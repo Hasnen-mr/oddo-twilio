@@ -3,7 +3,7 @@
     "name": "Twilio Dialer - Calling, SMS and Call Logs",
     "version": "1.0.0",
     "category": "Productivity/Communication",
-    "summary": "Make calls, send SMS, and view Twilio call logs from Odoo. $1/month (your Twilio account).",
+    "summary": "Make calls, send SMS, and view Twilio call logs from Odoo using your own Twilio account. Free.",
     "description": """
 Twilio Dialer for Odoo
 =========================
@@ -22,8 +22,6 @@ privacy policy. Requires a Twilio account (twilio.com).
     "author": "Twilio Dialer",
     "license": "LGPL-3",
     "website": "https://www.twilio.com",
-    "currency": "USD",
-    "price": 1.00,  # Billed per month (store may show as one-shot; describe as $1/month in description)
     "depends": ["base"],
     "external_dependencies": {},
     # Cover/thumbnail for Odoo Apps Store (first image = list thumbnail)

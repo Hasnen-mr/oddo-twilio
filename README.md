@@ -19,20 +19,35 @@ Odoo module that provides Twilio integration: configuration (Account SID, Auth T
 
 Your Odoo instance must be reachable by Twilio on the internet (public URL). The module provides a public TwiML endpoint at `/twilio/dial?to=<number>`. When you use Click to Call, Twilio first calls your phone; when you answer, Twilio fetches that URL and dials the contact. Ensure `web.base.url` is set correctly in Odoo.
 
-## Odoo Apps Store – repository URL
+## Odoo Apps Store – repository structure and URL
 
-When you register your repository on [apps.odoo.com](https://apps.odoo.com), the URL must follow the standard format. Odoo may modify or normalize it to match:
+**Required structure:** Each module must be in its **own folder at the root** of the repository. The store expects:
+
+```
+your-repo-root/
+  odoo_twilio/          <-- one folder per module, name = module technical name
+    __manifest__.py
+    __init__.py
+    models/
+    views/
+    ...
+```
+
+If you pushed the **contents** of `odoo_twilio` as the repo root (so `__manifest__.py` is at the top level), the store will report "No module found". Fix it by creating a folder named `odoo_twilio` and moving all module files into it. You can run from the repo root:
+
+```bash
+bash fix_repo_structure.sh
+```
+
+(Or create `odoo_twilio/` manually and move `__manifest__.py`, `__init__.py`, `models/`, `views/`, `data/`, `security/`, `controllers/`, `wizard/`, `static/`, `README.md` into it.)
+
+**Repository URL** must follow the standard format:
 
 ```
 ssh://git@github.com/<owner>/<repo>.git#<branch>
 ```
 
-Examples:
-
-- `ssh://git@github.com/yourusername/twilio-extension.git#18.0` (Odoo 18)
-- `ssh://git@github.com/yourusername/twilio-extension.git#17.0` (Odoo 17)
-
-Use the branch that matches your Odoo version (e.g. `#18.0`, `#17.0`). HTTPS-style URLs may be converted to this standard by the store.
+Examples: `ssh://git@github.com/Hasnen-mr/oddo-twilio.git#18.0`. Use the branch that matches your Odoo version (e.g. `#18.0`, `#17.0`).
 
 ## License
 

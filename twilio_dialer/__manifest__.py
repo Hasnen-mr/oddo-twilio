@@ -24,6 +24,7 @@ privacy policy. Requires a Twilio account (twilio.com).
     "website": "https://www.twilio.com",
     "depends": ["base"],
     "external_dependencies": {},
+    "images": ["static/description/cover.png"],
     "data": [
         "security/ir.model.access.csv",
         "data/menu.xml",

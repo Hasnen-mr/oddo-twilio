@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_fetch_calls_wizard" model="ir.actions.act_window">
+        <field name="name">Call Logs</field>
+        <field name="res_model">twilio.fetch.calls.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="view_twilio_fetch_calls_wizard_form" model="ir.ui.view">
+        <field name="name">twilio.fetch.calls.wizard.form</field>
+        <field name="model">twilio.fetch.calls.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Fetch Call Logs from Twilio">
+                <group>
+                    <p colspan="2">Click the button below to fetch call logs from your Twilio account.</p>
+                </group>
+                <footer>
+                    <button name="action_fetch" string="Fetch Call Logs" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_twilio_call_line_tree" model="ir.ui.view">
+        <field name="name">twilio.call.line.tree</field>
+        <field name="model">twilio.call.line</field>
+        <field name="arch" type="xml">
+            <tree string="Call Logs" create="false" delete="false" editable="bottom">
+                <field name="date_created"/>
+                <field name="from_number"/>
+                <field name="to_number"/>
+                <field name="direction"/>
+                <field name="status"/>
+                <field name="duration"/>
+                <field name="recording_url" string="Recording"/>
+            </tree>
+        </field>
+    </record>
+</odoo>

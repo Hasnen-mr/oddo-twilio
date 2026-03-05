@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_twilio_config" model="ir.actions.act_window">
+        <field name="name">Twilio Configuration</field>
+        <field name="res_model">twilio.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="target">current</field>
+    </record>
+
+    <record id="view_twilio_config_tree" model="ir.ui.view">
+        <field name="name">twilio.config.tree</field>
+        <field name="model">twilio.config</field>
+        <field name="arch" type="xml">
+            <tree string="Twilio Configuration">
+                <field name="company_id"/>
+                <field name="account_sid"/>
+                <field name="default_from_number"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_twilio_config_form" model="ir.ui.view">
+        <field name="name">twilio.config.form</field>
+        <field name="model">twilio.config</field>
+        <field name="arch" type="xml">
+            <form string="Twilio Configuration">
+                <sheet>
+                    <group>
+                        <group string="Credentials">
+                            <field name="company_id" options="{'no_create': True}"/>
+                            <field name="account_sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"/>
+                            <field name="auth_token" password="True"/>
+                            <field name="default_from_number" placeholder="+1234567890"/>
+                        </group>
+                    </group>
+                    <footer>
+                        <button name="action_test_connection" string="Test connection" type="object" class="btn-primary"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

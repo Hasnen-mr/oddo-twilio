@@ -1,0 +1,8 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_twilio_config_user,twilio.config.user,model_twilio_config,base.group_user,1,1,1,1
+access_twilio_send_sms_wizard_user,twilio.send.sms.wizard.user,model_twilio_send_sms_wizard,base.group_user,1,1,1,1
+access_twilio_sms_line_user,twilio.sms.line.user,model_twilio_sms_line,base.group_user,1,1,1,1
+access_twilio_fetch_sms_wizard_user,twilio.fetch.sms.wizard.user,model_twilio_fetch_sms_wizard,base.group_user,1,1,1,1
+access_twilio_call_line_user,twilio.call.line.user,model_twilio_call_line,base.group_user,1,1,1,1
+access_twilio_fetch_calls_wizard_user,twilio.fetch.calls.wizard.user,model_twilio_fetch_calls_wizard,base.group_user,1,1,1,1
+access_twilio_click_to_call_wizard_user,twilio.click.to.call.wizard.user,model_twilio_click_to_call_wizard,base.group_user,1,1,1,1

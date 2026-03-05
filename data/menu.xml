@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_twilio_root"
+              name="Twilio"
+              sequence="50"/>
+    <menuitem id="menu_twilio_config"
+              name="Configuration"
+              parent="menu_twilio_root"
+              action="action_twilio_config"
+              sequence="10"/>
+    <menuitem id="menu_twilio_send_sms"
+              name="Send SMS"
+              parent="menu_twilio_root"
+              action="action_send_sms_wizard"
+              sequence="20"/>
+    <menuitem id="menu_twilio_sms_history"
+              name="SMS History"
+              parent="menu_twilio_root"
+              action="action_fetch_sms_wizard"
+              sequence="30"/>
+    <menuitem id="menu_twilio_call_logs"
+              name="Call Logs"
+              parent="menu_twilio_root"
+              action="action_fetch_calls_wizard"
+              sequence="40"/>
+    <menuitem id="menu_twilio_click_to_call"
+              name="Click to Call"
+              parent="menu_twilio_root"
+              action="action_click_to_call_wizard"
+              sequence="50"/>
+</odoo>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_send_sms_wizard" model="ir.actions.act_window">
+        <field name="name">Send SMS</field>
+        <field name="res_model">twilio.send.sms.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="view_twilio_send_sms_wizard_form" model="ir.ui.view">
+        <field name="name">twilio.send.sms.wizard.form</field>
+        <field name="model">twilio.send.sms.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Send SMS">
+                <group>
+                    <field name="from_number"/>
+                    <field name="to_number" placeholder="+1234567890"/>
+                    <field name="body" nolabel="1" placeholder="Message text..."/>
+                </group>
+                <footer>
+                    <button name="action_send_sms" string="Send" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_fetch_sms_wizard" model="ir.actions.act_window">
+        <field name="name">SMS History</field>
+        <field name="res_model">twilio.fetch.sms.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="view_twilio_fetch_sms_wizard_form" model="ir.ui.view">
+        <field name="name">twilio.fetch.sms.wizard.form</field>
+        <field name="model">twilio.fetch.sms.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Fetch SMS from Twilio">
+                <group>
+                    <p colspan="2">Click the button below to fetch the latest SMS messages from your Twilio account.</p>
+                </group>
+                <footer>
+                    <button name="action_fetch" string="Fetch SMS History" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_twilio_sms_line_tree" model="ir.ui.view">
+        <field name="name">twilio.sms.line.tree</field>
+        <field name="model">twilio.sms.line</field>
+        <field name="arch" type="xml">
+            <tree string="SMS History" create="false" delete="false" editable="bottom">
+                <field name="date_created"/>
+                <field name="from_number"/>
+                <field name="to_number"/>
+                <field name="body"/>
+                <field name="status"/>
+            </tree>
+        </field>
+    </record>
+</odoo>

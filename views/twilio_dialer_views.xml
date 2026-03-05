@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_click_to_call_wizard" model="ir.actions.act_window">
+        <field name="name">Click to Call</field>
+        <field name="res_model">twilio.click.to.call.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <record id="view_twilio_click_to_call_wizard_form" model="ir.ui.view">
+        <field name="name">twilio.click.to.call.wizard.form</field>
+        <field name="model">twilio.click.to.call.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Click to Call">
+                <group>
+                    <field name="from_number"/>
+                    <field name="to_number" placeholder="+1234567890"/>
+                    <field name="caller_phone" placeholder="+1234567890"/>
+                </group>
+                <footer>
+                    <button name="action_initiate_call" string="Call" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

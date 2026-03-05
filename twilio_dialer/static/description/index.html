@@ -1,21 +1,104 @@
 <div class="container mt-3">
-  <h2>Twilio Dialer - Calling, SMS and Call Logs</h2>
-  <p class="lead">Use your own Twilio account from Odoo to send SMS, view call logs, and initiate click-to-call.</p>
+  <h2>Twilio Dialer - Free Calling, SMS & Call Logs for Odoo</h2>
+  <p class="lead">
+    Make and receive calls, send SMS, and view Twilio logs directly within your Odoo – 100% no middle server, secure, and privacy-first. Use your own Twilio account to handle all business communications from a single, unified Odoo interface.
+  </p>
 
-  <h3>Features</h3>
+  <h3>Why Choose Twilio Dialer for Odoo?</h3>
   <ul>
-    <li><strong>Configuration</strong> - Store your Twilio Account SID and Auth Token per company. Test the connection with one click.</li>
-    <li><strong>Send SMS</strong> – Compose and send SMS from Odoo using your Twilio phone numbers.</li>
-    <li><strong>SMS History</strong> - Fetch and view recent SMS messages from Twilio on demand.</li>
-    <li><strong>Call Logs</strong> - Fetch and view call logs from Twilio with optional recording links.</li>
-    <li><strong>Click-to-call</strong> - Initiate outbound calls: your phone rings first, then the contact is dialed. Requires your Odoo instance to be reachable by Twilio (public URL) for the dial TwiML.</li>
+    <li><strong>100% Free for Odoo Community & Enterprise</strong> - Pay only Twilio usage, no module subscriptions.</li>
+    <li><strong>Privacy First</strong> - Credentials saved only to your Odoo instance, never sent to third-party servers.</li>
+    <li><strong>No Tracking or Analytics</strong> - Your data and communication history stay private within Odoo and Twilio.</li>
   </ul>
 
+  <h3>Complete Twilio Communication Suite for Odoo</h3>
+  <ul>
+    <li>✅ <strong>Make outgoing voice calls:</strong> Click-to-call any number using your Twilio phone numbers.</li>
+    <li>✅ <strong>Receive incoming calls:</strong> Twilio can reach you through your browser or device.</li>
+    <li>✅ <strong>Send SMS/text messages:</strong> Compose and send directly from Odoo CRM or Contacts.</li>
+    <li>✅ <strong>View SMS and call history:</strong> Complete logs fetched from Twilio, including messages and calls with details and optional recordings.</li>
+    <li>✅ <strong>Track all communication:</strong> See who called, when, and full message details.</li>
+    <li>✅ <strong>Bulk SMS:</strong> Reach multiple customers at once if enabled in your Twilio account.</li>
+  </ul>
+
+  <h3>Zero Additional Infrastructure</h3>
+  <p>
+    No backend required beyond Odoo. No external servers or services. Simply enter your Twilio Account SID, Auth Token, and phone number in Odoo configuration to enable full calling and SMS features.
+  </p>
+
+  <h3>Who Is This For?</h3>
+  <ul>
+    <li><strong>Business Professionals:</strong> Call and text customers from your browser in Odoo, keep personal numbers private.</li>
+    <li><strong>Sales & Support Teams:</strong> Log all customer touchpoints automatically, streamline communication.</li>
+    <li><strong>Developers / QA:</strong> Test and verify Twilio integration right in Odoo, no extra code required.</li>
+    <li><strong>Remote & Small Business:</strong> Own your business phone system on any device with Odoo access.</li>
+  </ul>
+
+  <h3>Key Features</h3>
+  <ul>
+    <li><strong>WebRTC-based voice calling:</strong> Clear, reliable browser calls via Twilio.</li>
+    <li><strong>Click-to-call from any contact or lead:</strong> Instantly start calls from Odoo forms and lists.</li>
+    <li><strong>Receive calls if public URL enabled:</strong> Use Odoo’s <code>web.base.url</code> for incoming call forwarding.</li>
+    <li><strong>Advanced SMS messaging:</strong> Send, receive, and thread messages inside Odoo.</li>
+    <li><strong>Complete logs & reporting:</strong> Browse, filter, and export call/SMS history for compliance and record-keeping.</li>
+    <li><strong>Security:</strong> Credentials and logs stored only in your Odoo/PostgreSQL database; nothing leaves your infrastructure except calls to Twilio's API.</li>
+  </ul>
+
+  <h3>How It Works</h3>
+  <ol>
+    <li>Install the module in your Odoo instance (18.0 or 17.0 compatible).</li>
+    <li>Navigate to <strong>Twilio &rarr; Configuration</strong>, enter your Twilio Account SID, Auth Token, and phone number.</li>
+    <li>Start making calls, sending SMS, and reviewing call/message logs all from within Odoo – no browser extension needed.</li>
+    <li>Use standard Odoo user rights to manage access to SMS and call features.</li>
+  </ol>
+
+  <h3>Availability</h3>
+  <p><strong>Odoo.sh and self-hosted (on-premise):</strong> Yes. Install the module from the Apps menu or from the Odoo Apps Store.</p>
+  <p><strong>Odoo Online (SaaS):</strong> Not available. Odoo Online does not allow installation of third-party modules that contain Python code. To use this app you need <strong>Odoo.sh</strong> or a <strong>self-hosted</strong> Odoo instance.</p>
+
   <h3>Requirements</h3>
-  <p>You need a Twilio account (twilio.com). There is no intermediary server: the app uses your credentials to talk directly to the Twilio API. Your data is sent to Twilio according to their services and privacy policy.</p>
+  <ul>
+    <li><strong>Odoo 18.0 or 17.0</strong></li>
+    <li><strong>Active Twilio account</strong> (<a href="https://twilio.com" target="_blank">sign up free</a>)</li>
+    <li><strong>Twilio phone number</strong> (voice & SMS enabled)</li>
+    <li><strong>Internet access & public Odoo URL</strong> (for full voice features)</li>
+  </ul>
+
+  <h3>Cost Structure</h3>
+  <ul>
+    <li><strong>Module:</strong> 100% open source, no extra fee</li>
+    <li><strong>Twilio Usage:</strong> Standard Twilio rates apply for calls/SMS</li>
+    <li><strong>No extra charges, subscriptions, or hidden costs.</strong></li>
+  </ul>
+
+  <h3>Privacy Promise</h3>
+  <ul>
+    <li>Your Twilio credentials, call logs, and message content are stored only within your Odoo database.</li>
+    <li>Nothing is sent to any external service except Twilio’s secure API endpoints.</li>
+    <li>No analytics, tracking, or unauthorized data collection, ever.</li>
+  </ul>
+
+  <h3>Why Better Than Alternatives?</h3>
+  <ul>
+    <li><strong>vs. Twilio Console:</strong> Faster workflow, integrated with your CRM and business data.</li>
+    <li><strong>vs. Browser extensions:</strong> Full data security, no browser storage risk, fine-grained Odoo user rights.</li>
+    <li><strong>vs. Separate VoIP apps:</strong> No switching apps, call and SMS direct from Odoo contacts/leads.</li>
+    <li><strong>vs. Custom code solutions:</strong> Plug-and-play for Odoo, no need to build or maintain integration.</li>
+  </ul>
+
+  <h3>Support & Updates</h3>
+  <ul>
+    <li>Active maintenance for Odoo LTS versions</li>
+    <li>Security updates as needed</li>
+    <li>Installation/troubleshooting help via issue tracker</li>
+  </ul>
 
   <h3>Installation</h3>
-  <p>Copy the module into your Odoo addons path and install it from the Apps menu. Configure Twilio under the Twilio menu (Configuration) with your Account SID and Auth Token.</p>
+  <ol>
+    <li>Copy the <code>twilio_dialer</code> folder into your Odoo addons path.</li>
+    <li>Update the Apps list and install "Twilio Dialer – Calling, SMS and Call Logs".</li>
+    <li>Go to the Twilio menu in Odoo and configure your Twilio credentials.</li>
+  </ol>
 
   <h3>License</h3>
   <p>LGPL-3.</p>

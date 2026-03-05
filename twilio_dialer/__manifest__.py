@@ -24,6 +24,7 @@ privacy policy. Requires a Twilio account (twilio.com).
     "website": "https://www.twilio.com",
     "depends": ["base"],
     "external_dependencies": {},
+    # Cover/thumbnail for Odoo Apps Store (first image = list thumbnail)
     "images": ["static/description/images/cover.png"],
     "data": [
         "security/ir.model.access.csv",

@@ -26,7 +26,7 @@ class FetchCallsWizard(models.TransientModel):
     _description = "Fetch Call Logs from Twilio"
 
     def action_fetch(self):
-        config = self.env["twilio.config"].get_config()
+        config = self.env["twilio_config"].get_config()
         if not config.account_sid or not config.auth_token:
             return {
                 "type": "ir.actions.client",

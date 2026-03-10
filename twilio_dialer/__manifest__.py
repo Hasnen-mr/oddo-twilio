@@ -18,6 +18,8 @@ send SMS, view SMS history and call logs from Twilio, and initiate click-to-call
 
 Uses only your Twilio credentials; no intermediary servers. Data is sent to Twilio as per their
 privacy policy. Requires a Twilio account (twilio.com).
+
+Install from addons path (copy twilio_dialer folder to addons); do not use Apps → Import (zip).
     """,
     "author": "Twilio Dialer",
     "license": "LGPL-3",
@@ -26,14 +28,15 @@ privacy policy. Requires a Twilio account (twilio.com).
     "external_dependencies": {},
     # Cover/thumbnail for Odoo Apps Store (first image = list thumbnail)
     "images": ["static/description/images/cover.png"],
+    "post_init_hook": "post_init_hook",
     "data": [
         "security/ir.model.access.csv",
-        "data/menu.xml",
         "views/twilio_config_views.xml",
         "views/twilio_sms_views.xml",
         "views/twilio_call_log_views.xml",
         "views/twilio_dialer_views.xml",
+        "data/menu.xml",
     ],
     "installable": True,
-    "application": False,
+    "application": True,
 }

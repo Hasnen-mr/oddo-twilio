@@ -52,13 +52,13 @@
         <field name="name">twilio.sms.line.tree</field>
         <field name="model">twilio.sms.line</field>
         <field name="arch" type="xml">
-            <tree string="SMS History" create="false" delete="false" editable="bottom">
+            <list string="SMS History" create="false" delete="false" editable="bottom">
                 <field name="date_created"/>
                 <field name="from_number"/>
                 <field name="to_number"/>
                 <field name="body"/>
                 <field name="status"/>
-            </tree>
+            </list>
         </field>
     </record>
 </odoo>

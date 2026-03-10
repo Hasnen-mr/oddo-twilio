@@ -10,6 +10,48 @@ Odoo module that provides Twilio integration: configuration (Account SID, Auth T
 4. Open **Twilio → Configuration** and set your Twilio Account SID and Auth Token (from your Twilio console).
 5. Use **Twilio → Send SMS**, **SMS History**, **Call Logs**, and **Click to Call** as needed.
 
+## How to use (after install)
+
+All features are under the **Twilio** menu in the Odoo app switcher (top-left) or main menu.
+
+### 1. Configuration (required first time)
+
+- Go to **Twilio → Configuration**.
+- Click **Create** and fill in:
+  - **Company** (default: current company).
+  - **Account SID** – from [Twilio Console](https://console.twilio.com) (starts with `AC`).
+  - **Auth Token** – from the same console (keep it secret).
+  - **Default From Number** – your Twilio phone number (e.g. `+1234567890`) for SMS and calls.
+- Click **Test connection** to verify credentials.
+- Save.
+
+### 2. Send SMS
+
+- **Twilio → Send SMS**.
+- Choose **To** number, enter **Message**, optionally pick a **From** number (or use the default).
+- Click **Send SMS**. The message is sent via Twilio.
+
+### 3. SMS History
+
+- **Twilio → SMS History**.
+- Optionally set date range and click **Fetch SMS** to load messages from Twilio into Odoo.
+- View the list of sent/received SMS.
+
+### 4. Call Logs
+
+- **Twilio → Call Logs**.
+- Optionally set date range and click **Fetch Calls** to load call records from Twilio.
+- View direction, status, duration and recording links (if any).
+
+### 5. Click to Call
+
+- **Twilio → Click to Call**.
+- Enter **Your phone number** (the number Twilio will call first).
+- Enter or select **Contact / number to call** (the number to dial after you answer).
+- Click **Start call**. Twilio calls your phone; when you answer, it dials the contact.
+
+**Note:** Click to Call requires your Odoo server to be reachable from the internet (public URL) so Twilio can request the dial TwiML. Set **System Parameters → `web.base.url`** correctly.
+
 ## Requirements
 
 - Odoo 18.0 (or 17.0; adjust `__manifest__.py` if needed).

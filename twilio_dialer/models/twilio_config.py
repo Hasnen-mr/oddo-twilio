@@ -11,7 +11,7 @@ from odoo import api, fields, models
 
 
 class TwilioConfig(models.Model):
-    _name = "twilio.config"
+    _name = "twilio_config"
     _description = "Twilio Configuration"
     _rec_name = "account_sid"
 

@@ -20,7 +20,7 @@ class ClickToCallWizard(models.TransientModel):
 
     @api.model
     def _selection_from_number(self):
-        config = self.env["twilio.config"].get_config()
+        config = self.env["twilio_config"].get_config()
         if not config:
             return []
         numbers = config.get_phone_numbers()
@@ -28,7 +28,7 @@ class ClickToCallWizard(models.TransientModel):
 
     def action_initiate_call(self):
         self.ensure_one()
-        config = self.env["twilio.config"].get_config()
+        config = self.env["twilio_config"].get_config()
         if not config:
             return {
                 "type": "ir.actions.client",

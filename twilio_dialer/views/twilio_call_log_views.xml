@@ -27,7 +27,7 @@
         <field name="name">twilio.call.line.tree</field>
         <field name="model">twilio.call.line</field>
         <field name="arch" type="xml">
-            <tree string="Call Logs" create="false" delete="false" editable="bottom">
+            <list string="Call Logs" create="false" delete="false" editable="bottom">
                 <field name="date_created"/>
                 <field name="from_number"/>
                 <field name="to_number"/>
@@ -35,7 +35,7 @@
                 <field name="status"/>
                 <field name="duration"/>
                 <field name="recording_url" string="Recording"/>
-            </tree>
+            </list>
         </field>
     </record>
 </odoo>

@@ -17,7 +17,11 @@ class TwilioConfig(models.Model):
 
     company_id = fields.Many2one("res.company", required=True, default=lambda self: self.env.company)
     account_sid = fields.Char("Account SID", required=True, help="Twilio Account SID (starts with AC)")
-    auth_token = fields.Char("Auth Token", required=True, password=True, help="Twilio Auth Token (secret)")
+    auth_token = fields.Char(
+    string="Auth Token",
+    required=True,
+    help="Twilio Auth Token (secret)"
+)
     default_from_number = fields.Char("Default From Number", help="Default Twilio number for SMS and calls")
 
     def _twilio_request(self, path, method="GET", data=None):

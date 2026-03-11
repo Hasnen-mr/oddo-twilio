@@ -1,934 +1,395 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Twilio Dialer – Calling, SMS &amp; Call Logs for Odoo</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1f2937; background: #fff; }
-    a { color: inherit; text-decoration: none; }
+<section style="font-family:'Segoe UI',Arial,sans-serif;color:#1f2937;max-width:900px;margin:0 auto;">
 
-    /* ── HERO ── */
-    .hero {
-      background: linear-gradient(135deg, #0d1117 0%, #1e293b 55%, #e31837 100%);
-      color: #fff;
-      padding: 60px 40px 52px;
-      text-align: center;
-    }
-    .hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.13);
-      border: 1px solid rgba(255,255,255,0.28);
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      padding: 5px 14px;
-      margin-bottom: 22px;
-    }
-    .hero h1 {
-      font-size: 34px;
-      font-weight: 900;
-      line-height: 1.18;
-      margin-bottom: 16px;
-      letter-spacing: -0.02em;
-    }
-    .hero h1 span { color: #f8485e; }
-    .hero > p {
-      font-size: 16px;
-      color: rgba(255,255,255,0.80);
-      max-width: 640px;
-      margin: 0 auto 36px;
-      line-height: 1.65;
-    }
-    .hero-buttons {
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    /* ── BUTTONS ── */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 13px 22px;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      text-decoration: none;
-      transition: all 0.18s ease;
-      line-height: 1;
-      white-space: nowrap;
-    }
-    .btn svg { width: 17px; height: 17px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .btn-white   { background: #fff; color: #0d1117; }
-    .btn-white:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.22); background: #f0f4ff; }
-    .btn-ghost   { background: rgba(255,255,255,0.11); color: #fff; border: 1px solid rgba(255,255,255,0.32); }
-    .btn-ghost:hover { background: rgba(255,255,255,0.2); }
-    .btn-chrome  { background: #4285f4; color: #fff; }
-    .btn-chrome:hover { background: #2c6fda; box-shadow: 0 4px 18px rgba(66,133,244,0.45); }
-    .btn-twilio  { background: #e31837; color: #fff; }
-    .btn-twilio:hover { background: #c0102c; box-shadow: 0 4px 18px rgba(227,24,55,0.4); }
-    .btn-green   { background: #10b981; color: #fff; }
-    .btn-green:hover { background: #059669; box-shadow: 0 4px 18px rgba(16,185,129,0.38); }
-    .btn-outline { background: transparent; color: #4f46e5; border: 2px solid #4f46e5; }
-    .btn-outline:hover { background: #4f46e5; color: #fff; }
-
-    /* ── TWILIO BRANDING BAR ── */
-    .twilio-bar {
-      background: #e31837;
-      color: #fff;
-      padding: 0;
-    }
-    .twilio-bar-inner {
-      display: flex;
-      align-items: stretch;
-      flex-wrap: wrap;
-    }
-    .twilio-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 16px 28px;
-      background: rgba(0,0,0,0.18);
-      flex-shrink: 0;
-    }
-    .twilio-logo-wrap {
-      background: #fff;
-      border-radius: 8px;
-      padding: 5px 10px;
-      display: flex;
-      align-items: center;
-    }
-    .twilio-logo-text {
-      font-size: 18px;
-      font-weight: 900;
-      color: #e31837;
-      letter-spacing: -0.03em;
-      font-family: 'Segoe UI', Arial, sans-serif;
-    }
-    .twilio-tagline {
-      font-size: 12px;
-      color: rgba(255,255,255,0.85);
-      font-weight: 500;
-    }
-    .twilio-tagline strong { color: #fff; font-size: 14px; display: block; }
-    .twilio-stats {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0;
-      flex: 1;
-    }
-    .twilio-stat {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 14px 26px;
-      border-left: 1px solid rgba(255,255,255,0.18);
-    }
-    .twilio-stat-val {
-      font-size: 22px;
-      font-weight: 900;
-      color: #fff;
-      line-height: 1;
-      letter-spacing: -0.02em;
-    }
-    .twilio-stat-lbl {
-      font-size: 10px;
-      color: rgba(255,255,255,0.75);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-top: 3px;
-    }
-
-    /* ── CHROME PROMO ── */
-    .chrome-promo {
-      background: linear-gradient(90deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      padding: 40px;
-      display: flex;
-      align-items: center;
-      gap: 40px;
-      flex-wrap: wrap;
-    }
-    .chrome-promo-left { flex: 1; min-width: 260px; }
-    .chrome-promo-eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(66,133,244,0.2);
-      border: 1px solid rgba(66,133,244,0.4);
-      border-radius: 20px;
-      color: #93c5fd;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      padding: 4px 12px;
-      margin-bottom: 14px;
-    }
-    .chrome-promo h2 {
-      font-size: 24px;
-      font-weight: 800;
-      color: #fff;
-      margin-bottom: 10px;
-      line-height: 1.25;
-    }
-    .chrome-promo p {
-      font-size: 14px;
-      color: rgba(255,255,255,0.72);
-      line-height: 1.6;
-      margin-bottom: 20px;
-    }
-    .chrome-promo-right {
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      align-items: flex-start;
-    }
-    .chrome-store-card {
-      background: rgba(255,255,255,0.07);
-      border: 1px solid rgba(255,255,255,0.14);
-      border-radius: 14px;
-      padding: 16px 20px;
-      min-width: 220px;
-    }
-    .chrome-store-card-title {
-      font-size: 11px;
-      color: rgba(255,255,255,0.55);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 10px;
-    }
-    .chrome-store-stats {
-      display: flex;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-    .chrome-stat-item { text-align: center; }
-    .chrome-stat-val {
-      font-size: 20px;
-      font-weight: 800;
-      color: #fff;
-      line-height: 1;
-    }
-    .chrome-stat-lbl {
-      font-size: 10px;
-      color: rgba(255,255,255,0.55);
-      font-weight: 500;
-      margin-top: 2px;
-    }
-    .stars { color: #fbbf24; font-size: 14px; letter-spacing: 1px; }
-    .chrome-promo-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin-bottom: 18px;
-    }
-    .chrome-pill {
-      background: rgba(66,133,244,0.18);
-      border: 1px solid rgba(66,133,244,0.35);
-      border-radius: 20px;
-      color: #93c5fd;
-      font-size: 11px;
-      font-weight: 600;
-      padding: 4px 10px;
-    }
-    .chrome-promo-btns { display: flex; flex-wrap: wrap; gap: 10px; }
-
-    /* ── SECTIONS ── */
-    .section { padding: 52px 40px; }
-    .section-alt { background: #f9fafb; }
-    .section-dark { background: #0d1117; color: #e5e7eb; }
-    .section-twilio { background: linear-gradient(135deg, #fff5f5 0%, #fff 100%); border-top: 3px solid #e31837; }
-    .section-title { font-size: 22px; font-weight: 800; color: #111827; margin-bottom: 8px; letter-spacing: -0.01em; }
-    .section-dark .section-title { color: #f9fafb; }
-    .section-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 32px; line-height: 1.55; }
-    .section-dark .section-subtitle { color: #9ca3af; }
-
-    /* ── FEATURE GRID ── */
-    .feature-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
-    .feature-card {
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 18px 16px;
-      transition: box-shadow 0.18s;
-    }
-    .feature-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-    .section-dark .feature-card { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
-    .feature-icon { font-size: 22px; margin-bottom: 10px; display: block; }
-    .feature-card h4 { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 5px; }
-    .section-dark .feature-card h4 { color: #f3f4f6; }
-    .feature-card p { font-size: 12px; color: #6b7280; line-height: 1.55; }
-    .section-dark .feature-card p { color: #9ca3af; }
-
-    /* ── STEPS ── */
-    .steps { display: flex; flex-direction: column; gap: 16px; }
-    .step { display: flex; align-items: flex-start; gap: 14px; }
-    .step-num {
-      width: 34px; height: 34px;
-      background: linear-gradient(135deg, #e31837, #ff6b6b);
-      color: #fff; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 800; flex-shrink: 0;
-    }
-    .step-body h4 { font-size: 13px; font-weight: 700; color: #111827; margin-bottom: 3px; }
-    .step-body p { font-size: 12px; color: #6b7280; line-height: 1.55; }
-
-    /* ── COMPARE TABLE ── */
-    .compare-table { width: 100%; border-collapse: collapse; font-size: 12px; border-radius: 10px; overflow: hidden; }
-    .compare-table th { background: #e31837; color: #fff; padding: 11px 14px; text-align: left; font-weight: 700; }
-    .compare-table td { padding: 10px 14px; border-bottom: 1px solid #e5e7eb; color: #374151; }
-    .compare-table tr:last-child td { border-bottom: none; }
-    .compare-table tr:nth-child(even) td { background: #fef2f2; }
-    .compare-table td:first-child { font-weight: 600; }
-    .check { color: #10b981; font-weight: 700; }
-    .cross { color: #ef4444; }
-
-    /* ── AVAIL GRID ── */
-    .avail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .avail-card { border-radius: 10px; padding: 16px; font-size: 13px; }
-    .avail-yes { background: #ecfdf5; border: 1px solid #6ee7b7; }
-    .avail-no  { background: #fef2f2; border: 1px solid #fca5a5; }
-    .avail-card h4 { font-weight: 700; margin-bottom: 6px; font-size: 13px; }
-    .avail-yes h4 { color: #065f46; }
-    .avail-no  h4 { color: #991b1b; }
-    .avail-card p { color: #374151; line-height: 1.5; font-size: 12px; }
-
-    /* ── PILLS ── */
-    .pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-    .pill {
-      display: inline-flex; align-items: center; gap: 4px;
-      background: #ede9fe; color: #4f46e5;
-      border-radius: 20px; padding: 4px 11px;
-      font-size: 11px; font-weight: 600;
-    }
-    .pill-red { background: #fee2e2; color: #b91c1c; }
-
-    /* ── CTA BOTTOM ── */
-    .cta-section {
-      background: linear-gradient(135deg, #e31837 0%, #9b1239 100%);
-      color: #fff;
-      padding: 56px 40px;
-      text-align: center;
-    }
-    .cta-section h2 { font-size: 26px; font-weight: 800; margin-bottom: 10px; }
-    .cta-section p { font-size: 15px; color: rgba(255,255,255,0.82); margin-bottom: 32px; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.6; }
-    .cta-buttons { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; }
-
-    code {
-      background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 4px;
-      padding: 1px 6px; font-family: monospace; font-size: 11px; color: #be185d;
-    }
-
-    /* ── LIVE BADGE ── */
-    .live-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: #10b981; color: #fff;
-      border-radius: 20px; padding: 4px 12px;
-      font-size: 11px; font-weight: 800;
-      letter-spacing: 0.07em; text-transform: uppercase;
-    }
-    .live-dot {
-      width: 7px; height: 7px; border-radius: 50%;
-      background: #fff; display: inline-block;
-      animation: pulse 1.2s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(0.7); }
-    }
-
-    /* ── COMING SOON BADGE ── */
-    .soon-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      background: rgba(245,158,11,0.18); color: #fbbf24;
-      border: 1px solid rgba(245,158,11,0.4);
-      border-radius: 20px; padding: 4px 12px;
-      font-size: 11px; font-weight: 800;
-      letter-spacing: 0.07em; text-transform: uppercase;
-    }
-
-    /* ── STATUS SPLIT BAR ── */
-    .status-bar {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-    }
-    .status-bar-live {
-      background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
-      padding: 28px 36px;
-      display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
-    }
-    .status-bar-soon {
-      background: linear-gradient(135deg, #1c1107 0%, #292524 100%);
-      padding: 28px 36px;
-      display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
-      border-left: 1px solid rgba(255,255,255,0.06);
-    }
-    .status-bar-title {
-      font-size: 16px; font-weight: 800; color: #fff; line-height: 1.3;
-    }
-    .status-bar-desc {
-      font-size: 12px; color: rgba(255,255,255,0.6); line-height: 1.5; max-width: 320px;
-    }
-
-    /* ── COMING SOON BANNER ── */
-    .coming-soon-banner {
-      background: linear-gradient(90deg, #1c1107 0%, #292524 50%, #1c1107 100%);
-      border-top: 3px solid #f59e0b;
-      border-bottom: 3px solid #f59e0b;
-      padding: 22px 40px;
-      display: flex; align-items: center; justify-content: space-between;
-      flex-wrap: wrap; gap: 16px;
-    }
-    .coming-soon-left { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-    .coming-soon-title { font-size: 16px; font-weight: 800; color: #fff; }
-    .coming-soon-title span { color: #fbbf24; }
-    .coming-soon-desc { font-size: 12px; color: rgba(255,255,255,0.62); margin-top: 3px; }
-    .btn-soon {
-      background: rgba(245,158,11,0.15);
-      color: #fbbf24;
-      border: 2px solid rgba(245,158,11,0.5);
-      cursor: default;
-      opacity: 0.85;
-    }
-  </style>
-</head>
-<body>
-
-<!-- ══════════════════════════════════════
-     HERO
-════════════════════════════════════════ -->
-<div class="hero">
-  <span class="hero-badge">🔴 Powered by Twilio · Best Twilio Suite</span>
-  <h1>Twilio Dialer —<br><span>Calls, SMS &amp; Logs</span></h1>
-  <p>The most complete Twilio communication suite. Available <strong>now</strong> as a free Chrome Extension — and <strong>coming soon</strong> as the best Twilio module on the Odoo platform.</p>
-  <div class="hero-buttons">
-    <a class="btn btn-chrome" href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-      ✅ Chrome Extension — Live Now
-    </a>
-    <span class="btn btn-soon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px;"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-      ⏳ Odoo Module — Coming Soon
-    </span>
-    <a class="btn btn-ghost" href="https://twilio.com" target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      Get Twilio Account
-    </a>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     STATUS SPLIT BAR
-════════════════════════════════════════ -->
-<div class="status-bar">
-  <div class="status-bar-live">
-    <span class="live-badge"><span class="live-dot"></span> Live on Chrome Store</span>
-    <div class="status-bar-title">🌐 Free Chrome Extension<br>Available Now — 100% Free</div>
-    <div class="status-bar-desc">208+ users · 5.0 ⭐ rating · Install in seconds from the Chrome Web Store.</div>
-    <a class="btn btn-chrome" style="padding:10px 18px;font-size:13px;"
-       href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc"
-       target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:15px;height:15px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Add to Chrome — Free
-    </a>
-  </div>
-  <div class="status-bar-soon">
-    <span class="soon-badge">⏳ Coming Soon</span>
-    <div class="status-bar-title">🟣 Odoo Module<br>Best Twilio Module on Odoo</div>
-    <div class="status-bar-desc">The most feature-complete Twilio integration for Odoo 17 &amp; 18. Native CRM, zero server, full logs.</div>
-    <span class="btn btn-soon" style="padding:10px 18px;font-size:13px;">
-      ⏳ Notify Me When Live
-    </span>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     TWILIO BRANDING BAR
-════════════════════════════════════════ -->
-<div class="twilio-bar">
-  <div class="twilio-bar-inner">
-    <div class="twilio-brand">
-      <div class="twilio-logo-wrap">
-        <span class="twilio-logo-text">twilio</span>
-      </div>
-      <div>
-        <div class="twilio-tagline">
-          <strong>Powered by Twilio</strong>
-          Official Twilio Voice &amp; SMS API
-        </div>
-      </div>
-    </div>
-    <div class="twilio-stats">
-      <div class="twilio-stat">
-        <span class="twilio-stat-val">208+</span>
-        <span class="twilio-stat-lbl">Chrome Users</span>
-      </div>
-      <div class="twilio-stat">
-        <span class="twilio-stat-val">5.0 ⭐</span>
-        <span class="twilio-stat-lbl">Store Rating</span>
-      </div>
-      <div class="twilio-stat">
-        <span class="twilio-stat-val">v1.10</span>
-        <span class="twilio-stat-lbl">Latest Version</span>
-      </div>
-      <div class="twilio-stat">
-        <span class="twilio-stat-val">100%</span>
-        <span class="twilio-stat-lbl">Free &amp; Open Source</span>
-      </div>
-      <div class="twilio-stat">
-        <span class="twilio-stat-val">0</span>
-        <span class="twilio-stat-lbl">Servers Required</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     FREE CHROME EXTENSION PROMO
-════════════════════════════════════════ -->
-<div class="chrome-promo">
-  <div class="chrome-promo-left">
-    <span class="chrome-promo-eyebrow">
-      <svg style="width:13px;height:13px;fill:none;stroke:#93c5fd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-      ✅ Live Now · 100% Free on Chrome Web Store
-    </span>
-    <h2>Twilio Dialer Chrome Extension<br>Available Right Now — Free</h2>
-    <p>Install in seconds. Make calls, send SMS, and view Twilio logs directly from any Chrome tab. No Odoo needed. Same Twilio account, zero server, complete privacy. Already used by <strong style="color:#fff;">208+ professionals</strong> with a perfect <strong style="color:#fbbf24;">5.0 ⭐ rating</strong>.</p>
-    <div class="chrome-promo-pills">
-      <span class="chrome-pill">📞 Click-to-Call</span>
-      <span class="chrome-pill">💬 Send &amp; Receive SMS</span>
-      <span class="chrome-pill">📋 Full Call Logs</span>
-      <span class="chrome-pill">🔒 100% Local Storage</span>
-      <span class="chrome-pill">⚡ Under 60 sec setup</span>
-    </div>
-    <div class="chrome-promo-btns">
-      <a class="btn btn-chrome"
-         href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc"
-         target="_blank" rel="noopener">
-        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Add to Chrome — It's Free
+  <!-- HERO -->
+  <div style="background:linear-gradient(135deg,#0d1117 0%,#1e293b 55%,#e31837 100%);color:#fff;padding:48px 36px;text-align:center;border-radius:12px;margin-bottom:4px;">
+    <span style="display:inline-block;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.28);border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:5px 14px;margin-bottom:18px;">🔴 Powered by Twilio · Best Twilio Suite</span>
+    <h1 style="font-size:30px;font-weight:900;line-height:1.2;margin:0 0 14px;letter-spacing:-0.02em;">Twilio Dialer — <span style="color:#f87171;">Calls, SMS &amp; Logs</span></h1>
+    <p style="font-size:15px;color:rgba(255,255,255,0.82);max-width:600px;margin:0 auto 28px;line-height:1.65;">The most complete Twilio communication suite. Available <strong>now</strong> as a free Chrome Extension — and <strong>coming soon</strong> as the best Twilio module on the Odoo platform.</p>
+    <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;">
+      <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+         style="display:inline-flex;align-items:center;gap:7px;padding:12px 20px;background:#4285f4;color:#fff;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;">
+        ✅ Chrome Extension — Live Now
       </a>
-      <a class="btn btn-ghost" style="font-size:13px;"
-         href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc"
-         target="_blank" rel="noopener">
-        View on Chrome Web Store →
+      <span style="display:inline-flex;align-items:center;gap:7px;padding:12px 20px;background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);border-radius:9px;font-size:13px;font-weight:700;">
+        ⏳ Odoo Module — Coming Soon
+      </span>
+      <a href="https://twilio.com" target="_blank"
+         style="display:inline-flex;align-items:center;gap:7px;padding:12px 20px;background:rgba(255,255,255,0.11);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;">
+        Get Twilio Account
       </a>
     </div>
   </div>
 
-  <div class="chrome-promo-right">
-    <div class="chrome-store-card">
-      <div class="chrome-store-card-title">Chrome Web Store</div>
-      <div class="chrome-store-stats">
-        <div class="chrome-stat-item">
-          <div class="chrome-stat-val">208</div>
-          <div class="chrome-stat-lbl">Users</div>
-        </div>
-        <div class="chrome-stat-item">
-          <div class="chrome-stat-val">5.0</div>
-          <div class="chrome-stat-lbl">Rating</div>
-        </div>
-        <div class="chrome-stat-item">
-          <div class="chrome-stat-val">1.10</div>
-          <div class="chrome-stat-lbl">Version</div>
-        </div>
-      </div>
-      <div class="stars">★★★★★</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;">2 verified ratings · Mar 2026</div>
-    </div>
-    <a class="btn btn-chrome" style="width:100%;justify-content:center;"
-       href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc"
-       target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-      Install Chrome Extension
-    </a>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     WHY CHOOSE
-════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-title">Why Choose Twilio Dialer for Odoo?</div>
-  <div class="section-subtitle">Everything your business needs for calling and texting, built natively into Odoo — powered by Twilio's enterprise-grade API.</div>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <span class="feature-icon">🆓</span>
-      <h4>100% Free Module</h4>
-      <p>No module fee. Only standard Twilio pay-as-you-go rates for calls and SMS.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🔒</span>
-      <h4>Privacy First</h4>
-      <p>Credentials saved only in your Odoo instance — never sent to any third-party server.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🚫</span>
-      <h4>No Tracking</h4>
-      <p>Zero analytics or data collection. Your communication history stays private, always.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">⚡</span>
-      <h4>Zero Infrastructure</h4>
-      <p>No extra servers needed. Enter Twilio credentials in Odoo and start in under 2 minutes.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🔗</span>
-      <h4>Native Odoo Integration</h4>
-      <p>Works directly from Contacts, CRM leads, and any record in your Odoo database.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🏗️</span>
-      <h4>Odoo 17 &amp; 18 Ready</h4>
-      <p>Fully compatible with Odoo 17.0 and 18.0, Community and Enterprise editions.</p>
-    </div>
-  </div>
-  <div class="pill-row">
-    <span class="pill pill-red">🔴 Powered by Twilio Voice SDK</span>
-    <span class="pill pill-red">🔴 Twilio REST API</span>
-    <span class="pill">✅ WebRTC Calling</span>
-    <span class="pill">✅ Odoo Storage Only</span>
-    <span class="pill">✅ No External Backend</span>
-    <span class="pill">✅ Odoo 17 &amp; 18</span>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     FEATURES
-════════════════════════════════════════ -->
-<div class="section section-alt">
-  <div class="section-title">Complete Communication Suite</div>
-  <div class="section-subtitle">Everything in one Odoo module — calling, SMS, history, and more. All routed through Twilio's global infrastructure.</div>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <span class="feature-icon">📞</span>
-      <h4>Outgoing Voice Calls</h4>
-      <p>Click-to-call any contact or lead using your Twilio number with WebRTC crystal-clear quality.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">📲</span>
-      <h4>Incoming Calls</h4>
-      <p>Receive calls in your browser when <code>web.base.url</code> is publicly accessible.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">💬</span>
-      <h4>Send &amp; Receive SMS</h4>
-      <p>Compose and send texts directly from any Odoo form — CRM, Contacts, or custom models.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">📋</span>
-      <h4>Full Call &amp; SMS Logs</h4>
-      <p>Browse, filter, and export complete communication history fetched from Twilio.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">📤</span>
-      <h4>Bulk SMS</h4>
-      <p>Reach multiple customers at once when bulk messaging is enabled in your Twilio account.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🎙️</span>
-      <h4>Recording Access</h4>
-      <p>Optional call recordings shown in logs with playback links, if enabled in Twilio.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">👥</span>
-      <h4>Odoo User Rights</h4>
-      <p>Control who can call, SMS, or view logs using standard Odoo access rules.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🔍</span>
-      <h4>Search &amp; Filter Logs</h4>
-      <p>Find any call or message instantly with built-in search and status filtering.</p>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     HOW IT WORKS
-════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-title">How It Works</div>
-  <div class="section-subtitle">Set up in under 2 minutes. No tutorials, no learning curve.</div>
-  <div class="steps">
-    <div class="step">
-      <div class="step-num">1</div>
-      <div class="step-body">
-        <h4>Install the Odoo Module</h4>
-        <p>Copy the <code>twilio_dialer</code> folder to your Odoo addons path, update the Apps list, and install <strong>Twilio Dialer – Calling, SMS and Call Logs</strong>.</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">2</div>
-      <div class="step-body">
-        <h4>Configure Twilio Credentials</h4>
-        <p>Go to <strong>Twilio → Configuration</strong> in Odoo and enter your Twilio Account SID, Auth Token, and Twilio phone number.</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">3</div>
-      <div class="step-body">
-        <h4>Start Calling &amp; Texting</h4>
-        <p>Open any Odoo contact or lead and click the call or SMS button. All activity is automatically logged.</p>
-      </div>
-    </div>
-    <div class="step">
-      <div class="step-num">4</div>
-      <div class="step-body">
-        <h4>View History &amp; Reports</h4>
-        <p>Browse the full call and SMS history in the <strong>Twilio</strong> menu. Filter, export, and track all communications.</p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     AVAILABILITY
-════════════════════════════════════════ -->
-<div class="section section-alt">
-  <div class="section-title">Availability</div>
-  <div class="section-subtitle">Where you can use Twilio Dialer today and what's coming next.</div>
-  <div class="avail-grid">
-    <div class="avail-card avail-yes">
-      <h4>✅ Chrome Extension — Live Now · 100% Free</h4>
-      <p>Available on the Chrome Web Store right now. Install in seconds, connect your Twilio account, and start making calls and sending SMS from your browser immediately. <strong>208+ users · 5.0 ⭐</strong></p>
-      <a class="btn btn-chrome" style="margin-top:12px;padding:9px 16px;font-size:12px;display:inline-flex;"
-         href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc"
-         target="_blank" rel="noopener">Install Free →</a>
-    </div>
-    <div class="avail-card" style="background:#fefce8;border:1px solid #fde68a;">
-      <h4 style="color:#92400e;">⏳ Odoo Module — Coming Soon</h4>
-      <p style="color:#374151;">Being built as the <strong>best Twilio module on the Odoo platform</strong>. Full native integration for Odoo 17 &amp; 18 — Calls, SMS, Logs, CRM, Contacts, and more. Stay tuned for the launch.</p>
-      <span class="btn btn-soon" style="margin-top:12px;padding:9px 16px;font-size:12px;display:inline-flex;">⏳ Coming Soon to Odoo Apps</span>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     ODOO COMING SOON BANNER
-════════════════════════════════════════ -->
-<div class="coming-soon-banner">
-  <div class="coming-soon-left">
-    <span class="soon-badge" style="font-size:13px;padding:6px 16px;">⏳ Coming Soon</span>
-    <div>
-      <div class="coming-soon-title">🟣 Odoo Module — <span>The Best Twilio Integration on the Odoo Platform</span></div>
-      <div class="coming-soon-desc">Native Calls · SMS · Full Logs · CRM Integration · Click-to-Call · Bulk SMS · Odoo 17 &amp; 18 · Zero Server · 100% Free</div>
-    </div>
-  </div>
-  <span class="btn btn-soon" style="padding:11px 22px;font-size:14px;">⏳ Notify Me at Launch</span>
-</div>
-
-<!-- ══════════════════════════════════════
-     WHO IT'S FOR
-════════════════════════════════════════ -->
-<div class="section section-dark">
-  <div class="section-title">Who Is This For?</div>
-  <div class="section-subtitle">A complete Twilio-powered solution for teams of all sizes and industries.</div>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <span class="feature-icon">💼</span>
-      <h4>Business Professionals</h4>
-      <p>Call and text customers from Odoo, keep your personal number private.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🎯</span>
-      <h4>Sales &amp; Support Teams</h4>
-      <p>Log all customer touchpoints automatically and streamline every interaction.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🛠️</span>
-      <h4>Developers &amp; QA</h4>
-      <p>Test Twilio integrations right inside Odoo — no extra code required.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🏠</span>
-      <h4>Remote &amp; Small Business</h4>
-      <p>Own your business phone system on any device with Odoo access — no hardware needed.</p>
-    </div>
-  </div>
-</div>
-
-<!-- ══════════════════════════════════════
-     COMPARISON
-════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-title">Why Better Than Alternatives?</div>
-  <div class="section-subtitle">See how Twilio Dialer for Odoo compares with other options.</div>
-  <table class="compare-table">
-    <thead>
-      <tr>
-        <th>Feature</th>
-        <th>Twilio Dialer for Odoo</th>
-        <th>Twilio Console</th>
-        <th>Browser Extensions</th>
-        <th>VoIP Apps</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>Native Odoo CRM integration</td>
-        <td class="check">✔ Yes</td>
-        <td class="cross">✘ No</td>
-        <td class="cross">✘ No</td>
-        <td class="cross">✘ No</td>
-      </tr>
-      <tr>
-        <td>Data stays on your server</td>
-        <td class="check">✔ Yes</td>
-        <td class="check">✔ Yes</td>
-        <td class="cross">✘ Browser only</td>
-        <td class="cross">✘ External</td>
-      </tr>
-      <tr>
-        <td>Zero monthly platform fee</td>
-        <td class="check">✔ Free</td>
-        <td class="check">✔ Free</td>
-        <td>Varies</td>
-        <td class="cross">✘ Subscription</td>
-      </tr>
-      <tr>
-        <td>Odoo user access control</td>
-        <td class="check">✔ Odoo roles</td>
-        <td class="cross">✘ No</td>
-        <td class="cross">✘ No</td>
-        <td>Limited</td>
-      </tr>
-      <tr>
-        <td>Call &amp; SMS logs with history</td>
-        <td class="check">✔ Full</td>
-        <td class="check">✔ Yes</td>
-        <td>Partial</td>
-        <td>Partial</td>
-      </tr>
-      <tr>
-        <td>No extra server / infrastructure</td>
-        <td class="check">✔ Yes</td>
-        <td class="check">✔ Yes</td>
-        <td class="check">✔ Yes</td>
-        <td class="cross">✘ Needs server</td>
-      </tr>
-    </tbody>
+  <!-- STATUS SPLIT -->
+  <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
+    <tr>
+      <td style="background:#064e3b;padding:24px 28px;border-radius:0;width:50%;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:#10b981;color:#fff;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">● Live on Chrome Store</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">🌐 Free Chrome Extension<br>Available Now — 100% Free</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.65);margin-bottom:14px;">208+ users · 5.0 ⭐ rating · Install in seconds.</div>
+        <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+           style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#4285f4;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">
+          Add to Chrome — Free
+        </a>
+      </td>
+      <td style="background:#1c1107;padding:24px 28px;border-left:1px solid rgba(255,255,255,0.06);width:50%;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:10px;">⏳ Coming Soon</div>
+        <div style="font-size:16px;font-weight:800;color:#fff;margin-bottom:6px;">🟣 Odoo Module<br>Best Twilio Module on Odoo</div>
+        <div style="font-size:12px;color:rgba(255,255,255,0.62);margin-bottom:14px;">Native CRM · Zero server · Full logs · Odoo 17 &amp; 18.</div>
+        <span style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:rgba(245,158,11,0.12);color:#fbbf24;border:1px solid rgba(245,158,11,0.35);border-radius:8px;font-size:12px;font-weight:700;">
+          ⏳ Notify Me When Live
+        </span>
+      </td>
+    </tr>
   </table>
-</div>
 
-<!-- ══════════════════════════════════════
-     PRICING
-════════════════════════════════════════ -->
-<div class="section section-twilio">
-  <div class="section-title">Pricing</div>
-  <div class="section-subtitle">Simple and transparent — powered by Twilio's pay-as-you-go model.</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;max-width:640px;">
-    <div class="feature-card" style="border-color:#f59e0b;border-width:2px;">
-      <span class="feature-icon">⏳</span>
-      <h4 style="color:#92400e;">Odoo Module</h4>
-      <p><strong style="font-size:18px;color:#f59e0b;">Coming Soon</strong><br>Free — the best Twilio module on Odoo.</p>
-      <span class="soon-badge" style="margin-top:10px;font-size:10px;">Coming Soon to Odoo Apps</span>
+  <!-- TWILIO BRANDING BAR -->
+  <div style="background:#e31837;display:flex;align-items:stretch;flex-wrap:wrap;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:14px 24px;background:rgba(0,0,0,0.18);">
+      <div style="background:#fff;border-radius:7px;padding:5px 10px;">
+        <span style="font-size:17px;font-weight:900;color:#e31837;letter-spacing:-0.03em;">twilio</span>
+      </div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.85);font-weight:500;line-height:1.4;">
+        <strong style="color:#fff;font-size:13px;display:block;">Powered by Twilio</strong>
+        Official Twilio Voice &amp; SMS API
+      </div>
     </div>
-    <div class="feature-card" style="border-color:#e31837;border-width:2px;">
-      <span class="feature-icon">🔴</span>
-      <h4 style="color:#b91c1c;">Twilio Usage</h4>
-      <p>Standard Twilio pay-as-you-go rates. Use your own account — no middlemen.</p>
-    </div>
-    <div class="feature-card" style="border-color:#4285f4;border-width:2px;">
-      <span class="feature-icon">🌐</span>
-      <h4 style="color:#1d4ed8;">Chrome Extension</h4>
-      <p><strong style="font-size:22px;color:#4285f4;">Free</strong><br>Available on Chrome Web Store.</p>
-      <a class="btn btn-chrome" style="margin-top:10px;padding:8px 14px;font-size:12px;"
-         href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc"
-         target="_blank" rel="noopener">Get it Free →</a>
+    <div style="display:flex;align-items:center;flex-wrap:wrap;">
+      <div style="display:flex;flex-direction:column;align-items:center;padding:12px 22px;border-left:1px solid rgba(255,255,255,0.2);">
+        <span style="font-size:20px;font-weight:900;color:#fff;line-height:1;">208+</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.75);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Chrome Users</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:12px 22px;border-left:1px solid rgba(255,255,255,0.2);">
+        <span style="font-size:20px;font-weight:900;color:#fff;line-height:1;">5.0 ⭐</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.75);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Store Rating</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:12px 22px;border-left:1px solid rgba(255,255,255,0.2);">
+        <span style="font-size:20px;font-weight:900;color:#fff;line-height:1;">v1.10</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.75);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Latest Version</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:12px 22px;border-left:1px solid rgba(255,255,255,0.2);">
+        <span style="font-size:20px;font-weight:900;color:#fff;line-height:1;">100%</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.75);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Free &amp; Open Source</span>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;padding:12px 22px;border-left:1px solid rgba(255,255,255,0.2);">
+        <span style="font-size:20px;font-weight:900;color:#fff;line-height:1;">0</span>
+        <span style="font-size:10px;color:rgba(255,255,255,0.75);font-weight:600;text-transform:uppercase;letter-spacing:0.06em;margin-top:2px;">Servers Required</span>
+      </div>
     </div>
   </div>
-</div>
 
-<!-- ══════════════════════════════════════
-     REQUIREMENTS
-════════════════════════════════════════ -->
-<div class="section section-alt">
-  <div class="section-title">Requirements</div>
-  <div class="section-subtitle">Everything you need to get started in under 2 minutes.</div>
-  <div class="feature-grid">
-    <div class="feature-card">
-      <span class="feature-icon">🏗️</span>
-      <h4>Odoo 17.0 or 18.0</h4>
-      <p>Community or Enterprise. Self-hosted or Odoo.sh. <strong>Not</strong> Odoo Online (SaaS).</p>
+  <!-- CHROME PROMO -->
+  <div style="background:linear-gradient(90deg,#1a1a2e 0%,#0f3460 100%);padding:36px;display:flex;gap:32px;flex-wrap:wrap;margin-bottom:4px;border-radius:0;">
+    <div style="flex:1;min-width:240px;">
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(66,133,244,0.2);border:1px solid rgba(66,133,244,0.4);border-radius:20px;color:#93c5fd;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:4px 12px;margin-bottom:12px;">✅ Live Now · 100% Free on Chrome Web Store</div>
+      <h2 style="font-size:22px;font-weight:800;color:#fff;margin:0 0 10px;line-height:1.25;">Twilio Dialer Chrome Extension<br>Available Right Now — Free</h2>
+      <p style="font-size:13px;color:rgba(255,255,255,0.72);line-height:1.6;margin-bottom:16px;">Install in seconds. Make calls, send SMS, and view Twilio logs directly from any Chrome tab. No Odoo needed. Same Twilio account, zero server, complete privacy. Already used by <strong style="color:#fff;">208+ professionals</strong> with a perfect <strong style="color:#fbbf24;">5.0 ⭐ rating</strong>.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;">
+        <span style="background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.35);border-radius:20px;color:#93c5fd;font-size:11px;font-weight:600;padding:4px 10px;">📞 Click-to-Call</span>
+        <span style="background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.35);border-radius:20px;color:#93c5fd;font-size:11px;font-weight:600;padding:4px 10px;">💬 Send &amp; Receive SMS</span>
+        <span style="background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.35);border-radius:20px;color:#93c5fd;font-size:11px;font-weight:600;padding:4px 10px;">📋 Full Call Logs</span>
+        <span style="background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.35);border-radius:20px;color:#93c5fd;font-size:11px;font-weight:600;padding:4px 10px;">🔒 100% Local Storage</span>
+        <span style="background:rgba(66,133,244,0.18);border:1px solid rgba(66,133,244,0.35);border-radius:20px;color:#93c5fd;font-size:11px;font-weight:600;padding:4px 10px;">⚡ Under 60 sec setup</span>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+           style="display:inline-flex;align-items:center;gap:7px;padding:12px 20px;background:#4285f4;color:#fff;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;">
+          Add to Chrome — It's Free
+        </a>
+        <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+           style="display:inline-flex;align-items:center;gap:7px;padding:12px 18px;background:rgba(255,255,255,0.11);color:#fff;border:1px solid rgba(255,255,255,0.3);border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;">
+          View on Chrome Web Store →
+        </a>
+      </div>
     </div>
-    <div class="feature-card">
-      <span class="feature-icon">🔴</span>
-      <h4>Active Twilio Account</h4>
-      <p>Free trial available at <a href="https://twilio.com" target="_blank" style="color:#e31837;font-weight:700;">twilio.com</a>. Account SID and Auth Token required.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">📱</span>
-      <h4>Twilio Phone Number</h4>
-      <p>A Twilio number with voice and SMS capabilities enabled in your Twilio console.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🌐</span>
-      <h4>Public Odoo URL</h4>
-      <p>Required for incoming call forwarding via Twilio webhooks. Set in <code>web.base.url</code>.</p>
+    <div style="flex-shrink:0;display:flex;flex-direction:column;gap:10px;align-items:flex-start;min-width:200px;">
+      <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.14);border-radius:12px;padding:16px 20px;min-width:200px;">
+        <div style="font-size:10px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:12px;">Chrome Web Store</div>
+        <div style="display:flex;gap:16px;margin-bottom:10px;">
+          <div style="text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:#fff;line-height:1;">208</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;">Users</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:#fff;line-height:1;">5.0</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;">Rating</div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:20px;font-weight:800;color:#fff;line-height:1;">1.10</div>
+            <div style="font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;">Version</div>
+          </div>
+        </div>
+        <div style="color:#fbbf24;font-size:14px;letter-spacing:1px;">★★★★★</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);margin-top:4px;">2 verified ratings · Mar 2026</div>
+      </div>
+      <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+         style="display:flex;align-items:center;justify-content:center;gap:7px;width:100%;padding:10px 16px;background:#4285f4;color:#fff;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;box-sizing:border-box;">
+        Install Chrome Extension
+      </a>
     </div>
   </div>
-</div>
 
-<!-- ══════════════════════════════════════
-     PRIVACY
-════════════════════════════════════════ -->
-<div class="section">
-  <div class="section-title">Privacy Promise</div>
-  <div class="section-subtitle">Your data, your infrastructure — always. Only Twilio's official API is ever contacted.</div>
-  <div class="feature-grid" style="max-width:640px;">
-    <div class="feature-card">
-      <span class="feature-icon">🗄️</span>
-      <h4>On-Premise Storage</h4>
-      <p>Credentials, call logs, and message content stored only in your Odoo/PostgreSQL database.</p>
+  <!-- WHY CHOOSE -->
+  <div style="padding:40px 0 28px;">
+    <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;">Why Choose Twilio Dialer for Odoo?</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 24px;">Built on Twilio's enterprise-grade API. Zero servers. Fully native Odoo integration.</p>
+    <table style="width:100%;border-collapse:separate;border-spacing:10px;">
+      <tr>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;vertical-align:top;width:33%;">
+          <div style="font-size:22px;margin-bottom:8px;">🆓</div>
+          <strong style="font-size:13px;color:#111827;display:block;margin-bottom:4px;">100% Free Module</strong>
+          <span style="font-size:12px;color:#6b7280;line-height:1.5;display:block;">No module fee. Only standard Twilio pay-as-you-go rates.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;vertical-align:top;width:33%;">
+          <div style="font-size:22px;margin-bottom:8px;">🔒</div>
+          <strong style="font-size:13px;color:#111827;display:block;margin-bottom:4px;">Privacy First</strong>
+          <span style="font-size:12px;color:#6b7280;line-height:1.5;display:block;">Credentials saved only in your Odoo instance — never sent to any third-party.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;vertical-align:top;width:33%;">
+          <div style="font-size:22px;margin-bottom:8px;">⚡</div>
+          <strong style="font-size:13px;color:#111827;display:block;margin-bottom:4px;">Zero Infrastructure</strong>
+          <span style="font-size:12px;color:#6b7280;line-height:1.5;display:block;">No extra servers. Enter Twilio credentials in Odoo and start in under 2 minutes.</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">🔗</div>
+          <strong style="font-size:13px;color:#111827;display:block;margin-bottom:4px;">Native Odoo Integration</strong>
+          <span style="font-size:12px;color:#6b7280;line-height:1.5;display:block;">Works directly from Contacts, CRM leads, and any Odoo record.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">🚫</div>
+          <strong style="font-size:13px;color:#111827;display:block;margin-bottom:4px;">No Tracking</strong>
+          <span style="font-size:12px;color:#6b7280;line-height:1.5;display:block;">Zero analytics or data collection. Your communication history stays private.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:16px;vertical-align:top;">
+          <div style="font-size:22px;margin-bottom:8px;">🏗️</div>
+          <strong style="font-size:13px;color:#111827;display:block;margin-bottom:4px;">Odoo 17 &amp; 18 Ready</strong>
+          <span style="font-size:12px;color:#6b7280;line-height:1.5;display:block;">Compatible with Odoo 17.0 and 18.0, Community and Enterprise editions.</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- FEATURES -->
+  <div style="background:#f9fafb;padding:32px;margin-bottom:4px;border-radius:10px;">
+    <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;">Complete Communication Suite</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 22px;">All routed through Twilio's global infrastructure. Everything in one Odoo module.</p>
+    <table style="width:100%;border-collapse:separate;border-spacing:10px;">
+      <tr>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">📞</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Outgoing Voice Calls</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Click-to-call any contact using your Twilio number with WebRTC quality.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">📲</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Incoming Calls</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Receive calls in your browser when <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px;font-size:10px;">web.base.url</code> is public.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">💬</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Send &amp; Receive SMS</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Compose and send texts from any Odoo form — CRM, Contacts, or custom.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">📋</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Full Call &amp; SMS Logs</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Browse, filter, and export complete Twilio communication history.</span>
+        </td>
+      </tr>
+      <tr>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;">
+          <div style="font-size:20px;margin-bottom:6px;">📤</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Bulk SMS</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Reach multiple customers at once when enabled in your Twilio account.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;">
+          <div style="font-size:20px;margin-bottom:6px;">🎙️</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Recording Access</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Optional call recordings shown in logs with playback links.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;">
+          <div style="font-size:20px;margin-bottom:6px;">👥</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Odoo User Rights</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Control access using standard Odoo roles and access rules.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;">
+          <div style="font-size:20px;margin-bottom:6px;">🔍</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Search &amp; Filter Logs</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Find any call or message instantly with built-in search and filtering.</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- HOW IT WORKS -->
+  <div style="padding:32px 0 28px;">
+    <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;">How It Works</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 22px;">Set up in under 2 minutes. No tutorials, no learning curve.</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;">
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#e31837,#ff6b6b);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;text-align:center;line-height:32px;">1</div>
+            <div>
+              <strong style="font-size:13px;color:#111827;display:block;margin-bottom:3px;">Install the Odoo Module</strong>
+              <span style="font-size:12px;color:#6b7280;line-height:1.55;display:block;">Copy the <code style="background:#f3f4f6;padding:1px 5px;border-radius:3px;font-size:11px;color:#be185d;">twilio_dialer</code> folder to your Odoo addons path, update the Apps list, and install.</span>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;">
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#e31837,#ff6b6b);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;text-align:center;line-height:32px;">2</div>
+            <div>
+              <strong style="font-size:13px;color:#111827;display:block;margin-bottom:3px;">Configure Twilio Credentials</strong>
+              <span style="font-size:12px;color:#6b7280;line-height:1.55;display:block;">Go to <strong>Twilio → Configuration</strong> in Odoo. Enter your Account SID, Auth Token, and Twilio phone number.</span>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 16px;vertical-align:top;">
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#e31837,#ff6b6b);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;text-align:center;line-height:32px;">3</div>
+            <div>
+              <strong style="font-size:13px;color:#111827;display:block;margin-bottom:3px;">Start Calling &amp; Texting</strong>
+              <span style="font-size:12px;color:#6b7280;line-height:1.55;display:block;">Open any Odoo contact or lead and click the call or SMS button. All activity is automatically logged.</span>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:0 0 8px;vertical-align:top;">
+          <div style="display:flex;align-items:flex-start;gap:14px;">
+            <div style="width:32px;height:32px;background:linear-gradient(135deg,#e31837,#ff6b6b);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;text-align:center;line-height:32px;">4</div>
+            <div>
+              <strong style="font-size:13px;color:#111827;display:block;margin-bottom:3px;">View History &amp; Reports</strong>
+              <span style="font-size:12px;color:#6b7280;line-height:1.55;display:block;">Browse the full call and SMS history in the <strong>Twilio</strong> menu. Filter, export, and track all communications.</span>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- AVAILABILITY -->
+  <div style="background:#f9fafb;padding:32px;margin-bottom:4px;border-radius:10px;">
+    <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;">Availability</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 20px;">Where you can use Twilio Dialer today and what's coming next.</p>
+    <table style="width:100%;border-collapse:separate;border-spacing:12px;">
+      <tr>
+        <td style="background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;padding:18px;vertical-align:top;width:50%;">
+          <strong style="font-size:14px;color:#065f46;display:block;margin-bottom:8px;">✅ Chrome Extension — Live Now · 100% Free</strong>
+          <p style="font-size:12px;color:#374151;line-height:1.55;margin:0 0 14px;">Available on the Chrome Web Store right now. 208+ users · 5.0 ⭐ · Install in seconds and start making calls and SMS immediately.</p>
+          <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+             style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;background:#4285f4;color:#fff;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;">
+            Install Free →
+          </a>
+        </td>
+        <td style="background:#fefce8;border:1px solid #fde68a;border-radius:10px;padding:18px;vertical-align:top;width:50%;">
+          <strong style="font-size:14px;color:#92400e;display:block;margin-bottom:8px;">⏳ Odoo Module — Coming Soon</strong>
+          <p style="font-size:12px;color:#374151;line-height:1.55;margin:0 0 14px;">Being built as the <strong>best Twilio module on the Odoo platform</strong>. Full native integration for Odoo 17 &amp; 18 — Calls, SMS, Logs, CRM, and more.</p>
+          <span style="display:inline-flex;align-items:center;padding:9px 16px;background:rgba(245,158,11,0.12);color:#b45309;border:1px solid rgba(245,158,11,0.4);border-radius:8px;font-size:12px;font-weight:700;">
+            ⏳ Coming Soon to Odoo Apps
+          </span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ODOO COMING SOON BANNER -->
+  <div style="background:linear-gradient(90deg,#1c1107 0%,#292524 50%,#1c1107 100%);border-top:3px solid #f59e0b;border-bottom:3px solid #f59e0b;padding:20px 32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:4px;">
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+      <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(245,158,11,0.18);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);border-radius:20px;padding:5px 14px;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;">⏳ Coming Soon</span>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#fff;">🟣 Odoo Module — <span style="color:#fbbf24;">The Best Twilio Integration on Odoo</span></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:3px;">Native Calls · SMS · Full Logs · CRM · Click-to-Call · Bulk SMS · Odoo 17 &amp; 18 · Zero Server · Free</div>
+      </div>
     </div>
-    <div class="feature-card">
-      <span class="feature-icon">🔗</span>
-      <h4>Twilio API Only</h4>
-      <p>The only external calls made are to Twilio's official, secure API endpoints.</p>
-    </div>
-    <div class="feature-card">
-      <span class="feature-icon">🚫</span>
-      <h4>Zero Analytics</h4>
-      <p>No usage tracking, no third-party analytics, no unauthorized data collection. Ever.</p>
+    <span style="display:inline-flex;align-items:center;padding:11px 20px;background:rgba(245,158,11,0.15);color:#fbbf24;border:2px solid rgba(245,158,11,0.5);border-radius:9px;font-size:13px;font-weight:700;">⏳ Notify Me at Launch</span>
+  </div>
+
+  <!-- PRICING -->
+  <div style="background:#fff5f5;border-top:3px solid #e31837;padding:32px;margin-bottom:4px;border-radius:0 0 10px 10px;">
+    <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;">Pricing</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 20px;">Powered by Twilio's pay-as-you-go model. No surprises.</p>
+    <table style="width:100%;border-collapse:separate;border-spacing:12px;max-width:640px;">
+      <tr>
+        <td style="background:#fff;border:2px solid #f59e0b;border-radius:10px;padding:18px;vertical-align:top;width:33%;">
+          <div style="font-size:22px;margin-bottom:6px;">⏳</div>
+          <strong style="font-size:12px;color:#92400e;display:block;margin-bottom:4px;">Odoo Module</strong>
+          <span style="font-size:20px;font-weight:900;color:#f59e0b;display:block;">Coming Soon</span>
+          <span style="font-size:11px;color:#6b7280;display:block;margin-top:4px;">Free — the best Twilio module on Odoo.</span>
+        </td>
+        <td style="background:#fff;border:2px solid #e31837;border-radius:10px;padding:18px;vertical-align:top;width:33%;">
+          <div style="font-size:22px;margin-bottom:6px;">🔴</div>
+          <strong style="font-size:12px;color:#b91c1c;display:block;margin-bottom:4px;">Twilio Usage</strong>
+          <span style="font-size:12px;color:#6b7280;line-height:1.5;display:block;">Standard Twilio pay-as-you-go. Your own account — no middlemen.</span>
+        </td>
+        <td style="background:#fff;border:2px solid #4285f4;border-radius:10px;padding:18px;vertical-align:top;width:33%;">
+          <div style="font-size:22px;margin-bottom:6px;">🌐</div>
+          <strong style="font-size:12px;color:#1d4ed8;display:block;margin-bottom:4px;">Chrome Extension</strong>
+          <span style="font-size:20px;font-weight:900;color:#4285f4;display:block;">Free</span>
+          <span style="font-size:11px;color:#6b7280;display:block;margin-top:4px;">Available on Chrome Web Store now.</span>
+          <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+             style="display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:7px 13px;background:#4285f4;color:#fff;border-radius:7px;font-size:11px;font-weight:700;text-decoration:none;">
+            Get it Free →
+          </a>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- REQUIREMENTS -->
+  <div style="padding:32px 0 28px;">
+    <h2 style="font-size:20px;font-weight:800;color:#111827;margin:0 0 6px;">Requirements</h2>
+    <p style="font-size:13px;color:#6b7280;margin:0 0 20px;">Everything you need to get started.</p>
+    <table style="width:100%;border-collapse:separate;border-spacing:10px;">
+      <tr>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">🏗️</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Odoo 17.0 or 18.0</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Community or Enterprise. Self-hosted or Odoo.sh. <strong>Not</strong> Odoo Online.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">🔴</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Active Twilio Account</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">Free trial at <a href="https://twilio.com" target="_blank" style="color:#e31837;font-weight:700;">twilio.com</a>. Account SID and Auth Token required.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">📱</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Twilio Phone Number</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">A Twilio number with voice and SMS capabilities enabled.</span>
+        </td>
+        <td style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px;vertical-align:top;width:25%;">
+          <div style="font-size:20px;margin-bottom:6px;">🌐</div>
+          <strong style="font-size:12px;color:#111827;display:block;margin-bottom:3px;">Public Odoo URL</strong>
+          <span style="font-size:11px;color:#6b7280;line-height:1.5;display:block;">For incoming call forwarding via Twilio webhooks. Set in <code style="background:#f3f4f6;padding:1px 4px;border-radius:3px;font-size:10px;">web.base.url</code>.</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- CTA BOTTOM -->
+  <div style="background:linear-gradient(135deg,#e31837 0%,#9b1239 100%);color:#fff;padding:44px 36px;text-align:center;border-radius:12px;">
+    <h2 style="font-size:24px;font-weight:800;margin:0 0 10px;">Start with Twilio Today — It's Free</h2>
+    <p style="font-size:14px;color:rgba(255,255,255,0.82);margin:0 0 28px;max-width:500px;margin-left:auto;margin-right:auto;line-height:1.6;">The Chrome Extension is live with 208+ users and a perfect 5.0 ⭐ rating. The Odoo module is coming soon as the best Twilio integration on the Odoo platform.</p>
+    <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:10px;">
+      <a href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc" target="_blank"
+         style="display:inline-flex;align-items:center;gap:7px;padding:13px 22px;background:#fff;color:#0d1117;border-radius:9px;font-size:14px;font-weight:700;text-decoration:none;">
+        ✅ Chrome Extension — Free &amp; Live
+      </a>
+      <span style="display:inline-flex;align-items:center;gap:7px;padding:13px 22px;background:rgba(245,158,11,0.2);color:#fbbf24;border:1px solid rgba(245,158,11,0.4);border-radius:9px;font-size:14px;font-weight:700;">
+        ⏳ Odoo Module — Coming Soon
+      </span>
+      <a href="https://twilio.com" target="_blank"
+         style="display:inline-flex;align-items:center;gap:7px;padding:13px 22px;background:#10b981;color:#fff;border-radius:9px;font-size:14px;font-weight:700;text-decoration:none;">
+        Get Free Twilio Account
+      </a>
     </div>
   </div>
-</div>
 
-<!-- ══════════════════════════════════════
-     CTA BOTTOM
-════════════════════════════════════════ -->
-<div class="cta-section">
-  <h2>Start with Twilio Today — It's Free</h2>
-  <p>The Chrome Extension is live now with 208+ users and a perfect 5.0 ⭐ rating. The Odoo module is coming soon as the best Twilio integration on the Odoo platform.</p>
-  <div class="cta-buttons">
-    <a class="btn btn-white"
-       href="https://chromewebstore.google.com/detail/twilio-call-sms-and-logs/fpcemcdkoaflldcailmbbnnahnnckhjc"
-       target="_blank" rel="noopener">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:17px;height:17px;"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
-      ✅ Chrome Extension — Free &amp; Live
-    </a>
-    <span class="btn btn-soon" style="font-size:14px;padding:13px 22px;">
-      ⏳ Odoo Module — Coming Soon
-    </span>
-    <a class="btn btn-green" href="https://twilio.com" target="_blank" rel="noopener">
-      Get Free Twilio Account
-    </a>
-  </div>
-</div>
-
-</body>
-</html>
+</section>

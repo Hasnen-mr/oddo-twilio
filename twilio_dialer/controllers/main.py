@@ -24,6 +24,25 @@ class TwilioDialController(http.Controller):
             '<?xml version="1.0" encoding="UTF-8"?><Response><Dial>%s</Dial></Response>' % _escape_xml(to),
             headers=[("Content-Type", "application/xml")],
         )
+    
+    
+    @http.route('/twilio/get_call_logs', type='json', auth='user')
+    def get_call_logs(self):
+
+       logs = request.env['twilio.call.log'].sudo().search([], order="id desc", limit=20)
+
+       result = []
+ 
+       for log in logs:
+        result.append({
+            "to": log.to_number,
+            "from": log.from_number,
+            "duration": log.duration,
+            "status": log.status,
+            "date": log.date.strftime("%Y-%m-%d %H:%M:%S") if log.date else "",
+        })
+
+       return result 
 
 
 def _escape_xml(s):

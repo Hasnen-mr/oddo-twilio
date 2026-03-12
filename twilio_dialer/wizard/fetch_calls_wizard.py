@@ -4,6 +4,7 @@
 import base64
 import json
 import urllib.request
+from datetime import datetime
 from odoo import fields, models
 
 
@@ -38,6 +39,7 @@ class FetchCallsWizard(models.TransientModel):
                     "sticky": True,
                 },
             }
+        
         line_model = self.env["twilio.call.line"]
         line_model.search([]).unlink()
         try:
@@ -63,13 +65,32 @@ class FetchCallsWizard(models.TransientModel):
                             rec_url = "https://api.twilio.com" + rec.get("uri", "").replace(".json", ".mp3")
                     except Exception:
                         pass
+                    # line_model.create({
+                    #     "from_number": c.get("from"),
+                    #     "to_number": c.get("to"),
+                    #     "direction": c.get("direction"),
+                    #     "status": c.get("status"),
+                    #     "duration": int(c.get("duration") or 0),
+                    #     "date_created": c.get("date_created"),
+                    #     "sid": c.get("sid"),
+                    #     "recording_url": rec_url,
+                    # })
+                    date_created = c.get("date_created")
+                    parsed_date = False
+
+                    if date_created:
+                       try:
+                           parsed_date = datetime.strptime(date_created, "%a, %d %b %Y %H:%M:%S %z").replace(tzinfo=None)
+                       except Exception:
+                           parsed_date = False
+
                     line_model.create({
                         "from_number": c.get("from"),
                         "to_number": c.get("to"),
                         "direction": c.get("direction"),
                         "status": c.get("status"),
                         "duration": int(c.get("duration") or 0),
-                        "date_created": c.get("date_created"),
+                        "date_created": parsed_date,
                         "sid": c.get("sid"),
                         "recording_url": rec_url,
                     })
@@ -80,7 +101,7 @@ class FetchCallsWizard(models.TransientModel):
                 "type": "ir.actions.act_window",
                 "name": "Call Logs",
                 "res_model": "twilio.call.line",
-                "view_mode": "tree",
+                "view_mode": "list",
                 "target": "current",
                 "context": {"create": False, "delete": False},
             }

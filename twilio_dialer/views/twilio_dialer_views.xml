@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+
+<!-- Call Log Action -->
+    <record id="action_twilio_call_log" model="ir.actions.act_window">
+        <field name="name">Call Logs</field>
+        <field name="res_model">twilio.call.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
     <record id="action_click_to_call_wizard" model="ir.actions.act_window">
         <field name="name">Twilio Dialer</field>
         <field name="res_model">twilio.click.to.call.wizard</field>
         <field name="view_mode">form</field>
-        <field name="target">new</field>
+        <field name="target">current</field>
         <field name="context">{'default_from_number': '+12296092786', 'default_caller_phone': '+91 1234567890'}</field>
     </record>
 
@@ -12,17 +20,19 @@
         <field name="name">twilio.click.to.call.wizard.form</field>
         <field name="model">twilio.click.to.call.wizard</field>
         <field name="arch" type="xml">
-            <form string="Twilio Dialer" width="400px">
+            <form string="Twilio Dialer">
                 <style>
+                .dialer-wrapper{
+    display:flex;
+    justify-content:flex-end;
+}
+
                     .dialer-container {
-                        background: #1a1a1a;
-                        border-radius: 20px;
-                        padding: 20px;
-                        color: white;
-                        font-family: 'Segoe UI', Roboto, sans-serif;
-                        max-width: 350px;
-                        margin: 0 auto;
-                    }
+    background:#1a1a1a;
+    border-radius:20px;
+    padding:20px;
+    max-width:350px;
+}
                     .caller-info {
                         display: flex;
                         justify-content: space-between;
@@ -127,9 +137,37 @@
                         width: 100%;
                         padding: 0;
                     }
-                </style>
+                    .dialer-header{
+    display:flex;
+    justify-content:flex-start;
+    margin-bottom:10px;
+}
 
+.dialer-close-btn{
+    background:none;
+    border:none;
+    color:#aaa;
+    font-size:18px;
+    cursor:pointer;
+}
+
+.dialer-close-btn:hover{
+    color:white;
+}
+                </style>
+<div class="dialer-wrapper">
                 <div class="dialer-container">
+                 <div class="dialer-header">
+            <button type="object"
+                    name="action_close_dialer"
+                    class="dialer-close-btn">
+                ✕
+            </button>
+        </div>
+
+        <!-- Dialer content -->
+
+   
                     <!-- Calling From section -->
                     <div class="caller-info">
                         <span>Calling From:</span>
@@ -170,12 +208,18 @@
 
                     <!-- Bottom navigation tabs -->
                     <div class="bottom-nav">
-                        <span>Call Log</span>
+                     <button name="%(twilio_dialer.action_fetch_calls_wizard)d"
+        type="action"
+        string="Call Log"
+        style="background:none;border:none;color:#00b0ff;font-size:13px;font-weight:500;"/>
+        
                         <span style="color: white; border-bottom: 2px solid #00b0ff;">Dialpad</span>
                         <span>SMS</span>
                         <span>Settings</span>
                     </div>
+                  <!-- </div> -->
                 </div>
+             </div>
             </form>
         </field>
     </record>

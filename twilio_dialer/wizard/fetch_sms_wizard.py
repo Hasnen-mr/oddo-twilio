@@ -53,7 +53,7 @@ class FetchSmsWizard(models.TransientModel):
                 "type": "ir.actions.act_window",
                 "name": "SMS History",
                 "res_model": "twilio.sms.line",
-                "view_mode": "tree",
+                "view_mode": "list",
                 "target": "current",
                 "context": {"create": False, "delete": False},
             }

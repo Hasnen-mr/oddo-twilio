@@ -103,8 +103,7 @@ class ClickToCallWizard(models.TransientModel):
     def action_close_dialer(self):
         return {
         "type": "ir.actions.act_window_close"
-        }
-    
+    }
     # -------------------------------------------------------------------------
     # Twilio call initiation
     # -------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 # License: LGPL-3
 
 from odoo import fields, models
-
+from datetime import datetime
 
 class TwilioSmsLine(models.TransientModel):
     _name = "twilio.sms.line"
@@ -36,18 +36,37 @@ class FetchSmsWizard(models.TransientModel):
         line_model = self.env["twilio.sms.line"]
         line_model.search([]).unlink()
         try:
-            path = "/2010-04-01/Accounts/%s/Messages.json?PageSize=50" % config.account_sid
+            path = "/2010-04-01/Accounts/%s/Messages.json?PageSize=20" % config.account_sid
             while path:
                 data = config._twilio_request(path)
+                # for m in data.get("messages", []):
+                #     line_model.create({
+                #         "from_number": m.get("from"),
+                #         "to_number": m.get("to"),
+                #         "body": m.get("body"),
+                #         "date_created": m.get("date_created"),
+                #         "status": m.get("status"),
+                #         "sid": m.get("sid"),
+                #     })
                 for m in data.get("messages", []):
+
+                    date_str = m.get("date_created")
+                    date_val = False
+
+                    if date_str:
+                        try:
+                           date_val = datetime.strptime(date_str, "%a, %d %b %Y %H:%M:%S %z").replace(tzinfo=None)
+                        except:
+                             date_val = False
+ 
                     line_model.create({
                         "from_number": m.get("from"),
                         "to_number": m.get("to"),
                         "body": m.get("body"),
-                        "date_created": m.get("date_created"),
+                        "date_created": date_val,
                         "status": m.get("status"),
                         "sid": m.get("sid"),
-                    })
+                   })
                 path = data.get("next_page_uri")
             return {
                 "type": "ir.actions.act_window",

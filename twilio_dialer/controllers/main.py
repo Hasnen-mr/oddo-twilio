@@ -43,6 +43,28 @@ class TwilioDialController(http.Controller):
         })
 
        return result 
+    
+    @http.route("/twilio/sms", type="http", auth="public", methods=["POST"], csrf=False)
+    def twilio_sms(self, **kwargs):
+
+       from_number = kwargs.get("From")
+       to_number = kwargs.get("To")
+       body = kwargs.get("Body")
+
+       request.env["twilio.sms.line"].sudo().create({
+           "from_number": from_number,
+           "to_number": to_number,
+           "body": body,
+           "status": "received",
+      })
+
+       response = """<?xml version="1.0" encoding="UTF-8"?>
+   <Response>
+   <Message>Message received in Odoo</Message>
+   </Response>
+   """
+
+       return request.make_response(response, headers=[("Content-Type", "application/xml")])
 
 
 def _escape_xml(s):

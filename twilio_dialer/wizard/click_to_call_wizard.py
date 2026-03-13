@@ -15,82 +15,87 @@ class ClickToCallWizard(models.TransientModel):
     to_number = fields.Char("To (contact number)")
     caller_phone = fields.Char("Your phone", required=True)
 
+    record_call = fields.Boolean("Record Call")
+    incoming_call = fields.Boolean("Incoming Call")
+
     # -------------------------------------------------------------------------
     # Dialpad helpers
     # -------------------------------------------------------------------------
-    def _reopen_wizard(self):
-        """Return an action that reopens this wizard with the same record."""
-        return {
-            'type': 'ir.actions.act_window',
-            'res_model': self._name,
-            'view_mode': 'form',
-            'target': 'new',
-            'res_id': self.id,
-            'context': self.env.context,
-        }
+    # def _reopen_wizard(self):
+    #     """Return an action that reopens this wizard with the same record."""
+    #     return {
+    #         'type': 'ir.actions.act_window',
+    #         'res_model': self._name,
+    #         'view_mode': 'form',
+    #         'target': 'new',
+    #         'res_id': self.id,
+    #         'context': self.env.context,
+    #     }
+    
 
     def press_1(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "1"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_2(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "2"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_3(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "3"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_4(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "4"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_5(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "5"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_6(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "6"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_7(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "7"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_8(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "8"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_9(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "9"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_0(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "0"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_star(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "*"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
 
     def press_hash(self):
         self.ensure_one()
         self.to_number = (self.to_number or "") + "#"
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
     
     def action_refresh_numbers(self):
-        return self._reopen_wizard()
+        # return self._reopen_wizard()
+        return True
 
     def action_recent_calls(self):
         return True

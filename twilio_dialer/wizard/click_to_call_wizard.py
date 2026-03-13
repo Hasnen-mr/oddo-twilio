@@ -13,7 +13,8 @@ class ClickToCallWizard(models.TransientModel):
     ('+53', 'CU +53'),
 ], default='+91', string="Country Code")
     to_number = fields.Char("To (contact number)")
-    caller_phone = fields.Char("Your phone", required=True)
+    # caller_phone = fields.Char("Your phone", required=True)
+    caller_phone = fields.Char("Your phone")
 
     record_call = fields.Boolean("Record Call")
     incoming_call = fields.Boolean("Incoming Call")
@@ -174,13 +175,15 @@ class ClickToCallWizard(models.TransientModel):
                     "sticky": True,
                 },
             }
-        twiml_url = base_url + "/twilio/dial?to=" + quote(self.to_number)
+        # twiml_url = base_url + "/twilio/dial?to=" + quote(self.to_number)
+        full_number = f"{self.country_code}{self.to_number}"
+        twiml_url = base_url + "/twilio/dial?to=" + quote(full_number)
         try:
             config._twilio_request(
                 "/2010-04-01/Accounts/%s/Calls.json" % config.account_sid,
                 method="POST",
                 data={
-                    "To": self.caller_phone,
+                    "To": self.caller_phone or full_number,
                     "From": self.from_number,
                     "Url": twiml_url,
                 },
@@ -190,7 +193,7 @@ class ClickToCallWizard(models.TransientModel):
                 "tag": "display_notification",
                 "params": {
                     "title": "Call initiated",
-                    "message": "Your phone will ring shortly. Answer to be connected to %s." % self.to_number,
+                    "message": "Your phone will ring shortly. Answer to be connected to %s." % full_number,
                     "type": "success",
                     "sticky": False,
                 },

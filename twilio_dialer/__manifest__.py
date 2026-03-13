@@ -37,6 +37,11 @@ Install from addons path (copy twilio_dialer folder to addons); do not use Apps 
         "views/twilio_dialer_views.xml",
         "data/menu.xml",
     ],
+     "assets": {
+        "web.assets_backend": [
+            "twilio_dialer/static/src/js/dialer.js",
+        ],
+    },
     "installable": True,
     "application": True,
 }

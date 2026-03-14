@@ -16,12 +16,12 @@
     <menuitem id="menu_twilio_sms_history"
               name="SMS History"
               parent="menu_twilio_root"
-              action="action_fetch_sms_wizard"
+              action="action_open_sms_history_direct"
               sequence="30"/>
     <menuitem id="menu_twilio_call_logs"
               name="Call Logs"
               parent="menu_twilio_root"
-              action="action_fetch_calls_wizard"
+              action="action_open_call_logs_direct"
               sequence="40"/>
     <menuitem id="menu_twilio_click_to_call"
               name="Click to Call"

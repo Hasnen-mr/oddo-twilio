@@ -1,7 +1,7 @@
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 # License: LGPL-3
 
-from odoo import fields, models
+from odoo import api, fields, models
 from datetime import datetime
 
 class TwilioSmsLine(models.TransientModel):
@@ -14,6 +14,29 @@ class TwilioSmsLine(models.TransientModel):
     date_created = fields.Datetime("Date")
     status = fields.Char("Status")
     sid = fields.Char("SID")
+
+    @api.model
+    def action_open_sms_history(self):
+        """Open SMS history list, fetching from Twilio if needed.
+
+        This keeps the existing Twilio fetch logic but avoids showing the
+        popup fetch wizard to the user.
+        """
+        line_model = self.env["twilio.sms.line"]
+        if not line_model.search_count([]):
+            wizard = self.env["twilio.fetch.sms.wizard"].create({})
+            action = wizard.action_fetch()
+            if isinstance(action, dict):
+                return action
+
+        return {
+            "type": "ir.actions.act_window",
+            "name": "SMS History",
+            "res_model": "twilio.sms.line",
+            "view_mode": "list",
+            "target": "current",
+            "context": {"create": False, "delete": False},
+        }
 
 
 class FetchSmsWizard(models.TransientModel):

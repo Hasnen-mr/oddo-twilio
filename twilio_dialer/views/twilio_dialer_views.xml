@@ -356,7 +356,7 @@ Calling in <span id="timer-count">3</span>...
 
                     <!-- Bottom navigation tabs -->
                     <div class="bottom-nav">
-                     <button name="%(twilio_dialer.action_fetch_calls_wizard)d"
+                     <button name="%(twilio_dialer.action_open_call_logs_direct)d"
         type="action"
         string="Call Log"
         style="background:none;border:none;color:#00b0ff;font-size:13px;font-weight:500;"/>

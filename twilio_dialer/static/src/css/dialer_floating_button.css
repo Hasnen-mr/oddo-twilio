@@ -1,0 +1,69 @@
+.dialer-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.dialer-card {
+    background: #111;
+    padding: 20px;
+    border-radius: 20px;
+    width: 300px;
+    color: white;
+    text-align: center;
+}
+
+.close-btn {
+    float: right;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+.dialer-input {
+    width: 100%;
+    padding: 10px;
+    margin: 15px 0;
+    border-radius: 10px;
+    border: none;
+}
+
+.dialer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.dial-btn {
+    padding: 15px;
+    border-radius: 50%;
+    background: #333;
+    color: white;
+    border: none;
+    font-size: 18px;
+}
+
+.dialer-actions {
+    margin-top: 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.call-btn {
+    background: green;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+}
+
+.redial-btn {
+    background: gray;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 10px;
+}

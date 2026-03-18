@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<odoo>
-    <templates id="template" xml:space="preserve">
-        <t t-name="twilio_dialer.TwilioDialerFloatingButton">
-            <div class="twilio-dialer-floating-btn" t-on-click="openDialer">
-                <span class="twilio-dialer-floating-icon">
-                    <i class="fa fa-phone"></i>
-                </span>
-            </div>
-        </t>
-    </templates>
-</odoo>
+<templates xml:space="preserve">
 
+<t t-name="twilio_dialer.TwilioDialerFloatingButton" owl="1">
+    <button class="twilio-dialer-floating-btn"
+            t-on-click="openDialer"
+            title="Open Dialer">
+        <i class="fa fa-phone"></i>
+    </button>
+</t>
+</templates>

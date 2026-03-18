@@ -1,0 +1,20 @@
+<footer>
+
+    <button name="action_initiate_call"
+            string="Call"
+            type="object"
+            class="btn btn-primary btn-lg"
+            attrs="{'invisible': [('call_active','=',True)]}"/>
+
+    <button name="action_hangup_call"
+            string="End Call"
+            type="object"
+            class="btn btn-danger btn-lg"
+            attrs="{'invisible': [('call_active','=',False)]}"/>
+
+    <button name="action_redial"
+            string="Redial"
+            type="object"
+            class="btn btn-secondary"/>
+
+</footer>

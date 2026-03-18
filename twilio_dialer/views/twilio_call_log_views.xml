@@ -45,7 +45,8 @@ action = env["twilio.call.line"].action_open_call_logs()
                 <field name="direction"/>
                 <field name="status"/>
                 <field name="duration"/>
-                <field name="recording_url" string="Recording"/>
+                <!-- <field name="recording_url" string="Recording"/> -->
+                <field name="recording_player" widget="html" string="Recording"/>
             </list>
         </field>
     </record>

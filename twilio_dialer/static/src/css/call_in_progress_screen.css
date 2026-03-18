@@ -1,0 +1,207 @@
+/* Twilio Dialer – Call in progress screen (dark theme) */
+
+.twilio-call-in-progress-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    background: linear-gradient(180deg, #0d0d0d 0%, #1a1a1a 50%, #0d0d0d 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.twilio-call-in-progress-card {
+    background: linear-gradient(145deg, #1e1e1e 0%, #151515 100%);
+    border-radius: 24px;
+    padding: 28px 24px 20px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+/* Header */
+.twilio-cip-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.twilio-cip-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #00b0ff;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 0 0 8px 0;
+}
+
+.twilio-cip-number {
+    font-size: 22px;
+    font-weight: 600;
+    color: #fff;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+}
+
+.twilio-cip-timer {
+    font-size: 32px;
+    font-weight: 700;
+    color: #00ff9c;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+}
+
+/* Script card */
+.twilio-cip-script-card {
+    background: rgba(0, 176, 255, 0.12);
+    border: 1px solid rgba(0, 176, 255, 0.25);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 24px;
+}
+
+.twilio-cip-script-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #00b0ff;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 8px;
+}
+
+.twilio-cip-script-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #e0e0e0;
+}
+
+/* Action buttons */
+.twilio-cip-actions {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.twilio-cip-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 2px solid #3a3a3a;
+    background: linear-gradient(145deg, #2a2a2a 0%, #1a1a1a 100%);
+    color: #b0b0b0;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.twilio-cip-btn i {
+    font-size: 22px;
+}
+
+.twilio-cip-btn:hover {
+    border-color: #00b0ff;
+    color: #fff;
+    background: linear-gradient(145deg, #2a3a45 0%, #1a2830 100%);
+}
+
+.twilio-cip-btn-active {
+    border-color: #00b0ff;
+    color: #00b0ff;
+    background: rgba(0, 176, 255, 0.15);
+}
+
+.twilio-cip-dialpad-panel {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    padding: 12px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.twilio-cip-dialpad-hint {
+    margin: 0;
+    font-size: 13px;
+    color: #888;
+}
+
+/* End Call */
+.twilio-cip-end-row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 24px;
+}
+
+.twilio-cip-end-call {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 200px;
+    padding: 16px 28px;
+    border-radius: 30px;
+    border: none;
+    background: #c62828;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 14px rgba(198, 40, 40, 0.4);
+}
+
+.twilio-cip-end-call:hover {
+    background: #b71c1c;
+}
+
+.twilio-cip-end-call:active {
+    transform: scale(0.98);
+}
+
+.twilio-cip-end-call i {
+    font-size: 18px;
+}
+
+/* Bottom nav */
+.twilio-cip-nav {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.twilio-cip-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    border: none;
+    background: none;
+    color: #6a6a6a;
+    font-size: 11px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.twilio-cip-nav-item i {
+    font-size: 18px;
+}
+
+.twilio-cip-nav-item:hover {
+    color: #00b0ff;
+}
+
+.twilio-cip-nav-active {
+    color: #00b0ff;
+}

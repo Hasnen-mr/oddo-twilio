@@ -21,6 +21,26 @@ class TwilioCallLine(models.TransientModel):
     sid = fields.Char("SID")
     recording_url = fields.Char("Recording URL", readonly=True)
 
+    
+
+    recording_player = fields.Html(
+    string="Recording Player",
+    compute="_compute_recording_player",
+    sanitize=False
+)
+    def _compute_recording_player(self):
+        for rec in self:
+            if rec.recording_url:
+               rec.recording_player = f"""
+                   <a href="{rec.recording_url}" target="_blank" style="font-size:18px;">
+                    ▶
+                   </a>
+               """
+            else:
+                rec.recording_player = ""
+    
+    
+
     @api.model
     def action_open_call_logs(self):
         """Open call logs list view and fetch from Twilio if empty.
@@ -70,7 +90,7 @@ class FetchCallsWizard(models.TransientModel):
         
         line_model = self.env["twilio.call.line"]
         # Explicit refresh: clear existing fetched logs before reloading
-        line_model.search([]).unlink()
+        # line_model.search([]).unlink()
         try:
             # Use a larger page size to minimize API calls
             path = "/2010-04-01/Accounts/%s/Calls.json?PageSize=100" % config.account_sid
@@ -109,6 +129,7 @@ class FetchCallsWizard(models.TransientModel):
                         except Exception:
                             # If recording lookup fails, just skip it and continue
                             rec_url = None
+                    
 
                     date_created = c.get("date_created")
                     parsed_date = False

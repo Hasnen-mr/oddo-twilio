@@ -63,21 +63,14 @@ Install from addons path (copy twilio_dialer folder to addons); do not use Apps 
         "views/twilio_dialer_views.xml",
         "data/menu.xml",
     ],
-"assets": {
-    "web.assets_backend": [
-
-        # CSS
-        "twilio_dialer/static/src/css/dialer_floating_button.css",
-
-        # JS
-        "twilio_dialer/static/src/js/dialer.js",
-        "twilio_dialer/static/src/js/dialer_floating_button.js",
-    ],
-
-    "web.assets_qweb": [
-        "twilio_dialer/static/src/xml/dialer_floating_button.xml",
-    ],
-},
+    "assets": {
+        "web.assets_backend": [
+            "twilio_dialer/static/src/css/dialer_floating_button.css",
+            "twilio_dialer/static/src/js/dialer.js",
+            "twilio_dialer/static/src/js/dialer_floating_button.js",
+            "twilio_dialer/static/src/xml/dialer_floating_button.xml",
+        ],
+    },
     "installable": True,
     "application": True,
 }

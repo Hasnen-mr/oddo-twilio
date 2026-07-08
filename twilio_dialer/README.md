@@ -54,7 +54,7 @@ All features are under the **Twilio** menu in the Odoo app switcher (top-left) o
 
 ## Requirements
 
-- Odoo 18.0 (or 17.0; adjust `__manifest__.py` if needed).
+- Odoo 14.0 through 19.0 (use the matching git branch: `14.0`, `15.0`, … `19.0`).
 - A Twilio account (twilio.com). No activation key; you use your own credentials.
 
 ## Click-to-call

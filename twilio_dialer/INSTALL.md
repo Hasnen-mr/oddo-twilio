@@ -1,4 +1,4 @@
-# How to install Twilio Dialer (Odoo 18)
+# How to install Twilio Dialer (Odoo 14–19)
 
 ## Do not install from ZIP
 

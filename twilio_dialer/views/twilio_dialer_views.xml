@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+<!-- Call Log Action -->
+    <record id="action_twilio_call_log" model="ir.actions.act_window">
+        <field name="name">Call Logs</field>
+        <field name="res_model">twilio.call.log</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_click_to_call_wizard" model="ir.actions.act_window">
+        <field name="name">Twilio Dialer</field>
+        <field name="res_model">twilio.click.to.call.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">current</field>
+        <field name="context"></field>
+        <!-- {'default_from_number': '+12296092786', 'default_caller_phone': ''} -->
+    </record>
+
+    <record id="view_twilio_click_to_call_wizard_form" model="ir.ui.view">
+        <field name="name">twilio.click.to.call.wizard.form</field>
+        <field name="model">twilio.click.to.call.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Twilio Dialer">
+                <style>
+                .dialer-wrapper{
+    display:flex;
+    justify-content:flex-end;
+}
+
+                    .dialer-container {
+    background:#1a1a1a;
+    border-radius:20px;
+    padding:20px;
+    max-width:350px;
+}
+                    .caller-info {
+                        display: flex;
+                        justify-content: space-between;
+                        font-size: 14px;
+                        color: #aaa;
+                        margin-bottom: 5px;
+                    }
+                    .caller-number {
+                        position:relative;
+                        display:inline-block;
+                    }
+                    .caller-number select{
+    appearance:none;
+    -webkit-appearance:none;
+    -moz-appearance:none;
+
+    background:linear-gradient(145deg,#2c2c2c,#1b1b1b);
+    color:white;
+
+    padding:10px 38px 10px 14px;
+
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.08);
+
+    font-size:14px;
+    font-weight:500;
+
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.6),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+
+    transition:all .25s ease;
+
+    cursor:pointer;
+}
+.caller-number select:hover{
+    border-color:#00b0ff;
+    box-shadow:
+        0 0 8px rgba(0,176,255,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.caller-number select:focus{
+    outline:none;
+    border-color:#00b0ff;
+    box-shadow:
+        0 0 10px rgba(0,176,255,0.5);
+}
+.caller-number::after{
+    content:"▼";
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:10px;
+    color:#9aa0a6;
+    pointer-events:none;
+}
+                    .number-display {
+                        background: #333;
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin: 15px 0;
+                        text-align: center;
+                        font-size: 28px;
+                        letter-spacing: 2px;
+                        border: 1px solid #555;
+                    }
+                    .dialpad {
+                        display: grid;
+                        grid-template-columns: repeat(3, 1fr);
+                        gap: 12px;
+                        margin: 20px 0;
+                    }
+                   .dialpad button{
+     background:linear-gradient(145deg,#3a3a3a,#1f1f1f);
+    border:none;
+    color:white;
+    font-size:24px;
+    font-weight:500;
+
+    height:70px;
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    box-shadow:
+        6px 6px 12px rgba(0,0,0,0.6),
+        -4px -4px 8px rgba(255,255,255,0.05);
+
+    transition:all .15s ease;
+    cursor:pointer;
+}
+                    .dialpad button:hover {
+                        background: #444;
+                        transform: scale(1.02);
+                    }
+                    .dialpad button:active {
+                        background: #555;
+                        transform: scale(0.98);
+                    }
+                    .action-row {
+                        display: flex;
+                        justify-content: space-around;
+                        margin: 15px 0 10px;
+                    }
+                    .action-btn {
+                        background: #262626;
+                        color: #ccc;
+                        padding: 12px 0;
+                        border-radius: 30px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        text-align: center;
+                        flex: 1;
+                        margin: 0 4px;
+                        border: 1px solid #3a3a3a;
+                        cursor: default;
+                    }
+                    .call-btn {
+                        background: #00c851;
+                        color: white;
+                        font-weight: bold;
+                        border: none;
+                        padding: 12px 0;
+                        border-radius: 30px;
+                        font-size: 16px;
+                        flex: 1.2;
+                        margin: 0 4px;
+                        cursor: pointer;
+                    }
+                  .bottom-nav{
+                        display:none !important;
+                    }
+                 
+                    .bottom-nav span {
+                        cursor: default;
+                        opacity: 0.8;
+                    }
+                    .bottom-nav span:hover {
+                        opacity: 1;
+                    }
+              
+                    .field-transparent input{
+    border: none !important;
+    border-bottom: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.field-transparent input:focus{
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+.o_field_widget input{
+    border: none !important;
+    border-bottom: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+}
+                    .dialer-header{
+    display:flex;
+    justify-content:flex-start;
+    margin-bottom:10px;
+}
+
+.dialer-close-btn{
+    background:none;
+    border:none;
+    color:#aaa;
+    font-size:18px;
+    cursor:pointer;
+}
+
+.dialer-close-btn:hover{
+    color:white;
+}
+.o_field_widget select{
+    background:#2c2c2c !important;
+    color:white !important;
+    border:1px solid #444 !important;
+    border-radius:8px !important;
+    padding:8px !important;
+}
+
+.o_field_widget select:focus{
+    outline:none !important;
+    border-color:#00b0ff !important;
+}
+
+.o_field_widget select option{
+    background:#2c2c2c;
+    color:white;
+}
+                </style>
+<div class="dialer-wrapper">
+                <div class="dialer-container">
+                 <div class="dialer-header">
+            <button type="object"
+                    name="action_close_dialer"
+                    class="dialer-close-btn">
+                ✕
+            </button>
+        </div>
+
+        <!-- Dialer content -->
+
+   
+                    <!-- Calling From section -->
+                    <div class="caller-info">
+                        <span>Calling From:</span>
+                        <span class="caller-number">
+                            <field name="from_number" nolabel="1" class="field-transparent" style="width: auto; display: inline-block; color: #00b0ff;"/>
+                            <field name="caller_phone" nolabel="1" class="field-transparent" style="width: auto; display: inline-block; margin-left: 10px; color: #aaa;"/>
+                        </span>
+                    </div>
+
+                    <!-- Number display (to_number) -->
+                    <!-- <div class="number-display">
+                        <field name="to_number" nolabel="1" placeholder="Enter number" class="field-transparent" style="font-size: 28px;"/>
+                    </div> -->
+                    <!-- Phone Input Row -->
+<div style="display:flex;gap:10px;margin:15px 0;">
+
+    <!-- Country Code -->
+    <field name="country_code"
+       nolabel="1"
+       style="
+       width:110px;
+       background:#2c2c2c;
+       border-radius:10px;
+       padding:10px;
+       color:white;
+       font-size:14px;"/>
+
+    <!-- Phone Number -->
+    <field name="to_number"
+           nolabel="1"
+           placeholder="1234567890"
+           class="field-transparent"
+           style="
+           flex:1;
+           background:#333;
+           border-radius:10px;
+           padding:15px;
+           text-align:center;
+           color:white;
+           font-size:20px;"/>
+
+</div>
+
+                    <!-- Dialpad -->
+                    <div class="dialpad">
+                        <button type="object" name="press_1" string="1"/>
+                        <button type="object" name="press_2" string="2"/>
+                        <button type="object" name="press_3" string="3"/>
+                        <button type="object" name="press_4" string="4"/>
+                        <button type="object" name="press_5" string="5"/>
+                        <button type="object" name="press_6" string="6"/>
+                        <button type="object" name="press_7" string="7"/>
+                        <button type="object" name="press_8" string="8"/>
+                        <button type="object" name="press_9" string="9"/>
+                        <button type="object" name="press_star" string="*"/>
+                        <button type="object" name="press_0" string="0"/>
+                        <button type="object" name="press_hash" string="#"/>
+                    </div>
+
+                    <!-- Action buttons (Record, Incoming, Call, Redial) -->
+                  
+                   <div style="margin-top:20px;text-align:center;">
+                   <div id="call-timer"
+     style="display:none;
+            text-align:center;
+            font-size:22px;
+            font-weight:600;
+            color:#00ff9c;
+            margin-bottom:10px;">
+Calling in <span id="timer-count">3</span>...
+</div>
+
+
+    <div style="display:flex;justify-content:center;gap:20px;margin-bottom:15px;color:white;">
+
+        <div>
+            <field name="record_call"/>
+            Record Call
+        </div>
+
+        <div>
+            <field name="incoming_call"/>
+            Incoming Call
+        </div>
+
+    </div>
+
+    <div style="display:flex;gap:15px;justify-content:center;">
+<!-- 
+        <button type="object"
+                id="call-btn"
+                name="action_initiate_call"
+                string="Call"
+                style="background:black;color:white;padding:12px 35px;border-radius:30px;border:none;font-size:16px;"/> -->
+                 <button type="object"
+                id="call-btn"
+                name="action_initiate_call"
+                string="Call"
+                style="background:black;color:white;padding:12px 35px;border-radius:30px;border:none;font-size:16px;"/>
+
+
+        <button type="object"
+                name="action_redial"
+                string="Redial"
+                style="background:#556070;color:white;padding:12px 30px;border-radius:30px;border:none;font-size:16px;"/>
+
+    </div>
+
+</div>
+
+                    <!-- Bottom navigation tabs -->
+                    <div class="bottom-nav">
+                     <button name="%(twilio_dialer.action_open_call_logs_direct)d"
+        type="action"
+        string="Call Log"
+        style="background:none;border:none;color:#00b0ff;font-size:13px;font-weight:500;"/>
+        
+                        <span style="color: white; border-bottom: 2px solid #00b0ff;">Dialpad</span>
+                       <button name="%(twilio_dialer.action_send_sms_wizard)d"
+        type="action"
+        string="SMS"
+        style="background:none;border:none;color:#00b0ff;font-size:13px;font-weight:500;"/>
+                        <span>Settings</span>
+                    </div>
+                  <!-- </div> -->
+                </div>
+             </div>
+            </form>
+        </field>
+    </record>
+</odoo>

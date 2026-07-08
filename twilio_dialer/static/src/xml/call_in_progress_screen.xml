@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="twilio_dialer.CallInProgressScreen">
+        <t t-if="state.visible">
+            <div class="twilio-call-in-progress-overlay">
+                <div class="twilio-call-in-progress-card">
+                    <!-- Top: Title, number, timer -->
+                    <div class="twilio-cip-header">
+                        <h2 class="twilio-cip-title">Call in progress</h2>
+                        <div class="twilio-cip-number" t-esc="fullNumber"/>
+                        <div class="twilio-cip-timer" t-esc="formattedDuration"/>
+                    </div>
+
+                    <!-- Middle: Greeting script card -->
+                    <div class="twilio-cip-script-card">
+                        <div class="twilio-cip-script-label">Greeting / Pickup script</div>
+                        <div class="twilio-cip-script-text" t-esc="state.greetingScript"/>
+                    </div>
+
+                    <!-- Action buttons: Mute, Dialpad -->
+                    <div class="twilio-cip-actions">
+                        <button type="button"
+                                class="twilio-cip-btn twilio-cip-btn-mute"
+                                t-att-class="{'twilio-cip-btn-active': state.muted}"
+                                t-on-click="toggleMute"
+                                title="Mute">
+                            <i class="fa fa-microphone-slash" t-if="state.muted"/>
+                            <i class="fa fa-microphone" t-else=""/>
+                            <span>Mute</span>
+                        </button>
+                        <button type="button"
+                                class="twilio-cip-btn twilio-cip-btn-dialpad"
+                                t-att-class="{'twilio-cip-btn-active': state.dialpadOpen}"
+                                t-on-click="toggleDialpad"
+                                title="Dialpad">
+                            <i class="fa fa-th"/>
+                            <span>Dialpad</span>
+                        </button>
+                    </div>
+
+                    <!-- Optional dialpad panel -->
+                    <t t-if="state.dialpadOpen">
+                        <div class="twilio-cip-dialpad-panel">
+                            <p class="twilio-cip-dialpad-hint">Use your phone keypad for DTMF.</p>
+                        </div>
+                    </t>
+
+                    <!-- End Call -->
+                    <div class="twilio-cip-end-row">
+                        <button type="button"
+                                class="twilio-cip-end-call"
+                                t-on-click="endCall">
+                            <i class="fa fa-phone"/>
+                            <span>End Call</span>
+                        </button>
+                    </div>
+
+                    <!-- Bottom nav -->
+                    <nav class="twilio-cip-nav">
+                        <button type="button" class="twilio-cip-nav-item" t-on-click="openCallLog">
+                            <i class="fa fa-history"/>
+                            <span>Call Log</span>
+                        </button>
+                        <button type="button" class="twilio-cip-nav-item twilio-cip-nav-active">
+                            <i class="fa fa-phone"/>
+                            <span>Dialpad</span>
+                        </button>
+                        <button type="button" class="twilio-cip-nav-item" t-on-click="openSms">
+                            <i class="fa fa-comment"/>
+                            <span>SMS</span>
+                        </button>
+                        <button type="button" class="twilio-cip-nav-item" t-on-click="openSettings">
+                            <i class="fa fa-cog"/>
+                            <span>Settings</span>
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </t>
+    </t>
+</templates>

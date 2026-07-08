@@ -26,7 +26,7 @@ class TwilioDialController(http.Controller):
         )
     
     
-    @http.route('/twilio/get_call_logs', type='json', auth='user')
+    @http.route('/twilio/get_call_logs', type='jsonrpc', auth='user')
     def get_call_logs(self):
 
        logs = request.env['twilio.call.log'].sudo().search([], order="id desc", limit=20)

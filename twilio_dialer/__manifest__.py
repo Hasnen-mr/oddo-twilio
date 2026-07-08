@@ -1,23 +1,49 @@
 # License: LGPL-3
 {
-    "name": "Twilio Dialer - Calling, SMS and Call Logs",
+    "name": "Twilio Softphone for Odoo | Auto Dialer, API & Call Logs",
     "version": "1.0.1",
     "category": "Productivity/Communication",
-    "summary": "Make calls, send SMS, and view Twilio call logs from Odoo using your own Twilio account. Free.",
+    "summary": "Odoo Twilio API: Auto Dialer, click-to-call, SMS, contact sync & call logs. Pairs with Chrome softphone. Odoo 14–19.",
     "description": """
-Twilio Dialer for Odoo
-=========================
+Twilio Softphone for Odoo — Auto Dialer & Odoo API Integration
+================================================================
 
-Integrate Twilio with Odoo: store your Twilio credentials (Account SID and Auth Token),
-send SMS, view SMS history and call logs from Twilio, and initiate click-to-call from Odoo.
+Turn Odoo into a Twilio-powered calling hub. This module exposes the Odoo API endpoints
+your Chrome softphone needs to sync CRM contacts, log calls, and run outbound Auto Dialer
+campaigns — all through your own Twilio account.
 
-* Configuration: One configuration per company (Account SID, Auth Token, default From number).
-* SMS: Send SMS and fetch SMS history from Twilio on demand.
-* Call logs: Fetch and display call logs from Twilio with optional recording links.
-* Click-to-call: Initiate outbound calls via Twilio REST API (your phone rings, then the contact).
+Stop copying numbers between Odoo and your phone. Call and text contacts from Chrome,
+click any number on Odoo pages, and push every call back to CRM automatically.
 
-Uses only your Twilio credentials; no intermediary servers. Data is sent to Twilio as per their
-privacy policy. Requires a Twilio account (twilio.com).
+Key Features
+------------
+* **Auto Dialer** — Upload or paste call lists and auto-dial with Start, Stop, Skip, and End
+  controls. Built for outbound sales and follow-up workflows (Premium in Chrome extension).
+* **Odoo API / Twilio API Hub** — REST endpoints for Get Contacts, Post Call Log, Get All Call
+  Logs, and Contact Call Logs. Test each API before save with guided setup help.
+* **Click to Call** — Detect phone numbers on Odoo pages; one click dials via Twilio softphone.
+* **Odoo Contacts Sync** — Pull contacts from your Odoo API endpoint; search by name or phone.
+* **SMS** — Send SMS from the same panel without switching apps.
+* **Call History** — Twilio call logs and Odoo call logs in one place; redial, filter by date or number.
+* **Twilio Configuration** — Store Account SID, Auth Token, and default From number per company.
+
+Works With
+----------
+* Odoo 14, 15, 16, 17, 18, and 19 — Online, Odoo.sh, Enterprise, and Community
+* Chrome extension (Twilio Softphone for Odoo) for browser-based calling
+* Your own Twilio account — pay-as-you-go voice and SMS; no per-seat extension fee
+
+Setup in Four Steps
+-------------------
+1. Install this Odoo module and configure Twilio credentials.
+2. Install the Chrome extension and connect your Twilio account.
+3. Configure Odoo API Hub endpoints (contacts and call logs).
+4. Start calling — click any number in Odoo or use the Auto Dialer.
+
+Security & Privacy
+------------------
+Credentials are stored in Odoo (module) and locally in the browser (extension). Data is sent
+only to Twilio and your own Odoo endpoints — no intermediary servers.
 
 Install from addons path (copy twilio_dialer folder to addons); do not use Apps → Import (zip).
     """,

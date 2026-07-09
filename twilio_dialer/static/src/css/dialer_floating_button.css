@@ -67,3 +67,80 @@
     border: none;
     border-radius: 10px;
 }
+
+.twilio-softphone-floating {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 9999;
+}
+
+.twilio-open-dialer-btn {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: #25D366;
+    color: white !important;
+    border: none;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+    white-space: nowrap;
+    font-family: inherit;
+}
+
+.twilio-open-dialer-btn:hover {
+    background: #1da851;
+    color: white;
+}
+
+.twilio-open-dialer-btn .fa {
+    font-size: 18px;
+}
+
+.twilio-open-dialer-btn-inline {
+    display: inline-flex !important;
+}
+
+.twilio-chrome-store-btn {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    background: #4285f4;
+    color: #fff !important;
+    text-decoration: none !important;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px 18px;
+    border-radius: 999px;
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.35);
+    white-space: nowrap;
+}
+
+.twilio-chrome-store-btn:hover {
+    background: #3367d6;
+    color: #fff !important;
+}
+
+.twilio-chrome-store-btn .fa {
+    font-size: 18px;
+}
+
+.twilio-chrome-store-btn-inline {
+    display: inline-flex !important;
+}
+
+.twilio-hidden-tel {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}

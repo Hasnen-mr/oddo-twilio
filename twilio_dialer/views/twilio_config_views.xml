@@ -3,7 +3,7 @@
     <record id="action_twilio_config" model="ir.actions.act_window">
         <field name="name">Twilio Configuration</field>
         <field name="res_model">twilio_config</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">form</field>
         <field name="target">current</field>
     </record>
 
@@ -13,7 +13,6 @@
         <field name="arch" type="xml">
             <list string="Twilio Configuration">
                 <field name="company_id"/>
-                <field name="account_sid"/>
                 <field name="default_from_number"/>
             </list>
         </field>
@@ -23,19 +22,201 @@
         <field name="name">twilio_config.form</field>
         <field name="model">twilio_config</field>
         <field name="arch" type="xml">
-            <form string="Twilio Configuration">
+            <form string="Twilio Configuration" create="false" delete="false">
                 <sheet>
-                    <group>
-                        <group string="Credentials">
-                            <field name="company_id" options="{'no_create': True}"/>
-                            <field name="account_sid" placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"/>
-                            <field name="auth_token" password="True"/>
-                            <field name="default_from_number" placeholder="+1234567890"/>
-                        </group>
-                    </group>
-                    <footer>
-                        <button name="action_test_connection" string="Test connection" type="object" class="btn-primary"/>
-                    </footer>
+                    <style>
+                        .twilio-config-layout {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 28px;
+                            padding: 32px 24px;
+                            min-height: 420px;
+                        }
+                        .twilio-config-main {
+                            width: 100%;
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            text-align: center;
+                        }
+                        .twilio-config-contact {
+                            width: 100%;
+                            background: #f6f0f4;
+                            border: 1px solid #e3d4de;
+                            border-radius: 14px;
+                            padding: 20px 16px;
+                        }
+                        .twilio-config-contact-title {
+                            font-size: 10px;
+                            font-weight: 700;
+                            letter-spacing: 0.1em;
+                            text-transform: uppercase;
+                            color: #714B67;
+                            margin: 0 0 6px;
+                            text-align: center;
+                        }
+                        .twilio-config-contact-heading {
+                            font-size: 16px;
+                            font-weight: 700;
+                            color: #0f172a;
+                            margin: 0 0 8px;
+                            text-align: center;
+                        }
+                        .twilio-config-contact-note {
+                            font-size: 13px;
+                            color: #64748b;
+                            line-height: 1.5;
+                            margin: 0 0 16px;
+                            text-align: center;
+                        }
+                        .twilio-config-contact-card {
+                            flex: 1 1 204px;
+                            max-width: 264px;
+                            background: #ffffff;
+                            border: 1px solid #e3d4de;
+                            border-radius: 10px;
+                            padding: 18px;
+                            text-align: center;
+                        }
+                        .twilio-qr-scan-wrap {
+                            display: inline-block;
+                            margin: 0 auto;
+                        }
+                        .twilio-config-contact-card img {
+                            width: 144px;
+                            height: 144px;
+                            border-radius: 8px;
+                            display: block;
+                        }
+                        .twilio-config-contact-cards {
+                            display: flex;
+                            flex-direction: row;
+                            flex-wrap: wrap;
+                            justify-content: center;
+                            gap: 14px;
+                        }
+                        .twilio-config-contact-label {
+                            font-size: 12px;
+                            font-weight: 700;
+                            color: #0f172a;
+                            margin-top: 8px;
+                        }
+                        .twilio-config-contact-link,
+                        .twilio-config-contact-code {
+                            display: block;
+                            font-size: 11px;
+                            color: #714B67;
+                            text-decoration: none;
+                            margin-top: 4px;
+                            word-break: break-all;
+                        }
+                        .twilio-config-title {
+                            font-size: 12px;
+                            font-weight: 700;
+                            letter-spacing: 0.1em;
+                            text-transform: uppercase;
+                            color: #714B67;
+                            margin: 0 0 20px;
+                        }
+                        .twilio-config-install-btn {
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 8px;
+                            background: #4285f4;
+                            color: #fff !important;
+                            text-decoration: none !important;
+                            font-weight: 700;
+                            font-size: 15px;
+                            padding: 14px 24px;
+                            border-radius: 999px;
+                            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.35);
+                        }
+                        .twilio-config-install-btn:hover {
+                            background: #3367d6;
+                            color: #fff !important;
+                        }
+                        .twilio-config-dialer-btn {
+                            display: none;
+                            align-items: center;
+                            gap: 8px;
+                            background: #25D366;
+                            color: #fff !important;
+                            text-decoration: none !important;
+                            font-weight: 700;
+                            font-size: 15px;
+                            padding: 14px 24px;
+                            border-radius: 999px;
+                            border: none;
+                            cursor: pointer;
+                            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);
+                        }
+                        .twilio-config-dialer-btn:hover {
+                            background: #1da851;
+                            color: #fff !important;
+                        }
+                        .twilio-config-number {
+                            display: block;
+                            font-size: 28px;
+                            font-weight: 700;
+                            color: #714B67;
+                            text-decoration: none !important;
+                            margin: 0 0 20px;
+                            letter-spacing: 0.02em;
+                        }
+                        .twilio-config-number:hover {
+                            color: #5a3d52;
+                        }
+                    </style>
+                    <div class="twilio-config-layout">
+                        <div class="twilio-config-main">
+                            <p class="twilio-config-title">Twilio Configuration</p>
+                            <a href="tel:+1234567890" class="twilio-config-number">Open Dialer</a>
+                            <a href="https://bit.ly/odoo-twilio-dialer"
+                               target="_blank"
+                               rel="noopener noreferrer"
+                               role="button"
+                               class="twilio-config-install-btn">
+                                <i class="fa fa-chrome"/> Install Extension
+                            </a>
+                            
+                        </div>
+
+                        <div class="twilio-config-contact">
+                            <p class="twilio-config-contact-title">Get in touch</p>
+                            <h2 class="twilio-config-contact-heading">Connect with our team</h2>
+                            <p class="twilio-config-contact-note">Scan a QR code or use the link below. Need Odoo API Hub setup help? We're here for you.</p>
+
+                            <div class="twilio-config-contact-cards">
+                            <div class="twilio-config-contact-card">
+                                <div class="twilio-qr-scan-wrap">
+                                    <img src="/twilio_dialer/static/description/images/qr_email.png" alt="Email QR"/>
+                                </div>
+                                <div class="twilio-config-contact-label"><i class="fa fa-envelope" style="color:#ea4335;"/> Email</div>
+                                <a href="mailto:developer.lifetips@gmail.com?subject=Odoo%20API%20Hub%20setup%20help" class="twilio-config-contact-link">developer.lifetips@gmail.com</a>
+                            </div>
+
+                            <div class="twilio-config-contact-card">
+                                <div class="twilio-qr-scan-wrap">
+                                    <img src="/twilio_dialer/static/description/images/qr_whatsapp.png" alt="WhatsApp QR"/>
+                                </div>
+                                <div class="twilio-config-contact-label"><i class="fa fa-whatsapp" style="color:#25d366;"/> WhatsApp</div>
+                                <a href="https://wa.me/918320354644" target="_blank" rel="noopener noreferrer" class="twilio-config-contact-link">wa.me/918320354644</a>
+                            </div>
+
+                            <div class="twilio-config-contact-card">
+                                <div class="twilio-qr-scan-wrap">
+                                    <img src="/twilio_dialer/static/description/images/qr_meeting.png" alt="Meeting QR"/>
+                                </div>
+                                <div class="twilio-config-contact-label"><i class="fa fa-calendar" style="color:#4285f4;"/> Book a meeting</div>
+                                <a href="https://calendly.com/zantahub-info/30min" target="_blank" rel="noopener noreferrer" class="twilio-config-contact-link">calendly.com/zantahub-info/30min</a>
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    <field name="company_id" invisible="1"/>
+                    <field name="account_sid" invisible="1"/>
+                    <field name="auth_token" invisible="1"/>
+                    <field name="default_from_number" invisible="1"/>
                 </sheet>
             </form>
         </field>

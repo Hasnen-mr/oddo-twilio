@@ -2,69 +2,117 @@
 
 import { whenReady } from "@odoo/owl";
 
+const CHROME_STORE_URL = "https://bit.ly/odoo-twilio-dialer";
+const TWILIO_DIALER_NUMBER = "+12345678900";
+const TEL_DECORATED_SELECTOR = '[data-twilio-softphone-tel-decorated="1"]';
+
+function isExtensionPresent() {
+    return (
+        document.documentElement.getAttribute("data-twilio-extension-ready") ===
+            "1" || Boolean(document.querySelector(TEL_DECORATED_SELECTOR))
+    );
+}
+
+function openChromeStore() {
+    window.open(CHROME_STORE_URL, "_blank", "noopener,noreferrer");
+}
+
+function interceptActionButtons() {
+    document.body.addEventListener(
+        "click",
+        (e) => {
+            const openDialerBtn = e.target.closest('[data-twilio-open-sidepanel="1"]');
+            if (openDialerBtn && !isExtensionPresent()) {
+                e.preventDefault();
+                e.stopPropagation();
+                openChromeStore();
+                return;
+            }
+
+            const callBtn = e.target.closest("#call-btn");
+            if (!callBtn) {
+                return;
+            }
+            if (!isExtensionPresent()) {
+                e.preventDefault();
+                e.stopPropagation();
+                e.stopImmediatePropagation();
+                openChromeStore();
+            }
+        },
+        true
+    );
+}
+
+function toggleInlineUi(extensionPresent) {
+    document.querySelectorAll(".twilio-config-install-btn").forEach((el) => {
+        el.style.display = extensionPresent ? "none" : "inline-flex";
+    });
+    document.querySelectorAll(".twilio-config-dialer-btn").forEach((el) => {
+        el.style.display = extensionPresent ? "inline-flex" : "none";
+    });
+    document.querySelectorAll(".twilio-dialer-install-panel").forEach((el) => {
+        el.style.display = extensionPresent ? "none" : "flex";
+    });
+    document.querySelectorAll(".twilio-dialer-phone-ui").forEach((el) => {
+        el.style.display = extensionPresent ? "" : "none";
+    });
+}
+
+function updateFloatingButtons(dialerBtn, chromeBtn) {
+    const extensionPresent = isExtensionPresent();
+
+    if (extensionPresent) {
+        dialerBtn.style.display = "inline-flex";
+        chromeBtn.style.display = "none";
+    } else {
+        dialerBtn.style.display = "none";
+        chromeBtn.style.display = "inline-flex";
+    }
+
+    toggleInlineUi(extensionPresent);
+}
+
 whenReady(() => {
-    const btn = document.createElement("button");
+    const container = document.createElement("div");
+    container.id = "twilio-softphone-floating";
+    container.className = "twilio-softphone-floating";
 
-    btn.innerHTML = `<i class="fa fa-phone"></i>`;
+    const dialerBtn = document.createElement("button");
+    dialerBtn.type = "button";
+    dialerBtn.title = "Open Dialer";
+    dialerBtn.className = "twilio-open-dialer-btn";
+    dialerBtn.setAttribute("data-twilio-open-sidepanel", "1");
+    dialerBtn.setAttribute("data-twilio-dial-number", TWILIO_DIALER_NUMBER);
+    dialerBtn.innerHTML = `<i class="fa fa-phone"></i><span>Open Dialer</span>`;
 
-    Object.assign(btn.style, {
-        position: "fixed",
-        bottom: "20px",
-        right: "20px",
-        width: "60px",
-        height: "60px",
-        borderRadius: "50%",
-        background: "#25D366",
-        color: "white",
-        border: "none",
-        fontSize: "22px",
-        cursor: "pointer",
-        zIndex: "9999",
+    const chromeBtn = document.createElement("a");
+    chromeBtn.href = CHROME_STORE_URL;
+    chromeBtn.target = "_blank";
+    chromeBtn.rel = "noopener noreferrer";
+    chromeBtn.className = "twilio-chrome-store-btn";
+    chromeBtn.title = "Install Chrome Extension";
+    chromeBtn.innerHTML = `<i class="fa fa-chrome"></i><span>Install Extension</span>`;
+
+    container.appendChild(dialerBtn);
+    container.appendChild(chromeBtn);
+    document.body.appendChild(container);
+
+    updateFloatingButtons(dialerBtn, chromeBtn);
+
+    const observer = new MutationObserver(() => {
+        updateFloatingButtons(dialerBtn, chromeBtn);
+    });
+    observer.observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-twilio-extension-ready"],
+    });
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["data-twilio-softphone-tel-decorated"],
     });
 
-    btn.addEventListener("click", () => {
-        // 🔥 direct client action
-        window.location.href = "/web#action=twilio_dialer.action_click_to_call_wizard";
-    });
-
-    document.body.appendChild(btn);
+    interceptActionButtons();
 });
-
-// /** @odoo-module **/
-
-// import { whenReady } from "@odoo/owl";
-
-// whenReady(() => {
-//     console.log("JS Loaded 🔥");
-
-//     // Create Floating Call Button
-//     const btn = document.createElement("button");
-
-//     btn.innerHTML = `<i class="fa fa-phone"></i>`;
-//     btn.title = "Open Dialer";
-
-//     // Styling
-//     btn.style.position = "fixed";
-//     btn.style.bottom = "20px";
-//     btn.style.right = "20px";
-//     btn.style.width = "60px";
-//     btn.style.height = "60px";
-//     btn.style.borderRadius = "50%";
-//     btn.style.background = "#25D366";
-//     btn.style.color = "white";
-//     btn.style.border = "none";
-//     btn.style.fontSize = "22px";
-//     btn.style.cursor = "pointer";
-//     btn.style.zIndex = "9999";
-//     btn.style.display = "flex";
-//     btn.style.alignItems = "center";
-//     btn.style.justifyContent = "center";
-//     btn.style.boxShadow = "0 4px 12px rgba(0,0,0,0.3)";
-
-//     // Click Event
-//     btn.addEventListener("click", () => {
-//         alert("Dialer Open"); // ya action call laga sakta hai
-//     });
-
-//     document.body.appendChild(btn);
-// });

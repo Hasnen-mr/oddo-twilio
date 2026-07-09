@@ -17,6 +17,12 @@
         <!-- {'default_from_number': '+12296092786', 'default_caller_phone': ''} -->
     </record>
 
+    <record id="action_chrome_extension" model="ir.actions.act_url">
+        <field name="name">Install Chrome Extension</field>
+        <field name="url">https://bit.ly/odoo-twilio-dialer</field>
+        <field name="target">new</field>
+    </record>
+
     <record id="view_twilio_click_to_call_wizard_form" model="ir.ui.view">
         <field name="name">twilio.click.to.call.wizard.form</field>
         <field name="model">twilio.click.to.call.wizard</field>
@@ -100,6 +106,19 @@
                         font-size: 28px;
                         letter-spacing: 2px;
                         border: 1px solid #555;
+                    }
+                    .twilio-dialer-number {
+                        display: block;
+                        text-align: center;
+                        font-size: 24px;
+                        font-weight: 700;
+                        color: #00b0ff;
+                        text-decoration: none !important;
+                        margin: 10px 0 15px;
+                        letter-spacing: 0.05em;
+                    }
+                    .twilio-dialer-number:hover {
+                        color: #4fc3f7;
                     }
                     .dialpad {
                         display: grid;
@@ -243,7 +262,19 @@
 
         <!-- Dialer content -->
 
-   
+                    <a href="tel:+12345678900" class="twilio-dialer-number">+12345678900</a>
+
+                    <div class="twilio-dialer-install-panel" style="display:none;justify-content:center;align-items:center;margin:24px 0;">
+    <a href="https://bit.ly/odoo-twilio-dialer"
+       target="_blank"
+       rel="noopener noreferrer"
+       role="button"
+       class="twilio-chrome-store-btn twilio-chrome-store-btn-inline">
+        <i class="fa fa-chrome"></i><span>Install Extension</span>
+    </a>
+</div>
+
+<div class="twilio-dialer-phone-ui">
                     <!-- Calling From section -->
                     <div class="caller-info">
                         <span>Calling From:</span>
@@ -352,6 +383,7 @@ Calling in <span id="timer-count">3</span>...
 
     </div>
 
+</div>
 </div>
 
                     <!-- Bottom navigation tabs -->

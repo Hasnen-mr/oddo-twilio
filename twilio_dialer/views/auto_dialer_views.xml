@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_twilio_auto_dialer_list" model="ir.ui.view">
+        <field name="name">twilio.auto.dialer.list</field>
+        <field name="model">twilio.auto.dialer</field>
+        <field name="arch" type="xml">
+            <list string="Auto Calling Setup"
+                  decoration-success="state == 'done'"
+                  decoration-info="state == 'running'"
+                  decoration-warning="state == 'paused'"
+                  decoration-muted="state == 'draft'">
+                <field name="name"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="state" widget="badge"
+                          decoration-success="state in ('ready','done')"
+                          decoration-info="state == 'running'"
+                          decoration-warning="state == 'paused'"/>
+                <field name="total_numbers"/>
+                <field name="dialed_count"/>
+                <field name="remaining_count"/>
+                <field name="connected_count" optional="show"/>
+                <field name="skipped_count" optional="hide"/>
+                <field name="progress" widget="progressbar"/>
+                <field name="current_number" optional="show"/>
+                <field name="write_date" string="Updated"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_twilio_auto_dialer_form" model="ir.ui.view">
+        <field name="name">twilio.auto.dialer.form</field>
+        <field name="model">twilio.auto.dialer</field>
+        <field name="arch" type="xml">
+            <form string="Auto Calling Setup">
+                <header>
+                    <button name="action_mark_ready" type="object" string="Mark Ready"
+                            class="btn-secondary" invisible="state != 'draft'"/>
+                    <button name="action_start" type="object" string="Start"
+                            class="btn-primary" invisible="state not in ('ready','paused','done')"/>
+                    <button name="action_pause" type="object" string="Pause"
+                            class="btn-secondary" invisible="state != 'running'"/>
+                    <button name="action_next_number" type="object" string="Next"
+                            class="btn-secondary" invisible="state not in ('running','paused')"/>
+                    <button name="action_skip_number" type="object" string="Skip"
+                            class="btn-secondary" invisible="state not in ('running','paused')"/>
+                    <button name="action_open_dialer_hint" type="object" string="Call Current"
+                            class="btn-primary" invisible="state not in ('running','paused','ready')"/>
+                    <button name="action_reset" type="object" string="Reset"
+                            class="btn-link" confirm="Reset campaign progress?"/>
+                    <field name="state" widget="statusbar"
+                            statusbar_visible="draft,ready,running,paused,done"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" icon="fa-list" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="total_numbers"/></span>
+                                <span class="o_stat_text">Numbers</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-phone" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="dialed_count"/></span>
+                                <span class="o_stat_text">Dialed</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-hourglass-half" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="remaining_count"/></span>
+                                <span class="o_stat_text">Remaining</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" placeholder="e.g. Morning outbound list"/></h1>
+                    </div>
+
+                    <group>
+                        <group string="Campaign">
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="active" invisible="1"/>
+                            <field name="current_number" readonly="1"/>
+                            <field name="progress" widget="progressbar"/>
+                        </group>
+                        <group string="Dial settings">
+                            <field name="call_delay"/>
+                            <field name="max_ring_time"/>
+                            <field name="auto_skip_no_answer"/>
+                            <field name="connected_count"/>
+                            <field name="skipped_count"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Phone List" name="phone_list">
+                            <field name="phone_list"
+                                      placeholder="One number per line&#10;+15551234567&#10;+919876543210"/>
+                            <div class="text-muted mt-2">
+                                Tip: paste numbers from a spreadsheet. Use E.164 format when possible.
+                            </div>
+                        </page>
+                        <page string="Call Logs" name="call_logs">
+                            <field name="call_log_ids">
+                                <list>
+                                    <field name="start_time"/>
+                                    <field name="to_number"/>
+                                    <field name="status"/>
+                                    <field name="outcome"/>
+                                    <field name="duration_display"/>
+                                    <field name="user_id"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="notes" placeholder="Script notes, offer details, or campaign goals"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_twilio_auto_dialer_search" model="ir.ui.view">
+        <field name="name">twilio.auto.dialer.search</field>
+        <field name="model">twilio.auto.dialer</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="current_number"/>
+                <filter string="My Campaigns" name="my_campaigns" domain="[('user_id', '=', uid)]"/>
+                <filter string="Running" name="running" domain="[('state', '=', 'running')]"/>
+                <filter string="Ready" name="ready" domain="[('state', '=', 'ready')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Agent" name="group_user" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_twilio_auto_dialer" model="ir.actions.act_window">
+        <field name="name">Auto Dialer</field>
+        <field name="res_model">twilio.auto.dialer</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_twilio_auto_dialer_search"/>
+        <field name="context">{
+            'search_default_my_campaigns': 1,
+            'default_user_id': uid,
+        }</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first campaign
+            </p>
+            <p>
+                Click New, paste a phone list, Mark Ready, then Start. Dial from the Twilio Power Dialer.
+            </p>
+        </field>
+    </record>
+
+</odoo>

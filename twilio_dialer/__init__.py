@@ -1,4 +1,4 @@
-from . import models
+# -*- coding: utf-8 -*-
+
 from . import controllers
-from . import wizard
-from .post_install import post_init_hook
+from . import models

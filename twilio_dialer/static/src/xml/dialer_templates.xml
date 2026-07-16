@@ -2,8 +2,8 @@
 <templates xml:space="preserve">
 
     <t t-name="twilio_dialer.DialerSystray">
-        <button type="button" class="btn p-0 o_dialer_toggle_btn" title="Twilio Power Dialer" t-on-click="togglePanel">
-            <i class="fa fa-phone fa-lg" role="img" aria-label="Twilio Power Dialer"/>
+        <button type="button" class="btn p-0 o_dialer_toggle_btn" title="Twilio Call Auto Dialer" t-on-click="togglePanel">
+            <i class="fa fa-phone fa-lg" role="img" aria-label="Twilio Call Auto Dialer"/>
         </button>
         <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
             <DialerPopup onClose.bind="closePanel" phone="state.phone" requestId="state.requestId"/>
@@ -17,7 +17,7 @@
             <div class="o_dialer_header">
                 <div class="o_dialer_header_left">
                     <i class="fa fa-phone-o o_dialer_header_icon"/>
-                    <span class="o_dialer_title">Twilio Power Dialer</span>
+                    <span class="o_dialer_title">Twilio Call Auto Dialer</span>
                     <span class="o_dialer_status_badge" t-att-class="'o_dialer_status_badge--' + statusClass">
                         <span class="o_dialer_status_dot"/>
                         <t t-esc="statusLabel"/>
@@ -232,7 +232,7 @@
                             <i class="fa fa-life-ring o_dialer_tab_hero_icon"/>
                             <h3 class="o_dialer_tab_title">Help</h3>
                             <p class="o_dialer_tab_copy">
-                                Quick tips to get calling with Twilio Power Dialer.
+                                Quick tips to get calling with Twilio Call Auto Dialer.
                             </p>
                         </div>
                         <div class="o_dialer_help_list">
@@ -247,7 +247,7 @@
                                 <span class="o_dialer_help_step">1</span>
                                 <div>
                                     <strong>Configure Twilio</strong>
-                                    <p>Open Twilio Power Dialer → Configuration and enter Account SID + Auth Token.</p>
+                                    <p>Open Twilio Call Auto Dialer → Configuration and enter Account SID + Auth Token.</p>
                                 </div>
                             </div>
                             <div class="o_dialer_help_item">

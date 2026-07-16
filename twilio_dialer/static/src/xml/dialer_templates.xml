@@ -1,0 +1,319 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="twilio_dialer.DialerSystray">
+        <button type="button" class="btn p-0 o_dialer_toggle_btn" title="Twilio Power Dialer" t-on-click="togglePanel">
+            <i class="fa fa-phone fa-lg" role="img" aria-label="Twilio Power Dialer"/>
+        </button>
+        <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
+            <DialerPopup onClose.bind="closePanel" phone="state.phone" requestId="state.requestId"/>
+        </div>
+    </t>
+
+    <t t-name="twilio_dialer.DialerPopup">
+        <div class="o_dialer_popup" t-on-click="closeAllDropdowns">
+
+            <!-- Header -->
+            <div class="o_dialer_header">
+                <div class="o_dialer_header_left">
+                    <i class="fa fa-phone-o o_dialer_header_icon"/>
+                    <span class="o_dialer_title">Twilio Power Dialer</span>
+                    <span class="o_dialer_status_badge" t-att-class="'o_dialer_status_badge--' + statusClass">
+                        <span class="o_dialer_status_dot"/>
+                        <t t-esc="statusLabel"/>
+                    </span>
+                </div>
+                <button
+                    type="button"
+                    class="o_dialer_close_btn"
+                    t-on-click="closePopup"
+                    title="Close">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+
+            <div class="o_dialer_body">
+
+                <!-- Dialpad tab -->
+                <t t-if="state.activeTab === 'dialpad'">
+                    <div class="o_dialer_section">
+                        <label class="o_dialer_label">Calling From</label>
+                        <div class="o_dialer_caller_row">
+                            <div class="o_dialer_caller_dropdown_container">
+                                <button
+                                    type="button"
+                                    class="o_dialer_caller_dropdown_btn"
+                                    t-on-click.stop="toggleCallerDropdown">
+                                    <span class="o_dialer_caller_number" t-esc="formattedCallerDisplay"/>
+                                    <i class="fa fa-chevron-down o_dialer_dropdown_arrow"/>
+                                </button>
+                                <div class="o_dialer_caller_list" t-if="state.showCallerDropdown">
+                                    <t t-foreach="state.callerNumbers" t-as="caller" t-key="caller.number">
+                                        <button
+                                            type="button"
+                                            class="o_dialer_caller_option"
+                                            t-att-class="{ 'o_dialer_caller_option--active': state.selectedCaller and state.selectedCaller.number === caller.number }"
+                                            t-on-click.stop="() => this.selectCaller(caller)">
+                                            <span class="o_dialer_caller_option_name" t-if="caller.friendlyName" t-esc="caller.friendlyName"/>
+                                            <span class="o_dialer_caller_option_number" t-esc="caller.number"/>
+                                        </button>
+                                    </t>
+                                </div>
+                            </div>
+                            <button type="button" class="o_dialer_icon_btn" title="Refresh numbers" t-on-click.stop="_loadConfiguredPhoneNumber">
+                                <i class="fa fa-refresh"/>
+                            </button>
+                            <button type="button" class="o_dialer_icon_btn o_dialer_icon_btn--disabled" disabled="true" title="Add number">
+                                <i class="fa fa-plus"/>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="o_dialer_section">
+                        <div class="o_dialer_phone_entry">
+                            <div class="o_dialer_country_container">
+                                <button
+                                    type="button"
+                                    class="o_dialer_country_btn"
+                                    t-on-click.stop="toggleCountryDropdown">
+                                    <span class="o_dialer_country_flag" t-esc="state.selectedCountry.flag"/>
+                                    <span class="o_dialer_country_code" t-esc="state.selectedCountry.code"/>
+                                    <i class="fa fa-caret-down"/>
+                                </button>
+                                <div class="o_dialer_country_list" t-if="state.showCountryDropdown">
+                                    <div class="o_dialer_country_search">
+                                        <input
+                                            type="text"
+                                            placeholder="Search countries..."
+                                            class="o_dialer_country_search_input"
+                                            t-on-input="onCountrySearch"/>
+                                    </div>
+                                    <div class="o_dialer_country_options">
+                                        <t t-foreach="filteredCountries" t-as="country" t-key="country.label">
+                                            <button
+                                                type="button"
+                                                class="o_dialer_country_option"
+                                                t-att-class="{ 'o_dialer_country_option--active': state.selectedCountry.label === country.label }"
+                                                t-on-click.stop="() => this.selectCountry(country)">
+                                                <span class="o_dialer_country_option_flag" t-esc="country.flag"/>
+                                                <span class="o_dialer_country_option_name" t-esc="country.name"/>
+                                                <span class="o_dialer_country_option_code" t-esc="country.code"/>
+                                            </button>
+                                        </t>
+                                        <div class="o_dialer_country_no_results" t-if="filteredCountries.length === 0">
+                                            No countries found
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <input
+                                type="tel"
+                                t-att-value="state.phoneNumber"
+                                t-on-input="onInput"
+                                class="o_dialer_phone_input"
+                                placeholder="Enter phone number"/>
+                        </div>
+                    </div>
+
+                    <div class="o_dialer_keypad">
+                        <t t-foreach="['1','2','3','4','5','6','7','8','9','*','0','#']"
+                           t-as="digit"
+                           t-key="digit">
+                            <button
+                                type="button"
+                                class="o_dialer_key"
+                                t-on-click="() => this.appendDigit(digit)">
+                                <t t-esc="digit"/>
+                            </button>
+                        </t>
+                    </div>
+
+                    <div class="o_dialer_keypad_controls">
+                        <button
+                            type="button"
+                            class="o_dialer_control_btn"
+                            t-on-click="backspace"
+                            title="Backspace">
+                            <i class="fa fa-long-arrow-left"/>
+                        </button>
+                        <button
+                            type="button"
+                            class="o_dialer_control_btn"
+                            t-on-click="clearNumber"
+                            title="Clear">
+                            <i class="fa fa-times"/>
+                        </button>
+                    </div>
+
+                    <div class="o_dialer_actions">
+                        <button
+                            type="button"
+                            class="o_dialer_action_btn o_dialer_action_btn--call"
+                            t-att-disabled="!canCall"
+                            t-on-click="onCall">
+                            <i class="fa fa-phone"/>
+                            <span>Call</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="o_dialer_action_btn o_dialer_action_btn--hangup"
+                            t-att-disabled="!isCallActive"
+                            t-on-click="onHangUp">
+                            <i class="fa fa-phone-slash"/>
+                            <span>Hang Up</span>
+                        </button>
+                        <button
+                            type="button"
+                            class="o_dialer_action_btn o_dialer_action_btn--redial"
+                            t-att-disabled="!canRedial"
+                            t-on-click="onRedial">
+                            <i class="fa fa-redo"/>
+                            <span>Redial</span>
+                        </button>
+                    </div>
+                </t>
+
+                <!-- Auto Dialer tab (opens Auto Calling Setup menu) -->
+                <t t-elif="state.activeTab === 'auto_dialer'">
+                    <div class="o_dialer_tab_panel">
+                        <div class="o_dialer_tab_hero">
+                            <i class="fa fa-bolt o_dialer_tab_hero_icon"/>
+                            <h3 class="o_dialer_tab_title">Auto Dialer</h3>
+                            <p class="o_dialer_tab_copy">
+                                Manage your campaigns in Auto Dialer.
+                            </p>
+                        </div>
+                        <div class="o_dialer_empty_card">
+                            <i class="fa fa-external-link"/>
+                            <span>Opening Auto Dialer…</span>
+                            <p>Create a campaign, paste numbers, then Start / Next / Skip.</p>
+                        </div>
+                        <div class="o_dialer_tab_actions">
+                            <button type="button"
+                                    class="o_dialer_action_btn o_dialer_action_btn--call"
+                                    t-on-click.stop="openAutoCallingSetup">
+                                <i class="fa fa-list-ol"/>
+                                <span>Open Auto Dialer</span>
+                            </button>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- Contacts tab (opens Contacts menu) -->
+                <t t-elif="state.activeTab === 'contacts'">
+                    <div class="o_dialer_tab_panel">
+                        <div class="o_dialer_tab_hero">
+                            <i class="fa fa-address-book o_dialer_tab_hero_icon"/>
+                            <h3 class="o_dialer_tab_title">Contacts</h3>
+                            <p class="o_dialer_tab_copy">
+                                Open the Contacts list to call anyone with a phone number.
+                            </p>
+                        </div>
+                        <div class="o_dialer_empty_card">
+                            <i class="fa fa-external-link"/>
+                            <span>Opening Contacts…</span>
+                            <p>Click Call on any contact to dial with Power Dialer.</p>
+                        </div>
+                        <div class="o_dialer_tab_actions">
+                            <button type="button"
+                                    class="o_dialer_action_btn o_dialer_action_btn--call"
+                                    t-on-click.stop="openContacts">
+                                <i class="fa fa-address-book"/>
+                                <span>Open Contacts</span>
+                            </button>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- Help tab -->
+                <t t-elif="state.activeTab === 'help'">
+                    <div class="o_dialer_tab_panel o_dialer_help">
+                        <div class="o_dialer_tab_hero">
+                            <i class="fa fa-life-ring o_dialer_tab_hero_icon"/>
+                            <h3 class="o_dialer_tab_title">Help</h3>
+                            <p class="o_dialer_tab_copy">
+                                Quick tips to get calling with Twilio Power Dialer.
+                            </p>
+                        </div>
+                        <div class="o_dialer_help_list">
+                            <div class="o_dialer_help_item">
+                                <span class="o_dialer_help_step">$</span>
+                                <div>
+                                    <strong>$10 one-time setup</strong>
+                                    <p>Module setup is $10 once — no per-seat fee. Voice minutes are billed by Twilio on your account.</p>
+                                </div>
+                            </div>
+                            <div class="o_dialer_help_item">
+                                <span class="o_dialer_help_step">1</span>
+                                <div>
+                                    <strong>Configure Twilio</strong>
+                                    <p>Open Twilio Power Dialer → Configuration and enter Account SID + Auth Token.</p>
+                                </div>
+                            </div>
+                            <div class="o_dialer_help_item">
+                                <span class="o_dialer_help_step">2</span>
+                                <div>
+                                    <strong>Generate credentials</strong>
+                                    <p>Click Generate Configuration, then pick your Twilio phone number.</p>
+                                </div>
+                            </div>
+                            <div class="o_dialer_help_item">
+                                <span class="o_dialer_help_step">3</span>
+                                <div>
+                                    <strong>Allow microphone</strong>
+                                    <p>When prompted by the browser, allow mic access for outbound calls.</p>
+                                </div>
+                            </div>
+                            <div class="o_dialer_help_item">
+                                <span class="o_dialer_help_step">4</span>
+                                <div>
+                                    <strong>Dial from Dialpad</strong>
+                                    <p>Select country code, enter a number, then press Call.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </t>
+
+            </div>
+
+            <!-- Footer menu -->
+            <nav class="o_dialer_footer_menu" aria-label="Dialer sections">
+                <button
+                    type="button"
+                    class="o_dialer_footer_item"
+                    t-att-class="{ 'o_dialer_footer_item--active': state.activeTab === 'dialpad' }"
+                    t-on-click.stop="() => this.setActiveTab('dialpad')">
+                    <i class="fa fa-th"/>
+                    <span>Dialpad</span>
+                </button>
+                <button
+                    type="button"
+                    class="o_dialer_footer_item"
+                    t-att-class="{ 'o_dialer_footer_item--active': state.activeTab === 'auto_dialer' }"
+                    t-on-click.stop="() => this.setActiveTab('auto_dialer')">
+                    <i class="fa fa-bolt"/>
+                    <span>Auto dialer</span>
+                </button>
+                <button
+                    type="button"
+                    class="o_dialer_footer_item"
+                    t-att-class="{ 'o_dialer_footer_item--active': state.activeTab === 'contacts' }"
+                    t-on-click.stop="() => this.setActiveTab('contacts')">
+                    <i class="fa fa-address-book"/>
+                    <span>Contacts</span>
+                </button>
+                <button
+                    type="button"
+                    class="o_dialer_footer_item"
+                    t-att-class="{ 'o_dialer_footer_item--active': state.activeTab === 'help' }"
+                    t-on-click.stop="() => this.setActiveTab('help')">
+                    <i class="fa fa-question-circle"/>
+                    <span>Help</span>
+                </button>
+            </nav>
+
+        </div>
+    </t>
+
+</templates>

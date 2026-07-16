@@ -1,0 +1,32 @@
+/** @odoo-module **/
+
+import { Component, useState } from "@odoo/owl";
+import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+import { DialerPopup } from "./dialer_popup";
+
+export class DialerSystray extends Component {
+    static components = { DialerPopup };
+    static template = "twilio_dialer.DialerSystray";
+
+    setup() {
+        this.dialer = useService("twilio_dialer");
+        this.state = useState(this.dialer.state);
+    }
+
+    togglePanel() {
+        this.dialer.toggle();
+    }
+
+    closePanel() {
+        this.dialer.close();
+    }
+}
+
+registry
+    .category("systray")
+    .add(
+        "twilio_dialer.dialer_systray",
+        { Component: DialerSystray },
+        { sequence: 30 }
+    );

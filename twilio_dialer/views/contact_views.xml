@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_twilio_contact_list" model="ir.ui.view">
+        <field name="name">res.partner.twilio.dialer.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Contacts" create="1" edit="1">
+                <field name="complete_name" string="Name"/>
+                <field name="phone" optional="show"/>
+                <field name="mobile" optional="show"/>
+                <field name="email" optional="show"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="user_id" optional="hide" widget="many2one_avatar_user"/>
+                <button name="action_twilio_call"
+                        type="object"
+                        string="Call"
+                        icon="fa-phone"
+                        class="btn-primary"
+                        title="Call with Twilio Power Dialer"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_twilio_contact_form" model="ir.ui.view">
+        <field name="name">res.partner.twilio.dialer.form</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <form string="Contact">
+                <header>
+                    <button name="action_twilio_call"
+                            type="object"
+                            string="Call"
+                            class="btn-primary"
+                            icon="fa-phone"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Contact name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Phone">
+                            <field name="phone" widget="phone"/>
+                            <field name="mobile" widget="phone"/>
+                            <field name="email" widget="email"/>
+                        </group>
+                        <group string="Details">
+                            <field name="parent_id"/>
+                            <field name="function"/>
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <group string="Address">
+                        <field name="street"/>
+                        <field name="street2"/>
+                        <field name="city"/>
+                        <field name="state_id"/>
+                        <field name="zip"/>
+                        <field name="country_id"/>
+                    </group>
+                    <field name="comment" placeholder="Internal notes…"/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_twilio_contact_search" model="ir.ui.view">
+        <field name="name">res.partner.twilio.dialer.search</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <search string="Contacts">
+                <field name="name"/>
+                <field name="phone"/>
+                <field name="mobile"/>
+                <field name="email"/>
+                <filter string="Has Phone" name="has_phone"
+                        domain="['|', ('phone', '!=', False), ('mobile', '!=', False)]"/>
+                <filter string="Has Mobile" name="has_mobile" domain="[('mobile', '!=', False)]"/>
+                <separator/>
+                <filter string="Companies" name="companies" domain="[('is_company', '=', True)]"/>
+                <filter string="Individuals" name="individuals" domain="[('is_company', '=', False)]"/>
+                <group expand="0" string="Group By">
+                    <filter string="Salesperson" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Country" name="group_country" context="{'group_by': 'country_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_twilio_contacts" model="ir.actions.act_window">
+        <field name="name">Contacts</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">['|', ('phone', '!=', False), ('mobile', '!=', False)]</field>
+        <field name="context">{
+            'search_default_has_phone': 1,
+            'default_type': 'contact',
+        }</field>
+        <field name="search_view_id" ref="view_twilio_contact_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No contacts with a phone number yet
+            </p>
+            <p>
+                Create a contact with Phone or Mobile, then click Call to open the Power Dialer.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_twilio_contacts_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_twilio_contact_list"/>
+        <field name="act_window_id" ref="action_twilio_contacts"/>
+    </record>
+
+    <record id="action_twilio_contacts_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_twilio_contact_form"/>
+        <field name="act_window_id" ref="action_twilio_contacts"/>
+    </record>
+
+</odoo>

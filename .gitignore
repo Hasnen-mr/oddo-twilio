@@ -13,7 +13,8 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+**/.DS_Store
 Thumbs.db
 
 # Local Odoo dev (Colima/Docker binaries)
-local-dev/bin/
+local-dev/

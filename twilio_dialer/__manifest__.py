@@ -1,35 +1,62 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Twilio Power Dialer",
+    'name': "Twilio Calling System for Odoo | Auto Dialer | Call Logs | AI Transcription",
 
-    'summary': "Trusted Odoo softphone — Contacts, Auto Dialer, AI summary. $10 setup, clear billing.",
+    'summary': "Twilio calling system for Odoo — Auto Dialer, contact activity, local call logs & AI transcription.",
 
     'description': """
-Twilio Power Dialer for Odoo
-============================
+Twilio Call Auto Dialer for Odoo
+================================
 
-Call from Odoo Contacts with a built-in softphone, Auto Dialer, call logs, and optional AI summaries.
+Complete Twilio calling system inside Odoo: browser softphone, Auto Dialer campaigns,
+contact activity, local call log records, and optional AI call transcription & summaries.
+
+Twilio calling system
+---------------------
+* Make and receive calls from Odoo with Twilio Voice
+* In-app dialpad with country codes and caller ID
+* Secure credentials stored in your Odoo configuration
+* Uses your own Twilio account (pay-as-you-go minutes)
+
+Auto Dialer
+-----------
+* Create outbound campaigns with phone lists
+* Start, pause, next, and skip through numbers
+* Track dialed, remaining, and connected counts
+* Built for sales outreach and follow-up calling
+
+Contact activity
+----------------
+* Call directly from Odoo Contacts
+* Link calls to partners and keep CRM history together
+* Schedule follow-ups and activities on call records
+* Easy click-to-call workflow for your team
+
+Call log local records
+----------------------
+* Store call logs locally in Odoo (status, duration, numbers)
+* Search, filter, and report on inbound and outbound calls
+* Keep records in your database — not only in Twilio
+* Connect logs to contacts for a full communication trail
+
+Transcription & AI summary
+--------------------------
+* Optional AI transcription of call recordings
+* Generate short CRM-friendly call summaries
+* Configure your preferred AI provider in settings
+* Post insights back to the contact when needed
 
 Pricing (clear & transparent)
 -----------------------------
 * **$10 one-time setup** — no per-seat softphone fee
-* **Twilio usage** — pay-as-you-go on your own Twilio account (external service required)
-
-Features
---------
-* In-Odoo dialpad with country codes
-* Direct call from Odoo Contacts
-* Auto Dialer campaigns
-* Call logs linked to partners
-* AI recording transcript & call summary (optional)
-* Data stays in your Odoo + Twilio accounts — easy to use
+* **Twilio usage** — billed on your Twilio account (external service required)
 
 Requirements
 ------------
 * Odoo 18
 * Twilio account with a phone number and balance
 * Public HTTPS URL for TwiML voice callbacks (production)
-* Optional: AI provider API key for transcript/summary
+* Optional: AI provider API key for transcription and summary
     """,
 
     'author': "Solutions Master",
@@ -37,7 +64,7 @@ Requirements
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.1.3',
+    'version': '18.0.1.1.4',
     'license': 'LGPL-3',
     'price': 10.0,
     'currency': 'USD',

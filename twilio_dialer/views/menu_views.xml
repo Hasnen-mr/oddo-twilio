@@ -10,7 +10,7 @@
     </record>
 
     <menuitem id="menu_twilio_dialer_root"
-              name="Twilio Power Dialer"
+              name="Twilio Call Auto Dialer"
               groups="base.group_user"
               sequence="35"
               web_icon="twilio_dialer,static/description/icon.png"/>

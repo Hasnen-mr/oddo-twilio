@@ -9,7 +9,7 @@
 
             <xpath expr="//form" position="inside">
 
-                <app string="Twilio Power Dialer" name="twilio_dialer">
+                <app string="Twilio Call Auto Dialer" name="twilio_dialer">
 
                     <!-- Connection overview -->
                     <block title="Connection" name="twilio_connection_overview">

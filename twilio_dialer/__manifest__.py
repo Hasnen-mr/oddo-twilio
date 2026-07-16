@@ -64,7 +64,7 @@ Requirements
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.1.5',
+    'version': '18.0.1.1.6',
     'license': 'LGPL-3',
     'price': 10.0,
     'currency': 'USD',
@@ -87,10 +87,6 @@ Requirements
 
     'images': [
         'static/description/cover.png',
-        'static/description/screenshot_menu.png',
-        'static/description/screenshot_fast_calling.png',
-        'static/description/screenshot_contacts.png',
-        'static/description/screenshot_ai.png',
         'static/description/main_screenshot.png',
     ],
 

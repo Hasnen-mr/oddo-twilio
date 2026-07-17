@@ -47,6 +47,273 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 }
 
+// ── Contact Us page ─────────────────────────────────────
+
+.o_twilio_contact_hero {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    max-width: 980px;
+    padding: 24px;
+    border-radius: 18px;
+    color: #fff;
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 70%, #0369a1 140%);
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+
+    h1 {
+        margin: 0 0 6px;
+        color: #fff;
+        font-size: 25px;
+        font-weight: 750;
+    }
+
+    p {
+        max-width: 680px;
+        margin: 0;
+        color: #dbeafe;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+}
+
+.o_twilio_contact_hero_icon {
+    display: flex;
+    flex: 0 0 54px;
+    align-items: center;
+    justify-content: center;
+    width: 54px;
+    height: 54px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 23px;
+}
+
+.o_twilio_contact_grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    max-width: 980px;
+    margin-top: 20px;
+}
+
+.o_twilio_contact_card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 20px 18px;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06);
+    transition: transform 160ms ease, box-shadow 160ms ease;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.1);
+    }
+}
+
+.o_twilio_contact_icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 12px;
+    border-radius: 11px;
+    background: #eff6ff;
+    color: #0369a1;
+    font-size: 17px;
+}
+
+.o_twilio_contact_label {
+    margin-bottom: 4px;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.o_twilio_contact_value {
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 650;
+    text-decoration: none;
+    word-break: break-word;
+
+    &:hover {
+        color: #0369a1;
+        text-decoration: underline;
+    }
+}
+
+.o_twilio_contact_description {
+    flex: 1;
+    margin: 10px 0 16px;
+    color: #64748b;
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.o_twilio_contact_action {
+    align-self: flex-start;
+    border-radius: 9px;
+    font-weight: 600;
+}
+
+.o_twilio_contact_footer_note {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 980px;
+    margin-top: 18px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
+
+    i {
+        color: #0369a1;
+    }
+}
+
+@media (max-width: 992px) {
+    .o_twilio_contact_grid {
+        grid-template-columns: 1fr;
+    }
+
+    .o_twilio_contact_hero {
+        align-items: flex-start;
+    }
+}
+
+// ── Twilio analytics dashboard ───────────────────────────
+
+.o_form_view .o_twilio_dashboard_kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(130px, 1fr));
+    gap: 14px;
+    margin-top: 22px;
+}
+
+.o_twilio_dashboard_kpi,
+.o_twilio_dashboard_card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+.o_twilio_dashboard_kpi {
+    min-height: 112px;
+    padding: 17px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.o_twilio_dashboard_kpi_label {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.o_twilio_dashboard_kpi_value,
+.o_twilio_dashboard_kpi_value .o_field_widget {
+    color: #875a7b;
+    font-size: 27px !important;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-top: 5px;
+}
+
+.o_twilio_dashboard_kpi_hint {
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.o_form_view .o_twilio_dashboard_grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.o_twilio_dashboard_card {
+    min-width: 0;
+    padding: 18px;
+}
+
+.o_twilio_dashboard_card_header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 13px;
+    margin-bottom: 13px;
+    border-bottom: 1px solid #f1f5f9;
+
+    h3 {
+        color: #0f172a;
+        font-size: 16px;
+        font-weight: 750;
+        margin: 0 0 2px;
+    }
+
+    p {
+        color: #94a3b8;
+        font-size: 12px;
+        margin: 0;
+    }
+}
+
+.o_twilio_dashboard_stats {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+
+    > div {
+        background: #f8fafc;
+        border-radius: 10px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    span {
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .o_field_widget {
+        color: #0f172a;
+        font-size: 17px;
+        font-weight: 750;
+    }
+}
+
+.o_twilio_dashboard_progress {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+@media (max-width: 992px) {
+    .o_form_view .o_twilio_dashboard_kpis {
+        grid-template-columns: repeat(2, minmax(130px, 1fr));
+    }
+
+    .o_form_view .o_twilio_dashboard_grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 .o_dialer_toggle_btn {
     cursor: pointer;
 }
@@ -601,6 +868,21 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     padding: 6px 18px 12px;
 }
 
+@keyframes o-dialer-call-bounce {
+    0%, 72%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    80% {
+        transform: translateY(-3px) scale(1.025);
+    }
+    88% {
+        transform: translateY(0) scale(1);
+    }
+    94% {
+        transform: translateY(-1px) scale(1.01);
+    }
+}
+
 .o_dialer_action_btn {
     flex: 1;
     display: flex;
@@ -622,16 +904,28 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 
     &--call {
+        flex: 1.35;
         background-color: $o_dialer-success;
         color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        box-shadow: 0 4px 12px rgba($o_dialer-success, 0.32);
+        animation: o-dialer-call-bounce 2.4s ease-in-out infinite;
+
+        i {
+            font-size: 15px;
+        }
 
         &:hover:not(:disabled) {
             background-color: darken($o_dialer-success, 6%);
-            box-shadow: 0 2px 8px rgba($o_dialer-success, 0.3);
+            box-shadow: 0 6px 16px rgba($o_dialer-success, 0.42);
+            animation-play-state: paused;
+            transform: translateY(-1px);
         }
 
         &:active:not(:disabled) {
             background-color: darken($o_dialer-success, 10%);
+            animation: none;
             transform: scale(0.97);
         }
 
@@ -639,6 +933,8 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
             background-color: lighten($o_dialer-success, 20%);
             color: rgba(255, 255, 255, 0.7);
             cursor: not-allowed;
+            box-shadow: none;
+            animation: none;
         }
     }
 
@@ -681,6 +977,12 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
             opacity: 0.5;
             cursor: not-allowed;
         }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .o_dialer_action_btn--call {
+        animation: none;
     }
 }
 
@@ -1139,6 +1441,30 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         line-height: 1.4;
     }
 
+    .o_twilio_cfg_smart_note {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 10px 12px;
+        margin-bottom: 16px;
+        border-radius: 10px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1e3a5f;
+        font-size: 12px;
+        line-height: 1.45;
+
+        i {
+            color: #0369a1;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        strong {
+            font-weight: 700;
+        }
+    }
+
     .o_twilio_cfg_field {
         margin-bottom: 12px;
     }
@@ -1180,6 +1506,58 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         padding: 8px 12px !important;
         background: #f8fafc !important;
         font-size: 13px !important;
+    }
+
+    /* Read-only generated connection values (Odoo renders spans, not inputs) */
+    .o_twilio_cfg_readonly_box {
+        display: block;
+        width: 100%;
+        min-height: 40px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        padding: 10px 12px;
+        background: #f1f5f9;
+        color: #334155;
+        font-size: 12.5px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        line-height: 1.4;
+        word-break: break-all;
+
+        .o_field_widget,
+        span,
+        input {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+            color: inherit !important;
+            font: inherit !important;
+            word-break: break-all;
+        }
+    }
+
+    .o_twilio_cfg_readonly,
+    .o_twilio_cfg_readonly .o_field_widget,
+    .o_twilio_cfg_input.o_readonly_modifier,
+    .o_twilio_cfg_input .o_readonly_modifier,
+    .o_twilio_cfg_input span {
+        display: block;
+        width: 100%;
+        min-height: 40px;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        padding: 10px 12px;
+        background: #f1f5f9 !important;
+        color: #334155 !important;
+        font-size: 12.5px !important;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        line-height: 1.4;
+        word-break: break-all;
+        pointer-events: none;
+        cursor: default;
     }
 
     .o_twilio_cfg_input input[type="text"],
@@ -1241,6 +1619,89 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         text-decoration: none !important;
     }
 
+    .o_twilio_terms_block {
+        max-width: 860px;
+        padding: 8px 4px 20px;
+        line-height: 1.55;
+        color: #334155;
+        font-size: 14px;
+    }
+
+    .o_twilio_terms_block h3 {
+        margin-top: 18px;
+        margin-bottom: 8px;
+        font-size: 15px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .o_twilio_terms_block h3:first-child {
+        margin-top: 0;
+    }
+
+    .o_twilio_terms_block p {
+        margin-bottom: 10px;
+    }
+
+    .o_twilio_contact_grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+        margin-top: 18px;
+        max-width: 920px;
+    }
+
+    .o_twilio_contact_card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 18px 16px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+        min-width: 0;
+    }
+
+    .o_twilio_contact_icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #eff6ff;
+        color: #0369a1;
+        margin-bottom: 10px;
+        font-size: 16px;
+    }
+
+    .o_twilio_contact_label {
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    .o_twilio_contact_value {
+        display: inline-block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+        word-break: break-word;
+        text-decoration: none;
+
+        &:hover {
+            color: #0369a1;
+            text-decoration: underline;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .o_twilio_contact_grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
     .o_twilio_cfg_input input:focus,
     .o_twilio_cfg_input .o_input:focus,
     .o_twilio_cfg_input .o_select_menu_toggler:focus {
@@ -1276,6 +1737,52 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         &:last-of-type {
             border-bottom: none;
             margin-bottom: 8px;
+        }
+
+        .o_twilio_cfg_switch_text {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .o_twilio_cfg_switch,
+        .o_field_boolean,
+        .o_boolean_toggle,
+        .o_field_widget {
+            flex: 0 0 auto;
+            width: auto !important;
+            min-width: 42px;
+            margin: 0 !important;
+        }
+
+        .form-check,
+        .o-checkbox,
+        .form-switch {
+            display: flex !important;
+            align-items: center;
+            justify-content: flex-end;
+            margin: 0 !important;
+            min-height: 24px;
+            padding-left: 0 !important;
+        }
+
+        input[type="checkbox"],
+        .form-check-input {
+            position: static !important;
+            float: none !important;
+            margin: 0 !important;
+            width: 2.5em !important;
+            height: 1.35em !important;
+            min-width: 2.5em !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .form-check-label,
+        .o-checkbox > label:empty,
+        .form-check-label:empty {
+            display: none;
         }
     }
 

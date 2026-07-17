@@ -12,6 +12,7 @@ export class DialerPopup extends Component {
     static props = {
         onClose: { type: Function, optional: false },
         phone: { type: String, optional: true },
+        fromNumber: { type: String, optional: true },
         requestId: { type: Number, optional: true },
     };
 
@@ -40,6 +41,7 @@ export class DialerPopup extends Component {
 
         onWillStart(async () => {
             await this._loadConfiguredPhoneNumber();
+            this._applyFromNumber(this.props.fromNumber);
             await this._loadContacts();
             await deviceManager.initialize(
                 this._onDeviceStatusChange.bind(this)
@@ -49,6 +51,7 @@ export class DialerPopup extends Component {
         onWillUpdateProps((nextProps) => {
             if (nextProps.requestId !== this.props.requestId) {
                 this._applyIncomingPhone(nextProps.phone);
+                this._applyFromNumber(nextProps.fromNumber);
                 this.state.activeTab = "dialpad";
             }
         });
@@ -95,6 +98,25 @@ export class DialerPopup extends Component {
         }
     }
 
+    _applyFromNumber(fromNumber) {
+        if (!fromNumber) {
+            return;
+        }
+        const existing = this.state.callerNumbers.find(
+            (caller) => caller.number === fromNumber
+        );
+        if (existing) {
+            this.state.selectedCaller = existing;
+            return;
+        }
+        const caller = {
+            number: fromNumber,
+            friendlyName: "Campaign Number",
+        };
+        this.state.callerNumbers = [...this.state.callerNumbers, caller];
+        this.state.selectedCaller = caller;
+    }
+
     async _loadContacts() {
         try {
             const partners = await this.orm.searchRead(
@@ -132,7 +154,7 @@ export class DialerPopup extends Component {
     }
 
     openAutoCallingSetup() {
-        this.action.doAction("twilio_dialer.action_twilio_auto_dialer");
+        this.action.doAction("twilio_dialer.action_twilio_auto_dialer_menu");
         if (this.props.onClose) {
             this.props.onClose();
         }

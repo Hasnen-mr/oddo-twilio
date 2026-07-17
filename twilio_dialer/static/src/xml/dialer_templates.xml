@@ -6,7 +6,10 @@
             <i class="fa fa-phone fa-lg" role="img" aria-label="Twilio Call Auto Dialer"/>
         </button>
         <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
-            <DialerPopup onClose.bind="closePanel" phone="state.phone" requestId="state.requestId"/>
+            <DialerPopup onClose.bind="closePanel"
+                         phone="state.phone"
+                         fromNumber="state.fromNumber"
+                         requestId="state.requestId"/>
         </div>
     </t>
 
@@ -239,8 +242,8 @@
                             <div class="o_dialer_help_item">
                                 <span class="o_dialer_help_step">$</span>
                                 <div>
-                                    <strong>$10 one-time setup</strong>
-                                    <p>Module setup is $10 once — no per-seat fee. Voice minutes are billed by Twilio on your account.</p>
+                                    <strong>Free with fair usage</strong>
+                                    <p>Free to install with a monthly fair-usage allowance. Higher volume via In-App Purchases. Voice minutes billed by Twilio on your account.</p>
                                 </div>
                             </div>
                             <div class="o_dialer_help_item">

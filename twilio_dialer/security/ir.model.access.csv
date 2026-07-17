@@ -3,3 +3,8 @@ access_twilio_call_log_user,twilio.call.log.user,model_twilio_call_log,base.grou
 access_twilio_call_log_manager,twilio.call.log.manager,model_twilio_call_log,base.group_system,1,1,1,1
 access_twilio_auto_dialer_user,twilio.auto.dialer.user,model_twilio_auto_dialer,base.group_user,1,1,1,1
 access_twilio_auto_dialer_manager,twilio.auto.dialer.manager,model_twilio_auto_dialer,base.group_system,1,1,1,1
+access_twilio_terms_privacy_user,twilio.terms.privacy.user,model_twilio_terms_privacy,base.group_user,1,1,1,1
+access_twilio_contact_us_user,twilio.contact.us.user,model_twilio_contact_us,base.group_user,1,1,1,1
+access_twilio_dialer_dashboard_user,twilio.dialer.dashboard.user,model_twilio_dialer_dashboard,base.group_user,1,1,1,1
+access_twilio_dashboard_date_line_user,twilio.dashboard.date.line.user,model_twilio_dialer_dashboard_date_line,base.group_user,1,1,1,1
+access_twilio_dashboard_agent_line_user,twilio.dashboard.agent.line.user,model_twilio_dialer_dashboard_agent_line,base.group_user,1,1,1,1

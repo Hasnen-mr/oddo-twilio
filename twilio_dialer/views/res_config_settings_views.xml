@@ -10,6 +10,7 @@
             <xpath expr="//form" position="inside">
 
                 <app string="Twilio Call Auto Dialer" name="twilio_dialer">
+                    <field name="twilio_is_connected" invisible="1"/>
 
                     <!-- Connection overview -->
                     <block title="Connection" name="twilio_connection_overview">
@@ -21,10 +22,19 @@
                                 </div>
                             </div>
                             <div class="o_twilio_cfg_banner_right">
+                                <button name="%(action_twilio_open_phone)d"
+                                        type="action"
+                                        string="Open Phone"
+                                        icon="fa-phone"
+                                        class="btn btn-light me-2"/>
                                 <span class="o_twilio_cfg_status_pill">
                                     <field name="twilio_status" readonly="1" class="o_twilio_cfg_status_field"/>
                                 </span>
                             </div>
+                        </div>
+                        <div class="o_twilio_cfg_smart_note w-100 mt-2" invisible="twilio_is_connected">
+                            <i class="fa fa-lock"/>
+                            <span><strong>Call Settings</strong> and <strong>AI Settings</strong> unlock after you save valid Twilio credentials and connect.</span>
                         </div>
                     </block>
 
@@ -34,6 +44,11 @@
                             <div class="o_twilio_cfg_card">
                                 <div class="o_twilio_cfg_card_title">Credentials</div>
                                 <div class="o_twilio_cfg_card_sub">Used to authenticate with your Twilio account.</div>
+
+                                <div class="o_twilio_cfg_smart_note">
+                                    <i class="fa fa-magic"/>
+                                    <span>Enter your <strong>Account SID</strong> and <strong>Auth Token</strong>, then click <strong>Save Credentials</strong>. Smart Tools creates the API key, TwiML app, and phone numbers, then refreshes this page.</span>
+                                </div>
 
                                 <div class="o_twilio_cfg_field">
                                     <label for="twilio_account_sid" class="o_twilio_cfg_label">Account SID</label>
@@ -48,79 +63,110 @@
                                             class="o_twilio_cfg_input"
                                             placeholder="Your Twilio Auth Token"/>
                                 </div>
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_phone_number" class="o_twilio_cfg_label">Twilio Phone Number</label>
-                                    <field name="twilio_phone_number" class="o_twilio_cfg_input"/>
-                                </div>
 
                                 <div class="o_twilio_cfg_actions">
-                                    <button name="action_refresh_incoming_phone_numbers"
+                                    <button name="action_save_twilio_credentials"
                                             type="object"
-                                            string="Refresh Numbers"
-                                            class="btn btn-secondary"/>
+                                            string="Save Credentials"
+                                            class="btn btn-primary"/>
                                     <button name="action_generate_configuration"
                                             type="object"
-                                            string="Generate Configuration"
-                                            class="btn btn-primary"/>
+                                            string="Sync Again"
+                                            class="btn btn-secondary"
+                                            invisible="not twilio_is_connected"/>
                                     <button name="action_remove_connection"
                                             type="object"
-                                            string="Remove Connection"
+                                            string="Disconnect"
                                             class="btn btn-danger"
-                                            confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear generated credentials. Continue?"/>
+                                            invisible="not twilio_is_connected"
+                                            confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear Account SID, Auth Token, and generated credentials. Continue?"/>
                                 </div>
                             </div>
 
-                            <div class="o_twilio_cfg_card">
+                            <div class="o_twilio_cfg_card" invisible="not twilio_is_connected">
                                 <div class="o_twilio_cfg_card_title">Generated connection</div>
-                                <div class="o_twilio_cfg_card_sub">Created automatically after Generate Configuration.</div>
+                                <div class="o_twilio_cfg_card_sub">
+                                    Read-only details created automatically when you save your credentials.
+                                </div>
 
                                 <div class="o_twilio_cfg_field">
-                                    <label for="twilio_voice_url" class="o_twilio_cfg_label">Voice URL</label>
-                                    <field name="twilio_voice_url" readonly="1" class="o_twilio_cfg_input"/>
-                                </div>
-                                <div class="o_twilio_cfg_field">
                                     <label for="twilio_application_sid" class="o_twilio_cfg_label">Application SID</label>
-                                    <field name="twilio_application_sid" readonly="1" class="o_twilio_cfg_input"/>
+                                    <div class="o_twilio_cfg_readonly_box">
+                                        <field name="twilio_application_sid" readonly="1" nolabel="1"/>
+                                    </div>
                                 </div>
                                 <div class="o_twilio_cfg_field">
                                     <label for="twilio_api_key_sid" class="o_twilio_cfg_label">API Key SID</label>
-                                    <field name="twilio_api_key_sid" readonly="1" class="o_twilio_cfg_input"/>
+                                    <div class="o_twilio_cfg_readonly_box">
+                                        <field name="twilio_api_key_sid" readonly="1" nolabel="1"/>
+                                    </div>
                                 </div>
                                 <div class="o_twilio_cfg_field">
                                     <label for="twilio_api_secret" class="o_twilio_cfg_label">API Secret</label>
-                                    <field name="twilio_api_secret" readonly="1" widget="password_toggle" class="o_twilio_cfg_input"/>
+                                    <div class="o_twilio_cfg_readonly_box">
+                                        <field name="twilio_api_secret"
+                                                readonly="1"
+                                                widget="password_toggle"
+                                                nolabel="1"/>
+                                    </div>
+                                </div>
+
+                                <div class="o_twilio_cfg_actions">
+                                    <button name="action_remove_connection"
+                                            type="object"
+                                            string="Disconnect"
+                                            class="btn btn-danger"
+                                            confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear Account SID, Auth Token, and generated credentials. Continue?"/>
                                 </div>
                             </div>
                         </div>
                     </block>
 
-                    <!-- Call Settings -->
-                    <block title="Call Settings" name="twilio_call_settings">
+                    <!-- Call Settings (only when connected) -->
+                    <block title="Call Settings" name="twilio_call_settings"
+                           invisible="not twilio_is_connected">
                         <div class="o_twilio_cfg_grid w-100">
+                            <div class="o_twilio_cfg_card" style="grid-column: 1 / -1;">
+                                <div class="o_twilio_cfg_card_title">Phone Number</div>
+                                <div class="o_twilio_cfg_card_sub">
+                                    Select the Twilio number used as caller ID for outbound calls.
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_phone_number" class="o_twilio_cfg_label">Twilio Phone Number</label>
+                                    <field name="twilio_phone_number" class="o_twilio_cfg_input"/>
+                                </div>
+                                <div class="o_twilio_cfg_actions">
+                                    <button name="action_refresh_incoming_phone_numbers"
+                                            type="object"
+                                            string="Refresh Numbers"
+                                            class="btn btn-secondary"/>
+                                </div>
+                            </div>
+
                             <div class="o_twilio_cfg_card">
                                 <div class="o_twilio_cfg_card_title">Incoming</div>
                                 <div class="o_twilio_cfg_card_sub">How inbound Twilio calls behave in Odoo.</div>
 
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Enable Incoming Calls</div>
                                         <div class="o_twilio_cfg_hint">Allow receiving calls in the dialer.</div>
                                     </div>
-                                    <field name="twilio_incoming_enabled"/>
+                                    <field name="twilio_incoming_enabled" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Record Incoming</div>
                                         <div class="o_twilio_cfg_hint">Save recordings when available.</div>
                                     </div>
-                                    <field name="twilio_incoming_record"/>
+                                    <field name="twilio_incoming_record" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Voicemail if Unanswered</div>
                                         <div class="o_twilio_cfg_hint">Route missed calls to voicemail.</div>
                                     </div>
-                                    <field name="twilio_incoming_voicemail"/>
+                                    <field name="twilio_incoming_voicemail" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_field">
                                     <label for="twilio_incoming_timeout" class="o_twilio_cfg_label">Ring Timeout (seconds)</label>
@@ -133,35 +179,30 @@
                                 <div class="o_twilio_cfg_card_sub">Defaults for outbound dialer calls.</div>
 
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Record Outgoing</div>
                                         <div class="o_twilio_cfg_hint">Record outbound calls when supported.</div>
                                     </div>
-                                    <field name="twilio_outgoing_record"/>
+                                    <field name="twilio_outgoing_record" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Answering Machine Detection</div>
                                         <div class="o_twilio_cfg_hint">Detect voicemail / machine answers.</div>
                                     </div>
-                                    <field name="twilio_outgoing_machine_detection"/>
+                                    <field name="twilio_outgoing_machine_detection" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_field">
                                     <label for="twilio_outgoing_timeout" class="o_twilio_cfg_label">Call Timeout (seconds)</label>
                                     <field name="twilio_outgoing_timeout" class="o_twilio_cfg_input"/>
                                 </div>
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_outgoing_caller_id_name" class="o_twilio_cfg_label">Caller ID Display Name</label>
-                                    <field name="twilio_outgoing_caller_id_name"
-                                            class="o_twilio_cfg_input"
-                                            placeholder="Optional display name"/>
-                                </div>
                             </div>
                         </div>
                     </block>
 
-                    <!-- AI Settings -->
-                    <block title="AI Settings" name="twilio_ai_settings">
+                    <!-- AI Settings (only when connected) -->
+                    <block title="AI Settings" name="twilio_ai_settings"
+                           invisible="not twilio_is_connected">
                         <div class="o_twilio_cfg_grid w-100">
                             <div class="o_twilio_cfg_card">
                                 <div class="o_twilio_cfg_card_title">Providers</div>
@@ -194,25 +235,25 @@
                                 <div class="o_twilio_cfg_card_sub">Create AI output on call logs after calls finish.</div>
 
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Create Transcript</div>
                                         <div class="o_twilio_cfg_hint">Generate text transcript from notes/recording.</div>
                                     </div>
-                                    <field name="twilio_ai_enable_transcript"/>
+                                    <field name="twilio_ai_enable_transcript" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Create Summary</div>
                                         <div class="o_twilio_cfg_hint">Generate a short CRM-friendly call summary.</div>
                                     </div>
-                                    <field name="twilio_ai_enable_summary"/>
+                                    <field name="twilio_ai_enable_summary" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
-                                    <div>
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Auto on Complete</div>
                                         <div class="o_twilio_cfg_hint">Run enabled AI actions when a call completes.</div>
                                     </div>
-                                    <field name="twilio_ai_auto_on_complete"/>
+                                    <field name="twilio_ai_auto_on_complete" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                             </div>
                         </div>

@@ -115,64 +115,62 @@
                                 t-on-input="onInput"
                                 class="o_dialer_phone_input"
                                 placeholder="Enter phone number"/>
+                            <button
+                                type="button"
+                                class="o_dialer_phone_erase"
+                                t-att-disabled="!state.phoneNumber"
+                                t-on-click="backspace"
+                                title="Erase last digit"
+                                aria-label="Erase last digit">
+                                <i class="fa fa-long-arrow-left"/>
+                            </button>
                         </div>
                     </div>
 
                     <div class="o_dialer_keypad">
-                        <t t-foreach="['1','2','3','4','5','6','7','8','9','*','0','#']"
-                           t-as="digit"
-                           t-key="digit">
+                        <t t-foreach="dialPadKeys"
+                           t-as="key"
+                           t-key="key.digit">
                             <button
                                 type="button"
                                 class="o_dialer_key"
-                                t-on-click="() => this.appendDigit(digit)">
-                                <t t-esc="digit"/>
+                                t-on-click="() => this.appendDigit(key.digit)">
+                                <span class="o_dialer_key_digit" t-esc="key.digit"/>
+                                <span class="o_dialer_key_letters" t-esc="key.letters"/>
                             </button>
                         </t>
                     </div>
 
-                    <div class="o_dialer_keypad_controls">
-                        <button
-                            type="button"
-                            class="o_dialer_control_btn"
-                            t-on-click="backspace"
-                            title="Backspace">
-                            <i class="fa fa-long-arrow-left"/>
-                        </button>
-                        <button
-                            type="button"
-                            class="o_dialer_control_btn"
-                            t-on-click="clearNumber"
-                            title="Clear">
-                            <i class="fa fa-times"/>
-                        </button>
-                    </div>
-
                     <div class="o_dialer_actions">
-                        <button
-                            type="button"
-                            class="o_dialer_action_btn o_dialer_action_btn--call"
-                            t-att-disabled="!canCall"
-                            t-on-click="onCall">
-                            <i class="fa fa-phone"/>
-                            <span>Call</span>
-                        </button>
-                        <button
-                            type="button"
-                            class="o_dialer_action_btn o_dialer_action_btn--hangup"
-                            t-att-disabled="!isCallActive"
-                            t-on-click="onHangUp">
-                            <i class="fa fa-phone-slash"/>
-                            <span>Hang Up</span>
-                        </button>
-                        <button
-                            type="button"
-                            class="o_dialer_action_btn o_dialer_action_btn--redial"
-                            t-att-disabled="!canRedial"
-                            t-on-click="onRedial">
-                            <i class="fa fa-redo"/>
-                            <span>Redial</span>
-                        </button>
+                        <t t-if="isCallActive">
+                            <button
+                                type="button"
+                                class="o_dialer_action_btn o_dialer_action_btn--hangup"
+                                t-on-click="onHangUp">
+                                <i class="fa fa-phone-slash"/>
+                                <span>Hang Up</span>
+                            </button>
+                        </t>
+                        <t t-else="">
+                            <button
+                                type="button"
+                                class="o_dialer_action_btn o_dialer_action_btn--call"
+                                t-att-disabled="!canCall"
+                                t-on-click="onCall"
+                                title="Call"
+                                aria-label="Call">
+                                <i class="fa fa-phone"/>
+                            </button>
+                            <button
+                                type="button"
+                                class="o_dialer_action_btn o_dialer_action_btn--redial"
+                                t-att-disabled="!canRedial"
+                                t-on-click="onRedial"
+                                title="Redial"
+                                aria-label="Redial">
+                                <i class="fa fa-redo"/>
+                            </button>
+                        </t>
                     </div>
                 </t>
 

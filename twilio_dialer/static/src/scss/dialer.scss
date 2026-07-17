@@ -315,7 +315,133 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 }
 
 .o_dialer_toggle_btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin: 0 4px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
     cursor: pointer;
+    color: #fff;
+    vertical-align: middle;
+    animation: o-dialer-toggle-bounce 2.6s ease-in-out infinite;
+
+    &:focus-visible {
+        outline: 2px solid rgba($o_dialer-success, 0.55);
+        outline-offset: 3px;
+    }
+
+    &:hover {
+        animation-play-state: paused;
+
+        .o_dialer_toggle_core {
+            transform: scale(1.08);
+            box-shadow: 0 6px 16px rgba($o_dialer-success, 0.45);
+            background: linear-gradient(145deg, lighten($o_dialer-success, 4%), darken($o_dialer-success, 4%));
+        }
+
+        .o_dialer_toggle_ring {
+            animation-play-state: paused;
+            opacity: 0.55;
+        }
+    }
+
+    &:active .o_dialer_toggle_core {
+        transform: scale(0.94);
+    }
+
+    &--open {
+        animation: none;
+
+        .o_dialer_toggle_core {
+            background: linear-gradient(145deg, darken($o_dialer-success, 2%), darken($o_dialer-success, 10%));
+            box-shadow: 0 0 0 3px rgba($o_dialer-success, 0.22), 0 4px 12px rgba($o_dialer-success, 0.35);
+        }
+
+        .o_dialer_toggle_ring {
+            animation: none;
+            opacity: 0;
+        }
+    }
+}
+
+.o_dialer_toggle_core {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(145deg, lighten($o_dialer-success, 6%), $o_dialer-success);
+    box-shadow: 0 3px 10px rgba($o_dialer-success, 0.38);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+
+    i {
+        font-size: 14px;
+        line-height: 1;
+        transform: rotate(15deg);
+    }
+}
+
+.o_dialer_toggle_ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid rgba($o_dialer-success, 0.45);
+    pointer-events: none;
+    opacity: 0;
+
+    &--outer {
+        animation: o-dialer-toggle-ring 2.6s ease-out infinite;
+    }
+
+    &--inner {
+        animation: o-dialer-toggle-ring 2.6s ease-out infinite 0.85s;
+    }
+}
+
+@keyframes o-dialer-toggle-bounce {
+    0%, 70%, 100% {
+        transform: translateY(0) scale(1);
+    }
+    78% {
+        transform: translateY(-2px) scale(1.05);
+    }
+    86% {
+        transform: translateY(0) scale(1);
+    }
+    92% {
+        transform: translateY(-1px) scale(1.02);
+    }
+}
+
+@keyframes o-dialer-toggle-ring {
+    0% {
+        transform: scale(0.72);
+        opacity: 0.7;
+    }
+    70% {
+        transform: scale(1.35);
+        opacity: 0;
+    }
+    100% {
+        transform: scale(1.35);
+        opacity: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .o_dialer_toggle_btn,
+    .o_dialer_toggle_ring {
+        animation: none !important;
+    }
 }
 
 // ── Card Container ───────────────────────────────────────
@@ -911,9 +1037,13 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    gap: 12px;
     min-height: 76px;
     padding: 4px 18px 14px;
+
+    &--in-call {
+        gap: 10px;
+    }
 }
 
 @keyframes o-dialer-call-bounce {
@@ -988,13 +1118,19 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 
     &--hangup {
-        flex: 0 0 auto;
-        min-width: 132px;
+        flex: 1 1 auto;
+        min-width: 120px;
+        max-width: 180px;
         height: 48px;
-        padding: 0 20px;
+        padding: 0 18px;
         border-radius: 24px;
         background-color: $o_dialer-danger;
         color: #fff;
+
+        i {
+            font-size: 16px;
+            transform: rotate(135deg);
+        }
 
         &:hover:not(:disabled) {
             background-color: darken($o_dialer-danger, 6%);
@@ -1013,34 +1149,100 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         }
     }
 
-    &--redial {
-        flex: 0 0 38px;
-        width: 38px;
-        height: 38px;
-        padding: 0;
-        border-radius: 50%;
-        background-color: $o_dialer-gray-200;
+    &--mute {
+        flex: 0 0 auto;
+        min-width: 96px;
+        height: 48px;
+        padding: 0 16px;
+        border-radius: 24px;
+        background-color: $o_dialer-gray-100;
         color: $o_dialer-gray-700;
+        border: 1px solid $o_dialer-gray-300;
 
         i {
-            font-size: 13px;
+            font-size: 15px;
         }
 
         &:hover:not(:disabled) {
-            background-color: $o_dialer-gray-300;
+            background-color: $o_dialer-gray-200;
             color: $o_dialer-gray-800;
         }
 
         &:active:not(:disabled) {
-            background-color: $o_dialer-gray-400;
+            transform: scale(0.97);
+        }
+
+        &.o_dialer_action_btn--mute-active {
+            background-color: rgba($o_dialer-danger, 0.12);
+            border-color: rgba($o_dialer-danger, 0.35);
+            color: $o_dialer-danger;
+        }
+    }
+
+    &--redial {
+        flex: 0 0 48px;
+        width: 48px;
+        height: 48px;
+        padding: 0;
+        border-radius: 50%;
+        background-color: $o_dialer-gray-100;
+        color: $o_dialer-gray-700;
+        border: 1px solid $o_dialer-gray-300;
+        align-self: center;
+
+        i {
+            font-size: 18px;
+            line-height: 1;
+            display: block;
+        }
+
+        &:hover:not(:disabled) {
+            background-color: $o_dialer-gray-200;
+            color: $o_dialer-gray-900;
+        }
+
+        &:active:not(:disabled) {
+            background-color: $o_dialer-gray-300;
             transform: scale(0.97);
         }
 
         &:disabled {
-            opacity: 0.5;
+            opacity: 0.45;
             cursor: not-allowed;
         }
     }
+}
+
+.o_dialer_keypad--dtmf {
+    .o_dialer_key {
+        border-color: rgba($o_dialer-primary, 0.28);
+        box-shadow: inset 0 0 0 1px rgba($o_dialer-primary, 0.05);
+    }
+}
+
+.o_dialer_dtmf_feedback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 18px 8px;
+    color: $o_dialer-gray-600;
+    font-size: 12px;
+}
+
+.o_dialer_dtmf_label {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $o_dialer-primary;
+}
+
+.o_dialer_dtmf_digits {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: $o_dialer-gray-800;
+    letter-spacing: 0.08em;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1401,9 +1603,13 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 
     .o_dialer_action_btn--redial {
-        width: 36px;
-        height: 36px;
-        flex-basis: 36px;
+        width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+
+        i {
+            font-size: 16px;
+        }
     }
 
     .o_dialer_action_btn--hangup {

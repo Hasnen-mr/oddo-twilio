@@ -7,6 +7,7 @@ import { COUNTRY_CODES } from "./country_codes";
 import { deviceManager } from "./device_manager";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
+const TWILIO_NETWORK_TEST_URL = "https://networktest.twilio.com/";
 
 export class DialerPopup extends Component {
     static template = "twilio_dialer.DialerPopup";
@@ -33,6 +34,8 @@ export class DialerPopup extends Component {
             lastDialedCountryCode: lastDial?.countryCode || savedCountry.code,
             lastDialedFromNumber: lastDial?.fromNumber || "",
             connectionStatus: "initializing",
+            isMuted: false,
+            dtmfBuffer: "",
             selectedCountry: savedCountry,
             countrySearchQuery: "",
             showCountryDropdown: false,
@@ -132,7 +135,23 @@ export class DialerPopup extends Component {
     }
 
     _onDeviceStatusChange(status) {
+        const previousStatus = this.state.connectionStatus;
         this.state.connectionStatus = status;
+        if (status !== "connecting" && status !== "connected") {
+            this.state.isMuted = false;
+            this.state.dtmfBuffer = "";
+        }
+        if (status === "error" && previousStatus !== "error") {
+            this._openTwilioNetworkTest();
+        }
+    }
+
+    _openTwilioNetworkTest() {
+        try {
+            window.open(TWILIO_NETWORK_TEST_URL, "_blank", "noopener,noreferrer");
+        } catch (error) {
+            console.warn("Unable to open Twilio Network Test:", error);
+        }
     }
 
     async _loadConfiguredPhoneNumber() {
@@ -385,14 +404,21 @@ export class DialerPopup extends Component {
             registering: "Registering...",
             connecting: "Connecting...",
             connected: "Connected",
-            ready: "Ready",
+            ready: "Connected",
             disconnected: "Disconnected",
-            error: "Error",
+            error: "Failed",
         };
-        return labels[this.state.connectionStatus] || "Ready";
+        return labels[this.state.connectionStatus] || "Connected";
     }
 
     appendDigit(digit) {
+        if (this.isCallActive) {
+            const sent = deviceManager.sendDigits(digit);
+            if (sent) {
+                this.state.dtmfBuffer = `${this.state.dtmfBuffer || ""}${digit}`.slice(-24);
+            }
+            return;
+        }
         if (digit === "*" || digit === "#") {
             return;
         }
@@ -400,6 +426,19 @@ export class DialerPopup extends Component {
             return;
         }
         this.state.phoneNumber += digit;
+    }
+
+    onToggleMute() {
+        if (!this.isCallActive) {
+            return;
+        }
+        this.state.isMuted = deviceManager.toggleMute();
+    }
+
+    onHangUp() {
+        deviceManager.disconnect();
+        this.state.isMuted = false;
+        this.state.dtmfBuffer = "";
     }
 
     onInput(ev) {
@@ -484,10 +523,6 @@ export class DialerPopup extends Component {
             From: this.state.selectedCaller?.number,
             from_number: this.state.selectedCaller?.number,
         });
-    }
-
-    onHangUp() {
-        deviceManager.disconnect();
     }
 
     onRedial() {

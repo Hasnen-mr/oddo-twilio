@@ -2,8 +2,17 @@
 <templates xml:space="preserve">
 
     <t t-name="twilio_dialer.DialerSystray">
-        <button type="button" class="btn p-0 o_dialer_toggle_btn" title="Twilio Call Auto Dialer" t-on-click="togglePanel">
-            <i class="fa fa-phone fa-lg" role="img" aria-label="Twilio Call Auto Dialer"/>
+        <button type="button"
+                class="o_dialer_toggle_btn"
+                t-att-class="{ 'o_dialer_toggle_btn--open': state.isOpen }"
+                title="Twilio Call Auto Dialer"
+                aria-label="Twilio Call Auto Dialer"
+                t-on-click="togglePanel">
+            <span class="o_dialer_toggle_ring o_dialer_toggle_ring--outer" aria-hidden="true"/>
+            <span class="o_dialer_toggle_ring o_dialer_toggle_ring--inner" aria-hidden="true"/>
+            <span class="o_dialer_toggle_core" aria-hidden="true">
+                <i class="fa fa-phone" role="img"/>
+            </span>
         </button>
         <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
             <DialerPopup onClose.bind="closePanel"
@@ -127,7 +136,7 @@
                         </div>
                     </div>
 
-                    <div class="o_dialer_keypad">
+                    <div class="o_dialer_keypad" t-att-class="{ 'o_dialer_keypad--dtmf': isCallActive }">
                         <t t-foreach="dialPadKeys"
                            t-as="key"
                            t-key="key.digit">
@@ -141,13 +150,30 @@
                         </t>
                     </div>
 
-                    <div class="o_dialer_actions">
+                    <div class="o_dialer_dtmf_feedback" t-if="isCallActive and state.dtmfBuffer">
+                        <span class="o_dialer_dtmf_label">DTMF</span>
+                        <span class="o_dialer_dtmf_digits" t-esc="state.dtmfBuffer"/>
+                    </div>
+
+                    <div class="o_dialer_actions" t-att-class="{ 'o_dialer_actions--in-call': isCallActive }">
                         <t t-if="isCallActive">
                             <button
                                 type="button"
+                                class="o_dialer_action_btn o_dialer_action_btn--mute"
+                                t-att-class="{ 'o_dialer_action_btn--mute-active': state.isMuted }"
+                                t-on-click="onToggleMute"
+                                t-att-title="state.isMuted ? 'Unmute' : 'Mute'"
+                                t-att-aria-label="state.isMuted ? 'Unmute' : 'Mute'">
+                                <i t-att-class="state.isMuted ? 'fa fa-microphone-slash' : 'fa fa-microphone'"/>
+                                <span t-esc="state.isMuted ? 'Unmute' : 'Mute'"/>
+                            </button>
+                            <button
+                                type="button"
                                 class="o_dialer_action_btn o_dialer_action_btn--hangup"
-                                t-on-click="onHangUp">
-                                <i class="fa fa-phone-slash"/>
+                                t-on-click="onHangUp"
+                                title="Hang Up"
+                                aria-label="Hang Up">
+                                <i class="fa fa-phone"/>
                                 <span>Hang Up</span>
                             </button>
                         </t>
@@ -168,7 +194,7 @@
                                 t-on-click="onRedial"
                                 title="Redial"
                                 aria-label="Redial">
-                                <i class="fa fa-redo"/>
+                                <i class="fa fa-repeat"/>
                             </button>
                         </t>
                     </div>

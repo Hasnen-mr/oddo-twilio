@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_twilio_contact_us_form" model="ir.ui.view">
+        <field name="name">twilio.contact.us.form</field>
+        <field name="model">twilio.contact.us</field>
+        <field name="arch" type="xml">
+            <form string="Contact Us" create="0" edit="0" delete="0">
+                <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="o_twilio_contact_hero">
+                        <div class="o_twilio_contact_hero_icon">
+                            <i class="fa fa-comments" title="Contact support"/>
+                        </div>
+                        <div>
+                            <h1>How can we help?</h1>
+                            <p>
+                                Get setup assistance, product support, or book a personalized
+                                walkthrough of Twilio Call Auto Dialer.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="o_twilio_contact_grid">
+                        <div class="o_twilio_contact_card">
+                            <div class="o_twilio_contact_icon">
+                                <i class="fa fa-envelope" title="Email"/>
+                            </div>
+                            <div class="o_twilio_contact_label">Email</div>
+                            <a class="o_twilio_contact_value"
+                               href="mailto:developer.lifetips@gmail.com">
+                                developer.lifetips@gmail.com
+                            </a>
+                            <p class="o_twilio_contact_description">
+                                Send your question or technical issue by email.
+                            </p>
+                            <a class="btn btn-secondary o_twilio_contact_action"
+                               role="button"
+                               href="mailto:developer.lifetips@gmail.com">
+                                Send Email
+                            </a>
+                        </div>
+
+                        <div class="o_twilio_contact_card">
+                            <div class="o_twilio_contact_icon">
+                                <i class="fa fa-whatsapp" title="WhatsApp"/>
+                            </div>
+                            <div class="o_twilio_contact_label">WhatsApp</div>
+                            <a class="o_twilio_contact_value"
+                               href="https://wa.me/918320354644"
+                               target="_blank"
+                               rel="noreferrer noopener">
+                                +91 8320354644
+                            </a>
+                            <p class="o_twilio_contact_description">
+                                Chat with us for quick setup and support questions.
+                            </p>
+                            <a class="btn btn-secondary o_twilio_contact_action"
+                               role="button"
+                               href="https://wa.me/918320354644"
+                               target="_blank"
+                               rel="noreferrer noopener">
+                                Open WhatsApp
+                            </a>
+                        </div>
+
+                        <div class="o_twilio_contact_card">
+                            <div class="o_twilio_contact_icon">
+                                <i class="fa fa-calendar" title="Book a call"/>
+                            </div>
+                            <div class="o_twilio_contact_label">Book a call</div>
+                            <a class="o_twilio_contact_value"
+                               href="https://calendly.com/zantahub-info/30min"
+                               target="_blank"
+                               rel="noreferrer noopener">
+                                Calendly — 30 min
+                            </a>
+                            <p class="o_twilio_contact_description">
+                                Pick a convenient time for a 30-minute call.
+                            </p>
+                            <a class="btn btn-primary o_twilio_contact_action"
+                               role="button"
+                               href="https://calendly.com/zantahub-info/30min"
+                               target="_blank"
+                               rel="noreferrer noopener">
+                                Schedule Meeting
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="o_twilio_contact_footer_note">
+                        <i class="fa fa-shield" title="Privacy"/>
+                        Your Twilio credentials and Odoo data remain in your own Odoo database.
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_twilio_contact_us" model="ir.actions.server">
+        <field name="name">Contact Us</field>
+        <field name="model_id" ref="model_twilio_contact_us"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_contact_us()</field>
+    </record>
+
+</odoo>

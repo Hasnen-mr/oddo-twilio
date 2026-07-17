@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import json
+
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
@@ -35,6 +37,14 @@ class TwilioAutoDialerCampaign(models.Model):
         "res.company",
         string="Company",
         default=lambda self: self.env.company,
+    )
+    from_number = fields.Selection(
+        selection="_get_from_number_selection",
+        string="From Number",
+        tracking=True,
+        default=lambda self: self._default_from_number(),
+        help="Twilio number used as caller ID for this campaign. "
+             "Refresh numbers under Configuration → Call Settings.",
     )
     phone_list = fields.Text(
         string="Phone List",
@@ -84,6 +94,69 @@ class TwilioAutoDialerCampaign(models.Model):
         store=True,
     )
 
+    @api.model
+    def _get_from_number_selection(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        raw = icp.get_param("twilio_dialer.incoming_phone_numbers", "[]")
+        try:
+            phone_numbers = json.loads(raw)
+        except json.JSONDecodeError:
+            phone_numbers = []
+
+        selection = []
+        for number in phone_numbers:
+            value = number.get("phone_number")
+            if not value:
+                continue
+            label = (
+                "%s (%s)" % (number.get("friendly_name"), value)
+                if number.get("friendly_name")
+                else value
+            )
+            selection.append((value, label))
+
+        # Keep currently configured number visible even if refresh list is empty
+        default_number = icp.get_param("twilio_dialer.phone_number")
+        if default_number and default_number not in {item[0] for item in selection}:
+            selection.append((default_number, default_number))
+        return selection
+
+    @api.model
+    def _default_from_number(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        default_number = icp.get_param("twilio_dialer.phone_number")
+        if default_number:
+            return default_number
+        selection = self._get_from_number_selection()
+        return selection[0][0] if selection else False
+
+    @api.model
+    def _ensure_example_campaign(self):
+        """Show first-time users what a campaign looks like without duplicating it."""
+        if self.search_count([]):
+            return self.browse()
+        return self.create({
+            "name": "Example Campaign — Edit Me",
+            "state": "draft",
+            "user_id": self.env.user.id,
+            "company_id": self.env.company.id,
+            "from_number": self._default_from_number(),
+            "phone_list": "+15550100101\n+15550100102\n+15550100103",
+            "call_delay": 5,
+            "max_ring_time": 30,
+            "auto_skip_no_answer": True,
+            "notes": (
+                "Example campaign created to demonstrate the Auto Dialer layout. "
+                "Replace these reserved example numbers with your own contacts "
+                "before marking the campaign Ready."
+            ),
+        })
+
+    @api.model
+    def action_open_auto_dialer(self):
+        self._ensure_example_campaign()
+        return self.env.ref("twilio_dialer.action_twilio_auto_dialer").read()[0]
+
     @api.depends("phone_list", "current_index", "dialed_count", "total_numbers")
     def _compute_numbers(self):
         for campaign in self:
@@ -108,6 +181,8 @@ class TwilioAutoDialerCampaign(models.Model):
 
     def action_mark_ready(self):
         for campaign in self:
+            if not campaign.from_number:
+                raise UserError("Select a From Number for this campaign before marking Ready.")
             if not campaign._get_number_list():
                 raise UserError("Add at least one phone number before marking Ready.")
             campaign.state = "ready"
@@ -115,6 +190,8 @@ class TwilioAutoDialerCampaign(models.Model):
 
     def action_start(self):
         for campaign in self:
+            if not campaign.from_number:
+                raise UserError("Select a From Number for this campaign before starting.")
             numbers = campaign._get_number_list()
             if not numbers:
                 raise UserError("Add phone numbers before starting Auto Dialer.")
@@ -130,7 +207,9 @@ class TwilioAutoDialerCampaign(models.Model):
             "tag": "display_notification",
             "params": {
                 "title": "Auto Dialer",
-                "message": "Campaign is running. Use the dialer to call the current number, then Next/Skip.",
+                "message": "Campaign is running from %s. Use the dialer to call the current number, then Next/Skip." % (
+                    self[:1].from_number or "your Twilio number"
+                ),
                 "type": "success",
                 "sticky": False,
             },
@@ -176,14 +255,15 @@ class TwilioAutoDialerCampaign(models.Model):
 
     def action_open_dialer_hint(self):
         self.ensure_one()
-        number = self.current_number or "the next number"
+        if not self.current_number:
+            raise UserError("No current number to call. Add numbers or move to the next one.")
+        if not self.from_number:
+            raise UserError("Select a From Number for this campaign before calling.")
         return {
             "type": "ir.actions.client",
-            "tag": "display_notification",
+            "tag": "twilio_dialer.open_dialer",
             "params": {
-                "title": "Call next number",
-                "message": "Open Twilio Power Dialer and call %s" % number,
-                "type": "info",
-                "sticky": False,
+                "phone": self.current_number,
+                "from_number": self.from_number,
             },
         }

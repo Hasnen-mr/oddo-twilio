@@ -6,3 +6,6 @@ from . import ai_service
 from . import call_log
 from . import auto_dialer
 from . import res_partner
+from . import terms_privacy
+from . import contact_us
+from . import dashboard

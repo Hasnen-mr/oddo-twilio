@@ -373,6 +373,46 @@ class DeviceManager {
         this._setStatus(STATUS.READY);
     }
 
+    mute(shouldMute = true) {
+        if (!this._activeConnection || typeof this._activeConnection.mute !== "function") {
+            return false;
+        }
+        this._activeConnection.mute(!!shouldMute);
+        return this.isMuted();
+    }
+
+    toggleMute() {
+        return this.mute(!this.isMuted());
+    }
+
+    isMuted() {
+        if (!this._activeConnection) {
+            return false;
+        }
+        if (typeof this._activeConnection.isMuted === "function") {
+            return !!this._activeConnection.isMuted();
+        }
+        return false;
+    }
+
+    sendDigits(digits) {
+        const value = String(digits || "");
+        if (!value || !this._activeConnection) {
+            return false;
+        }
+        if (typeof this._activeConnection.sendDigits !== "function") {
+            console.warn("[DeviceManager] Active call does not support DTMF sendDigits.");
+            return false;
+        }
+        try {
+            this._activeConnection.sendDigits(value);
+            return true;
+        } catch (error) {
+            console.error("[DeviceManager] Failed to send DTMF digits:", error);
+            return false;
+        }
+    }
+
     destroy() {
         this._destroyed = true;
         if (this.device) {

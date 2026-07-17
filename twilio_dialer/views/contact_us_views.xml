@@ -5,7 +5,7 @@
         <field name="name">twilio.contact.us.form</field>
         <field name="model">twilio.contact.us</field>
         <field name="arch" type="xml">
-            <form string="Contact Us" create="0" edit="0" delete="0">
+            <form string="About Us" create="0" edit="0" delete="0">
                 <header>
                     <button name="%(action_twilio_open_phone)d"
                             type="action"
@@ -16,81 +16,48 @@
                 <sheet>
                     <div class="o_twilio_contact_hero">
                         <div class="o_twilio_contact_hero_icon">
-                            <i class="fa fa-comments" title="Contact support"/>
+                            <i class="fa fa-info-circle" title="About us"/>
                         </div>
                         <div>
-                            <h1>How can we help?</h1>
+                            <h1>About Us</h1>
                             <p>
-                                Get setup assistance, product support, or book a personalized
-                                walkthrough of Twilio Call Auto Dialer.
+                                Learn about Twilio Call Auto Dialer and reach our team for
+                                setup help, product support, or a personalized walkthrough.
                             </p>
                         </div>
                     </div>
 
-                    <div class="o_twilio_contact_grid">
-                        <div class="o_twilio_contact_card">
-                            <div class="o_twilio_contact_icon">
-                                <i class="fa fa-envelope" title="Email"/>
-                            </div>
-                            <div class="o_twilio_contact_label">Email</div>
-                            <a class="o_twilio_contact_value"
-                               href="mailto:developer.lifetips@gmail.com">
-                                developer.lifetips@gmail.com
-                            </a>
-                            <p class="o_twilio_contact_description">
-                                Send your question or technical issue by email.
-                            </p>
-                            <a class="btn btn-secondary o_twilio_contact_action"
-                               role="button"
-                               href="mailto:developer.lifetips@gmail.com">
-                                Send Email
-                            </a>
-                        </div>
+                    <div class="o_twilio_contact_section_title">
+                        What we offer
+                    </div>
 
-                        <div class="o_twilio_contact_card">
-                            <div class="o_twilio_contact_icon">
-                                <i class="fa fa-whatsapp" title="WhatsApp"/>
+                    <div class="o_twilio_help_page_list">
+                        <div class="o_twilio_help_page_item">
+                            <span class="o_twilio_help_page_step">
+                                <i class="fa fa-phone" title="Calling"/>
+                            </span>
+                            <div>
+                                <strong>Twilio calling in Odoo</strong>
+                                <p>Browser softphone, Auto Dialer campaigns, call logs, and optional AI summaries.</p>
                             </div>
-                            <div class="o_twilio_contact_label">WhatsApp</div>
-                            <a class="o_twilio_contact_value"
-                               href="https://wa.me/918320354644"
-                               target="_blank"
-                               rel="noreferrer noopener">
-                                +91 8320354644
-                            </a>
-                            <p class="o_twilio_contact_description">
-                                Chat with us for quick setup and support questions.
-                            </p>
-                            <a class="btn btn-secondary o_twilio_contact_action"
-                               role="button"
-                               href="https://wa.me/918320354644"
-                               target="_blank"
-                               rel="noreferrer noopener">
-                                Open WhatsApp
-                            </a>
                         </div>
-
-                        <div class="o_twilio_contact_card">
-                            <div class="o_twilio_contact_icon">
-                                <i class="fa fa-calendar" title="Book a call"/>
+                        <div class="o_twilio_help_page_item">
+                            <span class="o_twilio_help_page_step">
+                                <i class="fa fa-shield" title="Data privacy"/>
+                            </span>
+                            <div>
+                                <strong>Your account, your data</strong>
+                                <p>Connects to your Twilio account. Credentials and call records stay in your Odoo database.</p>
                             </div>
-                            <div class="o_twilio_contact_label">Book a call</div>
-                            <a class="o_twilio_contact_value"
-                               href="https://calendly.com/zantahub-info/30min"
-                               target="_blank"
-                               rel="noreferrer noopener">
-                                Calendly — 30 min
-                            </a>
-                            <p class="o_twilio_contact_description">
-                                Pick a convenient time for a 30-minute call.
-                            </p>
-                            <a class="btn btn-primary o_twilio_contact_action"
-                               role="button"
-                               href="https://calendly.com/zantahub-info/30min"
-                               target="_blank"
-                               rel="noreferrer noopener">
-                                Schedule Meeting
-                            </a>
+                        </div>
+                        <div class="o_twilio_help_page_item">
+                            <span class="o_twilio_help_page_step">
+                                <i class="fa fa-life-ring" title="Support"/>
+                            </span>
+                            <div>
+                                <strong>Need help or contact?</strong>
+                                <p>Open About Us → Help for setup tips and our email, WhatsApp, and booking links.</p>
+                            </div>
                         </div>
                     </div>
 
@@ -107,7 +74,7 @@
     </record>
 
     <record id="action_twilio_contact_us" model="ir.actions.server">
-        <field name="name">Contact Us</field>
+        <field name="name">About Us</field>
         <field name="model_id" ref="model_twilio_contact_us"/>
         <field name="state">code</field>
         <field name="code">action = model.action_open_contact_us()</field>

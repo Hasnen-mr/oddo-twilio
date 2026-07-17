@@ -6,6 +6,8 @@ import { useService } from "@web/core/utils/hooks";
 import { COUNTRY_CODES } from "./country_codes";
 import { deviceManager } from "./device_manager";
 
+const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
+
 export class DialerPopup extends Component {
     static template = "twilio_dialer.DialerPopup";
 
@@ -20,13 +22,18 @@ export class DialerPopup extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         const defaultCountry = COUNTRY_CODES.find((country) => country.code === "+91") || COUNTRY_CODES[0];
+        const lastDial = this._loadLastDial();
+        const savedCountry =
+            this._findCountry(lastDial?.countryCode, lastDial?.countryLabel) || defaultCountry;
 
         this.state = useState({
             activeTab: "dialpad",
             phoneNumber: "",
-            lastDialedNumber: "",
+            lastDialedNumber: lastDial?.phoneNumber || "",
+            lastDialedCountryCode: lastDial?.countryCode || savedCountry.code,
+            lastDialedFromNumber: lastDial?.fromNumber || "",
             connectionStatus: "initializing",
-            selectedCountry: defaultCountry,
+            selectedCountry: savedCountry,
             countrySearchQuery: "",
             showCountryDropdown: false,
             showCallerDropdown: false,
@@ -41,7 +48,7 @@ export class DialerPopup extends Component {
 
         onWillStart(async () => {
             await this._loadConfiguredPhoneNumber();
-            this._applyFromNumber(this.props.fromNumber);
+            this._applyFromNumber(this.props.fromNumber || this.state.lastDialedFromNumber);
             await this._loadContacts();
             await deviceManager.initialize(
                 this._onDeviceStatusChange.bind(this)
@@ -59,6 +66,48 @@ export class DialerPopup extends Component {
         onWillUnmount(() => {
             deviceManager.destroy();
         });
+    }
+
+    _loadLastDial() {
+        try {
+            const raw = window.localStorage.getItem(LAST_DIAL_STORAGE_KEY);
+            if (!raw) {
+                return null;
+            }
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== "object") {
+                return null;
+            }
+            return parsed;
+        } catch (error) {
+            console.warn("Failed to load last dial settings:", error);
+            return null;
+        }
+    }
+
+    _saveLastDial({ country, phoneNumber, fromNumber }) {
+        try {
+            window.localStorage.setItem(
+                LAST_DIAL_STORAGE_KEY,
+                JSON.stringify({
+                    countryCode: country?.code || "",
+                    countryLabel: country?.label || "",
+                    phoneNumber: phoneNumber || "",
+                    fromNumber: fromNumber || "",
+                    updatedAt: Date.now(),
+                })
+            );
+        } catch (error) {
+            console.warn("Failed to save last dial settings:", error);
+        }
+    }
+
+    _findCountry(countryCode, countryLabel) {
+        return (
+            COUNTRY_CODES.find((country) => country.code === countryCode) ||
+            COUNTRY_CODES.find((country) => country.label === countryLabel) ||
+            false
+        );
     }
 
     _applyIncomingPhone(phone) {
@@ -88,13 +137,40 @@ export class DialerPopup extends Component {
 
     async _loadConfiguredPhoneNumber() {
         const result = await rpc("/twilio_dialer/phone_number");
-        if (result.phone_number) {
-            const caller = {
+        const preferredNumber =
+            this.props.fromNumber ||
+            this.state.selectedCaller?.number ||
+            result.phone_number;
+        const numbers = result.phone_numbers || [];
+        const callers = [];
+        const seen = new Set();
+
+        for (const item of numbers) {
+            const number = item.phone_number;
+            if (!number || seen.has(number)) {
+                continue;
+            }
+            seen.add(number);
+            callers.push({
+                number,
+                friendlyName: item.friendly_name || "Twilio Number",
+            });
+        }
+
+        if (result.phone_number && !seen.has(result.phone_number)) {
+            callers.unshift({
                 number: result.phone_number,
                 friendlyName: "Twilio Number",
-            };
-            this.state.callerNumbers = [caller];
-            this.state.selectedCaller = caller;
+            });
+        }
+
+        this.state.callerNumbers = callers;
+        this.state.selectedCaller =
+            callers.find((caller) => caller.number === preferredNumber) ||
+            callers[0] ||
+            null;
+        if (this.props.fromNumber) {
+            this._applyFromNumber(this.props.fromNumber);
         }
     }
 
@@ -223,6 +299,23 @@ export class DialerPopup extends Component {
         );
     }
 
+    get dialPadKeys() {
+        return [
+            { digit: "1", letters: "" },
+            { digit: "2", letters: "ABC" },
+            { digit: "3", letters: "DEF" },
+            { digit: "4", letters: "GHI" },
+            { digit: "5", letters: "JKL" },
+            { digit: "6", letters: "MNO" },
+            { digit: "7", letters: "PQRS" },
+            { digit: "8", letters: "TUV" },
+            { digit: "9", letters: "WXYZ" },
+            { digit: "*", letters: "" },
+            { digit: "0", letters: "+" },
+            { digit: "#", letters: "" },
+        ];
+    }
+
     get displayPhoneNumber() {
         const num = this.state.phoneNumber;
         if (!num) {
@@ -249,7 +342,12 @@ export class DialerPopup extends Component {
     }
 
     get canRedial() {
-        return !!this.state.lastDialedNumber;
+        return (
+            !!this.state.lastDialedNumber &&
+            this.state.lastDialedNumber.length >= 5 &&
+            !this.isCallActive &&
+            this.state.connectionStatus === "ready"
+        );
     }
 
     get isCallActive() {
@@ -257,7 +355,13 @@ export class DialerPopup extends Component {
     }
 
     get canCall() {
-        return this.state.phoneNumber.length === 10 && !this.isCallActive && this.state.connectionStatus === "ready";
+        return (
+            this.state.phoneNumber.length >= 5 &&
+            this.state.phoneNumber.length <= 15 &&
+            !!this.state.selectedCaller &&
+            !this.isCallActive &&
+            this.state.connectionStatus === "ready"
+        );
     }
 
     get statusClass() {
@@ -292,14 +396,14 @@ export class DialerPopup extends Component {
         if (digit === "*" || digit === "#") {
             return;
         }
-        if (this.state.phoneNumber.length >= 10) {
+        if (this.state.phoneNumber.length >= 15) {
             return;
         }
         this.state.phoneNumber += digit;
     }
 
     onInput(ev) {
-        this.state.phoneNumber = ev.target.value.replace(/\D/g, "").slice(0, 10);
+        this.state.phoneNumber = ev.target.value.replace(/\D/g, "").slice(0, 15);
         ev.target.value = this.state.phoneNumber;
     }
 
@@ -315,6 +419,11 @@ export class DialerPopup extends Component {
         this.state.selectedCountry = country;
         this.state.showCountryDropdown = false;
         this.state.countrySearchQuery = "";
+        this._saveLastDial({
+            country,
+            phoneNumber: this.state.lastDialedNumber || this.state.phoneNumber,
+            fromNumber: this.state.selectedCaller?.number || this.state.lastDialedFromNumber,
+        });
     }
 
     toggleCountryDropdown() {
@@ -364,6 +473,13 @@ export class DialerPopup extends Component {
         }
         const fullNumber = this.state.selectedCountry.code + this.state.phoneNumber;
         this.state.lastDialedNumber = this.state.phoneNumber;
+        this.state.lastDialedCountryCode = this.state.selectedCountry.code;
+        this.state.lastDialedFromNumber = this.state.selectedCaller?.number || "";
+        this._saveLastDial({
+            country: this.state.selectedCountry,
+            phoneNumber: this.state.phoneNumber,
+            fromNumber: this.state.selectedCaller?.number || "",
+        });
         deviceManager.makeCall(fullNumber, {
             From: this.state.selectedCaller?.number,
             from_number: this.state.selectedCaller?.number,
@@ -375,9 +491,32 @@ export class DialerPopup extends Component {
     }
 
     onRedial() {
-        if (!this.state.lastDialedNumber) {
+        if (!this.canRedial) {
             return;
         }
-        this.state.phoneNumber = this.state.lastDialedNumber;
+        const lastDial = this._loadLastDial() || {};
+        const country =
+            this._findCountry(
+                this.state.lastDialedCountryCode || lastDial.countryCode,
+                lastDial.countryLabel
+            ) || this.state.selectedCountry;
+        const phoneNumber = this.state.lastDialedNumber || lastDial.phoneNumber || "";
+        const fromNumber =
+            this.state.lastDialedFromNumber ||
+            lastDial.fromNumber ||
+            this.state.selectedCaller?.number ||
+            "";
+
+        this.state.selectedCountry = country;
+        this.state.phoneNumber = phoneNumber;
+        this.state.activeTab = "dialpad";
+        if (fromNumber) {
+            this._applyFromNumber(fromNumber);
+        }
+
+        if (!this.canCall) {
+            return;
+        }
+        this.onCall();
     }
 }

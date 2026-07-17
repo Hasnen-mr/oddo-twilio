@@ -66,7 +66,7 @@ Requirements
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '17.0.1.2.19',
+    'version': '17.0.1.2.21',
     'license': 'LGPL-3',
 
     'depends': [

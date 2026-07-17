@@ -766,7 +766,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 .o_dialer_phone_input {
     flex: 1;
     height: 46px;
-    padding: 0 14px;
+    padding: 0 8px 0 14px;
     border: none;
     background: #fff;
     font-size: 16px;
@@ -782,6 +782,32 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 }
 
+.o_dialer_phone_erase {
+    display: inline-flex;
+    flex: 0 0 38px;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    margin-right: 4px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: $o_dialer-gray-600;
+    cursor: pointer;
+    transition: background-color $o_dialer-transition, color $o_dialer-transition;
+
+    &:hover:not(:disabled) {
+        background: $o_dialer-gray-100;
+        color: $o_dialer-gray-900;
+    }
+
+    &:disabled {
+        opacity: 0.3;
+        cursor: default;
+    }
+}
+
 // ── Dial Pad ─────────────────────────────────────────────
 
 .o_dialer_keypad {
@@ -793,6 +819,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 
 .o_dialer_key {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     width: 62px;
@@ -801,8 +828,6 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     border: none;
     border-radius: $o_dialer-radius-circle;
     background-color: $o_dialer-gray-100;
-    font-size: 18px;
-    font-weight: 500;
     color: $o_dialer-gray-800;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -824,6 +849,26 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         outline: 2px solid $o_dialer-primary;
         outline-offset: 2px;
     }
+}
+
+.o_dialer_key_digit {
+    font-size: 19px;
+    font-weight: 600;
+    line-height: 1.05;
+}
+
+.o_dialer_key_letters {
+    min-height: 11px;
+    margin-top: 3px;
+    color: $o_dialer-gray-500;
+    font-size: 8px;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    line-height: 1;
+}
+
+.o_dialer_key:active .o_dialer_key_letters {
+    color: rgba(255, 255, 255, 0.82);
 }
 
 // ── Keypad Controls ──────────────────────────────────────
@@ -864,8 +909,11 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 
 .o_dialer_actions {
     display: flex;
+    align-items: center;
+    justify-content: center;
     gap: 8px;
-    padding: 6px 18px 12px;
+    min-height: 76px;
+    padding: 4px 18px 14px;
 }
 
 @keyframes o-dialer-call-bounce {
@@ -884,7 +932,6 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 }
 
 .o_dialer_action_btn {
-    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -904,16 +951,18 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 
     &--call {
-        flex: 1.35;
+        flex: 0 0 62px;
+        width: 62px;
+        height: 62px;
+        padding: 0;
+        border-radius: 50%;
         background-color: $o_dialer-success;
         color: #fff;
-        font-size: 14px;
-        font-weight: 700;
         box-shadow: 0 4px 12px rgba($o_dialer-success, 0.32);
         animation: o-dialer-call-bounce 2.4s ease-in-out infinite;
 
         i {
-            font-size: 15px;
+            font-size: 23px;
         }
 
         &:hover:not(:disabled) {
@@ -939,6 +988,11 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 
     &--hangup {
+        flex: 0 0 auto;
+        min-width: 132px;
+        height: 48px;
+        padding: 0 20px;
+        border-radius: 24px;
         background-color: $o_dialer-danger;
         color: #fff;
 
@@ -960,8 +1014,17 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 
     &--redial {
+        flex: 0 0 38px;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        border-radius: 50%;
         background-color: $o_dialer-gray-200;
         color: $o_dialer-gray-700;
+
+        i {
+            font-size: 13px;
+        }
 
         &:hover:not(:disabled) {
             background-color: $o_dialer-gray-300;
@@ -1329,6 +1392,22 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     .o_dialer_action_btn {
         font-size: 12px;
         height: 40px;
+    }
+
+    .o_dialer_action_btn--call {
+        width: 58px;
+        height: 58px;
+        flex-basis: 58px;
+    }
+
+    .o_dialer_action_btn--redial {
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+    }
+
+    .o_dialer_action_btn--hangup {
+        height: 46px;
     }
 
     .o_dialer_footer_item {

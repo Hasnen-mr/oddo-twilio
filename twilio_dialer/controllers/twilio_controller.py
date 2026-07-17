@@ -1,3 +1,4 @@
+import json
 import logging
 from xml.sax.saxutils import escape
 
@@ -24,10 +25,29 @@ class TwilioController(http.Controller):
     @http.route("/twilio_dialer/phone_number", type="json", auth="user")
     def get_phone_number(self):
         try:
-            phone_number = request.env["twilio.service"].get_twilio_phone_number()
-            return {"phone_number": phone_number}
+            service = request.env["twilio.service"]
+            phone_number = service.get_twilio_phone_number()
+            icp = request.env["ir.config_parameter"].sudo()
+            try:
+                phone_numbers = json.loads(
+                    icp.get_param("twilio_dialer.incoming_phone_numbers", "[]")
+                )
+            except (TypeError, json.JSONDecodeError):
+                phone_numbers = []
+
+            if not phone_numbers:
+                phone_numbers = service.get_incoming_phone_numbers()
+
+            return {
+                "phone_number": phone_number,
+                "phone_numbers": phone_numbers,
+            }
         except UserError as e:
-            return {"phone_number": False, "message": str(e)}
+            return {
+                "phone_number": False,
+                "phone_numbers": [],
+                "message": str(e),
+            }
 
     @http.route(
         "/twilio_dialer/call_setup",

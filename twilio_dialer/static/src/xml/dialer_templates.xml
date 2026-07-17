@@ -8,11 +8,14 @@
                 title="Twilio Call Auto Dialer"
                 aria-label="Twilio Call Auto Dialer"
                 t-on-click="togglePanel">
-            <span class="o_dialer_toggle_ring o_dialer_toggle_ring--outer" aria-hidden="true"/>
-            <span class="o_dialer_toggle_ring o_dialer_toggle_ring--inner" aria-hidden="true"/>
-            <span class="o_dialer_toggle_core" aria-hidden="true">
-                <i class="fa fa-phone" role="img"/>
+            <span class="o_dialer_toggle_visual" aria-hidden="true">
+                <span class="o_dialer_toggle_ring o_dialer_toggle_ring--outer"/>
+                <span class="o_dialer_toggle_ring o_dialer_toggle_ring--inner"/>
+                <span class="o_dialer_toggle_core">
+                    <i class="fa fa-phone" role="img"/>
+                </span>
             </span>
+            <span class="o_dialer_toggle_label">Open Dialer</span>
         </button>
         <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
             <DialerPopup onClose.bind="closePanel"

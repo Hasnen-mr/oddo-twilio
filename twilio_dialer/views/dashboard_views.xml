@@ -60,6 +60,10 @@
                         <div>
                             <strong>Twilio is connected.</strong>
                             Your dialer is ready to place calls.
+                            <button name="%(action_twilio_open_phone)d"
+                                    type="action"
+                                    string="Open Phone"
+                                    class="btn-link p-0 ms-1"/>
                         </div>
                     </div>
 

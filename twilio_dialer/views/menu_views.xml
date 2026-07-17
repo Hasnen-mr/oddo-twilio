@@ -38,17 +38,23 @@
               groups="base.group_system"
               sequence="30"/>
 
-    <menuitem id="menu_twilio_terms_privacy"
-              name="Terms &amp; Privacy"
-              parent="menu_twilio_dialer_root"
-              action="action_twilio_terms_privacy"
-              sequence="40"/>
-
     <menuitem id="menu_twilio_contact_us"
-              name="Contact Us"
+              name="About Us"
               parent="menu_twilio_dialer_root"
               action="action_twilio_contact_us"
-              sequence="50"/>
+              sequence="40"/>
+
+    <menuitem id="menu_twilio_help"
+              name="Help"
+              parent="menu_twilio_contact_us"
+              action="action_twilio_help"
+              sequence="10"/>
+
+    <menuitem id="menu_twilio_terms_privacy"
+              name="Terms &amp; Privacy"
+              parent="menu_twilio_contact_us"
+              action="action_twilio_terms_privacy"
+              sequence="20"/>
 
     <!-- Hide previously created separate Auto Dialer menus -->
     <record id="menu_twilio_auto_dialer_root" model="ir.ui.menu">

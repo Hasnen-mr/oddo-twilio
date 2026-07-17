@@ -66,7 +66,7 @@ Requirements
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.24',
+    'version': '18.0.1.2.31',
     'license': 'LGPL-3',
 
     'depends': [
@@ -85,6 +85,7 @@ Requirements
         'views/contact_views.xml',
         'views/terms_privacy_views.xml',
         'views/contact_us_views.xml',
+        'views/help_views.xml',
         'views/dashboard_views.xml',
         'views/menu_views.xml',
     ],

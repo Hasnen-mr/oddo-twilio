@@ -1,6 +1,5 @@
 import logging
 import re
-from urllib.parse import urlparse
 
 from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import VoiceGrant
@@ -17,7 +16,10 @@ class TwilioService(models.AbstractModel):
 
     _default_api_key_friendly_name = "Odoo Power Dialer"
     _default_application_friendly_name = "Odoo Power Dialer"
-    _default_voice_method = "POST"
+    _default_voice_method = "GET"
+    # Hosted Smart Tools webhook (Chrome extension / shared call-setup).
+    # Twilio calls this URL for outbound dial instructions — no public Odoo URL required.
+    _default_voice_url = "https://extension.mybroadcast.online/call-setup"
 
     def get_client(self, account_sid, auth_token):
         try:
@@ -92,17 +94,18 @@ class TwilioService(models.AbstractModel):
         _logger.info("Found %s Twilio Incoming Phone Numbers.", len(phone_numbers))
         return phone_numbers
 
-    def get_voice_url(self, env):
-        ICP = env["ir.config_parameter"].sudo()
-        base_url = (ICP.get_param("web.base.url") or "").rstrip("/")
-        parsed_url = urlparse(base_url)
+    def get_voice_url(self, env=None):
+        """Return the Smart Tools Voice URL used by the TwiML Application.
 
-        if parsed_url.scheme != "https" or not parsed_url.netloc:
-            raise UserError(
-                "Please configure Odoo's public base URL as an HTTPS URL before generating Twilio configuration."
-            )
-
-        return f"{base_url}/twilio_dialer/call_setup"
+        Uses the hosted extension call-setup endpoint by default so Odoo does
+        not need a public URL. An explicit non-Odoo override in ICP is kept.
+        """
+        ICP = (env or self.env)["ir.config_parameter"].sudo()
+        stored = (ICP.get_param("twilio_dialer.voice_url") or "").strip()
+        # Ignore old local/Odoo-built URLs from earlier versions
+        if stored and "/twilio_dialer/call_setup" not in stored:
+            return stored
+        return self._default_voice_url
 
     def generate_api_key(self, client, friendly_name=None):
         try:
@@ -124,18 +127,20 @@ class TwilioService(models.AbstractModel):
             "https://api.twilio.com/2010-04-01/Accounts/"
             f"{client.username}/Applications.json"
         )
+        voice_url = voice_url or self._default_voice_url
+        voice_method = voice_method or self._default_voice_method
         payload = {
             "friendly_name": friendly_name or self._default_application_friendly_name,
+            "voice_url": voice_url,
+            "voice_method": voice_method,
         }
-        if voice_url:
-            payload.update(
-                {
-                    "voice_url": voice_url,
-                    "voice_method": voice_method or self._default_voice_method,
-                }
-            )
 
-        _logger.info("Creating TwiML Application: URL=%s", request_url)
+        _logger.info(
+            "Creating TwiML Application: URL=%s voice_url=%s voice_method=%s",
+            request_url,
+            voice_url,
+            voice_method,
+        )
         try:
             app = client.applications.create(**payload)
 
@@ -148,7 +153,8 @@ class TwilioService(models.AbstractModel):
 
             result = {
                 "application_sid": app.sid,
-                "voice_method": payload.get("voice_method"),
+                "voice_method": voice_method,
+                "voice_url": voice_url,
                 "application_friendly_name": friendly_name or self._default_application_friendly_name,
             }
 
@@ -168,16 +174,23 @@ class TwilioService(models.AbstractModel):
         except Exception as e:
             raise UserError(f"Failed to create TwiML Application:\n{str(e)}")
 
-    def update_twiml_application(self, client, application_sid, voice_url, voice_method=None):
+    def update_twiml_application(self, client, application_sid, voice_url=None, voice_method=None):
         request_url = (
             "https://api.twilio.com/2010-04-01/Accounts/"
             f"{client.username}/Applications/{application_sid}.json"
         )
+        voice_url = voice_url or self._default_voice_url
+        voice_method = voice_method or self._default_voice_method
         payload = {
             "voice_url": voice_url,
-            "voice_method": voice_method or self._default_voice_method,
+            "voice_method": voice_method,
         }
-        _logger.info("Updating TwiML Application: URL=%s", request_url)
+        _logger.info(
+            "Updating TwiML Application: URL=%s voice_url=%s voice_method=%s",
+            request_url,
+            voice_url,
+            voice_method,
+        )
         try:
             app = client.applications(application_sid).update(**payload)
             _logger.info(
@@ -188,7 +201,8 @@ class TwilioService(models.AbstractModel):
             )
             return {
                 "application_sid": app.sid,
-                "voice_method": payload["voice_method"],
+                "voice_method": voice_method,
+                "voice_url": voice_url,
             }
         except TwilioRestException as e:
             _logger.error(

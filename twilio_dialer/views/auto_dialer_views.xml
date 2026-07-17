@@ -10,7 +10,16 @@
                   decoration-info="state == 'running'"
                   decoration-warning="state == 'paused'"
                   decoration-muted="state == 'draft'">
+                <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"
+                            display="always"/>
+                </header>
                 <field name="name"/>
+                <field name="from_number" optional="show"/>
                 <field name="user_id" widget="many2one_avatar_user"/>
                 <field name="state" widget="badge"
                           decoration-success="state in ('ready','done')"
@@ -34,6 +43,11 @@
         <field name="arch" type="xml">
             <form string="Auto Calling Setup">
                 <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"/>
                     <button name="action_mark_ready" type="object" string="Mark Ready"
                             class="btn-secondary" invisible="state != 'draft'"/>
                     <button name="action_start" type="object" string="Start"
@@ -82,6 +96,9 @@
                         <group string="Campaign">
                             <field name="user_id" widget="many2one_avatar_user"/>
                             <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="from_number"
+                                      required="1"
+                                      placeholder="Select Twilio number"/>
                             <field name="active" invisible="1"/>
                             <field name="current_number" readonly="1"/>
                             <field name="progress" widget="progressbar"/>
@@ -131,6 +148,7 @@
         <field name="arch" type="xml">
             <search>
                 <field name="name"/>
+                <field name="from_number"/>
                 <field name="user_id"/>
                 <field name="current_number"/>
                 <filter string="My Campaigns" name="my_campaigns" domain="[('user_id', '=', uid)]"/>
@@ -142,6 +160,7 @@
                 <group expand="0" string="Group By">
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Agent" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="From Number" name="group_from_number" context="{'group_by': 'from_number'}"/>
                 </group>
             </search>
         </field>
@@ -161,9 +180,16 @@
                 Create your first campaign
             </p>
             <p>
-                Click New, paste a phone list, Mark Ready, then Start. Dial from the Twilio Power Dialer.
+                Click New, choose a From Number, paste a phone list, Mark Ready, then Start.
             </p>
         </field>
+    </record>
+
+    <record id="action_twilio_auto_dialer_menu" model="ir.actions.server">
+        <field name="name">Auto Dialer</field>
+        <field name="model_id" ref="model_twilio_auto_dialer"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_auto_dialer()</field>
     </record>
 
 </odoo>

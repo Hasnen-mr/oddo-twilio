@@ -6,6 +6,7 @@ import { registry } from "@web/core/registry";
 const dialerState = reactive({
     isOpen: false,
     phone: "",
+    fromNumber: "",
     partnerId: null,
     partnerName: "",
     requestId: 0,
@@ -18,8 +19,9 @@ export const dialerService = {
             get state() {
                 return dialerState;
             },
-            open({ phone = "", partnerId = null, partnerName = "" } = {}) {
+            open({ phone = "", fromNumber = "", partnerId = null, partnerName = "" } = {}) {
                 dialerState.phone = phone || "";
+                dialerState.fromNumber = fromNumber || "";
                 dialerState.partnerId = partnerId || null;
                 dialerState.partnerName = partnerName || "";
                 dialerState.requestId += 1;
@@ -41,6 +43,7 @@ registry.category("actions").add("twilio_dialer.open_dialer", (env, action) => {
     const params = action.params || {};
     env.services.twilio_dialer.open({
         phone: params.phone || "",
+        fromNumber: params.from_number || "",
         partnerId: params.partner_id || null,
         partnerName: params.partner_name || "",
     });

@@ -14,11 +14,18 @@
         <field name="model">twilio.call.log</field>
         <field name="arch" type="xml">
             <list string="Call Logs"
-                  decoration-success="status == 'completed'"
                   decoration-warning="status in ('busy','no_answer','ringing')"
                   decoration-danger="status in ('failed','canceled')"
                   decoration-info="follow_up_needed"
                   multi_edit="1">
+                <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"
+                            display="always"/>
+                </header>
                 <field name="name" optional="show"/>
                 <field name="start_time" string="When"/>
                 <field name="partner_id"/>
@@ -88,6 +95,11 @@
         <field name="arch" type="xml">
             <form string="Call Log">
                 <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"/>
                     <button name="action_redial" type="object" string="Redial" class="btn-primary" icon="fa-phone"/>
                     <button name="action_mark_follow_up" type="object" string="Schedule Follow-up" class="btn-secondary" icon="fa-calendar"/>
                     <button name="action_create_transcript" type="object" string="Create Transcript" class="btn-secondary"/>

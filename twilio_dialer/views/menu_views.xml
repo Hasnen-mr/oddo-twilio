@@ -1,19 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <record id="action_twilio_configuration" model="ir.actions.act_window">
-        <field name="name">Configuration</field>
-        <field name="res_model">res.config.settings</field>
-        <field name="view_mode">form</field>
-        <field name="target">inline</field>
-        <field name="context">{'module': 'twilio_dialer'}</field>
-    </record>
-
     <menuitem id="menu_twilio_dialer_root"
               name="Twilio Call Auto Dialer"
               groups="base.group_user"
               sequence="35"
               web_icon="twilio_dialer,static/description/icon.png"/>
+
+    <menuitem id="menu_twilio_dialer_dashboard"
+              name="Dashboard"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_dashboard"
+              sequence="5"/>
 
     <menuitem id="menu_twilio_dialer_call_logs"
               name="Call Logs"
@@ -24,7 +22,7 @@
     <menuitem id="menu_twilio_my_campaign"
               name="Auto Dialer"
               parent="menu_twilio_dialer_root"
-              action="action_twilio_auto_dialer"
+              action="action_twilio_auto_dialer_menu"
               sequence="20"/>
 
     <menuitem id="menu_twilio_contacts"
@@ -39,6 +37,18 @@
               action="action_twilio_configuration"
               groups="base.group_system"
               sequence="30"/>
+
+    <menuitem id="menu_twilio_terms_privacy"
+              name="Terms &amp; Privacy"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_terms_privacy"
+              sequence="40"/>
+
+    <menuitem id="menu_twilio_contact_us"
+              name="Contact Us"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_contact_us"
+              sequence="50"/>
 
     <!-- Hide previously created separate Auto Dialer menus -->
     <record id="menu_twilio_auto_dialer_root" model="ir.ui.menu">

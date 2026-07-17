@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_twilio_terms_privacy_form" model="ir.ui.view">
+        <field name="name">twilio.terms.privacy.form</field>
+        <field name="model">twilio.terms.privacy</field>
+        <field name="arch" type="xml">
+            <form string="Terms &amp; Privacy" create="0" edit="0" delete="0">
+                <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>Terms &amp; Privacy</h1>
+                    </div>
+                    <p class="text-muted">
+                        Please review how Twilio Call Auto Dialer works with your Twilio account,
+                        how your data is handled, and our fair usage policy.
+                    </p>
+
+                    <notebook>
+                        <page string="Terms of Use" name="terms">
+                            <div class="o_twilio_terms_block">
+                                <h3>1. Your Twilio Account</h3>
+                                <p>
+                                    Twilio Call Auto Dialer connects exclusively to
+                                    <strong>your own Twilio account</strong>. You must provide your
+                                    Twilio Account SID, Auth Token, and phone number. All voice calls
+                                    and messaging are executed through Twilio under your account and
+                                    are billed by Twilio according to their published rates.
+                                </p>
+                                <p>
+                                    This module does not provide telephony minutes, phone numbers, or
+                                    Twilio credit. You remain solely responsible for maintaining a
+                                    valid Twilio account, sufficient balance, and compliance with
+                                    Twilio’s terms of service and local telecommunications regulations.
+                                </p>
+
+                                <h3>2. Scope of the Software</h3>
+                                <p>
+                                    The software provides an Odoo interface for softphone calling,
+                                    Auto Dialer campaigns, contact click-to-call, local call logs, and
+                                    optional AI transcription features. Availability of optional
+                                    features may depend on your configuration and applicable usage limits.
+                                </p>
+
+                                <h3>3. Acceptable Use</h3>
+                                <p>
+                                    You agree to use this module only for lawful business communication.
+                                    You must not use the dialer for spam, harassment, unsolicited
+                                    bulk calling, or any activity prohibited by law or by Twilio’s
+                                    Acceptable Use Policy.
+                                </p>
+
+                                <h3>4. No Warranty</h3>
+                                <p>
+                                    The software is provided as-is. We do not guarantee uninterrupted
+                                    calling, carrier connectivity, or third-party AI service availability.
+                                    Call quality and delivery depend on Twilio, your network, and
+                                    end-user devices.
+                                </p>
+                            </div>
+                        </page>
+
+                        <page string="Privacy Policy" name="privacy">
+                            <div class="o_twilio_terms_block">
+                                <h3>1. Data Stays in Your Odoo</h3>
+                                <p>
+                                    Your contact records, call logs, campaign lists, transcripts, and
+                                    configuration are stored in <strong>your Odoo database</strong>.
+                                    We do not operate a separate backend that collects or hosts your
+                                    CRM or call data.
+                                </p>
+
+                                <h3>2. Credentials &amp; Security</h3>
+                                <p>
+                                    Twilio credentials (Account SID, Auth Token, API keys) are stored
+                                    in your Odoo system parameters / configuration. You control access
+                                    through Odoo user permissions and security groups. We recommend
+                                    restricting Configuration access to trusted administrators only.
+                                </p>
+
+                                <h3>3. Third-Party Processing</h3>
+                                <p>
+                                    Call audio and signaling are processed by <strong>Twilio</strong>
+                                    under your Twilio account. If you enable AI transcription or
+                                    summaries, recordings or related content may be sent to the AI
+                                    provider you configure (for example OpenAI). Those services are
+                                    governed by their own privacy policies and terms.
+                                </p>
+
+                                <h3>4. Your Responsibilities</h3>
+                                <p>
+                                    You are responsible for informing your users and customers about
+                                    call recording or transcription where required by law, and for
+                                    securing your Odoo instance, backups, and Twilio account access.
+                                </p>
+
+                                <h3>5. Data Ownership</h3>
+                                <p>
+                                    You retain ownership of your business data at all times. Removing
+                                    the module does not transfer your data to us. You may export or
+                                    delete records according to your Odoo administration practices.
+                                </p>
+                            </div>
+                        </page>
+
+                        <page string="Fair Usage Policy" name="fair_usage">
+                            <div class="o_twilio_terms_block">
+                                <h3>1. Free Module Access</h3>
+                                <p>
+                                    Twilio Call Auto Dialer is currently offered
+                                    <strong>free of charge</strong> for installation and core use
+                                    within Odoo. There is no per-seat software license for the dialer
+                                    interface while this free offering remains in effect.
+                                </p>
+
+                                <h3>2. Monthly Free Fair-Usage Allowance</h3>
+                                <p>
+                                    To keep the service sustainable for all users, free usage is
+                                    subject to a <strong>monthly fair-usage allowance</strong>. This
+                                    initial free limit is intended for normal business evaluation and
+                                    day-to-day light-to-moderate calling activity.
+                                </p>
+                                <p>
+                                    Fair usage covers reasonable call volume through the Odoo softphone,
+                                    Auto Dialer campaigns, and related features under normal operating
+                                    conditions. Excessive automated or high-volume activity that
+                                    impacts platform stability may be throttled or require an upgrade.
+                                </p>
+
+                                <h3>3. Higher Volume via In-App Purchases</h3>
+                                <p>
+                                    If your team needs usage beyond the monthly free fair-usage limit,
+                                    you can purchase <strong>add-ons through In-App Purchases</strong>
+                                    inside Odoo Apps. Add-ons unlock higher monthly capacity and any
+                                    premium feature packs announced for the module.
+                                </p>
+                                <p>
+                                    Twilio voice minutes remain separate and are always billed by
+                                    Twilio on your own account (pay-as-you-go). In-App Purchases apply
+                                    only to this module’s usage entitlements and software features,
+                                    not to Twilio carrier charges.
+                                </p>
+
+                                <h3>4. Transparency</h3>
+                                <p>
+                                    We aim to keep billing clear: free core access, a defined monthly
+                                    fair-usage ceiling, and optional paid add-ons for higher volume.
+                                    Specific allowance amounts and add-on prices are published in the
+                                    Odoo Apps product page and/or In-App Purchase listings and may be
+                                    updated from time to time.
+                                </p>
+
+                                <h3>5. Changes to This Policy</h3>
+                                <p>
+                                    We may update these Terms, Privacy, or Fair Usage terms to reflect
+                                    product changes or regulatory requirements. Continued use of the
+                                    module after updates constitutes acceptance of the revised terms.
+                                </p>
+
+                                <p class="text-muted mt-3">
+                                    Questions? Contact
+                                    <a href="mailto:developer.lifetips@gmail.com">developer.lifetips@gmail.com</a>.
+                                </p>
+                            </div>
+                        </page>
+                    </notebook>
+                </sheet>
+                <footer>
+                    <button string="Close" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_twilio_terms_privacy" model="ir.actions.server">
+        <field name="name">Terms &amp; Privacy</field>
+        <field name="model_id" ref="model_twilio_terms_privacy"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_terms_privacy()</field>
+    </record>
+
+</odoo>

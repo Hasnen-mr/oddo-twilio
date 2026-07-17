@@ -2,7 +2,7 @@
 {
     'name': "Twilio Calling System for Odoo | Auto Dialer | Call Logs | AI Transcription",
 
-    'summary': "Twilio calling system for Odoo — Auto Dialer, contact activity, local call logs & AI transcription.",
+    'summary': "Free Twilio calling for Odoo — Auto Dialer, contact activity, local call logs & AI transcription.",
 
     'description': """
 Twilio Call Auto Dialer for Odoo
@@ -14,9 +14,9 @@ contact activity, local call log records, and optional AI call transcription & s
 Twilio calling system
 ---------------------
 * Make and receive calls from Odoo with Twilio Voice
+* Connects to your own Twilio account
 * In-app dialpad with country codes and caller ID
 * Secure credentials stored in your Odoo configuration
-* Uses your own Twilio account (pay-as-you-go minutes)
 
 Auto Dialer
 -----------
@@ -46,10 +46,12 @@ Transcription & AI summary
 * Configure your preferred AI provider in settings
 * Post insights back to the contact when needed
 
-Pricing (clear & transparent)
------------------------------
-* **$10 one-time setup** — no per-seat softphone fee
-* **Twilio usage** — billed on your Twilio account (external service required)
+Pricing (free with fair usage)
+------------------------------
+* **Free to install** — no module purchase fee while this offer is active
+* **Monthly fair-usage allowance** — initial free limit for normal business use
+* **Higher volume** — purchase add-ons via In-App Purchases when you need more
+* **Twilio usage** — voice minutes billed on your own Twilio account (external service)
 
 Requirements
 ------------
@@ -64,10 +66,8 @@ Requirements
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '17.0.1.1.6',
+    'version': '17.0.1.2.19',
     'license': 'LGPL-3',
-    'price': 10.0,
-    'currency': 'USD',
 
     'depends': [
         'base',
@@ -78,10 +78,14 @@ Requirements
 
     'data': [
         'security/ir.model.access.csv',
+        'views/dialer_actions.xml',
         'views/res_config_settings_views.xml',
         'views/call_log_views.xml',
         'views/auto_dialer_views.xml',
         'views/contact_views.xml',
+        'views/terms_privacy_views.xml',
+        'views/contact_us_views.xml',
+        'views/dashboard_views.xml',
         'views/menu_views.xml',
     ],
 

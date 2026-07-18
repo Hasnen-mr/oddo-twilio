@@ -62,11 +62,11 @@ Requirements
     """,
 
     'author': "Solutions Master",
-    'website': "https://github.com/Hasnen-mr/odoo-twilio-power-dialer",
+    'website': "https://extension.mybroadcast.online",
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.31',
+    'version': '18.0.1.2.32',
     'license': 'LGPL-3',
 
     'depends': [

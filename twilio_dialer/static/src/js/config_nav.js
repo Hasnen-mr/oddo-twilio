@@ -3,6 +3,7 @@
 import { Component, onMounted, onWillUnmount, useEffect, useRef } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
+import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { BillingDashboard } from "./billing";
 
@@ -18,6 +19,7 @@ export class TwilioConfigNav extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
+        this.action = useService("action");
         this.rootRef = useRef("root");
         this._syncingSection = false;
         this._wasConnected = null;
@@ -83,6 +85,10 @@ export class TwilioConfigNav extends Component {
             return;
         }
         await this.props.record.update({ twilio_config_section: section.id });
+    }
+
+    backToDashboard() {
+        this.action.doAction("twilio_dialer.action_twilio_dashboard");
     }
 
     async _applyDefaultSection() {

@@ -21,57 +21,45 @@
         <field name="model">twilio.dialer.dashboard</field>
         <field name="arch" type="xml">
             <form string="Twilio Dialer Dashboard" create="0" edit="0" delete="0">
-                <header>
-                    <button name="%(action_twilio_open_phone)d"
-                            type="action"
-                            string="Open Phone"
-                            icon="fa-phone"
-                            class="btn-primary"/>
-                    <button name="action_open_configuration"
-                            type="object"
-                            string="Configure Twilio"
-                            icon="fa-cog"
-                            class="btn-primary"
-                            invisible="connection_configured"/>
-                </header>
                 <sheet>
                     <field name="connection_configured" invisible="1"/>
 
-                    <div class="oe_title">
-                        <h1>Twilio Call Auto Dialer</h1>
-                        <p class="text-muted">
-                            Calls, campaigns, and contacts at a glance.
-                        </p>
+                    <div class="o_twilio_dash_hero">
+                        <div class="oe_title">
+                            <h1>Twilio Call Auto Dialer</h1>
+                            <p class="text-muted">
+                                Calls, campaigns, and contacts at a glance.
+                            </p>
+                        </div>
+
+                        <div class="o_twilio_dash_status o_twilio_dash_status--ok o_twilio_dash_status--corner"
+                             invisible="not connection_configured">
+                            <div class="o_twilio_dash_status_icon">
+                                <i class="fa fa-check-circle" title="Connected"/>
+                            </div>
+                            <div class="o_twilio_dash_status_body">
+                                <strong>Twilio is connected</strong>
+                                <p>
+                                    Softphone is ready. Use the phone icon in the top bar to place calls.
+                                </p>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="alert alert-warning d-flex align-items-center"
-                         role="alert"
+                    <div class="o_twilio_dash_status o_twilio_dash_status--warn"
                          invisible="connection_configured">
-                        <i class="fa fa-exclamation-triangle fa-lg me-3"
-                           title="Configuration required"/>
-                        <div>
-                            <strong>Twilio is not configured.</strong>
-                            Add your Account SID and Auth Token before making calls.
-                            <button name="action_open_configuration"
-                                    type="object"
-                                    string="Open Configuration"
-                                    class="btn-link p-0 ms-1"/>
+                        <div class="o_twilio_dash_status_icon">
+                            <i class="fa fa-exclamation-triangle" title="Configuration required"/>
                         </div>
-                    </div>
-
-                    <div class="alert alert-success d-flex align-items-center"
-                         role="status"
-                         invisible="not connection_configured">
-                        <i class="fa fa-check-circle fa-lg me-3"
-                           title="Connected"/>
-                        <div>
-                            <strong>Twilio is connected.</strong>
-                            Your dialer is ready to place calls.
-                            <button name="%(action_twilio_open_phone)d"
-                                    type="action"
-                                    string="Open Phone"
-                                    class="btn-link p-0 ms-1"/>
+                        <div class="o_twilio_dash_status_body">
+                            <strong>Twilio is not configured</strong>
+                            <p>Add your Account SID and Auth Token to start placing calls.</p>
                         </div>
+                        <button name="action_open_configuration"
+                                type="object"
+                                string="Open Configuration"
+                                icon="fa-cog"
+                                class="btn btn-primary"/>
                     </div>
 
                     <div class="o_twilio_dashboard_kpis">

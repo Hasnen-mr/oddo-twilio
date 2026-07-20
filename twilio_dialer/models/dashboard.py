@@ -2,13 +2,14 @@
 from collections import defaultdict
 from datetime import datetime, time, timedelta
 
-from odoo import fields, models
+from odoo import api, fields, models
 
 
 class TwilioDialerDashboard(models.TransientModel):
     _name = "twilio.dialer.dashboard"
     _description = "Twilio Dialer Dashboard"
 
+    name = fields.Char(default="Dashboard", readonly=True)
     connection_configured = fields.Boolean(readonly=True)
     connection_status = fields.Char(readonly=True)
     total_calls = fields.Integer(readonly=True)
@@ -127,6 +128,7 @@ class TwilioDialerDashboard(models.TransientModel):
             }))
 
         return {
+            "name": "Dashboard",
             "connection_configured": configured,
             "connection_status": "Connected" if configured else "Configuration required",
             "total_calls": call_logs.search_count([]),
@@ -172,6 +174,13 @@ class TwilioDialerDashboard(models.TransientModel):
 
     def action_open_configuration(self):
         return self.env["res.config.settings"].action_open_twilio_configuration()
+
+    def action_open_dialer(self):
+        """Open softphone when connected; otherwise send user to Configuration."""
+        self.ensure_one()
+        if self.connection_configured:
+            return self.env.ref("twilio_dialer.action_twilio_open_phone").read()[0]
+        return self.action_open_configuration()
 
     def action_open_call_logs(self):
         return self.env.ref("twilio_dialer.action_twilio_call_log").read()[0]

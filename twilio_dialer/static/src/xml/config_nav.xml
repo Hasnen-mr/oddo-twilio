@@ -21,6 +21,15 @@
                     </button>
                 </li>
             </ul>
+            <div class="o_twilio_cfg_nav_footer">
+                <button type="button"
+                        class="o_twilio_cfg_nav_back"
+                        title="Back to Dashboard"
+                        t-on-click="backToDashboard">
+                    <i class="fa fa-arrow-left"/>
+                    <span>Back to Dashboard</span>
+                </button>
+            </div>
         </nav>
     </t>
 

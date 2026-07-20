@@ -26,14 +26,17 @@
                                 </div>
                             </div>
                             <div class="o_twilio_cfg_banner_right">
-                                <button name="%(action_twilio_open_phone)d"
-                                        type="action"
-                                        string="Open Phone"
-                                        icon="fa-phone"
-                                        class="btn btn-light me-2"/>
                                 <span class="o_twilio_cfg_status_pill">
                                     <field name="twilio_status" readonly="1" class="o_twilio_cfg_status_field"/>
                                 </span>
+                                <button name="action_remove_connection"
+                                        type="object"
+                                        string="Disconnect"
+                                        icon="fa-unlink"
+                                        class="btn btn-danger o_twilio_cfg_disconnect_btn"
+                                        invisible="not twilio_is_connected"
+                                        noSaveDialog="True"
+                                        confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear Account SID, Auth Token, and generated credentials. Continue?"/>
                             </div>
                         </div>
                         <div class="o_twilio_cfg_smart_note w-100 mt-2" invisible="twilio_is_connected">
@@ -92,12 +95,6 @@
                                             string="Sync Again"
                                             class="btn btn-secondary"
                                             invisible="not twilio_is_connected"/>
-                                    <button name="action_remove_connection"
-                                            type="object"
-                                            string="Disconnect"
-                                            class="btn btn-danger"
-                                            invisible="not twilio_is_connected"
-                                            confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear Account SID, Auth Token, and generated credentials. Continue?"/>
                                 </div>
                             </div>
 
@@ -127,14 +124,6 @@
                                                 widget="password_toggle"
                                                 nolabel="1"/>
                                     </div>
-                                </div>
-
-                                <div class="o_twilio_cfg_actions">
-                                    <button name="action_remove_connection"
-                                            type="object"
-                                            string="Disconnect"
-                                            class="btn btn-danger"
-                                            confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear Account SID, Auth Token, and generated credentials. Continue?"/>
                                 </div>
                             </div>
                         </div>

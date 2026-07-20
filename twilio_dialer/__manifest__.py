@@ -91,8 +91,8 @@ Support
 -------
 Professional implementation and customization available.
 Email: developer.lifetips@gmail.com
-Product website: https://extension.mybroadcast.online
-Chrome extension: https://bit.ly/odoo-twilio-dialer
+Website: https://extension.mybroadcast.online
+Bitly: https://bit.ly/odoo-twilio-dialer
     """,
 
     'author': "Solutions Master",
@@ -100,7 +100,7 @@ Chrome extension: https://bit.ly/odoo-twilio-dialer
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.49',
+    'version': '18.0.1.2.57',
     'license': 'LGPL-3',
 
     'depends': [

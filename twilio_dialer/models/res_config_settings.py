@@ -255,9 +255,12 @@ class ResConfigSettings(models.TransientModel):
         """Open Configuration; default to Call Settings when Twilio is connected."""
         action = self.env.ref("twilio_dialer.action_twilio_configuration").sudo().read()[0]
         connected = self._twilio_is_configured()
+        section = self.env.context.get("default_twilio_config_section")
+        if section not in ("call", "ai", "account", "billing"):
+            section = "call" if connected else "account"
         action["context"] = {
             "module": "twilio_dialer",
-            "default_twilio_config_section": "call" if connected else "account",
+            "default_twilio_config_section": section,
         }
         return action
 
@@ -651,12 +654,20 @@ class ResConfigSettings(models.TransientModel):
         )
 
     def action_remove_connection(self):
-        self.ensure_one()
+        """Disconnect Twilio and clear all stored credentials.
 
-        account_sid = self.twilio_account_sid
-        auth_token = self.twilio_auth_token
-        api_key_sid = self.twilio_api_key_sid
-        application_sid = self.twilio_application_sid
+        Reads SIDs from config parameters first so cleanup still works even if
+        the settings form save wiped transient field values.
+        """
+        self.ensure_one()
+        icp = self.env["ir.config_parameter"].sudo()
+
+        account_sid = self.twilio_account_sid or icp.get_param("twilio_dialer.account_sid")
+        auth_token = self.twilio_auth_token or icp.get_param("twilio_dialer.auth_token")
+        api_key_sid = self.twilio_api_key_sid or icp.get_param("twilio_dialer.api_key_sid")
+        application_sid = (
+            self.twilio_application_sid or icp.get_param("twilio_dialer.application_sid")
+        )
 
         if account_sid and auth_token and (api_key_sid or application_sid):
             service = self.env["twilio.service"]
@@ -667,7 +678,6 @@ class ResConfigSettings(models.TransientModel):
             except Exception as error:
                 _logger.warning("Twilio disconnect cleanup failed: %s", error)
 
-        icp = self.env["ir.config_parameter"].sudo()
         for key in (
             "twilio_dialer.account_sid",
             "twilio_dialer.auth_token",
@@ -685,20 +695,34 @@ class ResConfigSettings(models.TransientModel):
         ):
             icp.set_param(key, "")
 
-        self.twilio_account_sid = False
-        self.twilio_auth_token = False
-        self.twilio_contact_email = False
-        self.twilio_contact_phone = False
-        self.twilio_phone_number = False
-        self.twilio_api_key_sid = False
-        self.twilio_api_secret = False
-        self.twilio_application_sid = False
+        vals = {
+            "twilio_account_sid": False,
+            "twilio_auth_token": False,
+            "twilio_contact_email": False,
+            "twilio_contact_phone": False,
+            "twilio_phone_number": False,
+            "twilio_api_key_sid": False,
+            "twilio_api_secret": False,
+            "twilio_application_sid": False,
+            "twilio_config_section": "account",
+        }
+        self.with_context(twilio_skip_auto_generate=True).write(vals)
         self.with_context(twilio_skip_auto_generate=True).set_values()
 
-        return self._reload_twilio_settings(
-            "Twilio Connection",
-            "Disconnected. Credentials and generated details were cleared.",
-        )
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Twilio Connection",
+                "message": "Disconnected. Credentials and generated details were cleared.",
+                "type": "success",
+                "sticky": False,
+                "next": self.env["res.config.settings"].with_context(
+                    module="twilio_dialer",
+                    default_twilio_config_section="account",
+                ).action_open_twilio_configuration(),
+            },
+        }
 
     def action_save_twilio_credentials(self):
         """Save SID/token, generate connection details, then reload the page."""

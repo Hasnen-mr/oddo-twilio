@@ -5,8 +5,11 @@ import { registry } from "@web/core/registry";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
 
-class BillingDashboard extends Component {
+export class BillingDashboard extends Component {
     static template = "twilio_dialer.BillingDashboard";
+    static props = {
+        "*": true,
+    };
 
     setup() {
         this.notification = useService("notification");
@@ -40,23 +43,6 @@ class BillingDashboard extends Component {
     get progress() {
         const billing = this.state.billing;
         return billing?.limit ? Math.min((billing.usage / billing.limit) * 100, 100) : 0;
-    }
-
-    get usageState() {
-        return this.progress >= 100 ? "over-limit" : this.progress >= 80 ? "warning" : "healthy";
-    }
-
-    get maskedAccountSid() {
-        const sid = this.state.billing?.accountSid || "";
-        return sid.length > 10 ? `${sid.slice(0, 4)}••••••••${sid.slice(-4)}` : sid;
-    }
-
-    get purchaseHistory() {
-        return Array.isArray(this.state.billing?.purchaseHistory) ? this.state.billing.purchaseHistory : [];
-    }
-
-    get activity() {
-        return Array.isArray(this.state.billing?.activity) ? this.state.billing.activity : [];
     }
 }
 

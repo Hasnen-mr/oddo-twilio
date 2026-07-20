@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="twilio_dialer.CallSettingsAutosave">
+        <div class="o_twilio_call_settings_autosave" aria-hidden="true"/>
+    </t>
+</templates>

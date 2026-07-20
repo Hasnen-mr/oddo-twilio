@@ -36,14 +36,7 @@
               action="contacts.action_contacts"
               sequence="25"/>
 
-    <menuitem id="menu_twilio_billing"
-              name="Billing"
-              parent="menu_twilio_dialer_root"
-              action="action_twilio_billing"
-              groups="base.group_system"
-              sequence="26"/>
-
-    <!-- Configuration -->
+    <!-- Configuration (Billing is inside the Configuration left sidebar) -->
     <menuitem id="menu_twilio_dialer_configuration"
               name="Configuration"
               parent="menu_twilio_dialer_root"
@@ -51,25 +44,11 @@
               groups="base.group_system"
               sequence="30"/>
 
-    <!-- About Us -->
+    <!-- About Us (Overview / Help / Terms live in the left sidebar) -->
     <menuitem id="menu_twilio_contact_us"
               name="About Us"
               parent="menu_twilio_dialer_root"
               action="action_twilio_contact_us"
               sequence="40"/>
-
-    <!-- Help -->
-    <menuitem id="menu_twilio_help"
-              name="Help"
-              parent="menu_twilio_contact_us"
-              action="action_twilio_help"
-              sequence="10"/>
-
-    <!-- Terms & Privacy -->
-    <menuitem id="menu_twilio_terms_privacy"
-              name="Terms &amp; Privacy"
-              parent="menu_twilio_contact_us"
-              action="action_twilio_terms_privacy"
-              sequence="20"/>
 
 </odoo>

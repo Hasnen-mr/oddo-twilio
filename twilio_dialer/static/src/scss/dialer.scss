@@ -86,6 +86,184 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 
 // ── Contact Us page ─────────────────────────────────────
 
+.o_twilio_about_form {
+    .o_form_sheet {
+        max-width: 1200px;
+    }
+
+    &.o_twilio_about_shell .o_form_sheet,
+    .o_form_sheet:has(.o_twilio_about_nav) {
+        display: grid;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: 0 24px;
+        align-items: start;
+    }
+
+    .o_twilio_about_nav_host,
+    .o_twilio_about_nav_field,
+    .o_field_widget[name="about_nav"] {
+        grid-column: 1;
+        grid-row: 1 / span 40;
+        width: 100% !important;
+        max-width: 230px;
+        position: sticky;
+        top: 12px;
+        align-self: start;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+    }
+
+    .o_twilio_about_panel {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .o_twilio_about_prereq {
+        max-width: 860px;
+        margin-top: 8px;
+    }
+
+    .o_twilio_about_prereq_list {
+        margin: 0 0 12px;
+        padding-left: 18px;
+        color: #4a3845;
+        font-size: 13px;
+        line-height: 1.55;
+
+        li + li {
+            margin-top: 6px;
+        }
+    }
+
+    .o_twilio_about_help_form {
+        max-width: 640px;
+        margin: 18px 0 8px;
+    }
+
+    .o_twilio_cfg_card {
+        background: #fff;
+        border: 1px solid rgba($o_dialer-primary, 0.12);
+        border-radius: 14px;
+        padding: 18px 18px 16px;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .o_twilio_cfg_card_title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #2f1d2a;
+        margin-bottom: 2px;
+    }
+
+    .o_twilio_cfg_card_sub {
+        font-size: 12px;
+        color: #7a6674;
+        margin-bottom: 16px;
+        line-height: 1.4;
+    }
+
+    .o_twilio_cfg_field {
+        margin-bottom: 12px;
+    }
+
+    .o_twilio_cfg_label {
+        display: block;
+        font-size: 12px;
+        font-weight: 600;
+        color: #334155;
+        margin-bottom: 5px;
+    }
+
+    .o_twilio_cfg_input,
+    .o_twilio_cfg_input .o_field_widget,
+    .o_twilio_cfg_input input,
+    .o_twilio_cfg_input textarea,
+    .o_twilio_cfg_input .o_input {
+        width: 100% !important;
+        max-width: 100% !important;
+        display: block;
+        box-sizing: border-box;
+    }
+
+    .o_twilio_cfg_input input,
+    .o_twilio_cfg_input textarea,
+    .o_twilio_cfg_input .o_input {
+        min-height: 40px;
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px 12px !important;
+        background: #f8fafc !important;
+        font-size: 13px !important;
+    }
+
+    .o_twilio_cfg_input textarea {
+        min-height: 110px;
+    }
+
+    .o_twilio_cfg_actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid rgba($o_dialer-primary, 0.12);
+    }
+
+    .o_twilio_terms_block {
+        max-width: 860px;
+        margin-top: 18px;
+        padding: 8px 4px 20px;
+        line-height: 1.55;
+        color: #4a3845;
+        font-size: 14px;
+
+        h3 {
+            margin-top: 18px;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #2f1d2a;
+        }
+
+        h3:first-child {
+            margin-top: 0;
+        }
+
+        p {
+            margin-bottom: 10px;
+        }
+    }
+
+    @media (max-width: 992px) {
+        &.o_twilio_about_shell .o_form_sheet,
+        .o_form_sheet:has(.o_twilio_about_nav) {
+            grid-template-columns: 1fr;
+        }
+
+        .o_twilio_about_nav_host,
+        .o_twilio_about_nav_field,
+        .o_field_widget[name="about_nav"],
+        .o_twilio_about_panel {
+            grid-column: 1;
+            grid-row: auto;
+            max-width: none;
+            position: static;
+        }
+
+        .o_twilio_cfg_nav_list {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .o_twilio_cfg_nav_item {
+            flex: 1 1 calc(50% - 4px);
+            min-width: 140px;
+        }
+    }
+}
+
 .o_twilio_contact_hero {
     display: flex;
     align-items: center;
@@ -107,7 +285,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     p {
         max-width: 680px;
         margin: 0;
-        color: #dbeafe;
+        color: rgba(255, 255, 255, 0.88);
         font-size: 14px;
         line-height: 1.5;
     }
@@ -1789,23 +1967,205 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 }
 
-// ── Twilio Configuration page redesign ───────────────────
+// ── Shared left sidebar nav (Configuration + About Us) ───
+
+.o_twilio_cfg_nav {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 14px 12px;
+    border: 1px solid rgba($o_dialer-primary, 0.14);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff 0%, $o_dialer-primary-light 160%);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.o_twilio_cfg_nav_brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 4px 6px 10px;
+    border-bottom: 1px solid rgba($o_dialer-primary, 0.12);
+
+    > i {
+        display: grid;
+        place-items: center;
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: rgba($o_dialer-primary, 0.12);
+        color: $o_dialer-primary;
+        flex-shrink: 0;
+    }
+}
+
+.o_twilio_cfg_nav_brand_title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #2f1d2a;
+    line-height: 1.2;
+}
+
+.o_twilio_cfg_nav_brand_sub {
+    font-size: 11px;
+    color: #7a6674;
+    line-height: 1.3;
+    margin-top: 2px;
+}
+
+.o_twilio_cfg_nav_list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.o_twilio_cfg_nav_item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #4a3845;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    i {
+        width: 16px;
+        text-align: center;
+        color: rgba($o_dialer-primary, 0.75);
+    }
+
+    &:hover:not(:disabled) {
+        background: rgba($o_dialer-primary, 0.08);
+        color: darken($o_dialer-primary, 4%);
+    }
+
+    &--active {
+        background: $o_dialer-primary !important;
+        color: #fff !important;
+        box-shadow: 0 6px 16px rgba($o_dialer-primary, 0.28);
+
+        i {
+            color: #fff !important;
+        }
+    }
+
+    &--disabled,
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+}
+
+// ── Twilio Configuration page (Odoo branding) ────────────
 
 .app_settings_block[data-key="twilio_dialer"] {
-    max-width: 1100px;
+    --o-twilio-cfg-primary: #{$o_dialer-primary};
+    --o-twilio-cfg-primary-light: #{$o_dialer-primary-light};
+    max-width: 1280px;
+
+    &.o_twilio_cfg_shell {
+        display: grid !important;
+        grid-template-columns: 230px minmax(0, 1fr);
+        gap: 0 24px;
+        align-items: start;
+    }
 
     .o_settings_container {
         display: block !important;
+    }
+
+    &.o_twilio_cfg_shell > .o_settings_container:not(.o_twilio_cfg_nav_host),
+    &.o_twilio_cfg_shell > *:not(.o_twilio_cfg_nav_host) {
+        grid-column: 2;
+        min-width: 0;
+    }
+
+    .o_twilio_cfg_nav_host {
+        grid-column: 1 !important;
+        grid-row: 1 / span 80;
+        width: 100% !important;
+        max-width: 230px;
+        position: sticky;
+        top: 12px;
+        align-self: start;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+
+        .o_setting_right_pane,
+        .o_setting_left_pane,
+        .o_form_label,
+        .o_field_highlight,
+        label {
+            display: none !important;
+        }
+
+        .o_setting_box,
+        .o_setting_right_pane,
+        .o_wrap_field,
+        .o_field_widget {
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: 0 !important;
+            background: transparent !important;
+        }
+    }
+
+    .o_twilio_cfg_nav_field,
+    .o_field_widget[name="twilio_config_section"] {
+        width: 100% !important;
+        max-width: 230px;
+    }
+
+    .o_twilio_call_settings_autosave_field,
+    .o_twilio_call_settings_autosave {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border: 0 !important;
+    }
+
+    .o_twilio_cfg_billing_field,
+    .o_field_widget[name="twilio_billing_panel"] {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .o_twilio_cfg_billing_panel {
+        width: 100%;
+        margin: 0 -4px;
+
+        .o_twilio_billing {
+            max-width: none;
+            margin: 0;
+            padding: 0 0 12px;
+        }
     }
 
     // Keep blocks visible; style their titles
     h2 {
         font-size: 18px !important;
         font-weight: 700 !important;
-        color: #0f172a !important;
-        margin: 28px 0 14px !important;
+        color: #2f1d2a !important;
+        margin: 12px 0 14px !important;
         padding-bottom: 8px;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid rgba($o_dialer-primary, 0.12);
     }
 
     .o_twilio_cfg_banner {
@@ -1817,9 +2177,9 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         padding: 18px 20px;
         margin: 4px 0 8px;
         border-radius: 14px;
-        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 70%, #0369a1 140%);
+        background: linear-gradient(135deg, darken($o_dialer-primary, 10%) 0%, $o_dialer-primary 55%, lighten($o_dialer-primary, 12%) 140%);
         color: #fff;
-        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.18);
+        box-shadow: 0 10px 28px rgba($o_dialer-primary, 0.28);
     }
 
     .o_twilio_cfg_banner_title {
@@ -1831,7 +2191,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     .o_twilio_cfg_banner_sub {
         font-size: 12.5px;
         line-height: 1.45;
-        color: #cbd5e1;
+        color: rgba(255, 255, 255, 0.82);
         max-width: 560px;
     }
 
@@ -1840,8 +2200,8 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         align-items: center;
         padding: 8px 14px;
         border-radius: 999px;
-        background: rgba(255, 255, 255, 0.12);
-        border: 1px solid rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.22);
         min-width: 120px;
         justify-content: center;
     }
@@ -1869,7 +2229,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 
     .o_twilio_cfg_card {
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid rgba($o_dialer-primary, 0.12);
         border-radius: 14px;
         padding: 18px 18px 16px;
         box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
@@ -1879,13 +2239,13 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     .o_twilio_cfg_card_title {
         font-size: 15px;
         font-weight: 700;
-        color: #0f172a;
+        color: #2f1d2a;
         margin-bottom: 2px;
     }
 
     .o_twilio_cfg_card_sub {
         font-size: 12px;
-        color: #64748b;
+        color: #7a6674;
         margin-bottom: 16px;
         line-height: 1.4;
     }
@@ -1897,14 +2257,14 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         padding: 10px 12px;
         margin-bottom: 16px;
         border-radius: 10px;
-        background: #eff6ff;
-        border: 1px solid #bfdbfe;
-        color: #1e3a5f;
+        background: $o_dialer-primary-light;
+        border: 1px solid rgba($o_dialer-primary, 0.18);
+        color: darken($o_dialer-primary, 8%);
         font-size: 12px;
         line-height: 1.45;
 
         i {
-            color: #0369a1;
+            color: $o_dialer-primary;
             margin-top: 2px;
             flex-shrink: 0;
         }
@@ -2064,7 +2424,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
 
     .o_twilio_password_eye:hover,
     .o_twilio_password_eye:focus {
-        color: #0ea5e9 !important;
+        color: $o_dialer-primary !important;
         text-decoration: none !important;
     }
 
@@ -2116,8 +2476,8 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: #eff6ff;
-        color: #0369a1;
+        background: $o_dialer-primary-light;
+        color: $o_dialer-primary;
         margin-bottom: 10px;
         font-size: 16px;
     }
@@ -2140,7 +2500,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         text-decoration: none;
 
         &:hover {
-            color: #0369a1;
+            color: $o_dialer-primary;
             text-decoration: underline;
         }
     }
@@ -2154,8 +2514,8 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     .o_twilio_cfg_input input:focus,
     .o_twilio_cfg_input .o_input:focus,
     .o_twilio_cfg_input .o_select_menu_toggler:focus {
-        border-color: #0ea5e9 !important;
-        box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15) !important;
+        border-color: $o_dialer-primary !important;
+        box-shadow: 0 0 0 3px rgba($o_dialer-primary, 0.15) !important;
         background: #fff !important;
         outline: none !important;
     }
@@ -2236,6 +2596,33 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 
     @media (max-width: 992px) {
+        &.o_twilio_cfg_shell {
+            grid-template-columns: 1fr;
+        }
+
+        .o_twilio_cfg_nav_host {
+            grid-column: 1 !important;
+            grid-row: auto !important;
+            max-width: none;
+            position: static;
+            margin-bottom: 12px !important;
+        }
+
+        &.o_twilio_cfg_shell > .o_settings_container:not(.o_twilio_cfg_nav_host),
+        &.o_twilio_cfg_shell > *:not(.o_twilio_cfg_nav_host) {
+            grid-column: 1;
+        }
+
+        .o_twilio_cfg_nav_list {
+            flex-direction: row;
+            flex-wrap: wrap;
+        }
+
+        .o_twilio_cfg_nav_item {
+            flex: 1 1 calc(50% - 4px);
+            min-width: 140px;
+        }
+
         .o_twilio_cfg_grid {
             grid-template-columns: 1fr;
         }

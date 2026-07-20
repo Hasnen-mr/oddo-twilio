@@ -11,9 +11,11 @@
 
                 <app string="Twilio Call Auto Dialer" name="twilio_dialer">
                     <field name="twilio_is_connected" invisible="1"/>
+                    <field name="twilio_config_section" widget="twilio_config_nav" class="o_twilio_cfg_nav_field"/>
 
-                    <!-- Connection overview -->
-                    <block title="Connection" name="twilio_connection_overview">
+                    <!-- Connection overview (Account section) -->
+                    <block title="Connection" name="twilio_connection_overview"
+                           invisible="twilio_config_section != 'account'">
                         <div class="o_twilio_cfg_banner w-100">
                             <div class="o_twilio_cfg_banner_left">
                                 <div class="o_twilio_cfg_banner_title">Twilio connection</div>
@@ -39,7 +41,8 @@
                     </block>
 
                     <!-- Account -->
-                    <block title="Account Details" name="twilio_account_details">
+                    <block title="Account Details" name="twilio_account_details"
+                           invisible="twilio_config_section != 'account'">
                         <div class="o_twilio_cfg_grid w-100">
                             <div class="o_twilio_cfg_card">
                                 <div class="o_twilio_cfg_card_title">Credentials</div>
@@ -62,6 +65,19 @@
                                             widget="password_toggle"
                                             class="o_twilio_cfg_input"
                                             placeholder="Your Twilio Auth Token"/>
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_contact_email" class="o_twilio_cfg_label">Contact Email</label>
+                                    <field name="twilio_contact_email"
+                                            class="o_twilio_cfg_input"
+                                            placeholder="you@company.com"
+                                            widget="email"/>
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_contact_phone" class="o_twilio_cfg_label">Contact Phone</label>
+                                    <field name="twilio_contact_phone"
+                                            class="o_twilio_cfg_input"
+                                            placeholder="+15551234567"/>
                                 </div>
 
                                 <div class="o_twilio_cfg_actions">
@@ -122,11 +138,15 @@
                         </div>
                     </block>
 
-                    <!-- Call Settings (only when connected) -->
+                    <!-- Call Settings -->
                     <block title="Call Settings" name="twilio_call_settings"
-                           invisible="not twilio_is_connected">
+                           invisible="twilio_config_section != 'call' or not twilio_is_connected">
                         <field name="twilio_call_settings_error" invisible="1"/>
-                        <div class="alert alert-warning w-100" invisible="not twilio_call_settings_error">
+                        <field name="twilio_call_settings_autosave"
+                                widget="twilio_call_settings_autosave"
+                                nolabel="1"
+                                class="o_twilio_call_settings_autosave_field"/>
+                        <div class="alert alert-warning w-100" role="alert" invisible="not twilio_call_settings_error">
                             <field name="twilio_call_settings_error" readonly="1"/>
                         </div>
                         <div class="o_twilio_cfg_grid w-100">
@@ -206,19 +226,13 @@
                                     </div>
                                     <field name="twilio_outgoing_smart_copy" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
-                                <div class="o_twilio_cfg_actions">
-                                    <button name="action_save_call_settings"
-                                            type="object"
-                                            string="Save Call Settings"
-                                            class="btn btn-primary"/>
-                                </div>
                             </div>
                         </div>
                     </block>
 
-                    <!-- AI Settings (only when connected) -->
+                    <!-- AI Settings -->
                     <block title="AI Settings" name="twilio_ai_settings"
-                           invisible="not twilio_is_connected">
+                           invisible="twilio_config_section != 'ai' or not twilio_is_connected">
                         <div class="o_twilio_cfg_grid w-100">
                             <div class="o_twilio_cfg_card">
                                 <div class="o_twilio_cfg_card_title">Providers</div>
@@ -273,6 +287,12 @@
                                 </div>
                             </div>
                         </div>
+                    </block>
+
+                    <!-- Billing -->
+                    <block title="Billing" name="twilio_billing_settings"
+                           invisible="twilio_config_section != 'billing' or not twilio_is_connected">
+                        <field name="twilio_billing_panel" widget="twilio_billing_panel" nolabel="1" class="w-100 o_twilio_cfg_billing_field"/>
                     </block>
 
                 </app>

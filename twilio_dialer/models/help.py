@@ -7,13 +7,5 @@ class TwilioHelp(models.TransientModel):
     _description = "Help"
 
     def action_open_help(self):
-        """Open the Help information page."""
-        wizard = self.create({})
-        return {
-            "type": "ir.actions.act_window",
-            "name": "Help",
-            "res_model": "twilio.help",
-            "res_id": wizard.id,
-            "view_mode": "form",
-            "target": "current",
-        }
+        """Open About Us on the Help section."""
+        return self.env["twilio.contact.us"].action_open_contact_us(section="help")

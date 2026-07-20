@@ -4,7 +4,7 @@ import logging
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
-from ..services import MyBroadcastAPI, MyBroadcastAPIError
+from ..services import MyBroadcastAPI, MyBroadcastAPIError, ZantaTechAPI, ZantaTechAPIError
 
 _logger = logging.getLogger(__name__)
 
@@ -12,21 +12,20 @@ _logger = logging.getLogger(__name__)
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
 
-    # UI section toggles (open / close) — stored so the settings view can resolve them
-    twilio_section_account_open = fields.Boolean(
-        string="Account Details",
-        config_parameter="twilio_dialer.section_account_open",
-        default=True,
+    # Left-sidebar section on Configuration page (client-only, not persisted)
+    twilio_config_section = fields.Selection(
+        selection=[
+            ("call", "Call Settings"),
+            ("ai", "AI Settings"),
+            ("account", "Account Setting"),
+            ("billing", "Billing"),
+        ],
+        string="Configuration Section",
+        default="call",
     )
-    twilio_section_call_open = fields.Boolean(
-        string="Call Settings",
-        config_parameter="twilio_dialer.section_call_open",
-        default=True,
-    )
-    twilio_section_ai_open = fields.Boolean(
-        string="AI Settings",
-        config_parameter="twilio_dialer.section_ai_open",
-        default=True,
+    twilio_billing_panel = fields.Char(
+        string="Billing Panel",
+        default="1",
     )
 
     # ── Account Details ───────────────────────────────────
@@ -37,6 +36,15 @@ class ResConfigSettings(models.TransientModel):
     twilio_auth_token = fields.Char(
         string="Auth Token",
         config_parameter="twilio_dialer.auth_token",
+    )
+    twilio_contact_email = fields.Char(
+        string="Contact Email",
+        config_parameter="twilio_dialer.contact_email",
+        help="Email used for module registration and support notifications.",
+    )
+    twilio_contact_phone = fields.Char(
+        string="Contact Phone",
+        config_parameter="twilio_dialer.contact_phone",
     )
     twilio_phone_number = fields.Selection(
         string="Twilio Phone Number",
@@ -101,6 +109,10 @@ class ResConfigSettings(models.TransientModel):
         string="Smart Copy",
     )
     twilio_call_settings_error = fields.Char(readonly=True)
+    twilio_call_settings_autosave = fields.Char(
+        string="Call Settings Autosave",
+        default="1",
+    )
 
     # ── AI Settings ───────────────────────────────────────
     twilio_ai_provider = fields.Selection(
@@ -233,6 +245,11 @@ class ResConfigSettings(models.TransientModel):
     @api.model
     def get_values(self):
         values = super().get_values()
+        connected = bool(
+            values.get("twilio_api_key_sid") and values.get("twilio_application_sid")
+        )
+        values["twilio_config_section"] = "call" if connected else "account"
+
         account_sid = self.env["ir.config_parameter"].sudo().get_param(
             "twilio_dialer.account_sid"
         )
@@ -253,44 +270,88 @@ class ResConfigSettings(models.TransientModel):
 
     def action_save_call_settings(self):
         self.ensure_one()
-        if not self.twilio_account_sid:
-            return self._reload_twilio_settings(
-                "Call Settings",
-                "Configure and save a Twilio Account SID before saving call settings.",
-                "warning",
-            )
+        result = self.autosave_call_settings({
+            "twilio_account_sid": self.twilio_account_sid,
+            "twilio_phone_number": self.twilio_phone_number,
+            "twilio_incoming_enabled": self.twilio_incoming_enabled,
+            "twilio_incoming_record": self.twilio_incoming_record,
+            "twilio_incoming_voicemail": self.twilio_incoming_voicemail,
+            "twilio_incoming_voicemail_text": self.twilio_incoming_voicemail_text or "",
+            "twilio_incoming_forward": self.twilio_incoming_forward,
+            "twilio_incoming_forward_to": self.twilio_incoming_forward_to or "",
+            "twilio_outgoing_record": self.twilio_outgoing_record,
+            "twilio_outgoing_smart_copy": self.twilio_outgoing_smart_copy,
+        })
+        notif_type = "success" if result.get("success") else "danger"
+        if result.get("success"):
+            incoming = result.get("incoming") or {}
+            outgoing = result.get("outgoing") or {}
+            if incoming or outgoing:
+                self.update(self._call_settings_values(incoming, outgoing))
+        return self._reload_twilio_settings(
+            "Call Settings",
+            result.get("message") or "Settings updated successfully.",
+            notif_type,
+        )
+
+    @api.model
+    def autosave_call_settings(self, values):
+        """Persist Call Settings immediately (no Save button / no page reload)."""
+        values = values or {}
+        account_sid = (
+            values.get("twilio_account_sid")
+            or self.env["ir.config_parameter"].sudo().get_param("twilio_dialer.account_sid")
+        )
+        if not account_sid:
+            return {
+                "success": False,
+                "message": "Configure and save a Twilio Account SID before updating call settings.",
+            }
+
+        phone_number = values.get("twilio_phone_number")
+        if phone_number:
+            try:
+                phone_number = self.env["twilio.service"].validate_phone_number(phone_number)
+                self.env["ir.config_parameter"].sudo().set_param(
+                    "twilio_dialer.phone_number",
+                    phone_number,
+                )
+            except UserError as error:
+                return {"success": False, "message": str(error)}
 
         settings = {
             "incomingCallSetting": {
-                "allow": self.twilio_incoming_enabled,
-                "record": self.twilio_incoming_record,
-                "voicemail": self.twilio_incoming_voicemail,
-                "voicemailText": self.twilio_incoming_voicemail_text or "",
-                "forward": self.twilio_incoming_forward,
-                "forwardTo": self.twilio_incoming_forward_to or "",
+                "allow": bool(values.get("twilio_incoming_enabled")),
+                "record": bool(values.get("twilio_incoming_record")),
+                "voicemail": bool(values.get("twilio_incoming_voicemail")),
+                "voicemailText": values.get("twilio_incoming_voicemail_text") or "",
+                "forward": bool(values.get("twilio_incoming_forward")),
+                "forwardTo": values.get("twilio_incoming_forward_to") or "",
             },
             "outgoingCallSetting": {
-                "record": self.twilio_outgoing_record,
-                "smartCopy": self.twilio_outgoing_smart_copy,
+                "record": bool(values.get("twilio_outgoing_record")),
+                "smartCopy": bool(values.get("twilio_outgoing_smart_copy")),
             },
         }
         try:
-            payload = MyBroadcastAPI().save_call_settings(
-                self.twilio_account_sid,
-                settings,
-            )
+            payload = MyBroadcastAPI().save_call_settings(account_sid, settings)
         except MyBroadcastAPIError as error:
-            return self._reload_twilio_settings("Call Settings", str(error), "danger")
+            return {"success": False, "message": str(error)}
 
         incoming, outgoing, error = self._parse_call_settings(payload)
         if error:
-            _logger.warning("MyBroadcast returned malformed Call Settings after save: %s", error)
-            return self._reload_twilio_settings("Call Settings", error, "warning")
-        self.update(self._call_settings_values(incoming, outgoing))
-        return self._reload_twilio_settings(
-            "Call Settings",
-            "Call settings were saved successfully.",
-        )
+            _logger.warning(
+                "MyBroadcast returned malformed Call Settings after autosave: %s",
+                error,
+            )
+            return {"success": False, "message": error}
+
+        return {
+            "success": True,
+            "message": "Settings updated successfully.",
+            "incoming": incoming,
+            "outgoing": outgoing,
+        }
 
     @api.model
     def _get_twilio_phone_number_selection(self):
@@ -438,6 +499,7 @@ class ResConfigSettings(models.TransientModel):
                     record._generate_twilio_configuration_values(
                         force_new_api_key=creds_changed and bool(stored_sid or stored_token)
                     )
+                    record._submit_module_registration()
                 except UserError as error:
                     _logger.warning("Twilio auto-configuration failed: %s", error)
                     raise UserError(
@@ -454,6 +516,38 @@ class ResConfigSettings(models.TransientModel):
                     ) from error
 
         return super().set_values()
+
+    def _submit_module_registration(self):
+        """Notify ZantaTech when a Twilio account is connected to the module."""
+        self.ensure_one()
+        icp = self.env["ir.config_parameter"].sudo()
+        account_sid = self.twilio_account_sid or icp.get_param("twilio_dialer.account_sid")
+        if not account_sid:
+            return
+
+        email = (
+            (self.twilio_contact_email or "").strip()
+            or icp.get_param("twilio_dialer.contact_email")
+            or ""
+        )
+        phone = (
+            (self.twilio_contact_phone or "").strip()
+            or icp.get_param("twilio_dialer.contact_phone")
+            or ""
+        )
+        payload = {
+            "accountSid": account_sid,
+            "email": email,
+            "phone": phone,
+            "message": "New Registration",
+            "title": "Odoo Module login",
+        }
+        try:
+            ZantaTechAPI().submit_feedback(payload)
+        except ZantaTechAPIError as error:
+            _logger.warning("Module registration feedback failed: %s", error)
+        except Exception:
+            _logger.exception("Unexpected error submitting module registration feedback")
 
     def _refresh_incoming_phone_numbers(self):
         icp = self.env["ir.config_parameter"].sudo()
@@ -569,6 +663,8 @@ class ResConfigSettings(models.TransientModel):
         for key in (
             "twilio_dialer.account_sid",
             "twilio_dialer.auth_token",
+            "twilio_dialer.contact_email",
+            "twilio_dialer.contact_phone",
             "twilio_dialer.phone_number",
             "twilio_dialer.incoming_phone_numbers",
             "twilio_dialer.api_key_sid",
@@ -583,6 +679,8 @@ class ResConfigSettings(models.TransientModel):
 
         self.twilio_account_sid = False
         self.twilio_auth_token = False
+        self.twilio_contact_email = False
+        self.twilio_contact_phone = False
         self.twilio_phone_number = False
         self.twilio_api_key_sid = False
         self.twilio_api_secret = False
@@ -601,6 +699,8 @@ class ResConfigSettings(models.TransientModel):
             raise UserError("Please enter your Twilio Account SID.")
         if not self.twilio_auth_token:
             raise UserError("Please enter your Twilio Auth Token.")
+        if not (self.twilio_contact_email or "").strip():
+            raise UserError("Please enter a Contact Email in Account Settings.")
 
         icp = self.env["ir.config_parameter"].sudo()
         stored_sid = icp.get_param("twilio_dialer.account_sid") or ""
@@ -627,6 +727,8 @@ class ResConfigSettings(models.TransientModel):
             ) from error
 
         self.with_context(twilio_skip_auto_generate=True).set_values()
+        if creds_changed or incomplete:
+            self._submit_module_registration()
         return self._reload_twilio_settings(
             "Twilio Connection",
             "Credentials saved. API key, application ID, and phone numbers are ready.",

@@ -5,70 +5,254 @@
         <field name="name">twilio.contact.us.form</field>
         <field name="model">twilio.contact.us</field>
         <field name="arch" type="xml">
-            <form string="About Us" create="0" edit="0" delete="0">
-                <header>
-                    <button name="%(action_twilio_open_phone)d"
-                            type="action"
-                            string="Open Phone"
-                            icon="fa-phone"
-                            class="btn-primary"/>
-                </header>
+            <form string="About Us" create="0" delete="0" class="o_twilio_about_form">
                 <sheet>
-                    <div class="o_twilio_contact_hero">
-                        <div class="o_twilio_contact_hero_icon">
-                            <i class="fa fa-info-circle" title="About us"/>
+                    <field name="about_section" invisible="1"/>
+                    <field name="about_nav" widget="twilio_about_nav" nolabel="1" class="o_twilio_about_nav_field"/>
+
+                    <!-- 1. About Module -->
+                    <div class="o_twilio_about_panel" invisible="about_section != 'overview'">
+                        <div class="o_twilio_contact_hero">
+                            <div class="o_twilio_contact_hero_icon">
+                                <i class="fa fa-info-circle" title="About module"/>
+                            </div>
+                            <div>
+                                <h1>What this module does</h1>
+                                <p>
+                                    Twilio Call Auto Dialer brings browser calling, Auto Dialer campaigns,
+                                    contact click-to-call, local call logs, and optional AI summaries into Odoo.
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1>About Us</h1>
+
+                        <div class="o_twilio_contact_section_title">Module features</div>
+                        <div class="o_twilio_help_page_list">
+                            <div class="o_twilio_help_page_item">
+                                <span class="o_twilio_help_page_step">
+                                    <i class="fa fa-phone" title="Calling"/>
+                                </span>
+                                <div>
+                                    <strong>Twilio calling in Odoo</strong>
+                                    <p>Softphone dialpad, inbound/outbound calls, mute, DTMF, and caller ID selection.</p>
+                                </div>
+                            </div>
+                            <div class="o_twilio_help_page_item">
+                                <span class="o_twilio_help_page_step">
+                                    <i class="fa fa-list" title="Auto Dialer"/>
+                                </span>
+                                <div>
+                                    <strong>Auto Dialer campaigns</strong>
+                                    <p>Load phone lists, start/pause campaigns, and track dialed vs remaining numbers.</p>
+                                </div>
+                            </div>
+                            <div class="o_twilio_help_page_item">
+                                <span class="o_twilio_help_page_step">
+                                    <i class="fa fa-database" title="Call logs"/>
+                                </span>
+                                <div>
+                                    <strong>Local call logs</strong>
+                                    <p>Store call status, duration, and partner links in your Odoo database.</p>
+                                </div>
+                            </div>
+                            <div class="o_twilio_help_page_item">
+                                <span class="o_twilio_help_page_step">
+                                    <i class="fa fa-magic" title="AI"/>
+                                </span>
+                                <div>
+                                    <strong>Optional AI transcription</strong>
+                                    <p>Generate transcripts and short CRM-friendly summaries with your AI provider.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_contact_section_title">Prerequisites</div>
+                        <div class="o_twilio_cfg_card o_twilio_about_prereq">
+                            <div class="o_twilio_cfg_card_title">
+                                <i class="fa fa-credit-card"/> Paid Twilio account required
+                            </div>
+                            <div class="o_twilio_cfg_card_sub">
+                                This module connects to <strong>your own Twilio account</strong>. You need:
+                            </div>
+                            <ul class="o_twilio_about_prereq_list">
+                                <li>An active <strong>paid Twilio account</strong> with Account SID and Auth Token</li>
+                                <li>At least one Twilio phone number with voice capability</li>
+                                <li>Sufficient Twilio balance for outbound/inbound voice minutes</li>
+                                <li>A public HTTPS URL for TwiML voice callbacks in production</li>
+                            </ul>
+                            <p class="mb-0 text-muted">
+                                Twilio minutes and numbers are billed by Twilio — not by this Odoo module.
+                            </p>
+                        </div>
+
+                        <div class="o_twilio_contact_footer_note">
+                            <i class="fa fa-shield" title="Privacy"/>
+                            Your Twilio credentials and Odoo data remain in your own Odoo database.
+                        </div>
+                    </div>
+
+                    <!-- 2. Help / Submit issue -->
+                    <div class="o_twilio_about_panel" invisible="about_section != 'help'">
+                        <div class="o_twilio_contact_hero">
+                            <div class="o_twilio_contact_hero_icon">
+                                <i class="fa fa-life-ring" title="Help"/>
+                            </div>
+                            <div>
+                                <h1>Help &amp; support</h1>
+                                <p>
+                                    Submit an issue and our team will follow up. You can also reach us by email,
+                                    WhatsApp, or book a call.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_cfg_card o_twilio_about_help_form">
+                            <div class="o_twilio_cfg_card_title">Submit an issue</div>
+                            <div class="o_twilio_cfg_card_sub">
+                                Tell us what you need help with. We receive your request securely.
+                            </div>
+
+                            <div class="o_twilio_cfg_field">
+                                <label for="help_email" class="o_twilio_cfg_label">Email</label>
+                                <field name="help_email" class="o_twilio_cfg_input" required="1" placeholder="you@company.com"/>
+                            </div>
+                            <div class="o_twilio_cfg_field">
+                                <label for="help_phone" class="o_twilio_cfg_label">Phone</label>
+                                <field name="help_phone" class="o_twilio_cfg_input" placeholder="+15551234567"/>
+                            </div>
+                            <div class="o_twilio_cfg_field">
+                                <label for="help_use_case" class="o_twilio_cfg_label">Use case</label>
+                                <field name="help_use_case" class="o_twilio_cfg_input" placeholder="Sales outbound calling from Odoo"/>
+                            </div>
+                            <div class="o_twilio_cfg_field">
+                                <label for="help_message" class="o_twilio_cfg_label">Message</label>
+                                <field name="help_message" class="o_twilio_cfg_input" required="1" placeholder="Describe your issue…"/>
+                            </div>
+                            <div class="o_twilio_cfg_field">
+                                <label for="help_account_sid" class="o_twilio_cfg_label">Twilio Account SID (optional)</label>
+                                <field name="help_account_sid" class="o_twilio_cfg_input" readonly="1"/>
+                            </div>
+                            <div class="o_twilio_cfg_actions">
+                                <button name="action_submit_help"
+                                        type="object"
+                                        string="Submit Issue"
+                                        class="btn btn-primary"
+                                        icon="fa-paper-plane"/>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_contact_section_title">Other ways to reach us</div>
+                        <div class="o_twilio_contact_grid">
+                            <div class="o_twilio_contact_card">
+                                <div class="o_twilio_contact_icon">
+                                    <i class="fa fa-envelope" title="Email"/>
+                                </div>
+                                <div class="o_twilio_contact_label">Email</div>
+                                <a class="o_twilio_contact_value" href="mailto:developer.lifetips@gmail.com">
+                                    developer.lifetips@gmail.com
+                                </a>
+                            </div>
+                            <div class="o_twilio_contact_card">
+                                <div class="o_twilio_contact_icon">
+                                    <i class="fa fa-whatsapp" title="WhatsApp"/>
+                                </div>
+                                <div class="o_twilio_contact_label">WhatsApp</div>
+                                <a class="o_twilio_contact_value"
+                                   href="https://wa.me/918320354644"
+                                   target="_blank"
+                                   rel="noreferrer noopener">
+                                    +91 8320354644
+                                </a>
+                            </div>
+                            <div class="o_twilio_contact_card">
+                                <div class="o_twilio_contact_icon">
+                                    <i class="fa fa-calendar" title="Book a call"/>
+                                </div>
+                                <div class="o_twilio_contact_label">Book a call</div>
+                                <a class="o_twilio_contact_value"
+                                   href="https://calendly.com/zantahub-info/30min"
+                                   target="_blank"
+                                   rel="noreferrer noopener">
+                                    Calendly — 30 min
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. Terms & Privacy -->
+                    <div class="o_twilio_about_panel" invisible="about_section != 'terms'">
+                        <div class="o_twilio_contact_hero">
+                            <div class="o_twilio_contact_hero_icon">
+                                <i class="fa fa-file-text-o" title="Terms"/>
+                            </div>
+                            <div>
+                                <h1>Terms &amp; Privacy</h1>
+                                <p>
+                                    How Twilio Call Auto Dialer works with your Twilio account, how data is handled,
+                                    and our fair usage policy.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_terms_block">
+                            <h3>1. Your Twilio Account</h3>
                             <p>
-                                Learn about Twilio Call Auto Dialer and reach our team for
-                                setup help, product support, or a personalized walkthrough.
+                                Twilio Call Auto Dialer connects exclusively to
+                                <strong>your own Twilio account</strong>. You must provide your
+                                Twilio Account SID, Auth Token, and phone number. All voice calls
+                                are executed through Twilio under your account and billed by Twilio.
+                            </p>
+                            <p>
+                                A <strong>paid Twilio account</strong> with sufficient balance is required.
+                                This module does not provide telephony minutes or Twilio credit.
+                            </p>
+
+                            <h3>2. Scope of the Software</h3>
+                            <p>
+                                The software provides an Odoo interface for softphone calling,
+                                Auto Dialer campaigns, contact click-to-call, local call logs, and
+                                optional AI transcription features.
+                            </p>
+
+                            <h3>3. Acceptable Use</h3>
+                            <p>
+                                Use this module only for lawful business communication.
+                                Do not use it for spam, harassment, unsolicited bulk calling, or any
+                                activity prohibited by law or Twilio’s Acceptable Use Policy.
+                            </p>
+
+                            <h3>4. Privacy — Data Stays in Your Odoo</h3>
+                            <p>
+                                Contact records, call logs, campaign lists, transcripts, and
+                                configuration are stored in <strong>your Odoo database</strong>.
+                                Twilio credentials are stored in your Odoo system parameters.
+                            </p>
+                            <p>
+                                Call audio and signaling are processed by <strong>Twilio</strong>
+                                under your account. If you enable AI features, content may be sent to
+                                the AI provider you configure.
+                            </p>
+
+                            <h3>5. Fair Usage</h3>
+                            <p>
+                                The module is offered free for core use with a monthly fair-usage
+                                allowance. Higher volume may require In-App Purchase add-ons.
+                                Twilio voice minutes remain billed by Twilio separately.
+                            </p>
+
+                            <h3>6. No Warranty</h3>
+                            <p>
+                                The software is provided as-is. Call quality depends on Twilio,
+                                your network, and end-user devices.
+                            </p>
+
+                            <p class="text-muted mt-3">
+                                Questions? Contact
+                                <a href="mailto:developer.lifetips@gmail.com">developer.lifetips@gmail.com</a>
+                                or use the Help section to submit an issue.
                             </p>
                         </div>
                     </div>
-
-                    <div class="o_twilio_contact_section_title">
-                        What we offer
-                    </div>
-
-                    <div class="o_twilio_help_page_list">
-                        <div class="o_twilio_help_page_item">
-                            <span class="o_twilio_help_page_step">
-                                <i class="fa fa-phone" title="Calling"/>
-                            </span>
-                            <div>
-                                <strong>Twilio calling in Odoo</strong>
-                                <p>Browser softphone, Auto Dialer campaigns, call logs, and optional AI summaries.</p>
-                            </div>
-                        </div>
-                        <div class="o_twilio_help_page_item">
-                            <span class="o_twilio_help_page_step">
-                                <i class="fa fa-shield" title="Data privacy"/>
-                            </span>
-                            <div>
-                                <strong>Your account, your data</strong>
-                                <p>Connects to your Twilio account. Credentials and call records stay in your Odoo database.</p>
-                            </div>
-                        </div>
-                        <div class="o_twilio_help_page_item">
-                            <span class="o_twilio_help_page_step">
-                                <i class="fa fa-life-ring" title="Support"/>
-                            </span>
-                            <div>
-                                <strong>Need help or contact?</strong>
-                                <p>Open About Us → Help for setup tips and our email, WhatsApp, and booking links.</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="o_twilio_contact_footer_note">
-                        <i class="fa fa-shield" title="Privacy"/>
-                        Your Twilio credentials and Odoo data remain in your own Odoo database.
-                    </div>
                 </sheet>
-                <footer>
-                    <button string="Close" class="btn-secondary" special="cancel"/>
-                </footer>
             </form>
         </field>
     </record>

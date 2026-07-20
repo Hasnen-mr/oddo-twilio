@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="twilio_dialer.TwilioConfigNav">
+        <nav class="o_twilio_cfg_nav" t-ref="root" aria-label="Configuration sections">
+            <div class="o_twilio_cfg_nav_brand">
+                <i class="fa fa-cog"/>
+                <div>
+                    <div class="o_twilio_cfg_nav_brand_title">Configuration</div>
+                    <div class="o_twilio_cfg_nav_brand_sub">Twilio Call Auto Dialer</div>
+                </div>
+            </div>
+            <ul class="o_twilio_cfg_nav_list">
+                <li t-foreach="sections" t-as="section" t-key="section.id">
+                    <button type="button"
+                            class="o_twilio_cfg_nav_item"
+                            t-att-class="{ 'o_twilio_cfg_nav_item--active': isActive(section) }"
+                            t-att-title="section.label"
+                            t-on-click="() => this.selectSection(section)">
+                        <i t-att-class="'fa ' + section.icon"/>
+                        <span t-esc="section.label"/>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </t>
+
+    <t t-name="twilio_dialer.TwilioBillingPanel">
+        <div class="o_twilio_cfg_billing_panel w-100">
+            <BillingDashboard/>
+        </div>
+    </t>
+</templates>

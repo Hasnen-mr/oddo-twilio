@@ -3,16 +3,71 @@
     <t t-name="twilio_dialer.BillingDashboard">
         <div class="o_twilio_billing">
             <t t-if="state.loading"><div class="o_twilio_billing_skeleton"/></t>
-            <t t-elif="state.error"><div class="alert alert-warning"><t t-esc="state.error"/></div><button class="btn btn-primary" t-on-click="refresh">Refresh</button></t>
+            <t t-elif="state.error">
+                <div class="alert alert-warning"><t t-esc="state.error"/></div>
+                <button class="btn btn-primary" t-on-click="refresh">Refresh</button>
+            </t>
             <t t-else="">
-                <t t-call="twilio_dialer.BillingHero"/><t t-call="twilio_dialer.BillingKpis"/><t t-call="twilio_dialer.BillingUsage"/><div class="o_twilio_billing_split"><t t-call="twilio_dialer.BillingHistory"/><t t-call="twilio_dialer.BillingActivity"/></div><t t-call="twilio_dialer.BillingActions"/>
+                <t t-call="twilio_dialer.BillingKpis"/>
+                <t t-call="twilio_dialer.BillingActions"/>
             </t>
         </div>
     </t>
-    <t t-name="twilio_dialer.BillingHero"><section class="o_billing_hero"><div><span class="o_billing_eyebrow">ACCOUNT &amp; BILLING</span><h1>Usage &amp; Credits</h1><p>Track call usage and purchased credits.</p><div class="o_billing_meta"><span><i class="fa fa-shield"/> Connected</span><span><i class="fa fa-key"/> <t t-esc="maskedAccountSid"/></span><span><i class="fa fa-bolt"/> Current plan: Usage credits</span></div></div><div class="o_billing_power"><i class="fa fa-power-off"/></div></section></t>
-    <t t-name="twilio_dialer.BillingKpis"><section class="o_billing_kpis"><div class="o_billing_kpi"><i class="fa fa-wallet"/><span>Credits Remaining</span><b t-esc="state.billing.remaining"/><small>Available for calls</small></div><div class="o_billing_kpi"><i class="fa fa-coins"/><span>Total Credits</span><b t-esc="state.billing.limit"/><small>Current allowance</small></div><div class="o_billing_kpi"><i class="fa fa-phone"/><span>Calls Used</span><b t-esc="state.billing.usage"/><small><t t-esc="state.billing.incoming"/> incoming · <t t-esc="state.billing.outgoing"/> outgoing</small></div><div class="o_billing_kpi"><i class="fa fa-chart-line"/><span>Usage Percentage</span><b><t t-esc="Math.round(progress)"/>%</b><small>Of current allowance</small></div></section></t>
-    <t t-name="twilio_dialer.BillingUsage"><section class="o_billing_glass o_billing_usage"><div><span class="o_billing_eyebrow">USAGE PROGRESS</span><h2><t t-esc="Math.round(progress)"/>% used</h2><p><t t-esc="state.billing.usage"/> / <t t-esc="state.billing.limit"/> Credits Used</p></div><span class="o_billing_badge" t-att-class="'o_billing_badge--' + usageState"><t t-esc="usageState === 'over-limit' ? 'Over Limit' : usageState === 'warning' ? 'Near Limit' : 'On Track'"/></span><progress t-att-class="'o_billing_progress o_billing_progress--' + usageState" t-att-value="state.billing.usage" t-att-max="state.billing.limit"/><footer><span><i class="fa fa-check-circle"/> <t t-esc="state.billing.remaining"/> credits remaining</span><span t-if="state.billing.lastCallAt">Last call: <t t-esc="state.billing.lastCallAt"/></span></footer></section></t>
-    <t t-name="twilio_dialer.BillingHistory"><section class="o_billing_glass"><header><div><span class="o_billing_eyebrow">CREDITS &amp; TOP-UP</span><h2>Purchase History</h2></div><i class="fa fa-history"/></header><t t-if="purchaseHistory.length"><table><thead><tr><th>Date</th><th>Credits</th><th>Amount</th><th>Status</th></tr></thead><tbody><tr t-foreach="purchaseHistory" t-as="purchase" t-key="purchase.id"><td t-esc="purchase.date"/><td t-esc="purchase.credits"/><td t-esc="purchase.amount"/><td t-esc="purchase.status"/></tr></tbody></table></t><t t-else=""><div class="o_billing_empty"><i class="fa fa-credit-card"/><strong>No purchase history yet.</strong><span>No purchase history available.</span></div></t></section></t>
-    <t t-name="twilio_dialer.BillingActivity"><section class="o_billing_glass"><header><div><span class="o_billing_eyebrow">BILLING ACTIVITY</span><h2>Recent Activity</h2></div><i class="fa fa-bolt"/></header><t t-if="activity.length"><ul><li t-foreach="activity" t-as="item" t-key="item.id" t-esc="item.label"/></ul></t><t t-else=""><div class="o_billing_empty"><i class="fa fa-history"/><strong>No billing activity yet.</strong><span>Top-ups and billing updates will appear here.</span></div></t></section></t>
-    <t t-name="twilio_dialer.BillingActions"><section class="o_billing_glass o_billing_actions"><div><span class="o_billing_eyebrow">ACTIONS</span><h2>Manage Billing</h2></div><button class="btn o_billing_btn" t-on-click="refresh"><i class="fa fa-refresh"/> Refresh</button><button class="btn o_billing_btn o_billing_btn--primary" t-att-disabled="!state.billing.topUpUrl" t-on-click="() => openUrl(state.billing.topUpUrl)"><i class="fa fa-arrow-up"/> Top Up Credits</button><button class="btn o_billing_btn" t-att-disabled="!state.billing.billingUrl" t-on-click="() => openUrl(state.billing.billingUrl)"><i class="fa fa-external-link"/> Billing Portal</button><button class="btn o_billing_btn" disabled="disabled"><i class="fa fa-question-circle"/> Help</button></section></t>
+
+    <t t-name="twilio_dialer.BillingKpis">
+        <section class="o_billing_kpis">
+            <div class="o_billing_kpi">
+                <i class="fa fa-wallet"/>
+                <span>Credits Remaining</span>
+                <b t-esc="state.billing.remaining"/>
+                <small>Available for calls</small>
+            </div>
+            <div class="o_billing_kpi">
+                <i class="fa fa-coins"/>
+                <span>Total Credits</span>
+                <b t-esc="state.billing.limit"/>
+                <small>Current allowance</small>
+            </div>
+            <div class="o_billing_kpi">
+                <i class="fa fa-phone"/>
+                <span>Calls Used</span>
+                <b t-esc="state.billing.usage"/>
+                <small>
+                    <t t-esc="state.billing.incoming"/> incoming ·
+                    <t t-esc="state.billing.outgoing"/> outgoing
+                </small>
+            </div>
+            <div class="o_billing_kpi">
+                <i class="fa fa-chart-line"/>
+                <span>Usage Percentage</span>
+                <b><t t-esc="Math.round(progress)"/>%</b>
+                <small>Of current allowance</small>
+            </div>
+        </section>
+    </t>
+
+    <t t-name="twilio_dialer.BillingActions">
+        <section class="o_billing_glass o_billing_actions">
+            <div>
+                <span class="o_billing_eyebrow">ACTIONS</span>
+                <h2>Manage Billing</h2>
+            </div>
+            <button class="btn o_billing_btn" t-on-click="refresh">
+                <i class="fa fa-refresh"/> Refresh
+            </button>
+            <button class="btn o_billing_btn o_billing_btn--primary"
+                    t-att-disabled="!state.billing.topUpUrl"
+                    t-on-click="() => openUrl(state.billing.topUpUrl)">
+                <i class="fa fa-arrow-up"/> Top Up Credits
+            </button>
+            <button class="btn o_billing_btn"
+                    t-att-disabled="!state.billing.billingUrl"
+                    t-on-click="() => openUrl(state.billing.billingUrl)">
+                <i class="fa fa-external-link"/> Billing Portal
+            </button>
+            <button class="btn o_billing_btn" disabled="disabled">
+                <i class="fa fa-question-circle"/> Help
+            </button>
+        </section>
+    </t>
 </templates>

@@ -66,7 +66,7 @@ Requirements
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.32',
+    'version': '18.0.1.2.38',
     'license': 'LGPL-3',
 
     'depends': [
@@ -108,6 +108,9 @@ Requirements
             'twilio_dialer/static/src/js/dialer_service.js',
             'twilio_dialer/static/src/js/contact_phone_field.js',
             'twilio_dialer/static/src/js/billing.js',
+            'twilio_dialer/static/src/js/config_nav.js',
+            'twilio_dialer/static/src/js/about_nav.js',
+            'twilio_dialer/static/src/js/call_settings_autosave.js',
             'twilio_dialer/static/src/js/password_toggle_field.js',
             'twilio_dialer/static/src/js/dialer_popup.js',
             'twilio_dialer/static/src/js/dialer_systray.js',

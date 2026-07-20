@@ -7,13 +7,5 @@ class TwilioTermsPrivacy(models.TransientModel):
     _description = "Terms & Privacy"
 
     def action_open_terms_privacy(self):
-        """Open the Terms & Privacy information page."""
-        wizard = self.create({})
-        return {
-            "type": "ir.actions.act_window",
-            "name": "Terms & Privacy",
-            "res_model": "twilio.terms.privacy",
-            "res_id": wizard.id,
-            "view_mode": "form",
-            "target": "current",
-        }
+        """Open About Us on the Terms & Privacy section."""
+        return self.env["twilio.contact.us"].action_open_contact_us(section="terms")

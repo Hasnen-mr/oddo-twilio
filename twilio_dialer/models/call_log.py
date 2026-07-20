@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
+import logging
 import re
 from datetime import timedelta
 
 from odoo import api, fields, models
 from odoo.addons.phone_validation.tools.phone_validation import phone_format
 from odoo.exceptions import UserError
+from ..services import CallLogService
+
+_logger = logging.getLogger(__name__)
 
 
 class TwilioCallLog(models.Model):
@@ -67,6 +71,8 @@ class TwilioCallLog(models.Model):
             ("no_answer", "No Answer"),
             ("failed", "Failed"),
             ("canceled", "Canceled"),
+            ("rejected", "Rejected"),
+            ("missed", "Missed"),
         ],
         string="Status",
         required=True,
@@ -133,6 +139,7 @@ class TwilioCallLog(models.Model):
     is_missed = fields.Boolean(compute="_compute_flags", store=True)
 
     call_count = fields.Integer(string="Count", default=1, help="Used for reporting aggregates.")
+    contact_activity_posted = fields.Boolean(copy=False, readonly=True)
 
     _sql_constraints = [
         ("twilio_call_log_call_sid_unique", "unique(call_sid)", "The Twilio Call SID must be unique."),
@@ -226,7 +233,7 @@ class TwilioCallLog(models.Model):
                 if not call_log.contact_id:
                     call_log.contact_id = partner
 
-    def create_outgoing_call(self, call_sid, to_number):
+    def create_outgoing_call(self, call_sid, to_number, partner_id=False):
         if not call_sid or not to_number:
             raise UserError("Twilio Call SID and destination number are required.")
 
@@ -236,7 +243,7 @@ class TwilioCallLog(models.Model):
             return call_log
 
         from_number = self.env["twilio.service"].get_twilio_phone_number()
-        partner = self._find_partner_by_phone_number(to_number)
+        partner = self.env["res.partner"].browse(partner_id).exists() or self._find_partner_by_phone_number(to_number)
         return self.create(
             {
                 "partner_id": partner.id,
@@ -256,9 +263,13 @@ class TwilioCallLog(models.Model):
         if not call_log:
             raise UserError("Twilio call log was not found.")
 
+        terminal_statuses = {"completed", "busy", "no_answer", "failed", "canceled", "rejected", "missed"}
+        if call_log.contact_activity_posted and status in terminal_statuses:
+            return call_log
+
         call_log._link_partner_from_to_number()
         values = {"status": status}
-        if status in {"completed", "busy", "no_answer", "failed", "canceled"} and not call_log.end_time:
+        if status in terminal_statuses and not call_log.end_time:
             end_time = fields.Datetime.now()
             values["end_time"] = end_time
             values["duration"] = int((end_time - call_log.start_time).total_seconds())
@@ -268,9 +279,22 @@ class TwilioCallLog(models.Model):
             values["outcome"] = status if status in dict(self._fields["outcome"].selection) else "other"
         call_log.write(values)
 
+        if status in terminal_statuses:
+            call_log._post_contact_activity_if_needed()
+
         if status == "completed":
             call_log._maybe_auto_generate_ai()
         return call_log
+
+    def _post_contact_activity_if_needed(self):
+        try:
+            return CallLogService().post_call_activity(self)
+        except Exception:
+            _logger.exception(
+                "Unable to post Contact chatter activity for Twilio Call SID %s",
+                self.call_sid,
+            )
+            return False
 
     def _maybe_auto_generate_ai(self):
         icp = self.env["ir.config_parameter"].sudo()

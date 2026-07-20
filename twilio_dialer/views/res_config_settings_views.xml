@@ -125,6 +125,10 @@
                     <!-- Call Settings (only when connected) -->
                     <block title="Call Settings" name="twilio_call_settings"
                            invisible="not twilio_is_connected">
+                        <field name="twilio_call_settings_error" invisible="1"/>
+                        <div class="alert alert-warning w-100" invisible="not twilio_call_settings_error">
+                            <field name="twilio_call_settings_error" readonly="1"/>
+                        </div>
                         <div class="o_twilio_cfg_grid w-100">
                             <div class="o_twilio_cfg_card" style="grid-column: 1 / -1;">
                                 <div class="o_twilio_cfg_card_title">Phone Number</div>
@@ -169,8 +173,18 @@
                                     <field name="twilio_incoming_voicemail" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_field">
-                                    <label for="twilio_incoming_timeout" class="o_twilio_cfg_label">Ring Timeout (seconds)</label>
-                                    <field name="twilio_incoming_timeout" class="o_twilio_cfg_input"/>
+                                    <label for="twilio_incoming_voicemail_text" class="o_twilio_cfg_label">Voicemail Text</label>
+                                    <field name="twilio_incoming_voicemail_text" class="o_twilio_cfg_input"/>
+                                </div>
+                                <div class="o_twilio_cfg_switch_row">
+                                    <div class="o_twilio_cfg_switch_text">
+                                        <div class="o_twilio_cfg_label">Forward Calls</div>
+                                    </div>
+                                    <field name="twilio_incoming_forward" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
+                                </div>
+                                <div class="o_twilio_cfg_field" invisible="not twilio_incoming_forward">
+                                    <label for="twilio_incoming_forward_to" class="o_twilio_cfg_label">Forward To</label>
+                                    <field name="twilio_incoming_forward_to" class="o_twilio_cfg_input"/>
                                 </div>
                             </div>
 
@@ -187,14 +201,16 @@
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
                                     <div class="o_twilio_cfg_switch_text">
-                                        <div class="o_twilio_cfg_label">Answering Machine Detection</div>
-                                        <div class="o_twilio_cfg_hint">Detect voicemail / machine answers.</div>
+                                        <div class="o_twilio_cfg_label">Smart Copy</div>
+                                        <div class="o_twilio_cfg_hint">Enable Smart Copy for outgoing calls.</div>
                                     </div>
-                                    <field name="twilio_outgoing_machine_detection" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
+                                    <field name="twilio_outgoing_smart_copy" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_outgoing_timeout" class="o_twilio_cfg_label">Call Timeout (seconds)</label>
-                                    <field name="twilio_outgoing_timeout" class="o_twilio_cfg_input"/>
+                                <div class="o_twilio_cfg_actions">
+                                    <button name="action_save_call_settings"
+                                            type="object"
+                                            string="Save Call Settings"
+                                            class="btn btn-primary"/>
                                 </div>
                             </div>
                         </div>

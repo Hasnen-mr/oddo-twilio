@@ -82,11 +82,12 @@ Requirements
         'views/res_config_settings_views.xml',
         'views/call_log_views.xml',
         'views/auto_dialer_views.xml',
-        'views/contact_views.xml',
+        'views/res_partner_views.xml',
         'views/terms_privacy_views.xml',
         'views/contact_us_views.xml',
         'views/help_views.xml',
         'views/dashboard_views.xml',
+        'views/billing_views.xml',
         'views/menu_views.xml',
     ],
 
@@ -102,8 +103,11 @@ Requirements
         'web.assets_backend': [
             # Twilio Voice SDK is loaded at runtime via loadJS (UMD) — do not bundle it
             'twilio_dialer/static/src/js/country_codes.js',
+            'twilio_dialer/static/src/js/phone_utils.js',
             'twilio_dialer/static/src/js/device_manager.js',
             'twilio_dialer/static/src/js/dialer_service.js',
+            'twilio_dialer/static/src/js/contact_phone_field.js',
+            'twilio_dialer/static/src/js/billing.js',
             'twilio_dialer/static/src/js/password_toggle_field.js',
             'twilio_dialer/static/src/js/dialer_popup.js',
             'twilio_dialer/static/src/js/dialer_systray.js',

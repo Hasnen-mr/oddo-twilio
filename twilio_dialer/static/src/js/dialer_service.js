@@ -2,6 +2,7 @@
 
 import { reactive } from "@odoo/owl";
 import { registry } from "@web/core/registry";
+import { normalizePhoneNumber } from "./phone_utils";
 
 const dialerState = reactive({
     isOpen: false,
@@ -20,7 +21,7 @@ export const dialerService = {
                 return dialerState;
             },
             open({ phone = "", fromNumber = "", partnerId = null, partnerName = "" } = {}) {
-                dialerState.phone = phone || "";
+                dialerState.phone = normalizePhoneNumber(phone);
                 dialerState.fromNumber = fromNumber || "";
                 dialerState.partnerId = partnerId || null;
                 dialerState.partnerName = partnerName || "";

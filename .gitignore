@@ -18,3 +18,9 @@ Thumbs.db
 
 # Local Odoo dev (Colima/Docker binaries)
 local-dev/
+
+# Local development environment and configuration
+.venv/
+odoo.conf
+installed_packages.txt
+to do.txt

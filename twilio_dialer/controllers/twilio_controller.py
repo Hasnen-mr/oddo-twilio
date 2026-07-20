@@ -106,10 +106,11 @@ class TwilioController(http.Controller):
             )
 
     @http.route("/twilio_dialer/call_log/create", type="json", auth="user")
-    def create_call_log(self, call_sid, to_number):
+    def create_call_log(self, call_sid, to_number, partner_id=False):
         call_log = request.env["twilio.call.log"].create_outgoing_call(
             call_sid,
             to_number,
+            partner_id=partner_id,
         )
         return {"id": call_log.id}
 
@@ -117,3 +118,10 @@ class TwilioController(http.Controller):
     def update_call_log(self, call_sid, status):
         request.env["twilio.call.log"].update_call_status(call_sid, status)
         return {"success": True}
+
+    @http.route("/twilio_dialer/billing", type="json", auth="user")
+    def get_billing(self):
+        try:
+            return {"success": True, "billing": request.env["twilio.billing.service"].get_billing()}
+        except UserError as error:
+            return {"success": False, "message": str(error)}

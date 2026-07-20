@@ -1,36 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
+    <!-- Root Menu -->
     <menuitem id="menu_twilio_dialer_root"
               name="Twilio Call Auto Dialer"
               groups="base.group_user"
               sequence="35"
               web_icon="twilio_dialer,static/description/icon.png"/>
 
+    <!-- Dashboard -->
     <menuitem id="menu_twilio_dialer_dashboard"
               name="Dashboard"
               parent="menu_twilio_dialer_root"
               action="action_twilio_dashboard"
               sequence="5"/>
 
+    <!-- Call Logs -->
     <menuitem id="menu_twilio_dialer_call_logs"
               name="Call Logs"
               parent="menu_twilio_dialer_root"
               action="action_twilio_call_log"
               sequence="10"/>
 
+    <!-- Auto Dialer -->
     <menuitem id="menu_twilio_my_campaign"
               name="Auto Dialer"
               parent="menu_twilio_dialer_root"
               action="action_twilio_auto_dialer_menu"
               sequence="20"/>
 
+    <!-- Contacts -->
     <menuitem id="menu_twilio_contacts"
               name="Contacts"
               parent="menu_twilio_dialer_root"
-              action="action_twilio_contacts"
+              action="contacts.action_contacts"
               sequence="25"/>
 
+    <menuitem id="menu_twilio_billing"
+              name="Billing"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_billing"
+              groups="base.group_system"
+              sequence="26"/>
+
+    <!-- Configuration -->
     <menuitem id="menu_twilio_dialer_configuration"
               name="Configuration"
               parent="menu_twilio_dialer_root"
@@ -38,33 +51,25 @@
               groups="base.group_system"
               sequence="30"/>
 
+    <!-- About Us -->
     <menuitem id="menu_twilio_contact_us"
               name="About Us"
               parent="menu_twilio_dialer_root"
               action="action_twilio_contact_us"
               sequence="40"/>
 
+    <!-- Help -->
     <menuitem id="menu_twilio_help"
               name="Help"
               parent="menu_twilio_contact_us"
               action="action_twilio_help"
               sequence="10"/>
 
+    <!-- Terms & Privacy -->
     <menuitem id="menu_twilio_terms_privacy"
               name="Terms &amp; Privacy"
               parent="menu_twilio_contact_us"
               action="action_twilio_terms_privacy"
               sequence="20"/>
-
-    <!-- Hide previously created separate Auto Dialer menus -->
-    <record id="menu_twilio_auto_dialer_root" model="ir.ui.menu">
-        <field name="active" eval="False"/>
-    </record>
-    <record id="menu_twilio_my_campaign_create" model="ir.ui.menu">
-        <field name="active" eval="False"/>
-    </record>
-    <record id="menu_twilio_auto_calling_setup" model="ir.ui.menu">
-        <field name="active" eval="False"/>
-    </record>
 
 </odoo>

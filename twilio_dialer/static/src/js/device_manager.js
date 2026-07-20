@@ -188,7 +188,7 @@ class DeviceManager {
         });
 
         call.on("reject", () => {
-            this._syncCallLog(call, callSid, phoneNumber, "failed");
+            this._syncCallLog(call, callSid, phoneNumber, "rejected");
             this._activeConnection = null;
             if (!this._destroyed) {
                 this._setStatus(STATUS.READY);
@@ -225,10 +225,11 @@ class DeviceManager {
         return statusMap[call.parameters?.CallStatus] || call.parameters?.CallStatus || fallback;
     }
 
-    async _createCallLog(callSid, phoneNumber) {
+    async _createCallLog(callSid, phoneNumber, partnerId = null) {
         await rpc("/twilio_dialer/call_log/create", {
             call_sid: callSid,
             to_number: phoneNumber,
+            partner_id: partnerId,
         });
     }
 
@@ -240,7 +241,7 @@ class DeviceManager {
         }
 
         try {
-            await this._createCallLog(callSid, phoneNumber);
+            await this._createCallLog(callSid, phoneNumber, this._activePartnerId);
             await this._updateCallLog(callSid, status);
         } catch (error) {
             console.error("Failed to create Twilio call log:", error);
@@ -299,12 +300,13 @@ class DeviceManager {
         }
     }
 
-    async makeCall(phoneNumber, customParameters = {}) {
+    async makeCall(phoneNumber, customParameters = {}, callContext = {}) {
         if (!this.device || this._destroyed || !phoneNumber) {
             return false;
         }
 
         this._setStatus(STATUS.CONNECTING);
+        this._activePartnerId = callContext.partnerId || null;
 
         try {
             console.log("Dialing:", phoneNumber);
@@ -333,7 +335,7 @@ class DeviceManager {
             if (!callSid) {
                 console.warn("Call SID not available yet.");
             } else {
-                await this._createCallLog(callSid, phoneNumber);
+                await this._createCallLog(callSid, phoneNumber, this._activePartnerId);
             }
 
             this._activeConnection = call;

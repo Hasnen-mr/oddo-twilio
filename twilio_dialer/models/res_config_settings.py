@@ -4,6 +4,7 @@ import logging
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from ..services import MyBroadcastAPI, MyBroadcastAPIError
 
 _logger = logging.getLogger(__name__)
 
@@ -77,39 +78,29 @@ class ResConfigSettings(models.TransientModel):
     # ── Call Settings ─────────────────────────────────────
     twilio_incoming_enabled = fields.Boolean(
         string="Enable Incoming Calls",
-        config_parameter="twilio_dialer.incoming_enabled",
-        default=True,
     )
     twilio_incoming_record = fields.Boolean(
         string="Record Incoming Calls",
-        config_parameter="twilio_dialer.incoming_record",
-        default=False,
     )
     twilio_incoming_voicemail = fields.Boolean(
         string="Send Unanswered to Voicemail",
-        config_parameter="twilio_dialer.incoming_voicemail",
-        default=False,
     )
-    twilio_incoming_timeout = fields.Integer(
-        string="Incoming Ring Timeout (sec)",
-        config_parameter="twilio_dialer.incoming_timeout",
-        default=30,
+    twilio_incoming_voicemail_text = fields.Text(
+        string="Voicemail Text",
+    )
+    twilio_incoming_forward = fields.Boolean(
+        string="Forward Calls",
+    )
+    twilio_incoming_forward_to = fields.Char(
+        string="Forward To",
     )
     twilio_outgoing_record = fields.Boolean(
         string="Record Outgoing Calls",
-        config_parameter="twilio_dialer.outgoing_record",
-        default=False,
     )
-    twilio_outgoing_timeout = fields.Integer(
-        string="Outgoing Call Timeout (sec)",
-        config_parameter="twilio_dialer.outgoing_timeout",
-        default=60,
+    twilio_outgoing_smart_copy = fields.Boolean(
+        string="Smart Copy",
     )
-    twilio_outgoing_machine_detection = fields.Boolean(
-        string="Answering Machine Detection",
-        config_parameter="twilio_dialer.outgoing_machine_detection",
-        default=False,
-    )
+    twilio_call_settings_error = fields.Char(readonly=True)
 
     # ── AI Settings ───────────────────────────────────────
     twilio_ai_provider = fields.Selection(
@@ -168,6 +159,138 @@ class ResConfigSettings(models.TransientModel):
         voice_url = self.env["twilio.service"].get_voice_url(self.env)
         for record in self:
             record.twilio_voice_url = voice_url
+
+    @staticmethod
+    def _call_settings_section(settings, names, label, errors):
+        """Return the first valid API section without assuming its response shape."""
+        for name in names:
+            value = settings.get(name)
+            if value is None:
+                continue
+            if isinstance(value, dict):
+                return value
+            _logger.warning(
+                "MyBroadcast returned an invalid %s Call Settings section (%s): %r",
+                label,
+                type(value).__name__,
+                value,
+            )
+            errors.append(label)
+        return {}
+
+    def _parse_call_settings(self, payload):
+        """Validate API payload sections before reading their settings values."""
+        if not isinstance(payload, dict):
+            _logger.warning("MyBroadcast returned a non-object Call Settings payload: %r", payload)
+            return {}, {}, "Call settings service returned an invalid response."
+
+        nested_settings = payload.get("settings")
+        if nested_settings is None:
+            settings = payload
+        elif isinstance(nested_settings, dict):
+            settings = nested_settings
+        else:
+            _logger.warning(
+                "MyBroadcast returned an invalid settings container (%s): %r",
+                type(nested_settings).__name__,
+                nested_settings,
+            )
+            return {}, {}, "Call settings service returned invalid settings data."
+
+        errors = []
+        incoming = self._call_settings_section(
+            settings,
+            ("incomingCallSetting", "incoming"),
+            "incoming",
+            errors,
+        )
+        outgoing = self._call_settings_section(
+            settings,
+            ("outgoingCallSetting", "outgoing"),
+            "outgoing",
+            errors,
+        )
+        if errors:
+            return incoming, outgoing, "Call settings service returned invalid %s data." % (
+                " and ".join(sorted(set(errors)))
+            )
+        return incoming, outgoing, False
+
+    @staticmethod
+    def _call_settings_values(incoming, outgoing):
+        """Map validated API sections to transient fields only."""
+        return {
+            "twilio_incoming_enabled": incoming.get("allow"),
+            "twilio_incoming_record": incoming.get("record"),
+            "twilio_incoming_voicemail": incoming.get("voicemail"),
+            "twilio_incoming_voicemail_text": incoming.get("voicemailText", ""),
+            "twilio_incoming_forward": incoming.get("forward"),
+            "twilio_incoming_forward_to": incoming.get("forwardTo", ""),
+            "twilio_outgoing_record": outgoing.get("record"),
+            "twilio_outgoing_smart_copy": outgoing.get("smartCopy"),
+        }
+
+    @api.model
+    def get_values(self):
+        values = super().get_values()
+        account_sid = self.env["ir.config_parameter"].sudo().get_param(
+            "twilio_dialer.account_sid"
+        )
+        if not account_sid:
+            return values
+
+        try:
+            payload = MyBroadcastAPI().get_call_settings(account_sid)
+            incoming, outgoing, error = self._parse_call_settings(payload)
+            if error:
+                values["twilio_call_settings_error"] = error
+            else:
+                values.update(self._call_settings_values(incoming, outgoing))
+        except MyBroadcastAPIError as error:
+            _logger.warning("Unable to load MyBroadcast call settings: %s", error)
+            values["twilio_call_settings_error"] = str(error)
+        return values
+
+    def action_save_call_settings(self):
+        self.ensure_one()
+        if not self.twilio_account_sid:
+            return self._reload_twilio_settings(
+                "Call Settings",
+                "Configure and save a Twilio Account SID before saving call settings.",
+                "warning",
+            )
+
+        settings = {
+            "incomingCallSetting": {
+                "allow": self.twilio_incoming_enabled,
+                "record": self.twilio_incoming_record,
+                "voicemail": self.twilio_incoming_voicemail,
+                "voicemailText": self.twilio_incoming_voicemail_text or "",
+                "forward": self.twilio_incoming_forward,
+                "forwardTo": self.twilio_incoming_forward_to or "",
+            },
+            "outgoingCallSetting": {
+                "record": self.twilio_outgoing_record,
+                "smartCopy": self.twilio_outgoing_smart_copy,
+            },
+        }
+        try:
+            payload = MyBroadcastAPI().save_call_settings(
+                self.twilio_account_sid,
+                settings,
+            )
+        except MyBroadcastAPIError as error:
+            return self._reload_twilio_settings("Call Settings", str(error), "danger")
+
+        incoming, outgoing, error = self._parse_call_settings(payload)
+        if error:
+            _logger.warning("MyBroadcast returned malformed Call Settings after save: %s", error)
+            return self._reload_twilio_settings("Call Settings", error, "warning")
+        self.update(self._call_settings_values(incoming, outgoing))
+        return self._reload_twilio_settings(
+            "Call Settings",
+            "Call settings were saved successfully.",
+        )
 
     @api.model
     def _get_twilio_phone_number_selection(self):

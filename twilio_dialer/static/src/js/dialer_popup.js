@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, useState, onWillStart, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
+import { Component, useExternalListener, useState, onWillStart, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
 import { COUNTRY_CODES } from "./country_codes";
@@ -16,6 +16,8 @@ export class DialerPopup extends Component {
         onClose: { type: Function, optional: false },
         phone: { type: String, optional: true },
         fromNumber: { type: String, optional: true },
+        partnerId: { type: Number, optional: true },
+        partnerName: { type: String, optional: true },
         requestId: { type: Number, optional: true },
     };
 
@@ -48,6 +50,7 @@ export class DialerPopup extends Component {
         });
 
         this._applyIncomingPhone(this.props.phone);
+        useExternalListener(window, "keydown", this._onKeydown.bind(this));
 
         onWillStart(async () => {
             await this._loadConfiguredPhoneNumber();
@@ -85,6 +88,13 @@ export class DialerPopup extends Component {
         } catch (error) {
             console.warn("Failed to load last dial settings:", error);
             return null;
+        }
+    }
+
+    _onKeydown(event) {
+        if (event.key === "Escape") {
+            event.preventDefault();
+            this.closePopup();
         }
     }
 
@@ -256,7 +266,7 @@ export class DialerPopup extends Component {
     }
 
     openContacts() {
-        this.action.doAction("twilio_dialer.action_twilio_contacts");
+        this.action.doAction("contacts.action_contacts");
         if (this.props.onClose) {
             this.props.onClose();
         }
@@ -522,6 +532,8 @@ export class DialerPopup extends Component {
         deviceManager.makeCall(fullNumber, {
             From: this.state.selectedCaller?.number,
             from_number: this.state.selectedCaller?.number,
+        }, {
+            partnerId: this.props.partnerId,
         });
     }
 

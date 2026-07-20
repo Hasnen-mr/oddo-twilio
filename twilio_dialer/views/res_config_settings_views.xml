@@ -11,6 +11,8 @@
 
                 <app string="Twilio Call Auto Dialer" name="twilio_dialer">
                     <field name="twilio_is_connected" invisible="1"/>
+                    <field name="twilio_api_key_sid" invisible="1"/>
+                    <field name="twilio_application_sid" invisible="1"/>
                     <field name="twilio_config_section" widget="twilio_config_nav" class="o_twilio_cfg_nav_field"/>
 
                     <!-- Connection overview (Account section) -->
@@ -204,7 +206,9 @@
                                 </div>
                                 <div class="o_twilio_cfg_field" invisible="not twilio_incoming_forward">
                                     <label for="twilio_incoming_forward_to" class="o_twilio_cfg_label">Forward To</label>
-                                    <field name="twilio_incoming_forward_to" class="o_twilio_cfg_input"/>
+                                    <field name="twilio_incoming_forward_to"
+                                            widget="twilio_phone_country"
+                                            class="o_twilio_cfg_input o_twilio_forward_to_field"/>
                                 </div>
                             </div>
 

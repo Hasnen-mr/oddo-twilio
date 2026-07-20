@@ -171,7 +171,7 @@ class TwilioDialerDashboard(models.TransientModel):
         }
 
     def action_open_configuration(self):
-        return self.env.ref("twilio_dialer.action_twilio_configuration").read()[0]
+        return self.env["res.config.settings"].action_open_twilio_configuration()
 
     def action_open_call_logs(self):
         return self.env.ref("twilio_dialer.action_twilio_call_log").read()[0]

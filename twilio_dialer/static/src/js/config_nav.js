@@ -24,8 +24,7 @@ export class TwilioConfigNav extends Component {
 
         onMounted(() => {
             this._applyShellLayout();
-            // Always land on Call Settings when connected (Account when not).
-            this._applyDefaultSection(true);
+            this._applyDefaultSection();
             this._wasConnected = this.isConnected;
         });
         onWillUnmount(() => this._clearShellLayout());
@@ -37,13 +36,16 @@ export class TwilioConfigNav extends Component {
                     this._wasConnected = connected;
                     return;
                 }
-                // Only force default when connection status flips.
                 if (connected !== this._wasConnected) {
                     this._wasConnected = connected;
-                    this._applyDefaultSection(true);
+                    this._applyDefaultSection();
                 }
             },
-            () => [this.props.record.data.twilio_is_connected]
+            () => [
+                this.props.record.data.twilio_is_connected,
+                this.props.record.data.twilio_api_key_sid,
+                this.props.record.data.twilio_application_sid,
+            ]
         );
     }
 
@@ -62,7 +64,11 @@ export class TwilioConfigNav extends Component {
     }
 
     get isConnected() {
-        return !!this.props.record.data.twilio_is_connected;
+        const data = this.props.record.data;
+        return !!(
+            data.twilio_is_connected ||
+            (data.twilio_api_key_sid && data.twilio_application_sid)
+        );
     }
 
     isActive(section) {
@@ -79,16 +85,12 @@ export class TwilioConfigNav extends Component {
         await this.props.record.update({ twilio_config_section: section.id });
     }
 
-    async _applyDefaultSection(force = false) {
+    async _applyDefaultSection() {
         if (this._syncingSection) {
             return;
         }
-        const connected = this.isConnected;
+        const target = this.isConnected ? "call" : "account";
         const current = this.props.record.data.twilio_config_section;
-        const target = connected ? "call" : "account";
-        if (!force && current === target) {
-            return;
-        }
         if (current === target) {
             return;
         }

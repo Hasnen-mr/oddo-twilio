@@ -40,7 +40,7 @@
     <menuitem id="menu_twilio_dialer_configuration"
               name="Configuration"
               parent="menu_twilio_dialer_root"
-              action="action_twilio_configuration"
+              action="action_twilio_configuration_menu"
               groups="base.group_system"
               sequence="30"/>
 

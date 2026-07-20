@@ -9,6 +9,13 @@
         <field name="context">{'module': 'twilio_dialer'}</field>
     </record>
 
+    <record id="action_twilio_configuration_menu" model="ir.actions.server">
+        <field name="name">Configuration</field>
+        <field name="model_id" ref="base.model_res_config_settings"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_twilio_configuration()</field>
+    </record>
+
     <record id="view_twilio_dialer_dashboard_form" model="ir.ui.view">
         <field name="name">twilio.dialer.dashboard.form</field>
         <field name="model">twilio.dialer.dashboard</field>

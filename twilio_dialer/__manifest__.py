@@ -91,7 +91,8 @@ Support
 -------
 Professional implementation and customization available.
 Email: developer.lifetips@gmail.com
-Website: https://extension.mybroadcast.online
+Product website: https://extension.mybroadcast.online
+Chrome extension: https://bit.ly/odoo-twilio-dialer
     """,
 
     'author': "Solutions Master",
@@ -99,7 +100,7 @@ Website: https://extension.mybroadcast.online
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.40',
+    'version': '18.0.1.2.49',
     'license': 'LGPL-3',
 
     'depends': [
@@ -138,6 +139,7 @@ Website: https://extension.mybroadcast.online
             # Twilio Voice SDK is loaded at runtime via loadJS (UMD) — do not bundle it
             'twilio_dialer/static/src/js/country_codes.js',
             'twilio_dialer/static/src/js/phone_utils.js',
+            'twilio_dialer/static/src/js/phone_country_field.js',
             'twilio_dialer/static/src/js/device_manager.js',
             'twilio_dialer/static/src/js/dialer_service.js',
             'twilio_dialer/static/src/js/contact_phone_field.js',

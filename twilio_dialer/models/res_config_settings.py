@@ -243,9 +243,28 @@ class ResConfigSettings(models.TransientModel):
         }
 
     @api.model
+    def _twilio_is_configured(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        return bool(
+            icp.get_param("twilio_dialer.api_key_sid")
+            and icp.get_param("twilio_dialer.application_sid")
+        )
+
+    @api.model
+    def action_open_twilio_configuration(self):
+        """Open Configuration; default to Call Settings when Twilio is connected."""
+        action = self.env.ref("twilio_dialer.action_twilio_configuration").sudo().read()[0]
+        connected = self._twilio_is_configured()
+        action["context"] = {
+            "module": "twilio_dialer",
+            "default_twilio_config_section": "call" if connected else "account",
+        }
+        return action
+
+    @api.model
     def get_values(self):
         values = super().get_values()
-        connected = bool(
+        connected = self._twilio_is_configured() or bool(
             values.get("twilio_api_key_sid") and values.get("twilio_application_sid")
         )
         values["twilio_config_section"] = "call" if connected else "account"
@@ -582,29 +601,7 @@ class ResConfigSettings(models.TransientModel):
 
     def _get_twilio_settings_action(self):
         """Re-open Twilio Configuration so the form reloads generated fields."""
-        action = self.env.ref("twilio_dialer.action_twilio_configuration").sudo().read()[0]
-        # Drop transient keys that can break reopening settings after a button click
-        context = {
-            key: value
-            for key, value in dict(self.env.context).items()
-            if key not in ("active_id", "active_ids", "active_model", "allowed_company_ids")
-            and not key.startswith("default_")
-        }
-        # .read() returns context as a string — always set a clean dict
-        context["module"] = "twilio_dialer"
-        connected = bool(
-            (self.twilio_api_key_sid and self.twilio_application_sid)
-            or (
-                self.env["ir.config_parameter"].sudo().get_param("twilio_dialer.api_key_sid")
-                and self.env["ir.config_parameter"].sudo().get_param(
-                    "twilio_dialer.application_sid"
-                )
-            )
-        )
-        # Default sidebar tab: Call Settings when connected, Account when not
-        context["default_twilio_config_section"] = "call" if connected else "account"
-        action["context"] = context
-        return action
+        return self.action_open_twilio_configuration()
 
     def _reload_twilio_settings(self, title, message, notif_type="success"):
         return {

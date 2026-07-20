@@ -592,6 +592,17 @@ class ResConfigSettings(models.TransientModel):
         }
         # .read() returns context as a string — always set a clean dict
         context["module"] = "twilio_dialer"
+        connected = bool(
+            (self.twilio_api_key_sid and self.twilio_application_sid)
+            or (
+                self.env["ir.config_parameter"].sudo().get_param("twilio_dialer.api_key_sid")
+                and self.env["ir.config_parameter"].sudo().get_param(
+                    "twilio_dialer.application_sid"
+                )
+            )
+        )
+        # Default sidebar tab: Call Settings when connected, Account when not
+        context["default_twilio_config_section"] = "call" if connected else "account"
         action["context"] = context
         return action
 

@@ -3,7 +3,7 @@
 
     <!-- Root Menu -->
     <menuitem id="menu_twilio_dialer_root"
-              name="Twilio Call Auto Dialer"
+              name="Twilio Calling System"
               groups="base.group_user"
               sequence="35"
               web_icon="twilio_dialer,static/description/icon.png"/>

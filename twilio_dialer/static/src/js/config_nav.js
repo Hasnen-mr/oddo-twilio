@@ -20,16 +20,28 @@ export class TwilioConfigNav extends Component {
     setup() {
         this.rootRef = useRef("root");
         this._syncingSection = false;
+        this._wasConnected = null;
 
         onMounted(() => {
             this._applyShellLayout();
-            this._syncDefaultSection();
+            // Always land on Call Settings when connected (Account when not).
+            this._applyDefaultSection(true);
+            this._wasConnected = this.isConnected;
         });
         onWillUnmount(() => this._clearShellLayout());
 
         useEffect(
             () => {
-                this._syncDefaultSection();
+                const connected = this.isConnected;
+                if (this._wasConnected === null) {
+                    this._wasConnected = connected;
+                    return;
+                }
+                // Only force default when connection status flips.
+                if (connected !== this._wasConnected) {
+                    this._wasConnected = connected;
+                    this._applyDefaultSection(true);
+                }
             },
             () => [this.props.record.data.twilio_is_connected]
         );
@@ -67,21 +79,17 @@ export class TwilioConfigNav extends Component {
         await this.props.record.update({ twilio_config_section: section.id });
     }
 
-    async _syncDefaultSection() {
+    async _applyDefaultSection(force = false) {
         if (this._syncingSection) {
             return;
         }
         const connected = this.isConnected;
         const current = this.props.record.data.twilio_config_section;
-        const target = connected
-            ? current && ["call", "ai", "account", "billing"].includes(current)
-                ? null
-                : "call"
-            : current === "account"
-                ? null
-                : "account";
-
-        if (!target) {
+        const target = connected ? "call" : "account";
+        if (!force && current === target) {
+            return;
+        }
+        if (current === target) {
             return;
         }
         this._syncingSection = true;

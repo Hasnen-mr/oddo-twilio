@@ -1,64 +1,97 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Twilio Calling System for Odoo | Auto Dialer | Call Logs | AI Transcription",
+    'name': "Twilio Calling System for Odoo | VoIP Softphone | Auto Dialer | AI Transcription",
 
-    'summary': "Free Twilio calling for Odoo — Auto Dialer, contact activity, local call logs & AI transcription.",
+    'summary': "Twilio VoIP Softphone, Auto Dialer, Click-to-Call, Call Recording, AI Transcription, AI Summary, Voicemail & CRM Call Logs for Odoo.",
 
     'description': """
-Twilio Call Auto Dialer for Odoo
-================================
+Twilio Calling System for Odoo
+==============================
 
-Complete Twilio calling system inside Odoo: browser softphone, Auto Dialer campaigns,
-contact activity, local call log records, and optional AI call transcription & summaries.
+Complete Twilio cloud calling solution for Odoo with VoIP softphone, click-to-call,
+auto dialer, call recording, voicemail, AI transcription, AI call summaries, and
+automatic call logging inside your CRM.
 
-Twilio calling system
----------------------
-* Make and receive calls from Odoo with Twilio Voice
-* Connects to your own Twilio account
-* In-app dialpad with country codes and caller ID
-* Secure credentials stored in your Odoo configuration
+Transform Odoo into a cloud telephony workspace powered by your own Twilio account —
+no external softphone required.
 
-Auto Dialer
+Key Features
+------------
+* Twilio Voice Calling (inbound & outbound)
+* Browser-based VoIP Softphone
+* One-click Click-to-Call from Contacts
+* Auto Dialer campaigns
+* Voicemail configuration
+* Call Recording options
+* AI Call Transcription
+* AI Call Summary
+* Call History & local Call Logs
+* Contact Call History
+* Call Notes & activity trail
+* DTMF keypad support
+* Mute / hangup call controls
+* Twilio Voice SDK integration
+* CRM / Contacts integration
+* Multi-user support
+* Secure API configuration
+* Real-time call status
+* Automatic contact recognition
+* AI-powered call insights
+
+Modules Integrated
+------------------
+* Contacts
+* Discuss / Mail
+* Configuration & Billing workspace
+
+Benefits
+--------
+* Increase agent productivity
+* Centralize business communications in Odoo
+* Track every customer conversation
+* Improve sales outreach and customer support
+* Automatic local call logging
+* AI-powered conversation summaries
+* Easy deployment with your Twilio account
+* No external softphone required
+
+Perfect For
 -----------
-* Create outbound campaigns with phone lists
-* Start, pause, next, and skip through numbers
-* Track dialed, remaining, and connected counts
-* Built for sales outreach and follow-up calling
+* Sales Teams
+* Customer Support
+* Call Centers
+* Real Estate
+* Healthcare
+* Recruitment
+* Education
+* Logistics
+* Financial Services
 
-Contact activity
-----------------
-* Call directly from Odoo Contacts
-* Link calls to partners and keep CRM history together
-* Schedule follow-ups and activities on call records
-* Easy click-to-call workflow for your team
-
-Call log local records
-----------------------
-* Store call logs locally in Odoo (status, duration, numbers)
-* Search, filter, and report on inbound and outbound calls
-* Keep records in your database — not only in Twilio
-* Connect logs to contacts for a full communication trail
-
-Transcription & AI summary
---------------------------
-* Optional AI transcription of call recordings
-* Generate short CRM-friendly call summaries
-* Configure your preferred AI provider in settings
-* Post insights back to the contact when needed
+Supported Keywords
+------------------
+Twilio Voice · VoIP · Browser Softphone · Click-to-Call · Auto Dialer ·
+Call Recording · AI Transcription · AI Summary · Voicemail · Call Logs ·
+Activity Timeline · CRM Integration · Secure Authentication
 
 Pricing (free with fair usage)
 ------------------------------
-* **Free to install** — no module purchase fee while this offer is active
-* **Monthly fair-usage allowance** — initial free limit for normal business use
-* **Higher volume** — purchase add-ons via In-App Purchases when you need more
-* **Twilio usage** — voice minutes billed on your own Twilio account (external service)
+* Free to install — no module purchase fee while this offer is active
+* Monthly fair-usage allowance for normal business use
+* Higher volume via In-App Purchase add-ons when needed
+* Twilio voice minutes billed on your own Twilio account
 
 Requirements
 ------------
 * Odoo 18
-* Twilio account with a phone number and balance
+* Paid Twilio account with phone number and balance
 * Public HTTPS URL for TwiML voice callbacks (production)
 * Optional: AI provider API key for transcription and summary
+
+Support
+-------
+Professional implementation and customization available.
+Email: developer.lifetips@gmail.com
+Website: https://extension.mybroadcast.online
     """,
 
     'author': "Solutions Master",
@@ -66,7 +99,7 @@ Requirements
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.38',
+    'version': '18.0.1.2.40',
     'license': 'LGPL-3',
 
     'depends': [
@@ -98,6 +131,7 @@ Requirements
 
     'installable': True,
     'application': True,
+    'auto_install': False,
 
     'assets': {
         'web.assets_backend': [

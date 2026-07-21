@@ -86,40 +86,19 @@ class ResConfigSettings(models.TransientModel):
     duplicate_scan_limit = fields.Integer(
         string="Scan Batch Size",
         config_parameter="duplicate_contact.scan_limit",
-        default=5000,
+        default=2000,
     )
 
     def action_run_duplicate_scan(self):
         from ..services.detection import DuplicateDetectionService
-        ScanLog = self.env["duplicate.contact.scan.log"].sudo()
-        active = ScanLog._get_active_scan() or ScanLog._start_scan(source="manual")
-        stats = DuplicateDetectionService(self.env).run_scan_batch(
-            scan_log=active,
-            source="manual",
-            max_batches=20,
-        )
-        if stats.get("has_more"):
-            message = "Sync running: %s / %s contacts (%.1f%%). Created %s pairs." % (
-                f"{stats.get('processed', 0):,}",
-                f"{stats.get('total', 0):,}",
-                stats.get("progress", 0),
-                stats.get("created", 0),
-            )
-            notif_type = "warning"
-        else:
-            message = "Scan completed: %s contacts. Created %s, updated %s pairs." % (
-                f"{stats.get('processed', 0):,}",
-                stats.get("created", 0),
-                stats.get("updated", 0),
-            )
-            notif_type = "success"
+        stats = DuplicateDetectionService(self.env).run_scan(source="manual")
         return {
             "type": "ir.actions.client",
             "tag": "display_notification",
             "params": {
                 "title": "Duplicate Scan",
-                "message": message,
-                "type": notif_type,
+                "message": "Created %(created)s, updated %(updated)s pairs." % stats,
+                "type": "success",
                 "sticky": False,
             },
         }

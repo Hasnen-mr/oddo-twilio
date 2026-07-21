@@ -5,122 +5,48 @@
         <field name="name">duplicate.contact.merge.wizard.form</field>
         <field name="model">duplicate.contact.merge.wizard</field>
         <field name="arch" type="xml">
-            <form string="Merge Duplicate Contacts" class="o_dup_merge_wizard">
-                <field name="pair_id" invisible="1"/>
-                <div class="o_dup_merge_intro">
-                    <h2>Merge duplicate contacts</h2>
-                    <p>Choose which contact to keep, pick the best field values, then confirm.</p>
-                </div>
-
-                <div class="alert alert-warning o_dup_merge_alert" role="alert">
-                    <field name="merge_warning" readonly="1" nolabel="1" class="oe_inline"/>
-                </div>
-
-                <div class="o_dup_merge_reasons" invisible="not match_reasons">
-                    <div class="o_dup_merge_reasons_title">
-                        Why flagged as duplicate
-                        <span class="o_dup_merge_confidence" invisible="not confidence">
-                            — <field name="confidence" readonly="1" nolabel="1" class="oe_inline"/>% match
-                        </span>
-                    </div>
-                    <field name="match_reasons" readonly="1" nolabel="1" widget="text"/>
-                </div>
-
-                <div class="o_dup_merge_step">
-                    <div class="o_dup_merge_step_title">Step 1 — Choose the master contact</div>
-                    <div class="o_dup_merge_cards">
-                        <div class="o_dup_merge_card">
-                            <div class="o_dup_merge_card_badge">Contact 1</div>
-                            <h3><field name="contact_1_title" readonly="1" nolabel="1" class="oe_inline"/></h3>
-                            <p class="o_dup_merge_card_sub"><field name="contact_1_subtitle" readonly="1" nolabel="1" class="oe_inline"/></p>
-                            <field name="partner_a_id" readonly="1" nolabel="1" class="o_dup_merge_partner_link"/>
+            <form string="Merge Contacts">
+                <group>
+                    <field name="pair_id" invisible="1"/>
+                    <field name="partner_a_id" invisible="1"/>
+                    <field name="partner_b_id" invisible="1"/>
+                    <field name="survivor_id" widget="radio"/>
+                </group>
+                <group string="Choose field values">
+                    <group>
+                        <label for="name_choice" string="Name"/>
+                        <div class="o_row">
+                            <field name="preview_name_a" readonly="1" nolabel="1"/>
+                            <span>or</span>
+                            <field name="preview_name_b" readonly="1" nolabel="1"/>
+                            <field name="name_choice" widget="radio" nolabel="1"/>
                         </div>
-                        <div class="o_dup_merge_vs">vs</div>
-                        <div class="o_dup_merge_card">
-                            <div class="o_dup_merge_card_badge o_dup_merge_card_badge--alt">Contact 2</div>
-                            <h3><field name="contact_2_title" readonly="1" nolabel="1" class="oe_inline"/></h3>
-                            <p class="o_dup_merge_card_sub"><field name="contact_2_subtitle" readonly="1" nolabel="1" class="oe_inline"/></p>
-                            <field name="partner_b_id" readonly="1" nolabel="1" class="o_dup_merge_partner_link"/>
+                        <label for="phone_choice" string="Phone"/>
+                        <div class="o_row">
+                            <field name="preview_phone_a" readonly="1" nolabel="1"/>
+                            <span>or</span>
+                            <field name="preview_phone_b" readonly="1" nolabel="1"/>
+                            <field name="phone_choice" widget="radio" nolabel="1"/>
                         </div>
-                    </div>
-                    <div class="o_dup_merge_master_pick">
-                        <span class="o_dup_merge_master_label">Keep this contact as master:</span>
-                        <field name="survivor_id" widget="radio" nolabel="1"/>
-                    </div>
-                </div>
-
-                <div class="o_dup_merge_step">
-                    <div class="o_dup_merge_step_title">Step 2 — Pick values for the merged contact</div>
-                    <div class="o_dup_merge_table_wrap">
-                        <table class="o_dup_merge_table table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Field</th>
-                                    <th>Contact 1</th>
-                                    <th>Contact 2</th>
-                                    <th>Use</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>Name</td>
-                                    <td><field name="preview_name_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_name_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="name_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Email</td>
-                                    <td><field name="preview_email_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_email_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="email_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Phone</td>
-                                    <td><field name="preview_phone_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_phone_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="phone_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Mobile</td>
-                                    <td><field name="preview_mobile_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_mobile_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="mobile_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Street</td>
-                                    <td><field name="preview_street_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_street_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="street_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                                <tr>
-                                    <td>City</td>
-                                    <td><field name="preview_city_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_city_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="city_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Website</td>
-                                    <td><field name="preview_website_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_website_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="website_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                                <tr>
-                                    <td>Tax ID / VAT</td>
-                                    <td><field name="preview_vat_a" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="preview_vat_b" readonly="1" nolabel="1" class="oe_inline"/></td>
-                                    <td><field name="vat_choice" widget="radio" nolabel="1"/></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="o_dup_merge_notes">
+                        <label for="email_choice" string="Email"/>
+                        <div class="o_row">
+                            <field name="preview_email_a" readonly="1" nolabel="1"/>
+                            <span>or</span>
+                            <field name="preview_email_b" readonly="1" nolabel="1"/>
+                            <field name="email_choice" widget="radio" nolabel="1"/>
+                        </div>
+                    </group>
+                    <group>
+                        <field name="mobile_choice" widget="radio"/>
+                        <field name="street_choice" widget="radio"/>
+                        <field name="website_choice" widget="radio"/>
+                        <field name="vat_choice" widget="radio"/>
                         <field name="combine_notes"/>
-                    </div>
-                </div>
-
+                    </group>
+                </group>
                 <footer>
-                    <button name="action_merge" type="object" string="Confirm Merge" class="btn-primary" icon="fa-compress"/>
-                    <button string="Cancel" special="cancel" class="btn-secondary"/>
+                    <button name="action_merge" type="object" string="Confirm Merge" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
                 </footer>
             </form>
         </field>

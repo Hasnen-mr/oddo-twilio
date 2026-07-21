@@ -5,182 +5,51 @@
         <field name="name">duplicate.contact.dashboard.form</field>
         <field name="model">duplicate.contact.dashboard</field>
         <field name="arch" type="xml">
-            <form string="Duplicate Contact Manager" create="0" edit="0" delete="0" class="o_dup_dashboard_form">
+            <form string="Duplicate Contact Manager" create="0" edit="0" delete="0">
                 <sheet>
-                    <field name="scan_status" invisible="1"/>
-
-                    <div class="o_dup_dash_layout">
-                        <div class="o_dup_dash_main">
-
-                    <div class="o_dup_dash_header">
-                        <div class="o_dup_dash_header_text">
-                            <span class="o_dup_dash_eyebrow">Duplicate Contact Manager</span>
-                            <h1>Contact health overview</h1>
-                            <p>Scan large contact databases, review duplicates, and merge safely.</p>
+                    <div class="oe_title">
+                        <h1>Smart Duplicate Contact Manager</h1>
+                        <p class="text-muted">
+                            Find, review, and merge duplicate contacts across your database.
+                        </p>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-2 col-6 mb-3 text-center">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted">Total Contacts</div>
+                                <field name="total_contacts" class="fs-2 fw-bold"/>
+                            </div>
                         </div>
-                        <div class="o_dup_dash_header_badge" invisible="scan_status != 'running'">
-                            <i class="fa fa-spinner fa-spin" title="Syncing"/>
-                            <div>
-                                <strong>Sync in progress</strong>
-                                <span><field name="active_scan_name" readonly="1" class="oe_inline"/></span>
+                        <div class="col-md-2 col-6 mb-3 text-center">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted">Duplicates Found</div>
+                                <field name="duplicates_found" class="fs-2 fw-bold text-danger"/>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3 text-center">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted">Need Review</div>
+                                <field name="need_review" class="fs-2 fw-bold text-warning"/>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3 text-center">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted">Merged</div>
+                                <field name="merged_count" class="fs-2 fw-bold text-success"/>
+                            </div>
+                        </div>
+                        <div class="col-md-2 col-6 mb-3 text-center">
+                            <div class="border rounded p-3 h-100">
+                                <div class="text-muted">Ignored</div>
+                                <field name="ignored_count" class="fs-2 fw-bold"/>
                             </div>
                         </div>
                     </div>
-
-                    <div class="o_dup_dashboard_kpis">
-                        <div class="o_dup_dashboard_kpi">
-                            <div class="o_dup_dashboard_kpi_icon"><i class="fa fa-users" title="Contacts"/></div>
-                            <span class="o_dup_dashboard_kpi_label">Total Contacts</span>
-                            <field name="total_contacts" class="o_dup_dashboard_kpi_value"/>
-                        </div>
-                        <div class="o_dup_dashboard_kpi o_dup_dashboard_kpi--danger">
-                            <div class="o_dup_dashboard_kpi_icon"><i class="fa fa-clone" title="Duplicates"/></div>
-                            <span class="o_dup_dashboard_kpi_label">Contacts With Duplicates</span>
-                            <field name="contacts_with_duplicates" class="o_dup_dashboard_kpi_value"/>
-                        </div>
-                        <div class="o_dup_dashboard_kpi o_dup_dashboard_kpi--danger">
-                            <div class="o_dup_dashboard_kpi_icon"><i class="fa fa-link" title="Pairs"/></div>
-                            <span class="o_dup_dashboard_kpi_label">Duplicate Pairs</span>
-                            <field name="duplicate_pairs" class="o_dup_dashboard_kpi_value"/>
-                        </div>
-                        <div class="o_dup_dashboard_kpi o_dup_dashboard_kpi--warn">
-                            <div class="o_dup_dashboard_kpi_icon"><i class="fa fa-eye" title="Review"/></div>
-                            <span class="o_dup_dashboard_kpi_label">Need Review</span>
-                            <field name="need_review" class="o_dup_dashboard_kpi_value"/>
-                        </div>
-                        <div class="o_dup_dashboard_kpi o_dup_dashboard_kpi--ok">
-                            <div class="o_dup_dashboard_kpi_icon"><i class="fa fa-check-circle" title="Merged"/></div>
-                            <span class="o_dup_dashboard_kpi_label">Merged</span>
-                            <field name="merged_count" class="o_dup_dashboard_kpi_value"/>
-                        </div>
-                        <div class="o_dup_dashboard_kpi">
-                            <div class="o_dup_dashboard_kpi_icon"><i class="fa fa-ban" title="Ignored"/></div>
-                            <span class="o_dup_dashboard_kpi_label">Ignored</span>
-                            <field name="ignored_count" class="o_dup_dashboard_kpi_value"/>
-                        </div>
-                        <div class="o_dup_dashboard_kpi">
-                            <div class="o_dup_dashboard_kpi_icon"><i class="fa fa-percent" title="Rate"/></div>
-                            <span class="o_dup_dashboard_kpi_label">Duplicate Rate</span>
-                            <div class="o_dup_dashboard_kpi_rate">
-                                <field name="duplicate_rate" class="o_dup_dashboard_kpi_value"/>
-                                <span class="o_dup_dashboard_kpi_hint">%</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="o_dup_dash_grid">
-                        <div class="o_dup_sync_panel">
-                            <div class="o_dup_sync_panel_header">
-                                <div>
-                                    <h3>Sync &amp; progress</h3>
-                                    <p>Manual and automatic scans with live progress for large databases.</p>
-                                </div>
-                                <field name="scan_status" widget="badge"
-                                       decoration-info="scan_status == 'idle'"
-                                       decoration-warning="scan_status == 'running'"
-                                       decoration-success="scan_status == 'done'"/>
-                            </div>
-                            <p class="o_dup_sync_message">
-                                <field name="sync_message" readonly="1" nolabel="1" class="oe_inline"/>
-                            </p>
-                            <div class="o_dup_progress_wrap">
-                                <div class="o_dup_progress_meta">
-                                    <span>Contacts scanned</span>
-                                    <span>
-                                        <field name="contacts_scanned" readonly="1" class="oe_inline"/>
-                                        /
-                                        <field name="contacts_total" readonly="1" class="oe_inline"/>
-                                    </span>
-                                </div>
-                                <field name="scan_progress" widget="progressbar"/>
-                            </div>
-                            <div class="o_dup_sync_stats">
-                                <div class="o_dup_sync_stat">
-                                    <span>Last manual sync</span>
-                                    <field name="last_manual_scan" readonly="1"/>
-                                </div>
-                                <div class="o_dup_sync_stat">
-                                    <span>Last automatic sync</span>
-                                    <field name="last_auto_scan" readonly="1"/>
-                                    <field name="next_auto_sync_label" readonly="1" nolabel="1" class="o_dup_sync_stat_hint"/>
-                                </div>
-                                <div class="o_dup_sync_stat">
-                                    <span>Manual detections</span>
-                                    <field name="manual_pair_count" readonly="1"/>
-                                </div>
-                                <div class="o_dup_sync_stat">
-                                    <span>Auto detections</span>
-                                    <field name="auto_pair_count" readonly="1"/>
-                                </div>
-                            </div>
-                            <div class="o_dup_sync_actions">
-                                <button name="action_run_full_sync" type="object" string="Start Full Sync" class="btn btn-primary" icon="fa-refresh"/>
-                                <button name="action_continue_sync" type="object" string="Continue Sync" class="btn btn-secondary" icon="fa-forward"/>
-                                <button name="action_revalidate_duplicates" type="object" string="Fix False Duplicates" class="btn btn-secondary" icon="fa-filter"/>
-                                <button name="action_download_report" type="object" string="Download Report" class="btn btn-secondary" icon="fa-download"/>
-                            </div>
-                        </div>
-
-                        <div class="o_dup_quick_panel">
-                            <h3>Quick actions</h3>
-                            <div class="o_dup_quick_actions">
-                                <button name="action_open_duplicates" type="object" string="Review Duplicates" class="btn btn-secondary" icon="fa-list"/>
-                                <button name="action_open_review" type="object" string="Need Review" class="btn btn-secondary" icon="fa-flag"/>
-                                <button name="action_open_contacts" type="object" string="Open Contacts" class="btn btn-secondary" icon="fa-address-book"/>
-                                <button name="action_open_scan_logs" type="object" string="Reports &amp; Settings" class="btn btn-link" icon="fa-sliders"/>
-                                <button name="action_open_merged" type="object" string="Merge History" class="btn btn-link" icon="fa-history"/>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="o_dup_recent_scans">
-                        <div class="o_dup_recent_scans_header">
-                            <h3>Recent scan reports</h3>
-                            <button name="action_open_scan_logs" type="object" string="View all" class="btn btn-link"/>
-                        </div>
-                        <field name="scan_line_ids" nolabel="1" readonly="1">
-                            <list create="0" edit="0" delete="0">
-                                <field name="name"/>
-                                <field name="source"/>
-                                <field name="state"/>
-                                <field name="progress" widget="progressbar"/>
-                                <field name="processed_contacts"/>
-                                <field name="total_contacts"/>
-                                <field name="pairs_created"/>
-                                <field name="pairs_updated"/>
-                                <field name="date_start"/>
-                                <field name="date_end"/>
-                            </list>
-                        </field>
-                    </div>
-
-                        </div>
-
-                        <aside class="o_dup_dash_sidebar">
-                            <div class="o_dup_twilio_ad">
-                                <div class="o_dup_twilio_ad_badge">Recommended</div>
-                                <div class="o_dup_twilio_ad_icon">
-                                    <i class="fa fa-phone" title="Twilio Calling"/>
-                                </div>
-                                <h3>Twilio Calling System</h3>
-                                <p>VoIP softphone, auto dialer, click-to-call, AI transcription, and CRM call logs — inside Odoo.</p>
-                                <ul class="o_dup_twilio_ad_features">
-                                    <li><i class="fa fa-check" title="Feature"/> In-Odoo softphone</li>
-                                    <li><i class="fa fa-check" title="Feature"/> Auto dialer campaigns</li>
-                                    <li><i class="fa fa-check" title="Feature"/> AI call transcription</li>
-                                    <li><i class="fa fa-check" title="Feature"/> CRM call logging</li>
-                                </ul>
-                                <a href="https://apps.odoo.com/apps/modules/19.0/twilio_dialer"
-                                   target="_blank"
-                                   rel="noopener noreferrer"
-                                   role="button"
-                                   class="btn btn-primary o_dup_twilio_ad_btn">
-                                    <i class="fa fa-external-link" title="Open App Store"/>
-                                    Get Twilio Module
-                                </a>
-                                <span class="o_dup_twilio_ad_note">Opens Odoo Apps in a new tab</span>
-                            </div>
-                        </aside>
+                    <div class="mt-3">
+                        <button name="action_run_scan" type="object" string="Run Scan Now" class="btn btn-primary"/>
+                        <button name="action_open_duplicates" type="object" string="Review Duplicates" class="btn btn-secondary"/>
+                        <button name="action_open_review" type="object" string="Need Review" class="btn btn-secondary"/>
+                        <button name="action_open_merged" type="object" string="Merge History" class="btn btn-link"/>
                     </div>
                 </sheet>
             </form>

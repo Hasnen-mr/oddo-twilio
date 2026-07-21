@@ -9,7 +9,7 @@
                 and manual entry. Review confidence scores, merge safely, and keep a full audit trail.
             </h3>
             <p style="color:#875A7B; font-size:15px; font-weight:600; margin-top:14px;">
-                Dashboard &middot; Batch Sync &middot; Fuzzy Matching &middot; Merge Wizard &middot; Scan Reports &middot; Merge History
+                Fuzzy Matching &middot; Merge Wizard &middot; Dashboard &middot; Scheduled Scans &middot; Merge History
             </p>
         </div>
     </div>
@@ -17,176 +17,22 @@
 
 <section class="oe_container" style="background-color:#f5efff; border-radius:12px; padding:28px 20px;">
     <div class="row">
-        <div class="col-12 text-center mb-4">
-            <h3 style="color:#875A7B; font-weight:700; font-size:26px;">How the dashboard works</h3>
-            <p style="color:#666666; font-size:15px; line-height:1.6; max-width:820px; margin:0 auto;">
-                Open <strong>Duplicate Contacts &rarr; Dashboard</strong> for a live health overview of your contact database.
-                The dashboard is built for small teams and large databases (lakhs of contacts) with batch sync and progress tracking.
-            </p>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-3 col-6 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:18px; border:1px solid #e8dff0; height:100%;">
-                <div style="font-size:11px; font-weight:700; color:#875A7B; text-transform:uppercase; letter-spacing:0.05em;">KPI</div>
-                <h4 style="color:#333; font-size:16px; margin:8px 0 6px;">Total Contacts</h4>
-                <p style="color:#666; font-size:13px; margin:0;">Active contacts in Odoo.</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:18px; border:1px solid #e8dff0; height:100%;">
-                <div style="font-size:11px; font-weight:700; color:#c0392b; text-transform:uppercase; letter-spacing:0.05em;">KPI</div>
-                <h4 style="color:#333; font-size:16px; margin:8px 0 6px;">Contacts With Duplicates</h4>
-                <p style="color:#666; font-size:13px; margin:0;">Unique contacts involved in at least one open duplicate row.</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:18px; border:1px solid #e8dff0; height:100%;">
-                <div style="font-size:11px; font-weight:700; color:#c0392b; text-transform:uppercase; letter-spacing:0.05em;">KPI</div>
-                <h4 style="color:#333; font-size:16px; margin:8px 0 6px;">Duplicate Pairs</h4>
-                <p style="color:#666; font-size:13px; margin:0;">Comparison rows (Contact 1 vs Contact 2). Can be higher than contact count.</p>
-            </div>
-        </div>
-        <div class="col-md-3 col-6 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:18px; border:1px solid #e8dff0; height:100%;">
-                <div style="font-size:11px; font-weight:700; color:#875A7B; text-transform:uppercase; letter-spacing:0.05em;">KPI</div>
-                <h4 style="color:#333; font-size:16px; margin:8px 0 6px;">Duplicate Rate %</h4>
-                <p style="color:#666; font-size:13px; margin:0;">Contacts with duplicates &divide; total contacts. Never above 100%.</p>
-            </div>
-        </div>
-    </div>
-    <div class="row" style="margin-top:8px;">
-        <div class="col-md-10 offset-md-1 col-12">
-            <div style="background:#fff; border-radius:14px; padding:22px 24px; border:1px solid #e8dff0;">
-                <h4 style="color:#875A7B; font-weight:700; margin-bottom:14px;">Dashboard workflow</h4>
-                <ol style="color:#444; font-size:14px; line-height:1.75; margin:0; padding-left:20px;">
-                    <li><strong>Start Full Sync</strong> &mdash; scans all contacts in batches (default 5,000 per batch) with a live progress bar.</li>
-                    <li><strong>Continue Sync</strong> &mdash; resumes large databases where the previous batch stopped.</li>
-                    <li><strong>Fix False Duplicates</strong> &mdash; re-scores open rows and removes weak matches automatically.</li>
-                    <li><strong>Review Duplicates</strong> &mdash; open the review list, see match reasons, merge or ignore.</li>
-                    <li><strong>Scan Reports</strong> &mdash; download CSV and view manual vs automatic scan history.</li>
-                </ol>
-                <p style="color:#777; font-size:13px; margin:14px 0 0;">
-                    Automatic scans run hourly via scheduled action. Manual and automatic jobs both write to Scan Reports.
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="oe_container oe_dark" style="background-color:#f8f9fa; border-radius:12px; padding:28px 20px; margin-top:24px;">
-    <div class="row">
-        <div class="col-12 text-center mb-4">
-            <h3 style="color:#875A7B; font-weight:700; font-size:26px;">How duplicate checking works</h3>
-            <p style="color:#666666; font-size:15px; line-height:1.6; max-width:860px; margin:0 auto;">
-                Detection runs in two stages: <strong>candidate grouping</strong> (fast) and <strong>confidence scoring</strong> (accurate).
-                Every suggested pair stores <em>why</em> it was flagged so you can review before merging.
-            </p>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-6 col-12 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0; height:100%;">
-                <h4 style="color:#875A7B; font-weight:700;">Stage 1 &mdash; Find candidates</h4>
-                <p style="color:#666; font-size:14px; line-height:1.6;">
-                    Contacts are grouped only when they share a <strong>strong key</strong>:
-                </p>
-                <ul style="color:#444; font-size:14px; line-height:1.7; margin-bottom:0;">
-                    <li>Same normalized <strong>email</strong></li>
-                    <li>Same normalized <strong>phone / mobile</strong></li>
-                    <li>Same <strong>Tax ID / GST / VAT</strong></li>
-                </ul>
-                <p style="color:#999; font-size:12px; margin-top:12px; margin-bottom:0;">
-                    City-only grouping is <strong>not</strong> used &mdash; sharing Gurgaon alone does not create a duplicate.
-                </p>
-            </div>
-        </div>
-        <div class="col-md-6 col-12 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0; height:100%;">
-                <h4 style="color:#875A7B; font-weight:700;">Stage 2 &mdash; Score &amp; label</h4>
-                <p style="color:#666; font-size:14px; line-height:1.6;">
-                    Each candidate pair is scored with exact and fuzzy rules. Examples:
-                </p>
-                <ul style="color:#444; font-size:14px; line-height:1.7; margin-bottom:0;">
-                    <li><strong>100%</strong> &mdash; same Tax ID, email, or phone</li>
-                    <li><strong>95%+</strong> &mdash; same website</li>
-                    <li><strong>88%+</strong> &mdash; very similar company or contact name</li>
-                    <li><strong>85%+</strong> &mdash; similar street address (street or ZIP required)</li>
-                </ul>
-            </div>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-10 offset-md-1 col-12">
-            <div style="background:#fff; border:2px solid #875A7B; border-radius:14px; padding:22px 24px;">
-                <h4 style="color:#875A7B; font-weight:700; margin-bottom:10px;">Match reasons on every row</h4>
-                <p style="color:#444; font-size:14px; line-height:1.65; margin-bottom:12px;">
-                    Duplicate Review and the Merge popup show reasons like
-                    <em>Same Phone (98%)</em> or <em>Similar Company Name (91%)</em>.
-                    Weak single signals are rejected &mdash; a fuzzy name match alone cannot create a duplicate without a strong identifier.
-                </p>
-                <div style="display:flex; flex-wrap:wrap; gap:8px;">
-                    <span style="background:#e8f5e9; color:#2e7d32; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">Same Email</span>
-                    <span style="background:#e8f5e9; color:#2e7d32; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">Same Phone</span>
-                    <span style="background:#e8f5e9; color:#2e7d32; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">Same Tax ID</span>
-                    <span style="background:#fff3e0; color:#e65100; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">Similar Name</span>
-                    <span style="background:#fff3e0; color:#e65100; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">Similar Address</span>
-                    <span style="background:#ffebee; color:#c62828; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600;">City only = ignored</span>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="oe_container" style="margin-top:24px;">
-    <div class="row">
-        <div class="col-12 text-center mb-4">
-            <h3 style="color:#875A7B; font-weight:700; font-size:26px;">Safe merge workflow</h3>
-        </div>
-    </div>
-    <div class="row">
-        <div class="col-md-4 col-12 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0; height:100%;">
-                <div style="width:36px; height:36px; border-radius:50%; background:#f5efff; color:#875A7B; font-weight:700; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">1</div>
-                <h4 style="color:#875A7B;">Review pair</h4>
-                <p style="color:#666;">Open Duplicate Review. See Contact 1 vs Contact 2, confidence %, and match reasons.</p>
-            </div>
-        </div>
-        <div class="col-md-4 col-12 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0; height:100%;">
-                <div style="width:36px; height:36px; border-radius:50%; background:#f5efff; color:#875A7B; font-weight:700; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">2</div>
-                <h4 style="color:#875A7B;">Merge wizard</h4>
-                <p style="color:#666;">Choose the master contact. Pick the best name, email, phone, and address field by field.</p>
-            </div>
-        </div>
-        <div class="col-md-4 col-12 mb-3">
-            <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0; height:100%;">
-                <div style="width:36px; height:36px; border-radius:50%; background:#f5efff; color:#875A7B; font-weight:700; display:flex; align-items:center; justify-content:center; margin-bottom:10px;">3</div>
-                <h4 style="color:#875A7B;">Archive &amp; audit</h4>
-                <p style="color:#666;">Duplicate is archived. Related CRM, messages, and attachments move to the survivor. Merge History logs the action.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="oe_container" style="background-color:#f5efff; border-radius:12px; padding:28px 20px; margin-top:24px;">
-    <div class="row">
         <div class="col-md-4 col-12 mb-3">
             <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0;">
                 <h4 style="color:#875A7B;">Exact &amp; Fuzzy Detection</h4>
-                <p style="color:#666;">GST/VAT, email, normalized phone, website, company name, contact name, and street address with confidence scores.</p>
+                <p style="color:#666;">GST, email, normalized phone, website, company, name, and address matching with confidence scores.</p>
             </div>
         </div>
         <div class="col-md-4 col-12 mb-3">
             <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0;">
-                <h4 style="color:#875A7B;">Large database sync</h4>
-                <p style="color:#666;">Batch scanning with progress for 2 lakh+ contacts. Manual sync, hourly cron, and scan reports included.</p>
+                <h4 style="color:#875A7B;">Safe Merge Wizard</h4>
+                <p style="color:#666;">Choose surviving values field by field. Notes, messages, followers, and related records move to the master contact.</p>
             </div>
         </div>
         <div class="col-md-4 col-12 mb-3">
             <div style="background:#fff; border-radius:12px; padding:20px; border:1px solid #e8dff0;">
-                <h4 style="color:#875A7B;">API &amp; import guardrails</h4>
-                <p style="color:#666;">Optional warnings or blocking when new contacts match existing records during API or import create.</p>
+                <h4 style="color:#875A7B;">Enterprise Dashboard</h4>
+                <p style="color:#666;">Track duplicates found, items needing review, merges completed, and ignored pairs from one screen.</p>
             </div>
         </div>
     </div>

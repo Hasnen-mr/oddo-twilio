@@ -6,11 +6,10 @@
         <field name="model">duplicate.contact.pair</field>
         <field name="arch" type="xml">
             <list string="Duplicate Contacts" decoration-danger="confidence &gt;= 95" decoration-warning="confidence &gt;= 80 and confidence &lt; 95">
-                <field name="partner_a_id" string="Contact 1"/>
-                <field name="partner_b_id" string="Contact 2"/>
+                <field name="partner_a_id"/>
+                <field name="partner_b_id"/>
                 <field name="confidence"/>
                 <field name="confidence_label"/>
-                <field name="match_reasons" optional="show"/>
                 <field name="state"/>
                 <field name="detection_source"/>
             </list>
@@ -42,8 +41,8 @@
                             <field name="confidence_label"/>
                             <field name="detection_source"/>
                         </group>
-                        <group string="Why flagged as duplicate">
-                            <field name="match_reasons" nolabel="1" readonly="1" widget="text"/>
+                        <group>
+                            <field name="match_reasons" nolabel="1" readonly="1"/>
                         </group>
                     </group>
                 </sheet>

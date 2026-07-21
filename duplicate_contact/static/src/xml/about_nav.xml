@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="duplicate_contact.DuplicateAboutNav">
+        <nav class="o_dup_cfg_nav o_dup_about_nav" t-ref="root" aria-label="About sections">
+            <div class="o_dup_cfg_nav_brand">
+                <i class="fa fa-users"/>
+                <div>
+                    <div class="o_dup_cfg_nav_brand_title">About Us</div>
+                    <div class="o_dup_cfg_nav_brand_sub">Duplicate Contact Manager</div>
+                </div>
+            </div>
+            <ul class="o_dup_cfg_nav_list">
+                <li t-foreach="sections" t-as="section" t-key="section.id">
+                    <button type="button"
+                            class="o_dup_cfg_nav_item"
+                            t-att-class="{ 'o_dup_cfg_nav_item--active': isActive(section) }"
+                            t-att-title="section.label"
+                            t-on-click="() => this.selectSection(section)">
+                        <i t-att-class="'fa ' + section.icon"/>
+                        <span t-esc="section.label"/>
+                    </button>
+                </li>
+            </ul>
+        </nav>
+    </t>
+</templates>

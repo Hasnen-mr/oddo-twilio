@@ -128,15 +128,15 @@ class ResPartner(models.Model):
 
     def action_view_duplicate_pairs(self):
         self.ensure_one()
-        return {
-            "type": "ir.actions.act_window",
-            "name": "Duplicates",
-            "res_model": "duplicate.contact.pair",
-            "view_mode": "list,form",
-            "domain": [
+        from ..services.action_utils import xml_id_action
+        return xml_id_action(
+            self.env,
+            "duplicate_contact.action_duplicate_contact_pairs",
+            domain=[
                 ("state", "in", ("open", "review")),
                 "|",
                 ("partner_a_id", "=", self.id),
                 ("partner_b_id", "=", self.id),
             ],
-        }
+            name="Duplicates",
+        )

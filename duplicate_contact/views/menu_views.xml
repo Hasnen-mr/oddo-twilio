@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
-    <record id="action_duplicate_contact_settings" model="ir.actions.act_window">
-        <field name="name">Settings</field>
-        <field name="res_model">res.config.settings</field>
-        <field name="view_mode">form</field>
-        <field name="target">inline</field>
-        <field name="context">{'module': 'duplicate_contact'}</field>
-    </record>
-
     <menuitem id="menu_duplicate_contact_root"
               name="Duplicate Contacts"
               sequence="45"
@@ -27,17 +19,22 @@
               action="action_duplicate_contact_pairs"
               sequence="20"/>
 
-    <menuitem id="menu_duplicate_contact_history"
-              name="Merge History"
+    <menuitem id="menu_duplicate_contact_hub"
+              name="Reports &amp; Settings"
               parent="menu_duplicate_contact_root"
-              action="action_duplicate_contact_merge_history"
+              action="action_duplicate_contact_hub"
               sequence="30"/>
 
-    <menuitem id="menu_duplicate_contact_settings"
-              name="Settings"
+    <menuitem id="menu_duplicate_contact_contacts"
+              name="Contacts"
               parent="menu_duplicate_contact_root"
-              action="action_duplicate_contact_settings"
-              sequence="90"
-              groups="base.group_system"/>
+              action="contacts.action_contacts"
+              sequence="35"/>
+
+    <menuitem id="menu_duplicate_contact_about_us"
+              name="About Us"
+              parent="menu_duplicate_contact_root"
+              action="action_duplicate_contact_about_us"
+              sequence="40"/>
 
 </odoo>

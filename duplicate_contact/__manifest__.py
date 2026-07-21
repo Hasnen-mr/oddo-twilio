@@ -47,7 +47,7 @@ Website: https://extension.mybroadcast.online
     "support": "developer.lifetips@gmail.com",
 
     "category": "Sales/CRM",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.6",
     "license": "LGPL-3",
 
     "depends": [
@@ -63,6 +63,9 @@ Website: https://extension.mybroadcast.online
         "views/merge_history_views.xml",
         "views/merge_wizard_views.xml",
         "views/dashboard_views.xml",
+        "views/scan_log_views.xml",
+        "views/about_us_views.xml",
+        "views/hub_views.xml",
         "views/res_config_settings_views.xml",
         "views/menu_views.xml",
     ],
@@ -74,4 +77,18 @@ Website: https://extension.mybroadcast.online
     "installable": True,
     "application": True,
     "auto_install": False,
+
+    "assets": {
+        "web.assets_backend": [
+            "duplicate_contact/static/src/js/form_scroll_top.js",
+            "duplicate_contact/static/src/js/about_nav.js",
+            "duplicate_contact/static/src/xml/about_nav.xml",
+            "duplicate_contact/static/src/js/hub_nav.js",
+            "duplicate_contact/static/src/xml/hub_nav.xml",
+            "duplicate_contact/static/src/scss/about.scss",
+            "duplicate_contact/static/src/scss/hub.scss",
+            "duplicate_contact/static/src/scss/dashboard.scss",
+            "duplicate_contact/static/src/scss/merge_wizard.scss",
+        ],
+    },
 }

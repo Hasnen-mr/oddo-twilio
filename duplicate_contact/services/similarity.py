@@ -14,6 +14,12 @@ from .normalization import (
 )
 
 EXACT_CONFIDENCE = 100.0
+STRONG_REASONS = {
+    "Same Tax ID / GST / VAT",
+    "Same Email",
+    "Same Phone",
+    "Same Website",
+}
 
 
 def _ratio(a, b):
@@ -76,31 +82,39 @@ def _jaro_winkler(s1, s2, prefix_scale=0.1):
     return (jaro + prefix * prefix_scale * (1 - jaro)) * 100.0
 
 
+def _reason(label, score):
+    return "%s (%.0f%%)" % (label, score)
+
+
 def compare_partners(partner_a, partner_b, rules=None):
     """Return confidence score 0-100 and list of match reason strings."""
     rules = rules or {}
     reasons = []
     scores = []
+    strong_hits = 0
 
     def rule_on(key, default=True):
         return rules.get(key, default)
+
+    def add_match(label, score, strong=False):
+        reasons.append(_reason(label, score))
+        scores.append(score)
+        if strong or label in STRONG_REASONS:
+            nonlocal strong_hits
+            strong_hits += 1
 
     # Exact tax identifiers
     vat_a = normalize_tax_id(partner_a.vat)
     vat_b = normalize_tax_id(partner_b.vat)
     if rule_on("match_vat") and vat_a and vat_b and vat_a == vat_b:
-        return EXACT_CONFIDENCE, ["Same Tax ID / GST / VAT"]
+        return EXACT_CONFIDENCE, ["Same Tax ID / GST / VAT (100%)"]
 
     # Email
     if rule_on("match_email"):
         ea = normalize_email(partner_a.email)
         eb = normalize_email(partner_b.email)
-        if ea and eb:
-            if ea == eb:
-                reasons.append("Same Email")
-                scores.append(100.0)
-            elif ea.split("@")[-1] == eb.split("@")[-1]:
-                scores.append(75.0)
+        if ea and eb and ea == eb:
+            add_match("Same Email", 100.0, strong=True)
 
     # Phone / mobile
     if rule_on("match_phone"):
@@ -113,8 +127,7 @@ def compare_partners(partner_a, partner_b, rules=None):
             normalize_phone(partner_b.mobile),
         } - {""}
         if phones_a & phones_b:
-            reasons.append("Same Phone")
-            scores.append(98.0)
+            add_match("Same Phone", 98.0, strong=True)
 
     # Website
     if rule_on("match_website"):
@@ -122,49 +135,68 @@ def compare_partners(partner_a, partner_b, rules=None):
         wb = normalize_website(partner_b.website)
         if wa and wb:
             if wa == wb:
-                reasons.append("Same Website")
-                scores.append(95.0)
+                add_match("Same Website", 95.0, strong=True)
             else:
                 site_score = _ratio(wa, wb)
-                if site_score >= 85:
-                    scores.append(site_score)
+                if site_score >= 90:
+                    add_match("Very Similar Website", site_score)
 
     # Company name (for companies or parent)
     if rule_on("match_company"):
-        ca = normalize_company(partner_a.commercial_company_name or partner_a.name)
-        cb = normalize_company(partner_b.commercial_company_name or partner_b.name)
-        if ca and cb:
+        ca = normalize_company(
+            getattr(partner_a, "commercial_company_name", None) or partner_a.name
+        )
+        cb = normalize_company(
+            getattr(partner_b, "commercial_company_name", None) or partner_b.name
+        )
+        if ca and cb and ca != cb:
             company_score = max(_token_sort_ratio(ca, cb), _jaro_winkler(ca, cb))
-            if company_score >= 80:
-                reasons.append("Similar Company")
-                scores.append(company_score)
+            if company_score >= 88:
+                add_match("Similar Company Name", company_score)
 
     # Contact name
     if rule_on("match_name"):
         na = normalize_name(partner_a.name)
         nb = normalize_name(partner_b.name)
-        if na and nb:
+        if na and nb and na != nb:
             name_score = max(_token_sort_ratio(na, nb), _jaro_winkler(na, nb))
-            if name_score >= 75:
-                reasons.append("Similar Name")
-                scores.append(name_score)
+            if name_score >= 85:
+                add_match("Similar Contact Name", name_score)
+        elif na and nb and na == nb:
+            add_match("Same Contact Name", 96.0, strong=True)
 
-    # Address
+    # Address — city alone is never enough
     if rule_on("match_address"):
-        aa = normalize_address_parts(partner_a.street, partner_a.city, partner_a.zip)
-        ab = normalize_address_parts(partner_b.street, partner_b.city, partner_b.zip)
-        if aa and ab:
-            addr_score = _token_sort_ratio(aa, ab)
-            if addr_score >= 80:
-                reasons.append("Similar Address")
-                scores.append(addr_score)
+        street_a = (partner_a.street or "").strip()
+        street_b = (partner_b.street or "").strip()
+        zip_a = (partner_a.zip or "").strip()
+        zip_b = (partner_b.zip or "").strip()
+        if (street_a and street_b) or (zip_a and zip_b):
+            aa = normalize_address_parts(street_a, partner_a.city, zip_a)
+            ab = normalize_address_parts(street_b, partner_b.city, zip_b)
+            if aa and ab:
+                addr_score = _token_sort_ratio(aa, ab)
+                if addr_score >= 85:
+                    add_match("Similar Street / Address", addr_score)
 
     if not scores:
         return 0.0, []
 
-    confidence = min(99.0, max(scores)) if len(scores) == 1 else min(
-        99.0, sum(scores) / len(scores) + min(10, len(reasons) * 3)
-    )
+    # A single weak fuzzy signal must not create a duplicate.
+    if strong_hits == 0 and len(scores) == 1 and max(scores) < 92:
+        return 0.0, []
+
+    if len(scores) == 1:
+        confidence = min(99.0, max(scores))
+    else:
+        confidence = min(
+            99.0,
+            sum(scores) / len(scores) + min(8, len(reasons) * 2),
+        )
+
+    if strong_hits == 0 and confidence < 90:
+        return 0.0, []
+
     return round(confidence, 2), reasons
 
 

@@ -44,17 +44,130 @@ class DuplicateDetectionService:
         return tuple(sorted((a_id, b_id)))
 
     def run_scan(self, limit=500, source="manual"):
-        """Detect duplicates among active partners. Returns stats dict."""
+        """Run the next scan batch (continues an active sync when present)."""
+        ScanLog = self.env["duplicate.contact.scan.log"].sudo()
+        active = ScanLog._get_active_scan()
+        if not active:
+            active = ScanLog._start_scan(
+                source="cron" if source == "cron" else "manual"
+            )
+        return self.run_scan_batch(scan_log=active, source=source, max_batches=1)
+
+    def run_scan_batch(self, scan_log=None, source="manual", max_batches=5):
+        """Process contacts in batches with progress for large databases."""
         rules = self._get_rules()
         Partner = self.env["res.partner"].sudo()
         Pair = self.env["duplicate.contact.pair"].sudo()
-        partners = Partner.search([("active", "=", True)], order="id", limit=limit)
         icp = self.env["ir.config_parameter"].sudo()
+        ScanLog = self.env["duplicate.contact.scan.log"].sudo()
+
+        if not scan_log:
+            scan_log = ScanLog._get_active_scan() or ScanLog._start_scan(
+                source="cron" if source == "cron" else "manual"
+            )
+
+        batch_size = scan_log.batch_size or int(
+            icp.get_param("duplicate_contact.scan_limit", "5000") or 5000
+        )
+        total_contacts = scan_log.total_contacts or Partner.search_count([
+            ("active", "=", True)
+        ])
+        offset = scan_log.scan_offset or 0
+
         auto_merge = icp.get_param("duplicate_contact.auto_merge", "False") == "True"
         Merge = None
         if auto_merge:
             from .merge import DuplicateMergeService
             Merge = DuplicateMergeService(self.env)
+
+        created = updated = skipped = 0
+        batches_done = 0
+        has_more = True
+
+        log_pairs_created = scan_log.pairs_created
+        log_pairs_updated = scan_log.pairs_updated
+        log_pairs_skipped = scan_log.pairs_skipped
+
+        while has_more and batches_done < max_batches:
+            partners = Partner.search(
+                [("active", "=", True)],
+                order="id",
+                limit=batch_size,
+                offset=offset,
+            )
+            if not partners:
+                has_more = False
+                break
+
+            batch_stats = self._scan_partner_set(
+                partners,
+                rules,
+                Pair,
+                source,
+                auto_merge=auto_merge,
+                Merge=Merge,
+            )
+            created += batch_stats["created"]
+            updated += batch_stats["updated"]
+            skipped += batch_stats["skipped"]
+
+            offset += len(partners)
+            batches_done += 1
+            has_more = offset < total_contacts and len(partners) == batch_size
+
+            log_pairs_created += batch_stats["created"]
+            log_pairs_updated += batch_stats["updated"]
+            log_pairs_skipped += batch_stats["skipped"]
+
+            progress = min(100.0, (offset / total_contacts) * 100.0) if total_contacts else 100.0
+            scan_log.write({
+                "processed_contacts": offset,
+                "scan_offset": offset,
+                "progress": round(progress, 2),
+                "pairs_created": log_pairs_created,
+                "pairs_updated": log_pairs_updated,
+                "pairs_skipped": log_pairs_skipped,
+                "total_contacts": total_contacts,
+            })
+            icp.set_param("duplicate_contact.scan_progress", str(round(progress, 2)))
+            icp.set_param("duplicate_contact.scan_processed", str(offset))
+            icp.set_param("duplicate_contact.scan_offset", str(offset))
+            self.env.cr.commit()
+
+        if not has_more:
+            scan_log._mark_done(
+                "Scanned %(processed)s contacts. Created %(created)s, updated %(updated)s pairs."
+                % {
+                    "processed": f"{offset:,}",
+                    "created": scan_log.pairs_created,
+                    "updated": scan_log.pairs_updated,
+                }
+            )
+        else:
+            icp.set_param("duplicate_contact.scan_active", "True")
+            scan_log.write({
+                "message": "Batch sync running: %s / %s contacts scanned."
+                % (f"{offset:,}", f"{total_contacts:,}"),
+            })
+
+        return {
+            "created": created,
+            "updated": updated,
+            "skipped": skipped,
+            "processed": offset,
+            "total": total_contacts,
+            "progress": scan_log.progress,
+            "has_more": has_more,
+            "scan_log_id": scan_log.id,
+        }
+
+    def _scan_partner_set(self, partners, rules, Pair, source, auto_merge=False, Merge=None):
+        existing = {}
+        for pair in Pair.search([("state", "in", ("open", "review"))]):
+            key = self._pair_key(pair.partner_a_id.id, pair.partner_b_id.id)
+            existing[key] = pair
+
+        created = updated = skipped = 0
 
         def _upsert_pair(key, vals, pa, pb):
             nonlocal created, updated
@@ -68,6 +181,7 @@ class DuplicateDetectionService:
                 created += 1
             if (
                 auto_merge
+                and Merge
                 and vals["confidence"] >= 99.5
                 and pair.state in ("open", "review")
             ):
@@ -77,12 +191,6 @@ class DuplicateDetectionService:
                 Merge.merge_partners(survivor, duplicate)
                 pair.state = "merged"
             return pair
-
-        created = updated = skipped = 0
-        existing = {}
-        for pair in Pair.search([("state", "in", ("open", "review"))]):
-            key = self._pair_key(pair.partner_a_id.id, pair.partner_b_id.id)
-            existing[key] = pair
 
         by_email = {}
         by_phone = {}
@@ -112,6 +220,8 @@ class DuplicateDetectionService:
         for group in candidate_sets:
             for i, pa in enumerate(group):
                 for pb in group[i + 1 :]:
+                    if pa.id == pb.id:
+                        continue
                     key = self._pair_key(pa.id, pb.id)
                     if key in seen_pairs:
                         continue
@@ -135,48 +245,42 @@ class DuplicateDetectionService:
                         "match_reasons": "\n".join("✓ %s" % r for r in reasons),
                         "state": state,
                         "confidence_label": label,
-                        "detection_source": source,
+                        "detection_source": source if source in ("manual", "cron") else "manual",
                     }
                     _upsert_pair(key, vals, pa, pb)
 
-        # Fuzzy pass on smaller subsets with same city
-        city_groups = {}
-        for partner in partners:
-            city = (partner.city or "").strip().lower()
-            if city:
-                city_groups.setdefault(city, []).append(partner)
-        for group in city_groups.values():
-            if len(group) < 2 or len(group) > 40:
-                continue
-            for i, pa in enumerate(group):
-                for pb in group[i + 1 :]:
-                    key = self._pair_key(pa.id, pb.id)
-                    if key in seen_pairs:
-                        continue
-                    if self._is_ignored(pa.id, pb.id):
-                        continue
-                    confidence, reasons = compare_partners(pa, pb, rules)
-                    if confidence < rules["min_threshold"]:
-                        continue
-                    seen_pairs.add(key)
-                    state = (
-                        "review" if confidence >= rules["review_threshold"] else "open"
-                    )
-                    vals = {
-                        "partner_a_id": key[0],
-                        "partner_b_id": key[1],
-                        "confidence": confidence,
-                        "match_reasons": "\n".join("✓ %s" % r for r in reasons),
-                        "state": state,
-                        "confidence_label": confidence_label(
-                            confidence, rules["review_threshold"]
-                        ),
-                        "detection_source": source,
-                    }
-                    _upsert_pair(key, vals, pa, pb)
-
-        _logger.info(
-            "Duplicate scan (%s): created=%s updated=%s skipped=%s",
-            source, created, updated, skipped,
-        )
         return {"created": created, "updated": updated, "skipped": skipped}
+
+    def revalidate_open_pairs(self):
+        """Re-score open duplicate rows and close false positives."""
+        rules = self._get_rules()
+        Pair = self.env["duplicate.contact.pair"].sudo()
+        cleared = updated = 0
+        for pair in Pair.search([("state", "in", ("open", "review"))]):
+            if pair.partner_a_id.id == pair.partner_b_id.id:
+                pair.write({"state": "not_duplicate"})
+                cleared += 1
+                continue
+            confidence, reasons = compare_partners(
+                pair.partner_a_id,
+                pair.partner_b_id,
+                rules,
+            )
+            if confidence < rules["min_threshold"]:
+                pair.write({"state": "not_duplicate"})
+                cleared += 1
+                continue
+            pair.write({
+                "confidence": confidence,
+                "match_reasons": "\n".join("✓ %s" % r for r in reasons),
+                "confidence_label": confidence_label(
+                    confidence, rules["review_threshold"]
+                ),
+                "state": (
+                    "review"
+                    if confidence >= rules["review_threshold"]
+                    else "open"
+                ),
+            })
+            updated += 1
+        return {"cleared": cleared, "updated": updated}

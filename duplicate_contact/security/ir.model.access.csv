@@ -3,7 +3,14 @@ access_duplicate_contact_pair_user,duplicate.contact.pair.user,model_duplicate_c
 access_duplicate_contact_pair_manager,duplicate.contact.pair.manager,model_duplicate_contact_pair,base.group_system,1,1,1,1
 access_duplicate_contact_ignore_user,duplicate.contact.ignore.user,model_duplicate_contact_ignore,base.group_user,1,1,1,0
 access_duplicate_contact_ignore_manager,duplicate.contact.ignore.manager,model_duplicate_contact_ignore,base.group_system,1,1,1,1
-access_duplicate_contact_merge_history_user,duplicate.contact.merge.history.user,model_duplicate_contact_merge_history,base.group_user,1,0,0,0
+access_duplicate_contact_merge_history_user,duplicate.contact.merge.history.user,model_duplicate_contact_merge_history,base.group_user,1,0,1,0
 access_duplicate_contact_merge_history_manager,duplicate.contact.merge.history.manager,model_duplicate_contact_merge_history,base.group_system,1,1,1,1
 access_duplicate_contact_dashboard_user,duplicate.contact.dashboard.user,model_duplicate_contact_dashboard,base.group_user,1,1,1,1
 access_duplicate_contact_merge_wizard_user,duplicate.contact.merge.wizard.user,model_duplicate_contact_merge_wizard,base.group_user,1,1,1,1
+access_duplicate_contact_about_user,duplicate.contact.about.user,model_duplicate_contact_about,base.group_user,1,1,1,1
+access_duplicate_contact_scan_log_user,duplicate.contact.scan.log.user,model_duplicate_contact_scan_log,base.group_user,1,0,0,0
+access_duplicate_contact_scan_log_manager,duplicate.contact.scan.log.manager,model_duplicate_contact_scan_log,base.group_system,1,1,1,1
+access_duplicate_contact_dashboard_scan_line_user,duplicate.contact.dashboard.scan.line.user,model_duplicate_contact_dashboard_scan_line,base.group_user,1,1,1,1
+access_duplicate_contact_hub_user,duplicate.contact.hub.user,model_duplicate_contact_hub,base.group_user,1,1,1,1
+access_duplicate_contact_hub_merge_line_user,duplicate.contact.hub.merge.line.user,model_duplicate_contact_hub_merge_line,base.group_user,1,1,1,1
+access_duplicate_contact_hub_scan_line_user,duplicate.contact.hub.scan.line.user,model_duplicate_contact_hub_scan_line,base.group_user,1,1,1,1

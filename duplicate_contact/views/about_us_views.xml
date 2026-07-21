@@ -1,0 +1,348 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_duplicate_contact_about_form" model="ir.ui.view">
+        <field name="name">duplicate.contact.about.form</field>
+        <field name="model">duplicate.contact.about</field>
+        <field name="arch" type="xml">
+            <form string="About Us" create="0" delete="0" class="o_dup_about_form">
+                <sheet>
+                    <field name="about_section" invisible="1"/>
+                    <field name="about_nav" widget="duplicate_about_nav" nolabel="1" class="o_dup_about_nav_field"/>
+
+                    <div class="o_dup_about_panel" invisible="about_section != 'overview'">
+                        <div class="o_dup_contact_hero">
+                            <div class="o_dup_contact_hero_icon">
+                                <i class="fa fa-users" title="About module"/>
+                            </div>
+                            <div>
+                                <h1>What this module does</h1>
+                                <p>
+                                    Smart Duplicate Contact Manager finds, reviews, and merges duplicate
+                                    contacts in Odoo using exact and fuzzy matching — so your CRM stays clean
+                                    after imports, API integrations, websites, and manual entry.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_contact_section_title">Module features</div>
+                        <div class="o_dup_help_page_list">
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step">
+                                    <i class="fa fa-search" title="Detection"/>
+                                </span>
+                                <div>
+                                    <strong>Smart duplicate detection</strong>
+                                    <p>Match phone, email, GST/VAT, website, company, name, and address with confidence scores.</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step">
+                                    <i class="fa fa-columns" title="Review"/>
+                                </span>
+                                <div>
+                                    <strong>Duplicate review dashboard</strong>
+                                    <p>See duplicates found, items needing review, merges completed, and ignored pairs.</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step">
+                                    <i class="fa fa-compress" title="Merge"/>
+                                </span>
+                                <div>
+                                    <strong>Safe merge wizard</strong>
+                                    <p>Choose surviving values field by field and move related records to the master contact.</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step">
+                                    <i class="fa fa-clock-o" title="Automation"/>
+                                </span>
+                                <div>
+                                    <strong>Scheduled scans</strong>
+                                    <p>Run automatic duplicate detection hourly, daily, weekly, or monthly.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_contact_section_title">Best for</div>
+                        <div class="o_dup_cfg_card o_dup_about_prereq">
+                            <div class="o_dup_cfg_card_title">
+                                <i class="fa fa-building"/> CRM &amp; contact databases
+                            </div>
+                            <div class="o_dup_cfg_card_sub">
+                                Ideal when your Odoo database has grown through:
+                            </div>
+                            <ul class="o_dup_about_prereq_list">
+                                <li>CSV imports and spreadsheet uploads</li>
+                                <li>Website, WhatsApp, telephony, or REST API contact creation</li>
+                                <li>Multiple sales reps entering contacts manually</li>
+                                <li>Company and person records with similar phones or emails</li>
+                            </ul>
+                        </div>
+
+                        <div class="o_dup_contact_footer_note">
+                            <i class="fa fa-shield" title="Privacy"/>
+                            Your contact data stays in your own Odoo database.
+                        </div>
+                    </div>
+
+                    <div class="o_dup_about_panel" invisible="about_section != 'how_it_works'">
+                        <div class="o_dup_contact_hero">
+                            <div class="o_dup_contact_hero_icon">
+                                <i class="fa fa-dashboard" title="How it works"/>
+                            </div>
+                            <div>
+                                <h1>How the dashboard works</h1>
+                                <p>
+                                    Go to <strong>Duplicate Contacts → Dashboard</strong> for a live overview.
+                                    Metrics update after each sync and when you fix false duplicates.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_contact_section_title">Dashboard KPIs</div>
+                        <div class="o_dup_help_page_list">
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step"><i class="fa fa-users"/></span>
+                                <div>
+                                    <strong>Total Contacts</strong>
+                                    <p>All active contacts in Odoo.</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step"><i class="fa fa-user-times"/></span>
+                                <div>
+                                    <strong>Contacts With Duplicates</strong>
+                                    <p>Unique contacts that appear in at least one open duplicate row.</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step"><i class="fa fa-link"/></span>
+                                <div>
+                                    <strong>Duplicate Pairs</strong>
+                                    <p>Rows comparing Contact 1 vs Contact 2. This number can be higher than total contacts.</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step"><i class="fa fa-percent"/></span>
+                                <div>
+                                    <strong>Duplicate Rate</strong>
+                                    <p>Contacts with duplicates divided by total contacts (always 0–100%).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_contact_section_title">Sync actions</div>
+                        <div class="o_dup_cfg_card o_dup_about_prereq">
+                            <ul class="o_dup_about_prereq_list">
+                                <li><strong>Start Full Sync</strong> — scan all contacts in batches with progress (ideal for large databases).</li>
+                                <li><strong>Continue Sync</strong> — resume the next batch where the last scan stopped.</li>
+                                <li><strong>Fix False Duplicates</strong> — re-score open rows and remove weak matches.</li>
+                                <li><strong>Scan Reports</strong> — view manual vs automatic jobs and download CSV.</li>
+                            </ul>
+                        </div>
+
+                        <div class="o_dup_contact_hero" style="margin-top:18px;">
+                            <div class="o_dup_contact_hero_icon">
+                                <i class="fa fa-search" title="Detection"/>
+                            </div>
+                            <div>
+                                <h1>How duplicate checking works</h1>
+                                <p>
+                                    Detection uses candidate grouping first, then confidence scoring.
+                                    Every pair stores <strong>why</strong> it was flagged.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_contact_section_title">Stage 1 — Candidates</div>
+                        <div class="o_dup_cfg_card o_dup_about_prereq">
+                            <div class="o_dup_cfg_card_sub">Contacts are compared only when they share:</div>
+                            <ul class="o_dup_about_prereq_list">
+                                <li>Same normalized email</li>
+                                <li>Same normalized phone or mobile</li>
+                                <li>Same Tax ID / GST / VAT</li>
+                            </ul>
+                            <div class="o_dup_cfg_card_sub" style="margin-top:8px;">
+                                <strong>City alone does not create duplicates.</strong>
+                                Two companies in Gurgaon with different names are not matched.
+                            </div>
+                        </div>
+
+                        <div class="o_dup_contact_section_title">Stage 2 — Scoring</div>
+                        <div class="o_dup_help_page_list">
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step"><i class="fa fa-check"/></span>
+                                <div>
+                                    <strong>Strong matches (high confidence)</strong>
+                                    <p>Same email, phone, Tax ID, or website.</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step"><i class="fa fa-font"/></span>
+                                <div>
+                                    <strong>Fuzzy matches (review required)</strong>
+                                    <p>Similar company name, contact name, or street address (street or ZIP required).</p>
+                                </div>
+                            </div>
+                            <div class="o_dup_help_page_item">
+                                <span class="o_dup_help_page_step"><i class="fa fa-list-alt"/></span>
+                                <div>
+                                    <strong>Match reasons shown everywhere</strong>
+                                    <p>Duplicate Review, merge popup, and CSV reports include reasons like <em>Same Phone (98%)</em>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="o_dup_about_panel" invisible="about_section != 'help'">
+                        <div class="o_dup_contact_hero">
+                            <div class="o_dup_contact_hero_icon">
+                                <i class="fa fa-life-ring" title="Help"/>
+                            </div>
+                            <div>
+                                <h1>Help &amp; support</h1>
+                                <p>
+                                    Submit a question about duplicate detection, merging, or configuration.
+                                    You can also reach us by email, WhatsApp, or book a call.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_cfg_card o_dup_about_help_form">
+                            <div class="o_dup_cfg_card_title">Submit an issue</div>
+                            <div class="o_dup_cfg_card_sub">
+                                Tell us what you need help with. We receive your request by email.
+                            </div>
+                            <div class="o_dup_cfg_field">
+                                <label for="help_email" class="o_dup_cfg_label">Email</label>
+                                <field name="help_email" class="o_dup_cfg_input" required="1" placeholder="you@company.com"/>
+                            </div>
+                            <div class="o_dup_cfg_field">
+                                <label for="help_phone" class="o_dup_cfg_label">Phone</label>
+                                <field name="help_phone" class="o_dup_cfg_input" placeholder="+91 9876543210"/>
+                            </div>
+                            <div class="o_dup_cfg_field">
+                                <label for="help_use_case" class="o_dup_cfg_label">Use case</label>
+                                <field name="help_use_case" class="o_dup_cfg_input" placeholder="Duplicate cleanup after CRM import"/>
+                            </div>
+                            <div class="o_dup_cfg_field">
+                                <label for="help_message" class="o_dup_cfg_label">Message</label>
+                                <field name="help_message" class="o_dup_cfg_input" required="1" placeholder="Describe your issue…"/>
+                            </div>
+                            <div class="o_dup_cfg_actions">
+                                <button name="action_submit_help"
+                                        type="object"
+                                        string="Submit Issue"
+                                        class="btn btn-primary"
+                                        icon="fa-paper-plane"/>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_contact_section_title">Other ways to reach us</div>
+                        <div class="o_dup_contact_grid">
+                            <div class="o_dup_contact_card">
+                                <div class="o_dup_contact_icon">
+                                    <i class="fa fa-envelope" title="Email"/>
+                                </div>
+                                <div class="o_dup_contact_label">Email</div>
+                                <a class="o_dup_contact_value" href="mailto:developer.lifetips@gmail.com">
+                                    developer.lifetips@gmail.com
+                                </a>
+                            </div>
+                            <div class="o_dup_contact_card">
+                                <div class="o_dup_contact_icon">
+                                    <i class="fa fa-whatsapp" title="WhatsApp"/>
+                                </div>
+                                <div class="o_dup_contact_label">WhatsApp</div>
+                                <a class="o_dup_contact_value"
+                                   href="https://wa.me/918320354644"
+                                   target="_blank"
+                                   rel="noreferrer noopener">
+                                    +91 8320354644
+                                </a>
+                            </div>
+                            <div class="o_dup_contact_card">
+                                <div class="o_dup_contact_icon">
+                                    <i class="fa fa-calendar" title="Book a call"/>
+                                </div>
+                                <div class="o_dup_contact_label">Book a call</div>
+                                <a class="o_dup_contact_value"
+                                   href="https://calendly.com/zantahub-info/30min"
+                                   target="_blank"
+                                   rel="noreferrer noopener">
+                                    Calendly — 30 min
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="o_dup_about_panel" invisible="about_section != 'terms'">
+                        <div class="o_dup_contact_hero">
+                            <div class="o_dup_contact_hero_icon">
+                                <i class="fa fa-file-text-o" title="Terms"/>
+                            </div>
+                            <div>
+                                <h1>Terms &amp; Privacy</h1>
+                                <p>
+                                    How Smart Duplicate Contact Manager handles your data, merging,
+                                    and acceptable use.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="o_dup_terms_block">
+                            <h3>1. Your Odoo database</h3>
+                            <p>
+                                This module reads and updates <strong>your contact records</strong>
+                                stored in your Odoo database. Duplicate pairs, merge history, and
+                                configuration are stored locally in your system.
+                            </p>
+
+                            <h3>2. Merging contacts</h3>
+                            <p>
+                                Merging archives the duplicate contact and moves related records to the
+                                survivor you choose. Review company vs person pairs carefully before merging.
+                                Archived contacts can be found under Contacts → Filters → Archived.
+                            </p>
+
+                            <h3>3. Acceptable use</h3>
+                            <p>
+                                Use this module only for lawful data quality and CRM hygiene within your
+                                organization. Ensure you have permission to merge or archive contact records.
+                            </p>
+
+                            <h3>4. Privacy</h3>
+                            <p>
+                                Contact names, phones, emails, tax IDs, and addresses are processed inside
+                                your Odoo instance. Optional help form submissions are emailed to the support
+                                address you configure in the module.
+                            </p>
+
+                            <h3>5. No warranty</h3>
+                            <p>
+                                Duplicate detection uses normalization and fuzzy matching. Always review
+                                suggested pairs before merging. The software is provided as-is.
+                            </p>
+
+                            <p class="text-muted mt-3">
+                                Questions? Contact
+                                <a href="mailto:developer.lifetips@gmail.com">developer.lifetips@gmail.com</a>
+                                or use the Help section to submit an issue.
+                            </p>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_duplicate_contact_about_us" model="ir.actions.server">
+        <field name="name">About Us</field>
+        <field name="model_id" ref="model_duplicate_contact_about"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_about_us()</field>
+    </record>
+
+</odoo>

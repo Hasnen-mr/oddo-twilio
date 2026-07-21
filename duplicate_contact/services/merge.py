@@ -71,13 +71,12 @@ class DuplicateMergeService:
             if notes:
                 write_vals["comment"] = "\n\n---\n\n".join(dict.fromkeys(notes))
 
-        survivor.write(write_vals)
+        survivor.sudo().write(write_vals)
         self._reassign_relations(survivor, dup)
         self._merge_followers(survivor, dup)
         self._merge_messages(survivor, dup)
-
-        dup.active = False
-        dup.write({"comment": (dup.comment or "") + "\n[Merged into %s]" % survivor.name})
+        self._archive_duplicate(survivor, dup)
+        self._close_duplicate_pairs(dup)
 
         self.env["duplicate.contact.merge.history"].sudo().create({
             "survivor_id": survivor.id,
@@ -86,6 +85,35 @@ class DuplicateMergeService:
             "survivor_name": survivor.name,
         })
         return survivor
+
+    def _archive_duplicate(self, survivor, duplicate):
+        """Archive merged contact so it disappears from the default Contacts list."""
+        note = (duplicate.comment or "").strip()
+        note = "%s\n\n[Merged into %s (#%s)]" % (
+            note,
+            survivor.display_name,
+            survivor.id,
+        ) if note else "[Merged into %s (#%s)]" % (survivor.display_name, survivor.id)
+        duplicate.sudo().write({
+            "active": False,
+            "email": False,
+            "phone": False,
+            "mobile": False,
+            "vat": False,
+            "comment": note,
+        })
+
+    def _close_duplicate_pairs(self, duplicate):
+        """Remove open duplicate rows that still reference the archived contact."""
+        Pair = self.env["duplicate.contact.pair"].sudo()
+        pairs = Pair.search([
+            ("state", "in", ("open", "review")),
+            "|",
+            ("partner_a_id", "=", duplicate.id),
+            ("partner_b_id", "=", duplicate.id),
+        ])
+        if pairs:
+            pairs.write({"state": "merged"})
 
     def _reassign_relations(self, survivor, duplicate):
         for model_name, field_name in self._available_models():

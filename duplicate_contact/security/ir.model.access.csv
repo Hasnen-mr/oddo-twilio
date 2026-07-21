@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_duplicate_contact_pair_user,duplicate.contact.pair.user,model_duplicate_contact_pair,base.group_user,1,1,1,0
+access_duplicate_contact_pair_manager,duplicate.contact.pair.manager,model_duplicate_contact_pair,base.group_system,1,1,1,1
+access_duplicate_contact_ignore_user,duplicate.contact.ignore.user,model_duplicate_contact_ignore,base.group_user,1,1,1,0
+access_duplicate_contact_ignore_manager,duplicate.contact.ignore.manager,model_duplicate_contact_ignore,base.group_system,1,1,1,1
+access_duplicate_contact_merge_history_user,duplicate.contact.merge.history.user,model_duplicate_contact_merge_history,base.group_user,1,0,0,0
+access_duplicate_contact_merge_history_manager,duplicate.contact.merge.history.manager,model_duplicate_contact_merge_history,base.group_system,1,1,1,1
+access_duplicate_contact_dashboard_user,duplicate.contact.dashboard.user,model_duplicate_contact_dashboard,base.group_user,1,1,1,1
+access_duplicate_contact_merge_wizard_user,duplicate.contact.merge.wizard.user,model_duplicate_contact_merge_wizard,base.group_user,1,1,1,1

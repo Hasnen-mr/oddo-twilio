@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_duplicate_contact_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="target">inline</field>
+        <field name="context">{'module': 'duplicate_contact'}</field>
+    </record>
+
+    <menuitem id="menu_duplicate_contact_root"
+              name="Duplicate Contacts"
+              sequence="45"
+              web_icon="duplicate_contact,static/description/icon.png"
+              groups="base.group_user"/>
+
+    <menuitem id="menu_duplicate_contact_dashboard"
+              name="Dashboard"
+              parent="menu_duplicate_contact_root"
+              action="action_duplicate_contact_dashboard"
+              sequence="10"/>
+
+    <menuitem id="menu_duplicate_contact_review"
+              name="Duplicate Review"
+              parent="menu_duplicate_contact_root"
+              action="action_duplicate_contact_pairs"
+              sequence="20"/>
+
+    <menuitem id="menu_duplicate_contact_history"
+              name="Merge History"
+              parent="menu_duplicate_contact_root"
+              action="action_duplicate_contact_merge_history"
+              sequence="30"/>
+
+    <menuitem id="menu_duplicate_contact_settings"
+              name="Settings"
+              parent="menu_duplicate_contact_root"
+              action="action_duplicate_contact_settings"
+              sequence="90"
+              groups="base.group_system"/>
+
+</odoo>

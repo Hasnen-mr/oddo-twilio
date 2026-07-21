@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_duplicate_contact_merge_history_list" model="ir.ui.view">
+        <field name="name">duplicate.contact.merge.history.list</field>
+        <field name="model">duplicate.contact.merge.history</field>
+        <field name="arch" type="xml">
+            <list string="Merge History" create="0" edit="0" delete="0">
+                <field name="create_date"/>
+                <field name="survivor_name"/>
+                <field name="merged_name"/>
+                <field name="survivor_id"/>
+                <field name="user_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_duplicate_contact_merge_history" model="ir.actions.act_window">
+        <field name="name">Merge History</field>
+        <field name="res_model">duplicate.contact.merge.history</field>
+        <field name="view_mode">list</field>
+    </record>
+
+</odoo>

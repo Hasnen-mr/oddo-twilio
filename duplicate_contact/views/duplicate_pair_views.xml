@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_duplicate_contact_pair_list" model="ir.ui.view">
+        <field name="name">duplicate.contact.pair.list</field>
+        <field name="model">duplicate.contact.pair</field>
+        <field name="arch" type="xml">
+            <list string="Duplicate Contacts" decoration-danger="confidence &gt;= 95" decoration-warning="confidence &gt;= 80 and confidence &lt; 95">
+                <field name="partner_a_id"/>
+                <field name="partner_b_id"/>
+                <field name="confidence"/>
+                <field name="confidence_label"/>
+                <field name="state"/>
+                <field name="detection_source"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_duplicate_contact_pair_form" model="ir.ui.view">
+        <field name="name">duplicate.contact.pair.form</field>
+        <field name="model">duplicate.contact.pair</field>
+        <field name="arch" type="xml">
+            <form string="Duplicate Review">
+                <header>
+                    <button name="action_open_merge_wizard" type="object" string="Merge" class="btn-primary"/>
+                    <button name="action_ignore" type="object" string="Ignore"/>
+                    <button name="action_mark_not_duplicate" type="object" string="Mark Not Duplicate"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="partner_a_id" readonly="1" class="oe_inline"/>
+                            <span class="text-muted"> vs </span>
+                            <field name="partner_b_id" readonly="1" class="oe_inline"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="confidence"/>
+                            <field name="confidence_label"/>
+                            <field name="detection_source"/>
+                        </group>
+                        <group>
+                            <field name="match_reasons" nolabel="1" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_duplicate_contact_pairs" model="ir.actions.act_window">
+        <field name="name">Duplicate Review</field>
+        <field name="res_model">duplicate.contact.pair</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ('open', 'review'))]</field>
+    </record>
+
+</odoo>

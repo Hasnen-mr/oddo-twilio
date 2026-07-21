@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="res_config_settings_view_form_duplicate_contact" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.duplicate.contact</field>
+        <field name="model">res.config.settings</field>
+        <field name="inherit_id" ref="base.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app string="Duplicate Contacts" name="duplicate_contact" groups="base.group_system">
+                    <block title="Matching Rules">
+                        <setting string="Name similarity" help="Fuzzy match on contact names">
+                            <field name="duplicate_match_name"/>
+                        </setting>
+                        <setting string="Phone normalization" help="Match +91, spaces, and formatting variants">
+                            <field name="duplicate_match_phone"/>
+                        </setting>
+                        <setting string="Email normalization" help="Case-insensitive email match">
+                            <field name="duplicate_match_email"/>
+                        </setting>
+                        <setting string="Tax ID / GST / VAT" help="Exact match on tax identifiers">
+                            <field name="duplicate_match_vat"/>
+                        </setting>
+                        <setting string="Company similarity" help="Fuzzy company name matching">
+                            <field name="duplicate_match_company"/>
+                        </setting>
+                        <setting string="Website normalization" help="Compare root domains">
+                            <field name="duplicate_match_website"/>
+                        </setting>
+                        <setting string="Address similarity" help="Street, city, and ZIP comparison">
+                            <field name="duplicate_match_address"/>
+                        </setting>
+                        <setting string="AI similarity" help="Reserved for future AI-assisted matching">
+                            <field name="duplicate_match_ai"/>
+                        </setting>
+                    </block>
+                    <block title="Thresholds &amp; Automation">
+                        <setting string="Review threshold">
+                            <field name="duplicate_review_threshold"/>
+                        </setting>
+                        <setting string="Minimum match">
+                            <field name="duplicate_min_threshold"/>
+                        </setting>
+                        <setting string="Auto-merge exact matches">
+                            <field name="duplicate_auto_merge"/>
+                        </setting>
+                        <setting string="Automatic detection">
+                            <field name="duplicate_cron_interval"/>
+                        </setting>
+                        <setting string="Scan batch size">
+                            <field name="duplicate_scan_limit"/>
+                        </setting>
+                        <setting>
+                            <button name="action_run_duplicate_scan" type="object" string="Run Scan Now" class="btn-link"/>
+                        </setting>
+                    </block>
+                    <block title="API &amp; Import">
+                        <setting string="Block API duplicates" help="Prevent creating contacts when a duplicate is found via API">
+                            <field name="duplicate_api_block"/>
+                        </setting>
+                        <setting string="Warn on API duplicates" help="Log a warning when probable duplicates are detected">
+                            <field name="duplicate_api_warn"/>
+                        </setting>
+                    </block>
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

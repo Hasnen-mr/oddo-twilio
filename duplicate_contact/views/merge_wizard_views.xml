@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_duplicate_contact_merge_wizard_form" model="ir.ui.view">
+        <field name="name">duplicate.contact.merge.wizard.form</field>
+        <field name="model">duplicate.contact.merge.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Merge Contacts">
+                <group>
+                    <field name="pair_id" invisible="1"/>
+                    <field name="partner_a_id" invisible="1"/>
+                    <field name="partner_b_id" invisible="1"/>
+                    <field name="survivor_id" widget="radio"/>
+                </group>
+                <group string="Choose field values">
+                    <group>
+                        <label for="name_choice" string="Name"/>
+                        <div class="o_row">
+                            <field name="preview_name_a" readonly="1" nolabel="1"/>
+                            <span>or</span>
+                            <field name="preview_name_b" readonly="1" nolabel="1"/>
+                            <field name="name_choice" widget="radio" nolabel="1"/>
+                        </div>
+                        <label for="phone_choice" string="Phone"/>
+                        <div class="o_row">
+                            <field name="preview_phone_a" readonly="1" nolabel="1"/>
+                            <span>or</span>
+                            <field name="preview_phone_b" readonly="1" nolabel="1"/>
+                            <field name="phone_choice" widget="radio" nolabel="1"/>
+                        </div>
+                        <label for="email_choice" string="Email"/>
+                        <div class="o_row">
+                            <field name="preview_email_a" readonly="1" nolabel="1"/>
+                            <span>or</span>
+                            <field name="preview_email_b" readonly="1" nolabel="1"/>
+                            <field name="email_choice" widget="radio" nolabel="1"/>
+                        </div>
+                    </group>
+                    <group>
+                        <field name="mobile_choice" widget="radio"/>
+                        <field name="street_choice" widget="radio"/>
+                        <field name="website_choice" widget="radio"/>
+                        <field name="vat_choice" widget="radio"/>
+                        <field name="combine_notes"/>
+                    </group>
+                </group>
+                <footer>
+                    <button name="action_merge" type="object" string="Confirm Merge" class="btn-primary"/>
+                    <button string="Cancel" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+</odoo>

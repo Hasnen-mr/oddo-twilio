@@ -456,7 +456,7 @@ class TwilioService(models.AbstractModel):
                 % ", ".join(missing)
             )
 
-        identity = "odoo_user_%s" % env.uid
+        identity = "id_odoo_%s" % account_sid
 
         token = AccessToken(
             account_sid,

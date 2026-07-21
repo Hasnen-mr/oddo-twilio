@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
 import logging
 import re
+import threading
+import time
 from datetime import timedelta
 
+import odoo
 from odoo import api, fields, models
 from odoo.addons.phone_validation.tools.phone_validation import phone_format
 from odoo.exceptions import UserError
@@ -123,7 +126,33 @@ class TwilioCallLog(models.Model):
     follow_up_date = fields.Datetime(string="Follow-up Date", index=True)
     recording_sid = fields.Char(string="Recording SID")
     recording_url = fields.Char(string="Recording URL")
+    recording_duration = fields.Integer(string="Recording Duration (sec)")
+    playback_url = fields.Char(
+        string="Play Recording",
+        compute="_compute_playback_url",
+    )
+    recording_status = fields.Selection(
+        [
+            ("pending", "Pending"),
+            ("recording", "Recording"),
+            ("completed", "Completed"),
+            ("failed", "Failed"),
+            ("absent", "Not Available"),
+        ],
+        string="Recording Status",
+    )
     transcript = fields.Text(string="Transcript")
+    transcript_status = fields.Selection(
+        [
+            ("pending", "Pending"),
+            ("processing", "Processing"),
+            ("completed", "Completed"),
+            ("failed", "Failed"),
+            ("absent", "Not Available"),
+        ],
+        string="Transcript Status",
+        default="pending",
+    )
     summary = fields.Text(string="Summary")
     ai_provider = fields.Char(string="AI Provider", readonly=True)
 
@@ -169,7 +198,7 @@ class TwilioCallLog(models.Model):
             else:
                 log.duration_display = "%d:%02d" % (minutes, sec)
 
-    @api.depends("recording_url", "transcript", "summary", "status")
+    @api.depends("recording_url", "recording_status", "transcript", "summary", "status")
     def _compute_flags(self):
         missed_statuses = {"busy", "no_answer", "failed", "canceled"}
         for log in self:
@@ -177,6 +206,14 @@ class TwilioCallLog(models.Model):
             log.has_transcript = bool(log.transcript)
             log.has_summary = bool(log.summary)
             log.is_missed = log.status in missed_statuses
+
+    @api.depends("recording_sid")
+    def _compute_playback_url(self):
+        for log in self:
+            if log.recording_sid:
+                log.playback_url = "/twilio_dialer/recording/%d" % log.id
+            else:
+                log.playback_url = ""
 
     @api.model_create_multi
     def create(self, vals_list):
@@ -255,6 +292,32 @@ class TwilioCallLog(models.Model):
             }
         )
 
+    def create_incoming_call(self, call_sid, from_number, to_number):
+        """Create or return an existing incoming call log for an inbound Twilio call.
+
+        Creates the record before answering so the call is tracked and workers can
+        operate using the Call SID.
+        """
+        if not call_sid or not from_number or not to_number:
+            raise UserError("Twilio Call SID, from number and to number are required.")
+
+        call_log = self.search([("call_sid", "=", call_sid)], limit=1)
+        if call_log:
+            call_log._link_partner_from_to_number()
+            return call_log
+
+        partner = self._find_partner_by_phone_number(from_number)
+        return self.create(
+            {
+                "partner_id": partner.id,
+                "contact_id": partner.id,
+                "from_number": from_number,
+                "to_number": to_number,
+                "direction": "incoming",
+                "call_sid": call_sid,
+            }
+        )
+
     def update_call_status(self, call_sid, status):
         if status not in dict(self._fields["status"].selection):
             raise UserError("Invalid Twilio call status.")
@@ -277,10 +340,12 @@ class TwilioCallLog(models.Model):
             values["outcome"] = "connected"
         elif status in {"busy", "no_answer", "failed", "canceled"} and not call_log.outcome:
             values["outcome"] = status if status in dict(self._fields["outcome"].selection) else "other"
+
         call_log.write(values)
 
         if status in terminal_statuses:
             call_log._post_contact_activity_if_needed()
+            call_log._sync_recording_from_twilio()
 
         if status == "completed":
             call_log._maybe_auto_generate_ai()
@@ -296,29 +361,513 @@ class TwilioCallLog(models.Model):
             )
             return False
 
+    @staticmethod
+    def _build_recording_url(account_sid, recording_sid):
+        if not account_sid or not recording_sid:
+            return ""
+        return (
+            "https://api.twilio.com/2010-04-01/Accounts/"
+            f"{account_sid}/Recordings/{recording_sid}.wav"
+        )
+
+    def _sync_recording_from_twilio(self):
+        for call_log in self:
+            if call_log.recording_sid:
+                _logger.info(
+                    "Recording sync skipped for %s — already has recording_sid=%s",
+                    call_log.call_sid, call_log.recording_sid,
+                )
+                continue
+            _logger.info(
+                "Recording sync starting background thread for call_log=%s call_sid=%s",
+                call_log.id, call_log.call_sid,
+            )
+            db_name = self.env.cr.dbname
+            uid = self.env.uid
+            thread = threading.Thread(
+                target=TwilioCallLog._sync_recording_worker,
+                args=(call_log.id, db_name, uid),
+                daemon=True,
+            )
+            thread.start()
+
+    @staticmethod
+    def _sync_recording_worker(call_log_id, db_name, uid):
+        MAX_RETRIES = 5
+        RETRY_INTERVAL = 5
+
+        _logger.info(
+            "Recording worker started for call_log=%s (db=%s, uid=%s)",
+            call_log_id, db_name, uid,
+        )
+
+        for attempt in range(MAX_RETRIES):
+            time.sleep(RETRY_INTERVAL if attempt > 0 else 5)
+
+            try:
+                with odoo.registry(db_name).cursor() as cr:
+                    env = odoo.api.Environment(cr, uid, {})
+                    log = env["twilio.call.log"].browse(call_log_id)
+
+                    if log.recording_sid:
+                        _logger.info(
+                            "Recording sync attempt %d/%d: call_log=%s already has recording_sid=%s, stopping",
+                            attempt + 1, MAX_RETRIES, call_log_id, log.recording_sid,
+                        )
+                        return
+
+                    _logger.info(
+                        "Recording sync attempt %d/%d: fetching recordings for call_sid=%s",
+                        attempt + 1, MAX_RETRIES, log.call_sid,
+                    )
+                    recordings = env["twilio.service"].fetch_recordings_by_call_sid(
+                        log.call_sid
+                    )
+                    _logger.info(
+                        "Recording sync attempt %d/%d: got %d recording(s) for call_sid=%s",
+                        attempt + 1, MAX_RETRIES, len(recordings), log.call_sid,
+                    )
+                    if recordings:
+                        log._save_recording_from_twilio(recordings[0])
+                        cr.commit()
+                        _logger.info(
+                            "Recording sync attempt %d/%d: saved recording for call_log=%s call_sid=%s",
+                            attempt + 1, MAX_RETRIES, call_log_id, log.call_sid,
+                        )
+                        return
+            except Exception:
+                _logger.exception(
+                    "Recording sync attempt %d/%d failed for call log %s",
+                    attempt + 1,
+                    MAX_RETRIES,
+                    call_log_id,
+                )
+
+        _logger.info(
+            "Recording sync exhausted %d retries for call_log=%s, marking absent",
+            MAX_RETRIES, call_log_id,
+        )
+        try:
+            with odoo.registry(db_name).cursor() as cr:
+                env = odoo.api.Environment(cr, uid, {})
+                log = env["twilio.call.log"].browse(call_log_id)
+                if log.exists() and not log.recording_sid:
+                    log.sudo().write({"recording_status": "absent"})
+                    cr.commit()
+                    _logger.info(
+                        "Recording marked absent for call_log=%s call_sid=%s",
+                        call_log_id, log.call_sid,
+                    )
+        except Exception:
+            _logger.exception(
+                "Failed to mark recording as absent for call log %s", call_log_id
+            )
+
+    def _save_recording_from_twilio(self, recording):
+        for log in self:
+            icp = self.env["ir.config_parameter"].sudo()
+            account_sid = icp.get_param("twilio_dialer.account_sid")
+
+            sid = getattr(recording, "sid", "") or ""
+            status_raw = (getattr(recording, "status", "") or "").lower()
+            duration_raw = getattr(recording, "duration", None)
+
+            status_map = {
+                "completed": "completed",
+                "failed": "failed",
+                "in-progress": "recording",
+                "processing": "pending",
+            }
+            mapped_status = status_map.get(status_raw, "completed")
+
+            duration = 0
+            if duration_raw is not None:
+                try:
+                    duration = int(duration_raw)
+                except (TypeError, ValueError):
+                    pass
+
+            url = self._build_recording_url(account_sid, sid)
+
+            values = {
+                "recording_sid": sid,
+                "recording_url": url,
+                "recording_duration": duration,
+                "recording_status": mapped_status,
+            }
+            _logger.info(
+                "Saving recording for call_log=%s: sid=%s status=%s duration=%s",
+                log.id, sid, mapped_status, duration,
+            )
+            log.sudo().write(values)
+
+            _logger.info(
+                "Recording saved for call_log=%s: playback_url=%s",
+                log.id, log.playback_url,
+            )
+
+            try:
+                log._post_recording_to_chatter()
+            except Exception:
+                _logger.exception(
+                    "Chatter posting failed for call_log=%s but recording is saved", log.id,
+                )
+
+            # Start transcript worker after recording is saved
+            icp = self.env["ir.config_parameter"].sudo()
+            # Log raw value and type to help diagnose why the transcript worker may not start
+            ai_flag_raw = icp.get_param("twilio_dialer.ai_enable_transcript")
+            try:
+                ai_flag_type = type(ai_flag_raw).__name__
+            except Exception:
+                ai_flag_type = "<unknown>"
+            condition_eval = ai_flag_raw in ("True", "true", "1")
+            _logger.info(
+                "Transcription config check for call_log=%s call_sid=%s: raw_value=%r type=%s condition_eval=%s",
+                log.id,
+                log.call_sid,
+                ai_flag_raw,
+                ai_flag_type,
+                condition_eval,
+            )
+
+            if condition_eval:
+                _logger.info(
+                    "Starting transcript worker for call_log=%s call_sid=%s (ai_enable_transcript raw=%r)",
+                    log.id, log.call_sid, ai_flag_raw,
+                )
+                log._sync_transcript_from_twilio()
+
+    def _post_recording_to_chatter(self):
+        from markupsafe import Markup, escape
+        for log in self:
+            contact = log.partner_id or log.contact_id
+            if not contact:
+                _logger.info(
+                    "Recording chatter skipped for call_log=%s: no contact linked", log.id,
+                )
+                continue
+            if not log.playback_url:
+                _logger.info(
+                    "Recording chatter skipped for call_log=%s: playback_url is empty", log.id,
+                )
+                continue
+            url = escape(log.playback_url)
+            audio = (
+                '<div class="mt8">'
+                '<audio controls preload="none" style="width:100%%;">'
+                '<source src="%s" type="audio/wav"/>'
+                "Your browser does not support audio playback."
+                "</audio></div>"
+            ) % url
+            _logger.info(
+                "Posting recording to chatter for call_log=%s contact=%s playback_url=%s",
+                log.id, contact.display_name, log.playback_url,
+            )
+            # Use sudo() to ensure we see the freshly-written computed fields (recording_sid -> playback_url)
+            try:
+                log_sudo = log.sudo()
+                contact.message_post(
+                    body=Markup("<b>Recording:</b> %s") % Markup(audio),
+                    subtype_xmlid="mail.mt_note",
+                )
+
+                # Also schedule a mail activity on the contact so the recording shows
+                # up in the Contacts -> Activities tab. Use the standard 'call' activity
+                # type to make it recognizable as a phone-related item.
+                try:
+                    activity_user = log_sudo.user_id.id if log_sudo.user_id else self.env.uid
+                    contact.activity_schedule(
+                        "mail.mail_activity_data_call",
+                        date_deadline=fields.Date.context_today(log_sudo),
+                        summary="Call recording available",
+                        user_id=activity_user,
+                        note=("Recording available: %s" % (log_sudo.playback_url or "")),
+                    )
+                except Exception:
+                    _logger.exception(
+                        "Failed to schedule recording activity for contact for call_log=%s",
+                        log.id,
+                    )
+            except Exception:
+                _logger.exception(
+                    "Posting recording to chatter failed for call_log=%s contact=%s playback_url=%s",
+                    log.id, contact.display_name, log.playback_url,
+                )
+
+    def _sync_transcript_from_twilio(self):
+        for call_log in self:
+            if call_log.transcript:
+                _logger.info(
+                    "Transcript sync skipped for %s — already has transcript",
+                    call_log.call_sid,
+                )
+                continue
+            if call_log.transcript_status in ("completed", "failed"):
+                _logger.info(
+                    "Transcript sync skipped for %s — status is %s",
+                    call_log.call_sid, call_log.transcript_status,
+                )
+                continue
+            _logger.info(
+                "Transcript sync starting background thread for call_log=%s call_sid=%s",
+                call_log.id, call_log.call_sid,
+            )
+            db_name = self.env.cr.dbname
+            uid = self.env.uid
+            thread = threading.Thread(
+                target=TwilioCallLog._sync_transcript_worker,
+                args=(call_log.id, db_name, uid),
+                daemon=True,
+            )
+            thread.start()
+
+    @staticmethod
+    def _sync_transcript_worker(call_log_id, db_name, uid):
+        MAX_RETRIES = 5
+        RETRY_INTERVAL = 3
+
+        _logger.info(
+            "Transcript worker started for call_log=%s (db=%s, uid=%s)",
+            call_log_id, db_name, uid,
+        )
+
+        for attempt in range(MAX_RETRIES):
+            time.sleep(RETRY_INTERVAL if attempt > 0 else 2)
+
+            try:
+                with odoo.registry(db_name).cursor() as cr:
+                    env = odoo.api.Environment(cr, uid, {})
+                    log = env["twilio.call.log"].browse(call_log_id)
+
+                    if log.transcript:
+                        _logger.info(
+                            "Transcript sync attempt %d/%d: call_log=%s already has transcript, stopping",
+                            attempt + 1, MAX_RETRIES, call_log_id,
+                        )
+                        return
+
+                    if log.transcript_status == "completed":
+                        _logger.info(
+                            "Transcript sync attempt %d/%d: call_log=%s already completed, stopping",
+                            attempt + 1, MAX_RETRIES, call_log_id,
+                        )
+                        return
+
+                    # Update status to processing on first attempt
+                    if attempt == 0:
+                        log.sudo().write({"transcript_status": "processing"})
+                        cr.commit()
+
+                    _logger.info(
+                        "Transcript sync attempt %d/%d: fetching transcriptions for call_sid=%s",
+                        attempt + 1, MAX_RETRIES, log.call_sid,
+                    )
+                    transcriptions = env["twilio.service"].fetch_transcriptions_by_call_sid(
+                        log.call_sid
+                    )
+                    _logger.info(
+                        "Transcript sync attempt %d/%d: got %d transcription(s) for call_sid=%s",
+                        attempt + 1, MAX_RETRIES, len(transcriptions), log.call_sid,
+                    )
+
+                    if transcriptions:
+                        transcript_obj = transcriptions[0]
+                        status = (getattr(transcript_obj, "status", "") or "").lower()
+
+                        _logger.info(
+                            "Transcript sync attempt %d/%d: transcription status=%s for call_log=%s",
+                            attempt + 1, MAX_RETRIES, status, call_log_id,
+                        )
+
+                        if status == "completed":
+                            log._save_transcript_from_twilio(transcript_obj)
+                            cr.commit()
+                            _logger.info(
+                                "Transcript sync attempt %d/%d: saved transcript for call_log=%s call_sid=%s",
+                                attempt + 1, MAX_RETRIES, call_log_id, log.call_sid,
+                            )
+                            return
+
+                        elif status == "failed":
+                            log.sudo().write({"transcript_status": "failed"})
+                            cr.commit()
+                            _logger.error(
+                                "Transcript sync attempt %d/%d: transcription failed for call_log=%s call_sid=%s",
+                                attempt + 1, MAX_RETRIES, call_log_id, log.call_sid,
+                            )
+                            return
+
+                        # status == "in-progress": continue to next retry
+            except Exception:
+                _logger.exception(
+                    "Transcript sync attempt %d/%d failed for call log %s",
+                    attempt + 1,
+                    MAX_RETRIES,
+                    call_log_id,
+                )
+
+        _logger.info(
+            "Transcript sync exhausted %d retries for call_log=%s, marking absent",
+            MAX_RETRIES, call_log_id,
+        )
+        try:
+            with odoo.registry(db_name).cursor() as cr:
+                env = odoo.api.Environment(cr, uid, {})
+                log = env["twilio.call.log"].browse(call_log_id)
+                if log.exists() and not log.transcript and log.transcript_status != "completed":
+                    log.sudo().write({"transcript_status": "absent"})
+                    cr.commit()
+                    _logger.info(
+                        "Transcript marked absent for call_log=%s call_sid=%s",
+                        call_log_id, log.call_sid,
+                    )
+        except Exception:
+            _logger.exception(
+                "Failed to mark transcript as absent for call log %s", call_log_id
+            )
+
+    def _save_transcript_from_twilio(self, transcript_obj):
+        for log in self:
+            text_content = self.env["twilio.service"].get_transcript_text(transcript_obj)
+
+            values = {
+                "transcript": text_content,
+                "transcript_status": "completed",
+                "ai_provider": "twilio",
+            }
+            _logger.info(
+                "Saving transcript for call_log=%s: text_length=%d",
+                log.id, len(text_content),
+            )
+            log.sudo().write(values)
+
+            _logger.info(
+                "Transcript saved for call_log=%s, posting to chatter",
+                log.id,
+            )
+            try:
+                log._post_transcript_to_chatter()
+            except Exception:
+                _logger.exception(
+                    "Chatter posting failed for transcript call_log=%s but transcript is saved", log.id,
+                )
+
+            # Auto-generate summary if enabled and doesn't exist
+            icp = self.env["ir.config_parameter"].sudo()
+            if icp.get_param("twilio_dialer.ai_auto_on_complete") in ("True", "true", "1"):
+                ai = self.env["twilio.ai.service"]
+                if ai.is_summary_enabled() and not log.summary:
+                    try:
+                        _logger.info(
+                            "Auto-generating summary for call_log=%s after transcript saved",
+                            log.id,
+                        )
+                        log.action_create_summary()
+                    except UserError:
+                        _logger.exception("Summary generation failed for call_log=%s", log.id)
+
+    def _post_transcript_to_chatter(self):
+        for log in self:
+            contact = log.partner_id or log.contact_id
+            if not contact:
+                _logger.info(
+                    "Transcript chatter skipped for call_log=%s: no contact linked", log.id,
+                )
+                continue
+            if not log.transcript:
+                _logger.info(
+                    "Transcript chatter skipped for call_log=%s: transcript is empty", log.id,
+                )
+                continue
+
+            transcript_preview = log.transcript[:200] + "..." if len(log.transcript) > 200 else log.transcript
+            body = f"<b>Transcript (from Twilio):</b><br/>{transcript_preview.replace(chr(10), '<br/>')}"
+
+            _logger.info(
+                "Posting transcript to chatter for call_log=%s contact=%s",
+                log.id, contact.display_name,
+            )
+            contact.message_post(
+                body=body,
+                subtype_xmlid="mail.mt_note",
+            )
+
     def _maybe_auto_generate_ai(self):
         icp = self.env["ir.config_parameter"].sudo()
         if icp.get_param("twilio_dialer.ai_auto_on_complete") not in ("True", "true", "1"):
             return
-        ai = self.env["twilio.ai.service"]
         for call_log in self:
             try:
-                if ai.is_transcript_enabled() and not call_log.transcript:
-                    call_log.action_create_transcript()
-                if ai.is_summary_enabled() and not call_log.summary:
-                    call_log.action_create_summary()
+                # Start transcript worker if enabled and transcript not yet available
+                if icp.get_param("twilio_dialer.ai_enable_transcript") in ("True", "true", "1"):
+                    if not call_log.transcript and call_log.transcript_status not in ("completed", "failed"):
+                        _logger.info(
+                            "Auto-triggering transcript worker for call_log=%s",
+                            call_log.id,
+                        )
+                        call_log._sync_transcript_from_twilio()
+                        # Summary will be generated automatically after transcript is saved by worker
+                        # No need to generate it here
             except UserError:
-                continue
+                _logger.exception("Auto-generate AI failed for call_log=%s", call_log.id)
 
     def action_create_transcript(self):
-        ai = self.env["twilio.ai.service"]
+        """Manually trigger transcript generation from Twilio.
+        
+        This can be called in several scenarios:
+        1. If transcript already exists, show error
+        2. If transcript failed or absent, restart the worker
+        3. If still processing, show message to wait
+        """
         for call_log in self:
-            transcript = ai.create_transcript(call_log)
-            call_log.write({
-                "transcript": transcript,
-                "ai_provider": ai.get_provider(),
-            })
-            call_log.message_post(body="Transcript generated.", subtype_xmlid="mail.mt_note")
+            if call_log.transcript:
+                raise UserError(
+                    f"Transcript already exists for this call. "
+                    f"Length: {len(call_log.transcript)} characters."
+                )
+
+            if call_log.transcript_status == "completed":
+                raise UserError("Transcript is already complete.")
+
+            if call_log.transcript_status == "processing":
+                raise UserError(
+                    "Transcript is currently being generated. "
+                    "Check back in a few seconds."
+                )
+
+            if call_log.transcript_status == "failed":
+                _logger.info(
+                    "User manually restarting transcript for failed call_log=%s",
+                    call_log.id,
+                )
+                call_log.write({"transcript_status": "pending"})
+                call_log._sync_transcript_from_twilio()
+                call_log.message_post(
+                    body="Transcript generation restarted.",
+                    subtype_xmlid="mail.mt_note",
+                )
+                return True
+
+            if call_log.transcript_status == "absent":
+                raise UserError(
+                    "No transcript available for this call. "
+                    "The call may be too short to transcribe, or Twilio was unable to generate a transcript."
+                )
+
+            # transcript_status == "pending": start/restart worker
+            _logger.info(
+                "User manually starting transcript for call_log=%s",
+                call_log.id,
+            )
+            call_log.write({"transcript_status": "pending"})
+            call_log._sync_transcript_from_twilio()
+            call_log.message_post(
+                body="Transcript generation started.",
+                subtype_xmlid="mail.mt_note",
+            )
+
+        return True
         return True
 
     def action_create_summary(self):
@@ -395,10 +944,10 @@ class TwilioCallLog(models.Model):
 
     def action_open_recording(self):
         self.ensure_one()
-        if not self.recording_url:
-            raise UserError("No recording URL is available for this call.")
+        if not self.playback_url:
+            raise UserError("No recording is available for this call.")
         return {
             "type": "ir.actions.act_url",
-            "url": self.recording_url,
+            "url": self.playback_url,
             "target": "new",
         }

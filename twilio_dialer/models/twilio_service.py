@@ -1,6 +1,8 @@
 import logging
 import re
 
+import requests
+from requests.auth import HTTPBasicAuth
 from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import VoiceGrant
 from twilio.rest import Client
@@ -264,6 +266,171 @@ class TwilioService(models.AbstractModel):
             raise
         except Exception as e:
             raise UserError(f"Failed to generate Twilio configuration:\n{str(e)}")
+
+    def fetch_recordings_by_call_sid(self, call_sid):
+        ICP = self.env["ir.config_parameter"].sudo()
+        account_sid = ICP.get_param("twilio_dialer.account_sid")
+        auth_token = ICP.get_param("twilio_dialer.auth_token")
+        if not account_sid or not auth_token:
+            _logger.warning("fetch_recordings_by_call_sid: Twilio credentials not configured")
+            return []
+
+        try:
+            client = self.get_client(account_sid, auth_token)
+            _logger.info("Fetching Twilio recordings for call_sid=%s", call_sid)
+            recordings = client.calls(call_sid).recordings.list(limit=1)
+            _logger.info(
+                "Twilio returned %d recording(s) for call_sid=%s",
+                len(recordings), call_sid,
+            )
+            return recordings
+        except TwilioRestException as e:
+            _logger.warning("Twilio recordings fetch failed for %s: %s", call_sid, e)
+            return []
+        except Exception as e:
+            _logger.warning("Failed to fetch Twilio recordings for %s: %s", call_sid, e)
+            return []
+
+    def fetch_recording_audio(self, recording_sid):
+        ICP = self.env["ir.config_parameter"].sudo()
+        account_sid = ICP.get_param("twilio_dialer.account_sid")
+        auth_token = ICP.get_param("twilio_dialer.auth_token")
+        if not account_sid or not auth_token:
+            return None, None
+
+        url = (
+            "https://api.twilio.com/2010-04-01/Accounts/"
+            f"{account_sid}/Recordings/{recording_sid}.wav"
+        )
+        try:
+            resp = requests.get(
+                url,
+                auth=HTTPBasicAuth(account_sid, auth_token),
+                timeout=30,
+                stream=True,
+            )
+        except requests.RequestException:
+            _logger.exception("Failed to fetch recording %s from Twilio", recording_sid)
+            return None, None
+
+        if resp.status_code != 200:
+            resp.close()
+            return None, None
+
+        content_type = resp.headers.get("Content-Type", "audio/wav")
+        return resp, content_type
+
+    def fetch_transcriptions_by_call_sid(self, call_sid):
+        """Fetch transcriptions for a specific call from Twilio.
+
+        The Twilio REST API does not provide a /Calls/{CallSid}/Transcriptions endpoint.
+        Transcriptions are associated with Recordings or the account-wide Transcriptions
+        resource. This function therefore:
+          1. Fetches recordings for the given Call SID (client.calls(call_sid).recordings.list())
+          2. For each recording, lists transcriptions under that recording
+             (client.recordings(recording_sid).transcriptions.list())
+
+        Returns a list of transcription objects (may be empty). Does not suppress
+        exceptions: TwilioRestException or other exceptions are logged and re-raised
+        so callers can handle/fail as appropriate.
+        """
+        ICP = self.env["ir.config_parameter"].sudo()
+        account_sid = ICP.get_param("twilio_dialer.account_sid")
+        auth_token = ICP.get_param("twilio_dialer.auth_token")
+        if not account_sid or not auth_token:
+            _logger.warning("fetch_transcriptions_by_call_sid: Twilio credentials not configured")
+            return []
+
+        client = self.get_client(account_sid, auth_token)
+        _logger.info("Starting transcription fetch for call_sid=%s", call_sid)
+
+        results = []
+        try:
+            # Step 1: fetch recordings for the call
+            _logger.info("Requesting recordings for call_sid=%s", call_sid)
+            recordings = client.calls(call_sid).recordings.list()
+            _logger.info("Twilio returned %d recording(s) for call_sid=%s", len(recordings), call_sid)
+
+            if not recordings:
+                _logger.info("No recordings found for call_sid=%s; therefore no transcriptions available", call_sid)
+                return []
+
+            # Step 2: for each recording, fetch associated transcriptions
+            for rec in recordings:
+                recording_sid = getattr(rec, "sid", None) or ""
+                rec_status = getattr(rec, "status", None)
+                rec_duration = getattr(rec, "duration", None)
+                _logger.info(
+                    "Checking transcriptions for call_sid=%s recording_sid=%s status=%s duration=%s",
+                    call_sid,
+                    recording_sid,
+                    rec_status,
+                    rec_duration,
+                )
+
+                transcriptions = client.recordings(recording_sid).transcriptions.list()
+                # Log the raw response summary
+                try:
+                    transcription_summaries = [
+                        {
+                            "sid": getattr(t, "sid", None),
+                            "status": (getattr(t, "status", None) or "").lower(),
+                            "recording_sid": getattr(t, "recording_sid", None),
+                            "transcription_text_present": bool(getattr(t, "transcription_text", None) or getattr(t, "transcription_text", None) == ""),
+                        }
+                        for t in transcriptions
+                    ]
+                except Exception:
+                    transcription_summaries = [str(t) for t in transcriptions]
+
+                _logger.info(
+                    "Twilio returned %d transcription(s) for recording_sid=%s: %s",
+                    len(transcriptions), recording_sid, transcription_summaries,
+                )
+
+                if not transcriptions:
+                    # No transcriptions for this recording — log possible reasons available from recording
+                    _logger.info(
+                        "No transcriptions found for recording_sid=%s (call_sid=%s). recording_status=%s recording_duration=%s",
+                        recording_sid,
+                        call_sid,
+                        rec_status,
+                        rec_duration,
+                    )
+                    # Continue to next recording; do not raise here
+                    continue
+
+                # Collect transcription objects to return — caller will inspect status/text
+                for t in transcriptions:
+                    _logger.info(
+                        "Found transcription for call_sid=%s recording_sid=%s transcription_sid=%s status=%s",
+                        call_sid,
+                        recording_sid,
+                        getattr(t, "sid", None),
+                        (getattr(t, "status", None) or "").lower(),
+                    )
+                    results.append(t)
+
+            return results
+
+        except TwilioRestException as e:
+            # Log full exception details and re-raise (do not suppress)
+            _logger.exception("Twilio REST error while fetching transcriptions for call_sid=%s: %s", call_sid, e)
+            raise
+        except Exception as e:
+            # Log and re-raise any other unexpected exceptions
+            _logger.exception("Unexpected error while fetching transcriptions for call_sid=%s: %s", call_sid, e)
+            raise
+
+    def get_transcript_text(self, transcription):
+        """Extract transcript text from a Twilio transcription object.
+        
+        Returns the text content or empty string if not available.
+        """
+        if not transcription:
+            return ""
+        text = getattr(transcription, "text_content", "") or ""
+        return text.strip()
 
     def generate_access_token(self, env):
         ICP = env["ir.config_parameter"].sudo()

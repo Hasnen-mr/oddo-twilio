@@ -178,12 +178,19 @@
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
                                     <div class="o_twilio_cfg_switch_text">
+                                        <div class="o_twilio_cfg_label">Enable Transcription</div>
+                                        <div class="o_twilio_cfg_hint">Transcribe recorded incoming calls.</div>
+                                    </div>
+                                    <field name="twilio_incoming_transcription" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
+                                </div>
+                                <div class="o_twilio_cfg_switch_row">
+                                    <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Voicemail if Unanswered</div>
                                         <div class="o_twilio_cfg_hint">Route missed calls to voicemail.</div>
                                     </div>
                                     <field name="twilio_incoming_voicemail" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
-                                <div class="o_twilio_cfg_field">
+                                <div class="o_twilio_cfg_field" invisible="not twilio_incoming_voicemail">
                                     <label for="twilio_incoming_voicemail_text" class="o_twilio_cfg_label">Voicemail Text</label>
                                     <field name="twilio_incoming_voicemail_text" class="o_twilio_cfg_input"/>
                                 </div>
@@ -211,6 +218,13 @@
                                         <div class="o_twilio_cfg_hint">Record outbound calls when supported.</div>
                                     </div>
                                     <field name="twilio_outgoing_record" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
+                                </div>
+                                <div class="o_twilio_cfg_switch_row">
+                                    <div class="o_twilio_cfg_switch_text">
+                                        <div class="o_twilio_cfg_label">Enable Transcription</div>
+                                        <div class="o_twilio_cfg_hint">Transcribe recorded outgoing calls.</div>
+                                    </div>
+                                    <field name="twilio_outgoing_transcription" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
                                 <div class="o_twilio_cfg_switch_row">
                                     <div class="o_twilio_cfg_switch_text">

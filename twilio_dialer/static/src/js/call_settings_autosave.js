@@ -10,11 +10,13 @@ const WATCHED_FIELDS = [
     "twilio_phone_number",
     "twilio_incoming_enabled",
     "twilio_incoming_record",
+    "twilio_incoming_transcription",
     "twilio_incoming_voicemail",
     "twilio_incoming_voicemail_text",
     "twilio_incoming_forward",
     "twilio_incoming_forward_to",
     "twilio_outgoing_record",
+    "twilio_outgoing_transcription",
     "twilio_outgoing_smart_copy",
 ];
 
@@ -59,6 +61,8 @@ export class CallSettingsAutosave extends Component {
         this._pending = null;
         this._timer = null;
         this._seq = 0;
+        this._prevVoicemail = false;
+        this._prevForward = false;
 
         useEffect(
             () => {
@@ -69,6 +73,41 @@ export class CallSettingsAutosave extends Component {
                 if (!data.twilio_is_connected) {
                     return;
                 }
+
+                const voicemail = data.twilio_incoming_voicemail;
+                const forward = data.twilio_incoming_forward;
+
+                if (voicemail && forward) {
+                    const voicemailJustTurnedOn = voicemail && !this._prevVoicemail;
+                    const forwardJustTurnedOn = forward && !this._prevForward;
+
+                    if (voicemailJustTurnedOn && forwardJustTurnedOn) {
+                        this.props.record.update({
+                            twilio_incoming_forward: false,
+                            twilio_incoming_forward_to: "",
+                        });
+                        this._prevVoicemail = true;
+                        this._prevForward = false;
+                    } else if (forwardJustTurnedOn) {
+                        this.props.record.update({
+                            twilio_incoming_voicemail: false,
+                            twilio_incoming_voicemail_text: "",
+                        });
+                        this._prevVoicemail = false;
+                        this._prevForward = true;
+                    } else {
+                        this.props.record.update({
+                            twilio_incoming_forward: false,
+                            twilio_incoming_forward_to: "",
+                        });
+                        this._prevVoicemail = true;
+                        this._prevForward = false;
+                    }
+                    return;
+                }
+
+                this._prevVoicemail = voicemail;
+                this._prevForward = forward;
 
                 const snap = snapshotCallSettings(data);
                 if (!this._ready) {

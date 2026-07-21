@@ -168,7 +168,15 @@
                         <page string="Recording" name="recording">
                             <group>
                                 <field name="recording_sid"/>
-                                <field name="recording_url" widget="url"/>
+                                <field name="playback_url" widget="url"
+                                       invisible="not recording_sid"/>
+                                <field name="recording_status" widget="badge"
+                                       decoration-success="recording_status == 'completed'"
+                                       decoration-warning="recording_status in ('pending','recording')"
+                                       decoration-danger="recording_status == 'failed'"
+                                       decoration-muted="recording_status == 'absent'"/>
+                                <field name="recording_duration"
+                                       invisible="recording_status != 'completed'"/>
                                 <field name="has_recording" invisible="1"/>
                             </group>
                         </page>

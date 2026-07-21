@@ -31,10 +31,15 @@ class CallLogService:
 
     def format_call_activity(self, call_log):
         recording = "Not Available"
-        if call_log.recording_url:
-            recording = Markup('<a href="%s" target="_blank">Play Recording</a>') % escape(
-                call_log.recording_url
-            )
+        if call_log.playback_url:
+            url = escape(call_log.playback_url)
+            recording = (
+                '<div class="mt8">'
+                '<audio controls preload="none" style="width:100%%;">'
+                '<source src="%s" type="audio/wav"/>'
+                "Your browser does not support audio playback."
+                "</audio></div>"
+            ) % url
         summary = call_log.summary or "AI Summary is not enabled. Click here to enable it."
         status = self._status_labels.get(
             call_log.status,
@@ -51,7 +56,7 @@ class CallLogService:
             escape(call_log.from_number or "Not Available"),
             escape(call_log.to_number or "Not Available"),
             escape(self._duration_display(call_log.duration)),
-            recording,
+            Markup(recording) if call_log.playback_url else escape(recording),
             escape(status),
             escape(summary),
         )

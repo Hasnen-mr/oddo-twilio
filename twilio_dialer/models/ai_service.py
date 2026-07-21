@@ -125,60 +125,42 @@ class TwilioAIService(models.AbstractModel):
             parts = candidates[0].get("content", {}).get("parts") or []
             return "\n".join(part.get("text", "") for part in parts).strip()
 
-        if provider == "deepgram":
-            raise UserError(
-                "Deepgram is intended for audio transcription. Use Create Transcript on a call with a recording URL, "
-                "or choose OpenAI / Anthropic / Gemini for text summary."
-            )
-
         raise UserError("Unsupported AI provider: %s" % provider)
 
     def create_transcript(self, call_log):
+        """This method is no longer used for manual transcript creation.
+        
+        Transcripts now come directly from Twilio via the background worker.
+        This method is kept for backward compatibility but will raise an error.
+        """
         if not self.is_transcript_enabled():
             raise UserError("Enable Create Call Transcripts in Configuration → AI Settings.")
 
-        notes = (call_log.notes or "").strip()
-        recording_url = (call_log.recording_url or "").strip()
-        if not notes and not recording_url:
+        # Transcripts now come from Twilio only
+        if not call_log.transcript or call_log.transcript_status != "completed":
             raise UserError(
-                "Add call notes or a recording URL before creating a transcript."
+                "Transcripts are generated automatically from Twilio after each call.\n"
+                "Check the Transcript Status field for progress.\n"
+                "Status: %s" % call_log.transcript_status
             )
 
-        prompt = (
-            "Create a clean call transcript from this Odoo Twilio call log.\n"
-            "From: {from_number}\n"
-            "To: {to_number}\n"
-            "Direction: {direction}\n"
-            "Status: {status}\n"
-            "Duration (sec): {duration}\n"
-            "Recording URL: {recording_url}\n"
-            "Notes / raw content:\n{notes}\n\n"
-            "Return only the transcript text."
-        ).format(
-            from_number=call_log.from_number or "",
-            to_number=call_log.to_number or "",
-            direction=call_log.direction or "",
-            status=call_log.status or "",
-            duration=call_log.duration or 0,
-            recording_url=recording_url or "N/A",
-            notes=notes or "No notes provided.",
-        )
-        provider = self.get_provider()
-        transcript = self.generate_text(
-            prompt,
-            system_prompt="You produce accurate phone-call transcripts.",
-            provider=provider if provider != "deepgram" else "openai",
-        )
-        return transcript
+        return call_log.transcript
 
     def create_summary(self, call_log):
+        """Create a summary from the call transcript.
+        
+        The transcript must already be available (from Twilio).
+        Uses the configured AI provider (OpenAI, Anthropic, or Gemini).
+        """
         if not self.is_summary_enabled():
             raise UserError("Enable Create Call Summaries in Configuration → AI Settings.")
 
-        source = (call_log.transcript or call_log.notes or "").strip()
-        if not source:
+        # Require transcript to be available from Twilio
+        transcript = (call_log.transcript or "").strip()
+        if not transcript:
             raise UserError(
-                "Add notes or create a transcript first, then generate a summary."
+                "Cannot generate summary without a transcript.\n"
+                "Transcript status: %s" % call_log.transcript_status
             )
 
         prompt = (
@@ -187,12 +169,12 @@ class TwilioAIService(models.AbstractModel):
             "From: {from_number}\n"
             "To: {to_number}\n"
             "Contact: {contact}\n"
-            "Content:\n{source}"
+            "Transcript:\n{transcript}"
         ).format(
             from_number=call_log.from_number or "",
             to_number=call_log.to_number or "",
             contact=call_log.partner_id.display_name if call_log.partner_id else "",
-            source=source,
+            transcript=transcript,
         )
         return self.generate_text(
             prompt,

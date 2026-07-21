@@ -108,6 +108,16 @@ class ResConfigSettings(models.TransientModel):
     twilio_outgoing_smart_copy = fields.Boolean(
         string="Smart Copy",
     )
+    twilio_incoming_transcription = fields.Boolean(
+        string="Enable Incoming Transcription",
+        config_parameter="twilio_dialer.incoming_transcription",
+        default=False,
+    )
+    twilio_outgoing_transcription = fields.Boolean(
+        string="Enable Outgoing Transcription",
+        config_parameter="twilio_dialer.outgoing_transcription",
+        default=False,
+    )
     twilio_call_settings_error = fields.Char(readonly=True)
     twilio_call_settings_autosave = fields.Char(
         string="Call Settings Autosave",
@@ -196,6 +206,8 @@ class ResConfigSettings(models.TransientModel):
             _logger.warning("MyBroadcast returned a non-object Call Settings payload: %r", payload)
             return {}, {}, "Call settings service returned an invalid response."
 
+        _logger.info("Raw API response:\n%s", json.dumps(payload, indent=3, default=str))
+
         nested_settings = payload.get("settings")
         if nested_settings is None:
             settings = payload
@@ -226,12 +238,14 @@ class ResConfigSettings(models.TransientModel):
             return incoming, outgoing, "Call settings service returned invalid %s data." % (
                 " and ".join(sorted(set(errors)))
             )
+        _logger.info("Parsed incoming:\n%s", json.dumps(incoming, indent=3, default=str))
+        _logger.info("Parsed outgoing:\n%s", json.dumps(outgoing, indent=3, default=str))
         return incoming, outgoing, False
 
     @staticmethod
     def _call_settings_values(incoming, outgoing):
         """Map validated API sections to transient fields only."""
-        return {
+        values = {
             "twilio_incoming_enabled": incoming.get("allow"),
             "twilio_incoming_record": incoming.get("record"),
             "twilio_incoming_voicemail": incoming.get("voicemail"),
@@ -241,6 +255,11 @@ class ResConfigSettings(models.TransientModel):
             "twilio_outgoing_record": outgoing.get("record"),
             "twilio_outgoing_smart_copy": outgoing.get("smartCopy"),
         }
+        if incoming.get("transcription") is not None:
+            values["twilio_incoming_transcription"] = incoming["transcription"]
+        if outgoing.get("transcription") is not None:
+            values["twilio_outgoing_transcription"] = outgoing["transcription"]
+        return values
 
     @api.model
     def _twilio_is_configured(self):
@@ -266,7 +285,18 @@ class ResConfigSettings(models.TransientModel):
 
     @api.model
     def get_values(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        _logger.info(
+            "get_values() START — config_parameter incoming_transcription=%s outgoing_transcription=%s",
+            icp.get_param("twilio_dialer.incoming_transcription"),
+            icp.get_param("twilio_dialer.outgoing_transcription"),
+        )
         values = super().get_values()
+        _logger.info(
+            "get_values() after super() — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
+            values.get("twilio_incoming_transcription"),
+            values.get("twilio_outgoing_transcription"),
+        )
         connected = self._twilio_is_configured() or bool(
             values.get("twilio_api_key_sid") and values.get("twilio_application_sid")
         )
@@ -284,24 +314,42 @@ class ResConfigSettings(models.TransientModel):
             if error:
                 values["twilio_call_settings_error"] = error
             else:
-                values.update(self._call_settings_values(incoming, outgoing))
+                call_values = self._call_settings_values(incoming, outgoing)
+                values.update(call_values)
+                _logger.info(
+                    "get_values() after API update — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
+                    values.get("twilio_incoming_transcription"),
+                    values.get("twilio_outgoing_transcription"),
+                )
         except MyBroadcastAPIError as error:
             _logger.warning("Unable to load MyBroadcast call settings: %s", error)
             values["twilio_call_settings_error"] = str(error)
+        _logger.info(
+            "get_values() RETURN — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
+            values.get("twilio_incoming_transcription"),
+            values.get("twilio_outgoing_transcription"),
+        )
         return values
 
     def action_save_call_settings(self):
         self.ensure_one()
+        _logger.info(
+            "action_save_call_settings() — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
+            self.twilio_incoming_transcription,
+            self.twilio_outgoing_transcription,
+        )
         result = self.autosave_call_settings({
             "twilio_account_sid": self.twilio_account_sid,
             "twilio_phone_number": self.twilio_phone_number,
             "twilio_incoming_enabled": self.twilio_incoming_enabled,
             "twilio_incoming_record": self.twilio_incoming_record,
+            "twilio_incoming_transcription": self.twilio_incoming_transcription,
             "twilio_incoming_voicemail": self.twilio_incoming_voicemail,
             "twilio_incoming_voicemail_text": self.twilio_incoming_voicemail_text or "",
             "twilio_incoming_forward": self.twilio_incoming_forward,
             "twilio_incoming_forward_to": self.twilio_incoming_forward_to or "",
             "twilio_outgoing_record": self.twilio_outgoing_record,
+            "twilio_outgoing_transcription": self.twilio_outgoing_transcription,
             "twilio_outgoing_smart_copy": self.twilio_outgoing_smart_copy,
         })
         notif_type = "success" if result.get("success") else "danger"
@@ -320,6 +368,13 @@ class ResConfigSettings(models.TransientModel):
     def autosave_call_settings(self, values):
         """Persist Call Settings immediately (no Save button / no page reload)."""
         values = values or {}
+        # Diagnostic log: entry into autosave_call_settings
+        _logger.info(
+            "autosave_call_settings START — incoming_transcription=%r outgoing_transcription=%r values_keys=%r",
+            values.get("twilio_incoming_transcription"),
+            values.get("twilio_outgoing_transcription"),
+            list(values.keys()),
+        )
         account_sid = (
             values.get("twilio_account_sid")
             or self.env["ir.config_parameter"].sudo().get_param("twilio_dialer.account_sid")
@@ -341,24 +396,114 @@ class ResConfigSettings(models.TransientModel):
             except UserError as error:
                 return {"success": False, "message": str(error)}
 
+        voicemail = bool(values.get("twilio_incoming_voicemail"))
+        voicemail_text = values.get("twilio_incoming_voicemail_text") or ""
+        forward = bool(values.get("twilio_incoming_forward"))
+        forward_to = values.get("twilio_incoming_forward_to") or ""
+
+        if voicemail and forward:
+            _logger.warning(
+                "Both voicemail and forward enabled — normalizing to voicemail only."
+            )
+            forward = False
+            forward_to = ""
+
+        incoming_transcription = bool(values.get("twilio_incoming_transcription"))
+        outgoing_transcription = bool(values.get("twilio_outgoing_transcription"))
+
+        icp = self.env["ir.config_parameter"].sudo()
+        # Persist per-channel transcription settings
+        icp.set_param("twilio_dialer.incoming_transcription", incoming_transcription)
+        icp.set_param("twilio_dialer.outgoing_transcription", outgoing_transcription)
+
+        # Ensure AI transcript flag is enabled automatically when any UI transcription
+        # option is turned on. Do not automatically disable AI transcripts when the
+        # UI toggles are turned off to preserve backwards compatibility with any
+        # explicit admin setting for ai_enable_transcript.
+        try:
+            if incoming_transcription or outgoing_transcription:
+                _logger.info(
+                    "autosave_call_settings: attempting to set twilio_dialer.ai_enable_transcript=True (incoming=%s outgoing=%s)",
+                    incoming_transcription,
+                    outgoing_transcription,
+                )
+                icp.set_param("twilio_dialer.ai_enable_transcript", "True")
+                # Immediately read back and log the persisted value for diagnostics
+                try:
+                    persisted = icp.get_param("twilio_dialer.ai_enable_transcript")
+                except Exception as e:
+                    _logger.exception(
+                        "autosave_call_settings: error reading back twilio_dialer.ai_enable_transcript after set: %s",
+                        e,
+                    )
+                    raise
+                _logger.info(
+                    "autosave_call_settings: twilio_dialer.ai_enable_transcript persisted value=%r",
+                    persisted,
+                )
+
+                # Also update the transient res.config.settings record for the current
+                # user so that any subsequent set_values() (which persists transient
+                # fields to ir.config_parameter) will not overwrite this parameter back
+                # to False. This keeps the autosave and the main save flow in sync.
+                try:
+                    settings_model = self.env["res.config.settings"].sudo()
+                    recent = settings_model.search(
+                        [("create_uid", "=", self.env.uid)],
+                        order="create_date desc",
+                        limit=1,
+                    )
+                    if recent:
+                        _logger.info(
+                            "autosave_call_settings: updating transient res.config.settings id=%s twilio_ai_enable_transcript=True",
+                            recent.id,
+                        )
+                        # write the transient field so super().set_values() will persist True
+                        recent.write({"twilio_ai_enable_transcript": True})
+                    else:
+                        _logger.info(
+                            "autosave_call_settings: no transient res.config.settings record found to update"
+                        )
+                except Exception:
+                    _logger.exception(
+                        "autosave_call_settings: failed to update transient res.config.settings record"
+                    )
+        except Exception:
+            # Let exceptions bubble up after logging — caller handles errors; do not
+            # suppress to comply with project rules.
+            _logger.exception("Failed to set twilio_dialer.ai_enable_transcript config parameter")
+            raise
+
         settings = {
             "incomingCallSetting": {
                 "allow": bool(values.get("twilio_incoming_enabled")),
                 "record": bool(values.get("twilio_incoming_record")),
-                "voicemail": bool(values.get("twilio_incoming_voicemail")),
-                "voicemailText": values.get("twilio_incoming_voicemail_text") or "",
-                "forward": bool(values.get("twilio_incoming_forward")),
-                "forwardTo": values.get("twilio_incoming_forward_to") or "",
+                "transcription": incoming_transcription,
+                "voicemail": voicemail,
+                "voicemailText": voicemail_text,
+                "forward": forward,
+                "forwardTo": forward_to,
             },
             "outgoingCallSetting": {
                 "record": bool(values.get("twilio_outgoing_record")),
+                "transcription": outgoing_transcription,
                 "smartCopy": bool(values.get("twilio_outgoing_smart_copy")),
             },
         }
+        _logger.info(
+            "Sending call-settings payload:\n%s",
+            json.dumps(settings, indent=3),
+        )
         try:
             payload = MyBroadcastAPI().save_call_settings(account_sid, settings)
         except MyBroadcastAPIError as error:
             return {"success": False, "message": str(error)}
+
+        _logger.info(
+            "Saving incoming transcription=%s outgoing transcription=%s",
+            settings["incomingCallSetting"]["transcription"],
+            settings["outgoingCallSetting"]["transcription"],
+        )
 
         incoming, outgoing, error = self._parse_call_settings(payload)
         if error:
@@ -504,6 +649,16 @@ class ResConfigSettings(models.TransientModel):
         return True
 
     def set_values(self):
+        _logger.info(
+            "set_values() START — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
+            self.twilio_incoming_transcription,
+            self.twilio_outgoing_transcription,
+        )
+        _logger.info("set_values() — record state: %s", {
+            'id': self.id if hasattr(self, 'id') else 'N/A',
+            'twilio_incoming_transcription': self.twilio_incoming_transcription,
+            'twilio_outgoing_transcription': self.twilio_outgoing_transcription,
+        })
         self._twilio_preserve_generated_fields()
 
         if not self.env.context.get("twilio_skip_auto_generate"):
@@ -537,7 +692,60 @@ class ResConfigSettings(models.TransientModel):
                         % error
                     ) from error
 
-        return super().set_values()
+        result = super().set_values()
+        icp = self.env["ir.config_parameter"].sudo()
+        icp.set_param("twilio_dialer.incoming_transcription", self.twilio_incoming_transcription)
+        icp.set_param("twilio_dialer.outgoing_transcription", self.twilio_outgoing_transcription)
+        _logger.info(
+            "set_values() after super() — ir.config_parameter incoming_transcription=%s outgoing_transcription=%s",
+            icp.get_param("twilio_dialer.incoming_transcription"),
+            icp.get_param("twilio_dialer.outgoing_transcription"),
+        )
+        return result
+
+    def write(self, vals):
+        """Log write() calls to trace when and how settings are saved."""
+        _logger.info("write() CALLED with vals keys: %s", list(vals.keys()) if vals else [])
+        _logger.info("write() — transcription in vals: incoming=%s, outgoing=%s", 
+                     vals.get('twilio_incoming_transcription'), 
+                     vals.get('twilio_outgoing_transcription'))
+        _logger.info("write() — calling super().write()")
+        result = super().write(vals)
+        _logger.info("write() — after super().write(), result=%s", result)
+        
+        # CRITICAL FIX: For TransientModel, web_save doesn't call set_values() automatically
+        # We must explicitly call set_values() after write() to persist config_parameter fields
+        _logger.info("write() — calling set_values() to persist config_parameter fields")
+        try:
+            self.set_values()
+            _logger.info("write() — set_values() completed successfully")
+        except Exception as error:
+            _logger.warning("write() — set_values() raised an exception: %s", error)
+        
+        return result
+
+    def create(self, vals_list):
+        """Log create() calls to trace record creation."""
+        if isinstance(vals_list, dict):
+            vals_list = [vals_list]
+        _logger.info("create() CALLED with %d record(s)", len(vals_list))
+        for i, vals in enumerate(vals_list):
+            _logger.info("create() [%d] — vals keys: %s", i, list(vals.keys()) if vals else [])
+            _logger.info("create() [%d] — transcription in vals: incoming=%s, outgoing=%s", 
+                         i, vals.get('twilio_incoming_transcription'), vals.get('twilio_outgoing_transcription'))
+        _logger.info("create() — calling super().create()")
+        result = super().create(vals_list)
+        _logger.info("create() — after super().create(), result=%s", result)
+        
+        # CRITICAL FIX: Ensure set_values() is called after create() to persist config_parameter fields
+        _logger.info("create() — calling set_values() to persist config_parameter fields")
+        try:
+            result.set_values()
+            _logger.info("create() — set_values() completed successfully")
+        except Exception as error:
+            _logger.warning("create() — set_values() raised an exception: %s", error)
+        
+        return result
 
     def _submit_module_registration(self):
         """Notify ZantaTech when a Twilio account is connected to the module."""
@@ -621,6 +829,8 @@ class ResConfigSettings(models.TransientModel):
 
     def execute(self):
         """Save settings; after auto-connect, reload so API key / phones appear."""
+        _logger.info("execute() CALLED — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s", 
+                     self.twilio_incoming_transcription, self.twilio_outgoing_transcription)
         will_auto_connect = False
         if not self.env.context.get("twilio_skip_auto_generate"):
             for record in self:
@@ -629,7 +839,9 @@ class ResConfigSettings(models.TransientModel):
                     will_auto_connect = True
                     break
 
+        _logger.info("execute() — calling super().execute()")
         result = super().execute()
+        _logger.info("execute() — after super().execute(), result=%s", result)
         if will_auto_connect:
             return self._reload_twilio_settings(
                 "Twilio Connection",
@@ -692,6 +904,8 @@ class ResConfigSettings(models.TransientModel):
             "twilio_dialer.application_friendly_name",
             "twilio_dialer.voice_url",
             "twilio_dialer.voice_method",
+            "twilio_dialer.incoming_transcription",
+            "twilio_dialer.outgoing_transcription",
         ):
             icp.set_param(key, "")
 
@@ -704,6 +918,8 @@ class ResConfigSettings(models.TransientModel):
             "twilio_api_key_sid": False,
             "twilio_api_secret": False,
             "twilio_application_sid": False,
+            "twilio_incoming_transcription": False,
+            "twilio_outgoing_transcription": False,
             "twilio_config_section": "account",
         }
         self.with_context(twilio_skip_auto_generate=True).write(vals)

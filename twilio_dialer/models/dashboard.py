@@ -2,7 +2,7 @@
 from collections import defaultdict
 from datetime import datetime, time, timedelta
 
-from odoo import api, fields, models
+from odoo import api, fields, models, release
 
 
 class TwilioDialerDashboard(models.TransientModel):
@@ -212,6 +212,15 @@ class TwilioDialerDashboard(models.TransientModel):
 
     def action_open_contacts(self):
         return self.env.ref("contacts.action_contacts").read()[0]
+
+    def action_open_duplicate_contact_apps(self):
+        """Open Smart Duplicate Contact Manager on the Odoo Apps Store."""
+        series = release.major_version
+        return {
+            "type": "ir.actions.act_url",
+            "url": "https://apps.odoo.com/apps/modules/%s/sm_duplicate_contact" % series,
+            "target": "new",
+        }
 
 
 class TwilioDialerDashboardDateLine(models.TransientModel):

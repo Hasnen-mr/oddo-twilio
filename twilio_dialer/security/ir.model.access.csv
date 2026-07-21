@@ -9,3 +9,4 @@ access_twilio_help_user,twilio.help.user,model_twilio_help,base.group_user,1,1,1
 access_twilio_dialer_dashboard_user,twilio.dialer.dashboard.user,model_twilio_dialer_dashboard,base.group_user,1,1,1,1
 access_twilio_dashboard_date_line_user,twilio.dashboard.date.line.user,model_twilio_dialer_dashboard_date_line,base.group_user,1,1,1,1
 access_twilio_dashboard_agent_line_user,twilio.dashboard.agent.line.user,model_twilio_dialer_dashboard_agent_line,base.group_user,1,1,1,1
+access_twilio_version_update_user,twilio.version.update.user,model_twilio_version_update,base.group_user,1,0,0,0

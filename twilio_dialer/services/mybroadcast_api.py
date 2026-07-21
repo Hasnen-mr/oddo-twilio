@@ -52,3 +52,7 @@ class MyBroadcastAPI:
 
     def get_billing(self, account_sid):
         return self._request("GET", "/billing/%s" % account_sid)
+
+    def get_module_version(self, module_name="twilio_dialer"):
+        """Fetch published module version + feature list for update notifications."""
+        return self._request("GET", "/odoo/%s/version.json" % module_name)

@@ -1,0 +1,82 @@
+/* Version update dialog */
+
+.o_twilio_version_dialog {
+    .o_twilio_version_body {
+        padding: 4px 2px 8px;
+    }
+
+    .o_twilio_version_message {
+        margin: 0 0 1rem;
+        color: #495057;
+        line-height: 1.5;
+    }
+
+    .o_twilio_version_meta {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .o_twilio_version_pill {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+        padding: 0.55rem 0.85rem;
+        border-radius: 10px;
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        min-width: 120px;
+
+        strong {
+            font-size: 0.95rem;
+            color: #343a40;
+        }
+
+        &--new {
+            background: #f3edf2;
+            border-color: #d4c2d0;
+
+            strong {
+                color: #714b67;
+            }
+        }
+    }
+
+    .o_twilio_version_label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6c757d;
+        font-weight: 600;
+    }
+
+    .o_twilio_version_arrow {
+        color: #adb5bd;
+        font-size: 1.1rem;
+    }
+
+    .o_twilio_version_features_title {
+        margin: 0 0 0.5rem;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #343a40;
+    }
+
+    .o_twilio_version_features {
+        margin: 0 0 0.75rem;
+        padding-left: 1.15rem;
+        color: #495057;
+
+        li {
+            margin-bottom: 0.35rem;
+            line-height: 1.4;
+        }
+    }
+
+    .o_twilio_version_download {
+        color: #714b67;
+        font-weight: 600;
+    }
+}

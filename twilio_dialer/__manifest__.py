@@ -100,7 +100,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.61',
+    'version': '18.0.1.2.63',
     'license': 'LGPL-3',
 
     'depends': [
@@ -150,6 +150,8 @@ Bitly: https://bit.ly/odoo-twilio-dialer
             'twilio_dialer/static/src/js/password_toggle_field.js',
             'twilio_dialer/static/src/js/dialer_popup.js',
             'twilio_dialer/static/src/js/dialer_systray.js',
+            'twilio_dialer/static/src/js/version_update_dialog.js',
+            'twilio_dialer/static/src/js/version_update_service.js',
             'twilio_dialer/static/src/xml/**/*.xml',
             'twilio_dialer/static/src/scss/**/*.scss',
         ],

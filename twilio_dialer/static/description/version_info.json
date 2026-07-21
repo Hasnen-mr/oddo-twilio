@@ -1,0 +1,31 @@
+{
+  "module": "twilio_dialer",
+  "version": "18.0.1.2.63",
+  "title": "New Version Available",
+  "message": "A newer version of Twilio Dialer is available. Update from Apps to get the latest improvements.",
+  "release_date": "2026-07-21",
+  "download_url": "https://apps.odoo.com/apps/modules/19.0/twilio_dialer",
+  "features": [
+    "In-app New Version Available notification with Remind Me Later and Okay",
+    "Automatic what's-new list prepared from release changes",
+    "Twilio Client identity now uses id_odoo_<Account SID>",
+    "Recording, voicemail, and forward-to-device toggle improvements",
+    "Billing UI with credit packages and dialer country picker"
+  ],
+  "changelog": {
+    "18.0.1.2.63": [
+      "In-app New Version Available notification with Remind Me Later and Okay",
+      "Automatic what's-new list prepared from release changes"
+    ],
+    "18.0.1.2.62": [
+      "In-app New Version Available notification with Remind Me Later and Okay",
+      "Twilio Client identity now uses id_odoo_<Account SID>"
+    ],
+    "18.0.1.2.61": [
+      "Twilio Client identity now uses id_odoo_<Account SID>"
+    ],
+    "18.0.1.2.60": [
+      "Recording, voicemail, and forward-to-device toggle improvements"
+    ]
+  }
+}

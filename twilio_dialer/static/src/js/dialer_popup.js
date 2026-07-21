@@ -7,7 +7,6 @@ import { COUNTRY_CODES } from "./country_codes";
 import { deviceManager } from "./device_manager";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
-const TWILIO_NETWORK_TEST_URL = "https://networktest.twilio.com/";
 
 export class DialerPopup extends Component {
     static template = "twilio_dialer.DialerPopup";
@@ -145,22 +144,10 @@ export class DialerPopup extends Component {
     }
 
     _onDeviceStatusChange(status) {
-        const previousStatus = this.state.connectionStatus;
         this.state.connectionStatus = status;
         if (status !== "connecting" && status !== "connected") {
             this.state.isMuted = false;
             this.state.dtmfBuffer = "";
-        }
-        if (status === "error" && previousStatus !== "error") {
-            this._openTwilioNetworkTest();
-        }
-    }
-
-    _openTwilioNetworkTest() {
-        try {
-            window.open(TWILIO_NETWORK_TEST_URL, "_blank", "noopener,noreferrer");
-        } catch (error) {
-            console.warn("Unable to open Twilio Network Test:", error);
         }
     }
 

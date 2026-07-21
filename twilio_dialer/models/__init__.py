@@ -10,3 +10,4 @@ from . import contact_us
 from . import help
 from . import dashboard
 from . import billing
+from . import version_update

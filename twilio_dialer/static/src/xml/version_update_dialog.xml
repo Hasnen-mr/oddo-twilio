@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="twilio_dialer.VersionUpdateDialog">
+        <Dialog size="'md'" contentClass="'o_twilio_version_dialog'"
+               title="dialogTitle">
+            <div class="o_twilio_version_body">
+                <p class="o_twilio_version_message" t-esc="props.message"/>
+
+                <div class="o_twilio_version_meta">
+                    <div class="o_twilio_version_pill">
+                        <span class="o_twilio_version_label">Installed</span>
+                        <strong t-esc="props.installed_version"/>
+                    </div>
+                    <span class="o_twilio_version_arrow" aria-hidden="true">→</span>
+                    <div class="o_twilio_version_pill o_twilio_version_pill--new">
+                        <span class="o_twilio_version_label">Latest</span>
+                        <strong t-esc="props.latest_version"/>
+                    </div>
+                </div>
+
+                <t t-if="features.length">
+                    <h4 class="o_twilio_version_features_title">What's new</h4>
+                    <ul class="o_twilio_version_features">
+                        <t t-foreach="features" t-as="feature" t-key="feature_index">
+                            <li t-esc="feature"/>
+                        </t>
+                    </ul>
+                </t>
+
+                <t t-if="props.download_url">
+                    <button type="button"
+                            class="btn btn-link o_twilio_version_download px-0"
+                            t-on-click="openDownload">
+                        View on Odoo Apps
+                    </button>
+                </t>
+            </div>
+
+            <t t-set-slot="footer">
+                <button type="button" class="btn btn-secondary"
+                        t-on-click="onRemindLater">
+                    Remind Me Later
+                </button>
+                <button type="button" class="btn btn-primary"
+                        t-on-click="onOkay">
+                    Okay
+                </button>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

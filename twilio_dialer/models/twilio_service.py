@@ -471,3 +471,67 @@ class TwilioService(models.AbstractModel):
         token.add_grant(voice_grant)
 
         return token.to_jwt()
+
+    def configure_incoming_phone_number(self, phone_number=None, env=None):
+        """Update the Twilio Incoming Phone Number to point to the Odoo incoming call webhook.
+
+        Sets voice_url=<web.base.url>/twilio_dialer/incoming_call and voice_method="POST".
+        Idempotent: skips update if the phone number is already configured with the target URL.
+        """
+        env = env or self.env
+        ICP = env["ir.config_parameter"].sudo()
+        account_sid = ICP.get_param("twilio_dialer.account_sid")
+        auth_token = ICP.get_param("twilio_dialer.auth_token")
+        phone_number = phone_number or ICP.get_param("twilio_dialer.phone_number")
+
+        if not account_sid or not auth_token:
+            _logger.warning("configure_incoming_phone_number: Account SID or Auth Token missing.")
+            return False
+
+        if not phone_number:
+            _logger.warning("configure_incoming_phone_number: Twilio Phone Number missing.")
+            return False
+
+        base_url = (ICP.get_param("web.base.url") or "").rstrip("/")
+        if not base_url:
+            _logger.warning("configure_incoming_phone_number: web.base.url is missing.")
+            return False
+
+        target_voice_url = f"{base_url}/twilio_dialer/incoming_call"
+
+        try:
+            client = self.get_client(account_sid, auth_token)
+            phone_number_norm = self.validate_phone_number(phone_number)
+
+            matched_numbers = client.incoming_phone_numbers.list(phone_number=phone_number_norm)
+            if not matched_numbers:
+                all_numbers = client.incoming_phone_numbers.stream()
+                matched_numbers = [num for num in all_numbers if getattr(num, "phone_number", None) == phone_number_norm]
+
+            if not matched_numbers:
+                _logger.warning("configure_incoming_phone_number: Number %s not found in Twilio account %s", phone_number_norm, account_sid)
+                return False
+
+            target_number = matched_numbers[0]
+            current_voice_url = getattr(target_number, "voice_url", "") or ""
+            current_voice_method = getattr(target_number, "voice_method", "") or ""
+
+            if current_voice_url == target_voice_url and current_voice_method == "POST":
+                _logger.info("Twilio Incoming Phone Number %s (SID %s) is already configured with voice_url=%s", phone_number_norm, target_number.sid, target_voice_url)
+                return True
+
+            _logger.info("Updating Twilio Incoming Phone Number %s (SID %s) with voice_url=%s, voice_method=POST", phone_number_norm, target_number.sid, target_voice_url)
+            target_number.update(
+                voice_url=target_voice_url,
+                voice_method="POST",
+            )
+            return True
+
+        except TwilioRestException as e:
+            _logger.error("Twilio REST API error while configuring incoming phone number %s: %s", phone_number, e)
+            raise UserError(f"Twilio API error while configuring incoming phone number:\n{str(e)}")
+        except UserError:
+            raise
+        except Exception as e:
+            _logger.exception("Unexpected error while configuring incoming phone number: %s", e)
+            raise UserError(f"Failed to configure Twilio Incoming Phone Number:\n{str(e)}")

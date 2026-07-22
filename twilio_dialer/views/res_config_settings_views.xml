@@ -253,6 +253,10 @@
                                     <label for="twilio_openai_api_key" class="o_twilio_cfg_label">OpenAI API Key</label>
                                     <field name="twilio_openai_api_key" password="True" class="o_twilio_cfg_input" placeholder="sk-..."/>
                                 </div>
+                                <div class="o_twilio_cfg_field" invisible="twilio_ai_provider != 'openai'">
+                                    <label for="twilio_openai_speech_model" class="o_twilio_cfg_label">OpenAI Speech Model</label>
+                                    <field name="twilio_openai_speech_model" class="o_twilio_cfg_input"/>
+                                </div>
                                 <div class="o_twilio_cfg_field" invisible="twilio_ai_provider != 'anthropic'">
                                     <label for="twilio_anthropic_api_key" class="o_twilio_cfg_label">Anthropic API Key</label>
                                     <field name="twilio_anthropic_api_key" password="True" class="o_twilio_cfg_input" placeholder="sk-ant-..."/>

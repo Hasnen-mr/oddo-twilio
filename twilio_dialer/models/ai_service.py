@@ -7,6 +7,8 @@ import urllib.request
 from odoo import models
 from odoo.exceptions import UserError
 
+import requests
+
 _logger = logging.getLogger(__name__)
 
 
@@ -127,23 +129,128 @@ class TwilioAIService(models.AbstractModel):
 
         raise UserError("Unsupported AI provider: %s" % provider)
 
-    def create_transcript(self, call_log):
-        """This method is no longer used for manual transcript creation.
-        
-        Transcripts now come directly from Twilio via the background worker.
-        This method is kept for backward compatibility but will raise an error.
+    def get_speech_model(self):
+        return self._icp().get_param("twilio_dialer.openai_speech_model", "whisper-1") or "whisper-1"
+
+    def transcribe_recording(self, call_log):
+        """Transcribe call log recording audio using OpenAI Speech-to-Text API.
+
+        Uses the OpenAI API Key and Speech Model configured in AI Settings.
+        Fetches recording audio via TwilioService and sends to OpenAI transcription endpoint.
+        Includes retry with exponential backoff for transient errors, idempotency check,
+        and detailed error messages.
         """
+        import time
+
         if not self.is_transcript_enabled():
             raise UserError("Enable Create Call Transcripts in Configuration → AI Settings.")
 
-        # Transcripts now come from Twilio only
-        if not call_log.transcript or call_log.transcript_status != "completed":
-            raise UserError(
-                "Transcripts are generated automatically from Twilio after each call.\n"
-                "Check the Transcript Status field for progress.\n"
-                "Status: %s" % call_log.transcript_status
-            )
+        # 1. Idempotency check: avoid duplicate requests and unnecessary charges
+        if call_log.transcript and call_log.transcript_status == "completed":
+            _logger.info("Idempotency check: call_log=%s already has completed transcript, skipping OpenAI request.", call_log.id)
+            return call_log.transcript
 
+        if not call_log.recording_sid:
+            raise UserError("No call recording SID available to transcribe for this call.")
+
+        api_key = self._get_api_key("openai")
+        speech_model = self.get_speech_model()
+
+        # 2. Download recording with logging
+        _logger.info("Downloading recording audio for call_log=%s (recording_sid=%s)...", call_log.id, call_log.recording_sid)
+        dl_start = time.time()
+        try:
+            resp, content_type = self.env["twilio.service"].fetch_recording_audio(call_log.recording_sid)
+        except Exception as err:
+            _logger.exception("Failed to download recording audio from Twilio for call_log=%s: %s", call_log.id, err)
+            raise UserError("Recording download failure: %s" % str(err))
+
+        if not resp:
+            _logger.error("Recording audio response is empty for call_log=%s recording_sid=%s", call_log.id, call_log.recording_sid)
+            raise UserError("Recording download failure: Twilio returned no audio response.")
+
+        audio_bytes = resp.content
+        dl_duration = time.time() - dl_start
+        if not audio_bytes:
+            _logger.error("Recording audio content length is 0 bytes for call_log=%s", call_log.id)
+            raise UserError("Recording audio file is empty (0 bytes).")
+
+        _logger.info("Downloaded recording audio for call_log=%s: %d bytes in %.2fs (content_type=%s)",
+                     call_log.id, len(audio_bytes), dl_duration, content_type)
+
+        # 3. Request OpenAI Speech-to-Text API with retry & exponential backoff
+        url = "https://api.openai.com/v1/audio/transcriptions"
+        headers = {"Authorization": "Bearer %s" % api_key}
+        files = {"file": ("recording_%s.wav" % call_log.recording_sid, audio_bytes, content_type or "audio/wav")}
+        data = {"model": speech_model}
+
+        MAX_ATTEMPTS = 3
+        last_error_msg = None
+
+        _logger.info("OpenAI transcription request started: call_log=%s model=%s audio_bytes=%d",
+                     call_log.id, speech_model, len(audio_bytes))
+        api_start = time.time()
+
+        for attempt in range(1, MAX_ATTEMPTS + 1):
+            try:
+                if attempt > 1:
+                    backoff = 2 ** (attempt - 1)
+                    _logger.info("Retrying OpenAI transcription attempt %d/%d after %ds backoff for call_log=%s",
+                                 attempt, MAX_ATTEMPTS, backoff, call_log.id)
+                    time.sleep(backoff)
+
+                response = requests.post(
+                    url,
+                    headers=headers,
+                    files=files,
+                    data=data,
+                    timeout=120,
+                )
+
+                status_code = response.status_code
+                if status_code == 200:
+                    api_duration = time.time() - api_start
+                    result = response.json()
+                    transcript_text = (result.get("text") or "").strip()
+                    _logger.info("OpenAI transcription completed successfully for call_log=%s in %.2fs (length=%d chars)",
+                                 call_log.id, api_duration, len(transcript_text))
+                    return transcript_text
+
+                # Specific error handling for status codes
+                detail = response.text[:400]
+                if status_code == 401:
+                    _logger.error("OpenAI API Key invalid (401) for call_log=%s: %s", call_log.id, detail)
+                    raise UserError("Invalid OpenAI API Key (401 Unauthorized). Please verify key in AI Settings.")
+
+                if status_code == 429:
+                    _logger.error("OpenAI Rate Limit Exceeded (429) for call_log=%s: %s", call_log.id, detail)
+                    raise UserError("OpenAI Rate Limit Exceeded (429). Please check your OpenAI account quota/plan.")
+
+                if 400 <= status_code < 500:
+                    _logger.error("OpenAI API Bad Request (%d) for call_log=%s: %s", status_code, call_log.id, detail)
+                    raise UserError("OpenAI Speech-to-Text API rejected request (%d): %s" % (status_code, detail))
+
+                # HTTP 5xx: Transient server error -> candidate for retry
+                _logger.warning("OpenAI API server error (%d) on attempt %d/%d for call_log=%s: %s",
+                               status_code, attempt, MAX_ATTEMPTS, call_log.id, detail)
+                last_error_msg = "OpenAI server error (%d): %s" % (status_code, detail)
+
+            except (UserError, Exception) as err:
+                if isinstance(err, UserError):
+                    raise
+                _logger.warning("Network/Connection exception on attempt %d/%d for call_log=%s: %s",
+                               attempt, MAX_ATTEMPTS, call_log.id, err)
+                last_error_msg = "Network failure: %s" % str(err)
+
+        _logger.error("OpenAI transcription exhausted %d retries for call_log=%s. Last error: %s",
+                     MAX_ATTEMPTS, call_log.id, last_error_msg)
+        raise UserError("OpenAI transcription failed after %d attempts: %s" % (MAX_ATTEMPTS, last_error_msg))
+
+    def create_transcript(self, call_log):
+        if not self.is_transcript_enabled():
+            raise UserError("Enable Create Call Transcripts in Configuration → AI Settings.")
+        if not call_log.transcript:
+            return self.transcribe_recording(call_log)
         return call_log.transcript
 
     def create_summary(self, call_log):

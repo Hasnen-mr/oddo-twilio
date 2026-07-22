@@ -140,6 +140,15 @@ class ResConfigSettings(models.TransientModel):
         string="OpenAI API Key",
         config_parameter="twilio_dialer.openai_api_key",
     )
+    twilio_openai_speech_model = fields.Selection(
+        selection=[
+            ("whisper-1", "Whisper v1 (whisper-1)"),
+            ("gpt-4o-mini-transcribe", "GPT-4o Mini Transcribe (gpt-4o-mini-transcribe)"),
+        ],
+        string="OpenAI Speech Model",
+        config_parameter="twilio_dialer.openai_speech_model",
+        default="whisper-1",
+    )
     twilio_anthropic_api_key = fields.Char(
         string="Anthropic API Key",
         config_parameter="twilio_dialer.anthropic_api_key",
@@ -473,6 +482,12 @@ class ResConfigSettings(models.TransientModel):
             # suppress to comply with project rules.
             _logger.exception("Failed to set twilio_dialer.ai_enable_transcript config parameter")
             raise
+
+        if values.get("twilio_incoming_enabled"):
+            try:
+                self.env["twilio.service"].configure_incoming_phone_number(phone_number=phone_number)
+            except Exception as error:
+                _logger.warning("Failed to configure Twilio Incoming Phone Number webhook: %s", error)
 
         settings = {
             "incomingCallSetting": {

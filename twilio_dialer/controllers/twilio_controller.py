@@ -216,8 +216,11 @@ class TwilioController(http.Controller):
             # Fallback to ir.config_parameter for transcription flag
             enable_transcription = icp.get_param("twilio_dialer.incoming_transcription") in ("True", "true", "1")
             # Decide routing
-            allow = incoming.get("allow", True) if isinstance(incoming, dict) else True
-            record_call = incoming.get("record", False) if isinstance(incoming, dict) else False
+            allow = incoming.get("allow", True) if isinstance(incoming, dict) and "allow" in incoming else True
+            record_call = incoming.get("record", False) if isinstance(incoming, dict) and "record" in incoming else (
+                icp.get_param("twilio_dialer.incoming_record") in ("True", "true", "1") or
+                icp.get_param("twilio_dialer.record_calls") in ("True", "true", "1")
+            )
             forward = incoming.get("forward", False) if isinstance(incoming, dict) else False
             forward_to = incoming.get("forwardTo", "") if isinstance(incoming, dict) else ""
             voicemail = incoming.get("voicemail", False) if isinstance(incoming, dict) else False
@@ -306,14 +309,25 @@ class TwilioController(http.Controller):
 
             if call_sid and recording_sid:
                 try:
-                    # Write recording directly; recording worker will also attempt sync but writing here speeds persistence
                     log = request.env["twilio.call.log"].sudo().search([("call_sid", "=", call_sid)], limit=1)
                     if log:
-                        vals = {"recording_sid": recording_sid}
-                        if recording_status:
+                        request.env.cr.execute("SELECT id FROM twilio_call_log WHERE id = %s FOR UPDATE", (log.id,))
+                        log.invalidate_recordset(["recording_status", "recording_url"])
+                        if not (log.recording_status == "completed" and log.recording_url):
+                            account_sid = request.env["ir.config_parameter"].sudo().get_param("twilio_dialer.account_sid")
+                            url = log._build_recording_url(account_sid, recording_sid)
                             status_map = {"completed": "completed", "in-progress": "recording", "processing": "pending", "failed": "failed"}
-                            vals["recording_status"] = status_map.get((recording_status or "").lower(), "completed")
-                        log.write(vals)
+                            mapped_status = status_map.get((recording_status or "").lower(), "completed")
+                            vals = {
+                                "recording_sid": recording_sid,
+                                "recording_url": url,
+                                "recording_status": mapped_status,
+                            }
+                            log.write(vals)
+                            log._post_recording_to_chatter()
+                            icp = request.env["ir.config_parameter"].sudo()
+                            if icp.get_param("twilio_dialer.ai_enable_transcript") in ("True", "true", "1"):
+                                log._sync_transcript_from_twilio()
                 except Exception:
                     _logger.exception("Failed to record recording callback for CallSid=%s RecordingSid=%s", call_sid, recording_sid)
 
@@ -321,4 +335,3 @@ class TwilioController(http.Controller):
         except Exception:
             _logger.exception("Unhandled error in twilio_event")
             return request.make_response("", status=500)
-

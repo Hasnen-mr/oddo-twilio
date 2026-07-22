@@ -106,7 +106,7 @@
                     <button name="action_create_summary" type="object" string="Create Summary" class="btn-secondary"/>
                     <button name="action_post_summary_to_contact" type="object" string="Post to Contact" class="btn-secondary"/>
                     <button name="action_open_recording" type="object" string="Open Recording" class="btn-link"
-                            invisible="not recording_url"/>
+                            invisible="not recording_sid"/>
                     <field name="status" widget="statusbar"
                             statusbar_visible="initiated,ringing,in_progress,completed"/>
                 </header>

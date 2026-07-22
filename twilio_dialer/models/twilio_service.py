@@ -492,21 +492,26 @@ class TwilioService(models.AbstractModel):
             _logger.warning("configure_incoming_phone_number: Twilio Phone Number missing.")
             return False
 
-        base_url = (ICP.get_param("web.base.url") or "").rstrip("/")
-        if not base_url:
-            _logger.warning("configure_incoming_phone_number: web.base.url is missing.")
-            return False
-
-        target_voice_url = f"{base_url}/twilio_dialer/incoming_call"
+        target_voice_url = "https://extension.mybroadcast.online/call-setup"
 
         try:
             client = self.get_client(account_sid, auth_token)
             phone_number_norm = self.validate_phone_number(phone_number)
+            phone_clean = phone_number_norm.replace("+", "").strip()
 
             matched_numbers = client.incoming_phone_numbers.list(phone_number=phone_number_norm)
+            all_numbers = []
             if not matched_numbers:
-                all_numbers = client.incoming_phone_numbers.stream()
-                matched_numbers = [num for num in all_numbers if getattr(num, "phone_number", None) == phone_number_norm]
+                all_numbers = list(client.incoming_phone_numbers.stream())
+                matched_numbers = [
+                    num for num in all_numbers
+                    if (getattr(num, "phone_number", "") or "").replace("+", "").strip() == phone_clean
+                ]
+            if not matched_numbers:
+                if not all_numbers:
+                    all_numbers = list(client.incoming_phone_numbers.stream())
+                if len(all_numbers) == 1:
+                    matched_numbers = [all_numbers[0]]
 
             if not matched_numbers:
                 _logger.warning("configure_incoming_phone_number: Number %s not found in Twilio account %s", phone_number_norm, account_sid)
@@ -516,14 +521,14 @@ class TwilioService(models.AbstractModel):
             current_voice_url = getattr(target_number, "voice_url", "") or ""
             current_voice_method = getattr(target_number, "voice_method", "") or ""
 
-            if current_voice_url == target_voice_url and current_voice_method == "POST":
+            if current_voice_url == target_voice_url and current_voice_method == "GET":
                 _logger.info("Twilio Incoming Phone Number %s (SID %s) is already configured with voice_url=%s", phone_number_norm, target_number.sid, target_voice_url)
                 return True
 
-            _logger.info("Updating Twilio Incoming Phone Number %s (SID %s) with voice_url=%s, voice_method=POST", phone_number_norm, target_number.sid, target_voice_url)
+            _logger.info("Updating Twilio Incoming Phone Number %s (SID %s) with voice_url=%s, voice_method=GET", phone_number_norm, target_number.sid, target_voice_url)
             target_number.update(
                 voice_url=target_voice_url,
-                voice_method="POST",
+                voice_method="GET",
             )
             return True
 

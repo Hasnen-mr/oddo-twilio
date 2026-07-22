@@ -10,6 +10,7 @@ const STATUS = Object.freeze({
     FETCHING_TOKEN: "fetching_token",
     REGISTERING: "registering",
     READY: "ready",
+    INCOMING: "incoming",
     CONNECTING: "connecting",
     CONNECTED: "connected",
     DISCONNECTED: "disconnected",
@@ -23,6 +24,8 @@ class DeviceManager {
         this._onStatusChange = null;
         this._destroyed = false;
         this._activeConnection = null;
+        this._activePartnerId = null;
+        this._activeQueueLineId = null;
     }
 
     _setStatus(status) {
@@ -118,8 +121,7 @@ class DeviceManager {
             if (!this._destroyed) {
                 this._setStatus(STATUS.READY);
             }
-
-        console.log("Twilio Device registered successfully");
+            console.log("[Twilio JS] Device registered successfully");
         });
 
         this.device.on("registering", () => {
@@ -138,10 +140,66 @@ class DeviceManager {
             this._refreshToken();
         });
 
-        console.log("Creating Twilio Device");
+        this.device.on("incoming", (call) => {
+            console.log("[Twilio JS] device.on('incoming') event fired!", call);
+            this._activeConnection = call;
+            const fromNumber = call.parameters?.From || call.parameters?.from || "Unknown";
+            const callSid = call.parameters?.CallSid || "";
+
+            this._attachCallListeners(call, callSid, fromNumber);
+
+            if (!this._destroyed) {
+                this._setStatus(STATUS.INCOMING);
+            }
+
+            if (typeof this._onIncomingCall === "function") {
+                this._onIncomingCall(call, fromNumber, callSid);
+            }
+        });
+
+        console.log("[Twilio JS] Creating Twilio Device with token identity");
         console.log(this.device);
 
         this.device.register();
+    }
+
+    onIncomingCall(callback) {
+        this._onIncomingCall = callback;
+    }
+
+    acceptCall() {
+        if (this._activeConnection && typeof this._activeConnection.accept === "function") {
+            console.log("[Twilio JS] acceptCall() -> call.accept() executing");
+            try {
+                this._activeConnection.accept();
+                this._setStatus(STATUS.CONNECTED);
+                return true;
+            } catch (err) {
+                console.error("[Twilio JS] call.accept() failed:", err);
+                return false;
+            }
+        }
+        console.warn("[Twilio JS] acceptCall() failed: no active incoming connection");
+        return false;
+    }
+
+    rejectCall() {
+        if (this._activeConnection) {
+            console.log("[Twilio JS] rejectCall() -> call.reject() executing");
+            try {
+                if (typeof this._activeConnection.reject === "function") {
+                    this._activeConnection.reject();
+                } else if (typeof this._activeConnection.disconnect === "function") {
+                    this._activeConnection.disconnect();
+                }
+            } catch (err) {
+                console.error("[Twilio JS] rejectCall() failed:", err);
+            }
+            this._activeConnection = null;
+        }
+        if (!this._destroyed) {
+            this._setStatus(STATUS.READY);
+        }
     }
 
     _attachCallListeners(call, callSid, phoneNumber) {
@@ -243,6 +301,17 @@ class DeviceManager {
         try {
             await this._createCallLog(callSid, phoneNumber, this._activePartnerId);
             await this._updateCallLog(callSid, status);
+
+            if (this._activeQueueLineId) {
+                try {
+                    await rpc("/twilio_dialer/auto_dialer/sync_line", {
+                        line_id: this._activeQueueLineId,
+                        status: status,
+                    });
+                } catch (queueErr) {
+                    console.error("Failed to sync Auto Dialer queue line status:", queueErr);
+                }
+            }
         } catch (error) {
             console.error("Failed to create Twilio call log:", error);
         }
@@ -307,6 +376,7 @@ class DeviceManager {
 
         this._setStatus(STATUS.CONNECTING);
         this._activePartnerId = callContext.partnerId || null;
+        this._activeQueueLineId = callContext.queueLineId || null;
 
         try {
             console.log("Dialing:", phoneNumber);
@@ -423,6 +493,8 @@ class DeviceManager {
         }
         this.token = null;
         this._activeConnection = null;
+        this._activePartnerId = null;
+        this._activeQueueLineId = null;
         this._onStatusChange = null;
     }
 }

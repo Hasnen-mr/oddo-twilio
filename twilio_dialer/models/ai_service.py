@@ -283,7 +283,12 @@ class TwilioAIService(models.AbstractModel):
             contact=call_log.partner_id.display_name if call_log.partner_id else "",
             transcript=transcript,
         )
-        return self.generate_text(
+        summary_raw = self.generate_text(
             prompt,
-            system_prompt="You write concise CRM call summaries.",
+            system_prompt="You write concise CRM call summaries in plain text using bullet points (•). Do not use HTML tags.",
         )
+        import html
+        import re
+        clean_summary = html.unescape(summary_raw or "")
+        clean_summary = re.sub(r"<[^>]+>", "", clean_summary)
+        return clean_summary.strip()

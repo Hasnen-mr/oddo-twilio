@@ -5,11 +5,13 @@ import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
 import { COUNTRY_CODES } from "./country_codes";
 import { deviceManager } from "./device_manager";
+import { AutoDialerRunner } from "./auto_dialer_runner";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 
 export class DialerPopup extends Component {
     static template = "twilio_dialer.DialerPopup";
+    static components = { AutoDialerRunner };
 
     static props = {
         onClose: { type: Function, optional: false },
@@ -55,6 +57,11 @@ export class DialerPopup extends Component {
             await this._loadConfiguredPhoneNumber();
             this._applyFromNumber(this.props.fromNumber || this.state.lastDialedFromNumber);
             await this._loadContacts();
+            deviceManager.onIncomingCall((call, fromNumber, callSid) => {
+                console.log("[Twilio JS DialerPopup] Incoming call received from:", fromNumber);
+                this.state.activeTab = "dialpad";
+                this.state.phoneNumber = fromNumber ? String(fromNumber).replace(/\D/g, "").slice(-10) : "";
+            });
             await deviceManager.initialize(
                 this._onDeviceStatusChange.bind(this)
             );
@@ -71,6 +78,62 @@ export class DialerPopup extends Component {
         onWillUnmount(() => {
             deviceManager.destroy();
         });
+    }
+
+    get dialerState() {
+        return this.env.services.twilio_dialer?.state || {};
+    }
+
+    async onNavigateQueue(actionName) {
+        const dialerId = this.dialerState.autoDialerId;
+        if (!dialerId) {
+            return;
+        }
+        try {
+            const result = await rpc("/twilio_dialer/auto_dialer/navigate", {
+                dialer_id: dialerId,
+                action_name: actionName,
+            });
+            if (result && result.success && result.queue_line_id) {
+                this.dialerState.queueLineId = result.queue_line_id;
+                this.dialerState.partnerName = result.partner_name;
+                this.dialerState.queuePosition = result.queue_position;
+                this.dialerState.queueAttempts = result.queue_attempts;
+                this.dialerState.queueNotes = result.queue_notes;
+                this.dialerState.queueStatus = result.queue_status;
+                if (result.phone) {
+                    this._applyIncomingPhone(result.phone);
+                }
+            }
+        } catch (err) {
+            console.error("Queue navigation failed:", err);
+        }
+    }
+
+    onSkipQueueContact() {
+        this.onNavigateQueue("skip");
+    }
+
+    onNextQueueContact() {
+        this.onNavigateQueue("next");
+    }
+
+    onPrevQueueContact() {
+        this.onNavigateQueue("prev");
+    }
+
+    get isIncoming() {
+        return this.state.connectionStatus === "incoming";
+    }
+
+    onAcceptCall() {
+        console.log("[Twilio JS DialerPopup] User clicked Accept Call button");
+        deviceManager.acceptCall();
+    }
+
+    onRejectCall() {
+        console.log("[Twilio JS DialerPopup] User clicked Decline/Reject Call button");
+        deviceManager.rejectCall();
     }
 
     _loadLastDial() {
@@ -238,9 +301,7 @@ export class DialerPopup extends Component {
     setActiveTab(tab) {
         this.state.activeTab = tab;
         this.closeAllDropdowns();
-        if (tab === "auto_dialer") {
-            this.openAutoCallingSetup();
-        } else if (tab === "contacts") {
+        if (tab === "contacts") {
             this.openContacts();
         }
     }
@@ -385,6 +446,7 @@ export class DialerPopup extends Component {
             initializing: "connecting",
             fetching_token: "connecting",
             registering: "connecting",
+            incoming: "connecting",
             connecting: "connecting",
             connected: "ready",
             ready: "ready",
@@ -399,6 +461,7 @@ export class DialerPopup extends Component {
             initializing: "Initializing...",
             fetching_token: "Fetching Token...",
             registering: "Registering...",
+            incoming: "Incoming Call...",
             connecting: "Connecting...",
             connected: "Connected",
             ready: "Connected",
@@ -520,7 +583,8 @@ export class DialerPopup extends Component {
             From: this.state.selectedCaller?.number,
             from_number: this.state.selectedCaller?.number,
         }, {
-            partnerId: this.props.partnerId,
+            partnerId: this.props.partnerId || this.dialerState.partnerId,
+            queueLineId: this.dialerState.queueLineId || null,
         });
     }
 

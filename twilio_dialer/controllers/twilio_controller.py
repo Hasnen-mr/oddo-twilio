@@ -119,6 +119,74 @@ class TwilioController(http.Controller):
         request.env["twilio.call.log"].update_call_status(call_sid, status)
         return {"success": True}
 
+    @http.route("/twilio_dialer/auto_dialer/sync_line", type="json", auth="user")
+    def sync_auto_dialer_line(self, line_id, status, call_log_id=None, notes=None):
+        line = request.env["twilio.auto.dialer.line"].sudo().browse(line_id)
+        if not line.exists():
+            return {"success": False, "message": "Line not found"}
+        line.update_status_from_call(status, call_log_id=call_log_id, notes=notes)
+        dialer = line.dialer_id
+        current_line = dialer.current_line_id
+        if current_line:
+            partner = current_line.partner_id
+            all_lines = dialer.queue_line_ids
+            line_idx = list(all_lines).index(current_line) + 1 if current_line in all_lines else 1
+            return {
+                "success": True,
+                "queue_line_id": current_line.id,
+                "phone": current_line.phone,
+                "partner_id": partner.id if partner else False,
+                "partner_name": partner.name if partner else current_line.phone,
+                "queue_name": dialer.name,
+                "queue_position": "Line %s of %s" % (line_idx, len(all_lines)),
+                "queue_attempts": current_line.attempt_count,
+                "queue_notes": current_line.notes or "",
+                "queue_status": current_line.status,
+                "queue_state": dialer.state,
+            }
+        return {
+            "success": True,
+            "queue_line_id": False,
+            "queue_state": dialer.state,
+        }
+
+    @http.route("/twilio_dialer/auto_dialer/navigate", type="json", auth="user")
+    def navigate_auto_dialer(self, dialer_id, action_name):
+        dialer = request.env["twilio.auto.dialer"].sudo().browse(dialer_id)
+        if not dialer.exists():
+            return {"success": False, "message": "Queue not found"}
+
+        if action_name == "skip":
+            dialer.action_skip_contact()
+        elif action_name == "next":
+            dialer.action_next_contact()
+        elif action_name == "prev":
+            dialer.action_prev_contact()
+        elif action_name == "current":
+            pass  # Just return current pointer, no movement
+        else:
+            return {"success": False, "message": "Invalid action"}
+
+        current_line = dialer.current_line_id
+        if current_line:
+            partner = current_line.partner_id
+            all_lines = dialer.queue_line_ids
+            line_idx = list(all_lines).index(current_line) + 1 if current_line in all_lines else 1
+            return {
+                "success": True,
+                "queue_line_id": current_line.id,
+                "phone": current_line.phone,
+                "partner_id": partner.id if partner else False,
+                "partner_name": partner.name if partner else current_line.phone,
+                "queue_name": dialer.name,
+                "queue_position": "Line %s of %s" % (line_idx, len(all_lines)),
+                "queue_attempts": current_line.attempt_count,
+                "queue_notes": current_line.notes or "",
+                "queue_status": current_line.status,
+                "queue_state": dialer.state,
+            }
+        return {"success": True, "queue_line_id": False, "queue_state": dialer.state}
+
     @http.route("/twilio_dialer/billing", type="json", auth="user")
     def get_billing(self):
         try:
@@ -234,40 +302,47 @@ class TwilioController(http.Controller):
             caller_id = icp.get_param("twilio_dialer.phone_number") or None
 
             # Build TwiML response based on routing settings
-            if forward and forward_to:
-                # If forward_to looks like a phone number (digits, +), dial number
-                if isinstance(forward_to, str) and forward_to.strip() and any(ch.isdigit() for ch in forward_to):
-                    number = escape(forward_to)
-                    record_attr = " record=\"record-from-answer-dual\"" if record_call else ""
-                    twiml = ('<?xml version="1.0" encoding="UTF-8"?>'
-                             '<Response><Dial callerId="{caller_id}"{record}>{number}</Dial></Response>').format(
-                        caller_id=escape(caller_id) if caller_id else "",
-                        record=record_attr,
-                        number=number,
-                    )
-                    return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
-                else:
-                    # Forward to client/device — fall back to dialing a default client id
-                    client_id = escape(str(forward_to)) if forward_to else "agent"
-                    record_attr = " record=\"record-from-answer-dual\"" if record_call else ""
-                    twiml = ('<?xml version="1.0" encoding="UTF-8"?>'
-                             '<Response><Dial callerId="{caller_id}"{record}><Client>{client}</Client></Dial></Response>').format(
-                        caller_id=escape(caller_id) if caller_id else "",
-                        record=record_attr,
-                        client=client_id,
-                    )
-                    return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
+            if forward and forward_to and isinstance(forward_to, str) and forward_to.strip() and any(ch.isdigit() for ch in forward_to):
+                # Forward to external phone number
+                number = escape(forward_to)
+                record_attr = ' record="record-from-answer-dual"' if record_call else ""
+                twiml = (
+                    '<?xml version="1.0" encoding="UTF-8"?>'
+                    '<Response><Dial callerId="{caller_id}" answerOnBridge="true"{record}>{number}</Dial></Response>'
+                ).format(
+                    caller_id=escape(caller_id or from_number or ""),
+                    record=record_attr,
+                    number=number,
+                )
+                _logger.info("[Twilio Incoming] TwiML generated (Forward Number): %s", twiml)
+                return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
 
-            if voicemail:
+            if voicemail and not forward:
                 # Answer and record voicemail
                 say = escape(voicemail_text) if voicemail_text else "Please leave a message after the tone."
                 twiml = ('<?xml version="1.0" encoding="UTF-8"?>'
                          '<Response><Say>{say}</Say><Record maxLength="120" playBeep="true"/></Response>').format(say=say)
+                _logger.info("[Twilio Incoming] TwiML generated (Voicemail): %s", twiml)
                 return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
 
-            # Default answer: simple <Say> then hangup to avoid charge if not routed
-            twiml = ('<?xml version="1.0" encoding="UTF-8"?>'
-                     '<Response><Say>Thank you for calling. Please try again later.</Say><Hangup/></Response>')
+            # Default routing: Dial the browser VoIP Client identity matching JWT ("id_odoo_{account_sid}")
+            client_identity = f"id_odoo_{account_sid}" if account_sid else "agent"
+            record_attr = ' record="record-from-answer-dual"' if record_call else ""
+            caller_id_val = from_number or icp.get_param("twilio_dialer.phone_number") or ""
+
+            twiml = (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<Response>'
+                '<Dial callerId="{caller_id}" answerOnBridge="true"{record}>'
+                '<Client>{client}</Client>'
+                '</Dial>'
+                '</Response>'
+            ).format(
+                caller_id=escape(caller_id_val),
+                record=record_attr,
+                client=escape(client_identity),
+            )
+            _logger.info("[Twilio Incoming] TwiML generated (Browser Client %s): %s", client_identity, twiml)
             return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
         except Exception as e:
             _logger.exception("Incoming call handling failed: %s", e)

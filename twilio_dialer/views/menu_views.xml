@@ -23,11 +23,16 @@
               sequence="10"/>
 
     <!-- Auto Dialer -->
-    <menuitem id="menu_twilio_my_campaign"
+    <menuitem id="menu_twilio_auto_dialer_parent"
               name="Auto Dialer"
               parent="menu_twilio_dialer_root"
-              action="action_twilio_auto_dialer_menu"
               sequence="20"/>
+
+    <menuitem id="menu_twilio_auto_dialer_queues"
+              name="Dialing Queues"
+              parent="menu_twilio_auto_dialer_parent"
+              action="action_twilio_auto_dialer"
+              sequence="10"/>
 
     <!-- Contacts -->
     <menuitem id="menu_twilio_contacts"

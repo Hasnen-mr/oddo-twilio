@@ -1,139 +1,137 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
 
+    <!-- Tree / List View for Dialing Queues -->
     <record id="view_twilio_auto_dialer_list" model="ir.ui.view">
         <field name="name">twilio.auto.dialer.list</field>
         <field name="model">twilio.auto.dialer</field>
         <field name="arch" type="xml">
-            <list string="Auto Calling Setup"
-                  decoration-success="state == 'done'"
+            <list string="Dialing Queues"
+                  decoration-success="state == 'completed'"
                   decoration-info="state == 'running'"
                   decoration-warning="state == 'paused'"
-                  decoration-muted="state == 'draft'">
-                <header>
-                    <button name="%(action_twilio_open_phone)d"
-                            type="action"
-                            string="Open Phone"
-                            icon="fa-phone"
-                            class="btn-primary"
-                            display="always"/>
-                </header>
+                  decoration-muted="state == 'draft'"
+                  decoration-danger="state == 'cancelled'">
                 <field name="name"/>
-                <field name="from_number" optional="show"/>
                 <field name="user_id" widget="many2one_avatar_user"/>
                 <field name="state" widget="badge"
-                          decoration-success="state in ('ready','done')"
-                          decoration-info="state == 'running'"
-                          decoration-warning="state == 'paused'"/>
-                <field name="total_numbers"/>
-                <field name="dialed_count"/>
-                <field name="remaining_count"/>
-                <field name="connected_count" optional="show"/>
-                <field name="skipped_count" optional="hide"/>
+                       decoration-success="state == 'completed'"
+                       decoration-info="state == 'running'"
+                       decoration-warning="state == 'paused'"
+                       decoration-muted="state == 'draft'"
+                       decoration-danger="state == 'cancelled'"/>
+                <field name="total_contacts"/>
+                <field name="pending_contacts"/>
+                <field name="completed_contacts"/>
+                <field name="failed_contacts"/>
                 <field name="progress" widget="progressbar"/>
-                <field name="current_number" optional="show"/>
-                <field name="write_date" string="Updated"/>
+                <field name="create_date" string="Created On"/>
             </list>
         </field>
     </record>
 
+    <!-- Form View for Dialing Queue -->
     <record id="view_twilio_auto_dialer_form" model="ir.ui.view">
         <field name="name">twilio.auto.dialer.form</field>
         <field name="model">twilio.auto.dialer</field>
         <field name="arch" type="xml">
-            <form string="Auto Calling Setup">
+            <form string="Dialing Queue">
                 <header>
-                    <button name="%(action_twilio_open_phone)d"
-                            type="action"
-                            string="Open Phone"
-                            icon="fa-phone"
-                            class="btn-primary"/>
-                    <button name="action_mark_ready" type="object" string="Mark Ready"
-                            class="btn-secondary" invisible="state != 'draft'"/>
                     <button name="action_start" type="object" string="Start"
-                            class="btn-primary" invisible="state not in ('ready','paused','done')"/>
+                            class="btn-primary" disabled="1" title="Start dialing (Phase 2)"/>
                     <button name="action_pause" type="object" string="Pause"
-                            class="btn-secondary" invisible="state != 'running'"/>
-                    <button name="action_next_number" type="object" string="Next"
-                            class="btn-secondary" invisible="state not in ('running','paused')"/>
-                    <button name="action_skip_number" type="object" string="Skip"
-                            class="btn-secondary" invisible="state not in ('running','paused')"/>
-                    <button name="action_open_dialer_hint" type="object" string="Call Current"
-                            class="btn-primary" invisible="state not in ('running','paused','ready')"/>
-                    <button name="action_reset" type="object" string="Reset"
-                            class="btn-link" confirm="Reset campaign progress?"/>
+                            class="btn-secondary" disabled="1" title="Pause dialing (Phase 2)"/>
+                    <button name="action_stop" type="object" string="Stop"
+                            class="btn-danger" disabled="1" title="Stop dialing (Phase 2)"/>
                     <field name="state" widget="statusbar"
-                            statusbar_visible="draft,ready,running,paused,done"/>
+                           statusbar_visible="draft,running,paused,completed,cancelled"/>
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button" icon="fa-list" disabled="1">
                             <div class="o_stat_info">
-                                <span class="o_stat_value"><field name="total_numbers"/></span>
-                                <span class="o_stat_text">Numbers</span>
+                                <span class="o_stat_value"><field name="total_contacts"/></span>
+                                <span class="o_stat_text">Total</span>
                             </div>
                         </button>
-                        <button class="oe_stat_button" icon="fa-phone" disabled="1">
+                        <button class="oe_stat_button" icon="fa-clock-o" disabled="1">
                             <div class="o_stat_info">
-                                <span class="o_stat_value"><field name="dialed_count"/></span>
-                                <span class="o_stat_text">Dialed</span>
+                                <span class="o_stat_value"><field name="pending_contacts"/></span>
+                                <span class="o_stat_text">Pending</span>
                             </div>
                         </button>
-                        <button class="oe_stat_button" icon="fa-hourglass-half" disabled="1">
+                        <button class="oe_stat_button" icon="fa-check-circle" disabled="1">
                             <div class="o_stat_info">
-                                <span class="o_stat_value"><field name="remaining_count"/></span>
-                                <span class="o_stat_text">Remaining</span>
+                                <span class="o_stat_value"><field name="completed_contacts"/></span>
+                                <span class="o_stat_text">Completed</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-exclamation-triangle" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="failed_contacts"/></span>
+                                <span class="o_stat_text">Failed</span>
                             </div>
                         </button>
                     </div>
 
                     <div class="oe_title">
                         <label for="name"/>
-                        <h1><field name="name" placeholder="e.g. Morning outbound list"/></h1>
+                        <h1><field name="name" placeholder="e.g. Sales Q3 Campaign"/></h1>
                     </div>
 
                     <group>
-                        <group string="Campaign">
+                        <group string="Campaign Details">
                             <field name="user_id" widget="many2one_avatar_user"/>
                             <field name="company_id" groups="base.group_multi_company"/>
-                            <field name="from_number"
-                                      required="1"
-                                      placeholder="Select Twilio number"/>
-                            <field name="active" invisible="1"/>
-                            <field name="current_number" readonly="1"/>
+                            <field name="from_number" placeholder="Default Twilio Number"/>
+                            <field name="create_date" readonly="1"/>
                             <field name="progress" widget="progressbar"/>
                         </group>
-                        <group string="Dial settings">
-                            <field name="call_delay"/>
-                            <field name="max_ring_time"/>
-                            <field name="auto_skip_no_answer"/>
-                            <field name="connected_count"/>
-                            <field name="skipped_count"/>
+                        <group string="Statistics Summary">
+                            <field name="total_contacts" readonly="1"/>
+                            <field name="pending_contacts" readonly="1"/>
+                            <field name="completed_contacts" readonly="1"/>
+                            <field name="failed_contacts" readonly="1"/>
                         </group>
                     </group>
 
                     <notebook>
-                        <page string="Phone List" name="phone_list">
-                            <field name="phone_list"
-                                      placeholder="One number per line&#10;+15551234567&#10;+919876543210"/>
-                            <div class="text-muted mt-2">
-                                Tip: paste numbers from a spreadsheet. Use E.164 format when possible.
-                            </div>
-                        </page>
-                        <page string="Call Logs" name="call_logs">
-                            <field name="call_log_ids">
-                                <list>
-                                    <field name="start_time"/>
-                                    <field name="to_number"/>
-                                    <field name="status"/>
-                                    <field name="outcome"/>
-                                    <field name="duration_display"/>
-                                    <field name="user_id"/>
+                        <page string="Queue Lines" name="queue_lines">
+                            <field name="queue_line_ids">
+                                <list editable="bottom"
+                                      decoration-success="status == 'completed'"
+                                      decoration-info="status == 'calling'"
+                                      decoration-warning="status in ('busy','no_answer','skipped')"
+                                      decoration-danger="status in ('failed','cancelled')"
+                                      decoration-muted="status == 'pending'">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="sequence" string="Seq"/>
+                                    <field name="partner_id"/>
+                                    <field name="phone"/>
+                                    <field name="status" widget="badge"
+                                           decoration-success="status == 'completed'"
+                                           decoration-info="status == 'calling'"
+                                           decoration-warning="status in ('busy','no_answer','skipped')"
+                                           decoration-danger="status in ('failed','cancelled')"
+                                           decoration-muted="status == 'pending'"/>
+                                    <field name="attempt_count" string="Attempts"/>
+                                    <field name="last_call_date"/>
+                                    <field name="notes"/>
+                                    <field name="error_message" optional="show"/>
                                 </list>
                             </field>
                         </page>
-                        <page string="Notes" name="notes">
-                            <field name="notes" placeholder="Script notes, offer details, or campaign goals"/>
+                        <page string="Queue Settings" name="queue_settings">
+                            <group>
+                                <group string="Pacing &amp; Delay">
+                                    <field name="call_delay"/>
+                                    <field name="max_ring_time"/>
+                                </group>
+                                <group string="Retry &amp; Skip Rules">
+                                    <field name="auto_skip_no_answer"/>
+                                    <field name="max_retries"/>
+                                </group>
+                            </group>
                         </page>
                     </notebook>
                 </sheet>
@@ -142,54 +140,91 @@
         </field>
     </record>
 
+    <!-- Search View for Dialing Queue -->
     <record id="view_twilio_auto_dialer_search" model="ir.ui.view">
         <field name="name">twilio.auto.dialer.search</field>
         <field name="model">twilio.auto.dialer</field>
         <field name="arch" type="xml">
             <search>
                 <field name="name"/>
-                <field name="from_number"/>
                 <field name="user_id"/>
-                <field name="current_number"/>
-                <filter string="My Campaigns" name="my_campaigns" domain="[('user_id', '=', uid)]"/>
-                <filter string="Running" name="running" domain="[('state', '=', 'running')]"/>
-                <filter string="Ready" name="ready" domain="[('state', '=', 'ready')]"/>
+                <filter string="My Queues" name="my_queues" domain="[('user_id', '=', uid)]"/>
                 <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
-                <separator/>
-                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <filter string="Running" name="running" domain="[('state', '=', 'running')]"/>
+                <filter string="Paused" name="paused" domain="[('state', '=', 'paused')]"/>
+                <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
                 <group expand="0" string="Group By">
-                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
-                    <filter string="Agent" name="group_user" context="{'group_by': 'user_id'}"/>
-                    <filter string="From Number" name="group_from_number" context="{'group_by': 'from_number'}"/>
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
                 </group>
             </search>
         </field>
     </record>
 
+    <!-- Window Action for Dialing Queues -->
     <record id="action_twilio_auto_dialer" model="ir.actions.act_window">
-        <field name="name">Auto Dialer</field>
+        <field name="name">Dialing Queues</field>
         <field name="res_model">twilio.auto.dialer</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_twilio_auto_dialer_search"/>
         <field name="context">{
-            'search_default_my_campaigns': 1,
+            'search_default_my_queues': 1,
             'default_user_id': uid,
         }</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Create your first campaign
+                Create your first Dialing Queue
             </p>
             <p>
-                Click New, choose a From Number, paste a phone list, Mark Ready, then Start.
+                Add contacts to prepare a campaign list for Auto Dialer.
             </p>
         </field>
     </record>
 
-    <record id="action_twilio_auto_dialer_menu" model="ir.actions.server">
-        <field name="name">Auto Dialer</field>
-        <field name="model_id" ref="model_twilio_auto_dialer"/>
-        <field name="state">code</field>
-        <field name="code">action = model.action_open_auto_dialer()</field>
+    <!-- Add Contacts to Auto Dialer Wizard View -->
+    <record id="view_twilio_auto_dialer_add_contacts_wizard_form" model="ir.ui.view">
+        <field name="name">twilio.auto.dialer.add.contacts.wizard.form</field>
+        <field name="model">twilio.auto.dialer.add.contacts.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Add Contacts to Auto Dialer">
+                <group>
+                    <field name="target_type" widget="radio"/>
+                    <field name="campaign_name"
+                           invisible="target_type != 'new'"
+                           required="target_type == 'new'"/>
+                    <field name="dialer_id"
+                           invisible="target_type != 'existing'"
+                           required="target_type == 'existing'"
+                           options="{'no_create': True}"/>
+                </group>
+                <notebook>
+                    <page string="Selected Contacts">
+                        <field name="partner_ids" readonly="1">
+                            <list>
+                                <field name="name"/>
+                                <field name="phone"/>
+                                <field name="mobile"/>
+                                <field name="email"/>
+                            </list>
+                        </field>
+                    </page>
+                </notebook>
+                <footer>
+                    <button name="action_add_to_queue" string="Add to Queue" type="object" class="btn-primary"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <!-- Server Action on Contacts (res.partner) -->
+    <record id="action_twilio_add_contacts_to_queue" model="ir.actions.act_window">
+        <field name="name">Add to Auto Dialer</field>
+        <field name="res_model">twilio.auto.dialer.add.contacts.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="binding_model_id" ref="base.model_res_partner"/>
+        <field name="binding_view_types">list</field>
     </record>
 
 </odoo>

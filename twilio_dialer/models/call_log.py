@@ -169,6 +169,13 @@ class TwilioCallLog(models.Model):
 
     call_count = fields.Integer(string="Count", default=1, help="Used for reporting aggregates.")
     contact_activity_posted = fields.Boolean(copy=False, readonly=True)
+    recording_chatter_posted = fields.Boolean(copy=False, readonly=True)
+    chatter_message_id = fields.Many2one(
+        "mail.message", string="Chatter Message", copy=False, ondelete="set null"
+    )
+    contact_message_id = fields.Many2one(
+        "mail.message", string="Contact Chatter Message", copy=False, ondelete="set null"
+    )
 
     _sql_constraints = [
         ("twilio_call_log_call_sid_unique", "unique(call_sid)", "The Twilio Call SID must be unique."),
@@ -351,15 +358,48 @@ class TwilioCallLog(models.Model):
             call_log._maybe_auto_generate_ai()
         return call_log
 
+    def _sync_chatter_activity(self):
+        """Post or update the single consolidated chatter activity card on both Call Log and Contact chatter."""
+        service = CallLogService()
+        for log in self:
+            body = service.format_call_activity(log)
+
+            # 1. Single Chatter Message on Call Log
+            try:
+                if log.chatter_message_id and log.chatter_message_id.exists():
+                    log.chatter_message_id.sudo().write({"body": body})
+                else:
+                    msg = log.message_post(
+                        body=body,
+                        subtype_xmlid="mail.mt_note",
+                    )
+                    log.sudo().write({"chatter_message_id": msg.id})
+            except Exception:
+                _logger.exception("Failed to sync chatter activity on call_log=%s", log.id)
+
+            # 2. Single Chatter Message on Contact (if linked)
+            contact = log.partner_id or log.contact_id
+            if contact:
+                try:
+                    if log.contact_message_id and log.contact_message_id.exists():
+                        log.contact_message_id.sudo().write({"body": body})
+                    else:
+                        msg = contact.message_post(
+                            body=body,
+                            subtype_xmlid="mail.mt_note",
+                        )
+                        log.sudo().write({
+                            "contact_message_id": msg.id,
+                            "contact_activity_posted": True,
+                        })
+                except Exception:
+                    _logger.exception("Failed to sync chatter activity on contact for call_log=%s", log.id)
+
     def _post_contact_activity_if_needed(self):
-        try:
-            return CallLogService().post_call_activity(self)
-        except Exception:
-            _logger.exception(
-                "Unable to post Contact chatter activity for Twilio Call SID %s",
-                self.call_sid,
-            )
-            return False
+        return self._sync_chatter_activity()
+
+    def _post_recording_to_chatter(self):
+        return self._sync_chatter_activity()
 
     @staticmethod
     def _build_recording_url(account_sid, recording_sid):
@@ -538,66 +578,7 @@ class TwilioCallLog(models.Model):
                 log._sync_transcript_from_twilio()
 
     def _post_recording_to_chatter(self):
-        from markupsafe import Markup, escape
-        for log in self:
-            try:
-                self.env.cr.execute("SELECT id FROM twilio_call_log WHERE id = %s FOR UPDATE", (log.id,))
-                log.invalidate_recordset(["contact_activity_posted", "playback_url"])
-            except Exception:
-                pass
-
-            contact = log.partner_id or log.contact_id
-            if not contact:
-                _logger.info(
-                    "Recording chatter skipped for call_log=%s: no contact linked", log.id,
-                )
-                continue
-            if not log.playback_url:
-                _logger.info(
-                    "Recording chatter skipped for call_log=%s: playback_url is empty", log.id,
-                )
-                continue
-            if log.contact_activity_posted:
-                _logger.info(
-                    "Recording chatter skipped for call_log=%s: contact activity already posted", log.id,
-                )
-                continue
-            url = escape(log.playback_url)
-            link = '<a href="%s" target="_blank">▶ Play Recording</a>' % url
-            _logger.info(
-                "Posting recording to chatter for call_log=%s contact=%s playback_url=%s",
-                log.id, contact.display_name, log.playback_url,
-            )
-            # Use sudo() to ensure we see the freshly-written computed fields (recording_sid -> playback_url)
-            try:
-                log_sudo = log.sudo()
-                contact.message_post(
-                    body=Markup("<b>Recording:</b> %s") % Markup(link),
-                    subtype_xmlid="mail.mt_note",
-                )
-
-                # Also schedule a mail activity on the contact so the recording shows
-                # up in the Contacts -> Activities tab. Use the standard 'call' activity
-                # type to make it recognizable as a phone-related item.
-                try:
-                    activity_user = log_sudo.user_id.id if log_sudo.user_id else self.env.uid
-                    contact.activity_schedule(
-                        "mail.mail_activity_data_call",
-                        date_deadline=fields.Date.context_today(log_sudo),
-                        summary="Call recording available",
-                        user_id=activity_user,
-                        note=("Recording available: %s" % (log_sudo.playback_url or "")),
-                    )
-                except Exception:
-                    _logger.exception(
-                        "Failed to schedule recording activity for contact for call_log=%s",
-                        log.id,
-                    )
-            except Exception:
-                _logger.exception(
-                    "Posting recording to chatter failed for call_log=%s contact=%s playback_url=%s",
-                    log.id, contact.display_name, log.playback_url,
-                )
+        return self._sync_chatter_activity()
 
     def _sync_transcript_from_twilio(self):
         for call_log in self:
@@ -717,7 +698,6 @@ class TwilioCallLog(models.Model):
             )
 
     def _save_transcript_from_openai(self, transcript_text):
-        from markupsafe import escape
         for log in self:
             values = {
                 "transcript": transcript_text,
@@ -730,63 +710,28 @@ class TwilioCallLog(models.Model):
             )
             log.sudo().write(values)
 
-            # 1. Post transcript note to Call Log chatter
-            if transcript_text:
-                html_text = escape(transcript_text).replace("\n", "<br/>")
-                try:
-                    log.message_post(
-                        body=f"<b>AI Transcript (OpenAI Whisper):</b><br/>{html_text}",
-                        subtype_xmlid="mail.mt_note",
-                    )
-                except Exception:
-                    _logger.exception("Failed to post transcript to Call Log chatter for call_log=%s", log.id)
-
-            # 2. Post transcript note to Contact chatter
+            # Update single consolidated chatter activity card
             try:
-                log._post_transcript_to_chatter()
+                log._sync_chatter_activity()
             except Exception:
-                _logger.exception("Chatter posting failed for contact transcript call_log=%s", log.id)
+                _logger.exception("Failed to sync chatter activity after saving transcript for call_log=%s", log.id)
 
-            # 3. Auto-generate summary if enabled and doesn't exist
+            # Auto-generate summary if enabled and doesn't exist
             icp = self.env["ir.config_parameter"].sudo()
-            if icp.get_param("twilio_dialer.ai_auto_on_complete") in ("True", "true", "1"):
-                ai = self.env["twilio.ai.service"]
-                if ai.is_summary_enabled() and not log.summary:
-                    try:
-                        _logger.info(
-                            "Auto-generating summary for call_log=%s after transcript saved",
-                            log.id,
-                        )
-                        log.action_create_summary()
-                    except UserError:
-                        _logger.exception("Summary generation failed for call_log=%s", log.id)
+            auto_complete = icp.get_param("twilio_dialer.ai_auto_on_complete") in ("True", "true", "1")
+            ai = self.env["twilio.ai.service"]
+            if auto_complete and ai.is_summary_enabled() and not log.summary:
+                try:
+                    _logger.info(
+                        "Auto-generating summary for call_log=%s after transcript saved",
+                        log.id,
+                    )
+                    log.action_create_summary()
+                except UserError:
+                    _logger.exception("Summary generation failed for call_log=%s", log.id)
 
     def _post_transcript_to_chatter(self):
-        from markupsafe import escape
-        for log in self:
-            contact = log.partner_id or log.contact_id
-            if not contact:
-                _logger.info(
-                    "Transcript chatter skipped for call_log=%s: no contact linked", log.id,
-                )
-                continue
-            if not log.transcript:
-                _logger.info(
-                    "Transcript chatter skipped for call_log=%s: transcript is empty", log.id,
-                )
-                continue
-
-            transcript_preview = log.transcript[:300] + "..." if len(log.transcript) > 300 else log.transcript
-            body = f"<b>AI Transcript (OpenAI Whisper):</b><br/>{escape(transcript_preview).replace(chr(10), '<br/>')}"
-
-            _logger.info(
-                "Posting transcript to contact chatter for call_log=%s contact=%s",
-                log.id, contact.display_name,
-            )
-            contact.message_post(
-                body=body,
-                subtype_xmlid="mail.mt_note",
-            )
+        return self._sync_chatter_activity()
 
     def _maybe_auto_generate_ai(self):
         icp = self.env["ir.config_parameter"].sudo()
@@ -808,6 +753,9 @@ class TwilioCallLog(models.Model):
     def action_create_transcript(self):
         """Manually trigger OpenAI Whisper transcription for this call log."""
         ai = self.env["twilio.ai.service"]
+        if not ai.is_transcript_enabled():
+            raise UserError("Enable Create Call Transcripts under Twilio Power Dialer → Configuration → AI Settings.")
+
         for call_log in self:
             if call_log.transcript and call_log.transcript_status == "completed":
                 raise UserError(
@@ -832,24 +780,29 @@ class TwilioCallLog(models.Model):
                 )
 
             call_log.write({"transcript_status": "processing"})
+            call_log._sync_chatter_activity()
             try:
                 transcript_text = ai.transcribe_recording(call_log)
                 call_log._save_transcript_from_openai(transcript_text)
             except Exception as e:
                 call_log.write({"transcript_status": "failed"})
+                call_log._sync_chatter_activity()
                 raise UserError(f"OpenAI Whisper transcription failed:\n{str(e)}")
 
         return True
 
     def action_create_summary(self):
         ai = self.env["twilio.ai.service"]
+        if not ai.is_summary_enabled():
+            raise UserError("Enable Create Call Summaries under Twilio Power Dialer → Configuration → AI Settings.")
+
         for call_log in self:
             summary = ai.create_summary(call_log)
             call_log.write({
                 "summary": summary,
                 "ai_provider": ai.get_provider(),
             })
-            call_log.message_post(body="Summary generated.", subtype_xmlid="mail.mt_note")
+            call_log._sync_chatter_activity()
         return True
 
     def action_open_partner(self):

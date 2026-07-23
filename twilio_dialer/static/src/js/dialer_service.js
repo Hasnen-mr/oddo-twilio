@@ -3,6 +3,7 @@
 import { reactive } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { normalizePhoneNumber } from "./phone_utils";
+import { deviceManager } from "./device_manager";
 
 const dialerState = reactive({
     isOpen: false,
@@ -22,7 +23,34 @@ const dialerState = reactive({
 
 export const dialerService = {
     dependencies: [],
-    start() {
+    start(env) {
+        // Initialize DeviceManager once globally when the Odoo web client loads
+        deviceManager.initialize().catch((err) => {
+            console.error("[dialerService] DeviceManager global initialize failed:", err);
+        });
+
+        // Automatically open the dialer popup when an incoming call arrives
+        deviceManager.onIncomingCall((call, fromNumber, callSid) => {
+            console.log("[dialerService] Incoming call received:", fromNumber, callSid);
+            dialerState.phone = fromNumber ? String(fromNumber).replace(/\D/g, "").slice(-10) : "";
+            dialerState.requestId += 1;
+            dialerState.isOpen = true;
+        });
+
+        // Cleanup listener: Ensure Twilio WebSocket connections & Device instance are cleanly
+        // un-registered and destroyed when user logs out, closes browser tab, or unloads window.
+        const cleanupDevice = () => {
+            console.log("[dialerService] Unload/Logout cleanup: destroying deviceManager");
+            try {
+                deviceManager.destroy();
+            } catch (err) {
+                console.error("[dialerService] Error during deviceManager cleanup:", err);
+            }
+        };
+
+        window.addEventListener("pagehide", cleanupDevice);
+        window.addEventListener("beforeunload", cleanupDevice);
+
         return {
             get state() {
                 return dialerState;

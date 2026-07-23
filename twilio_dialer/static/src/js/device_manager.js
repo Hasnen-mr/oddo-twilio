@@ -21,7 +21,9 @@ class DeviceManager {
     constructor() {
         this.device = null;
         this.token = null;
+        this.status = STATUS.DISCONNECTED;
         this._onStatusChange = null;
+        this._onIncomingCall = null;
         this._destroyed = false;
         this._activeConnection = null;
         this._activePartnerId = null;
@@ -29,13 +31,25 @@ class DeviceManager {
     }
 
     _setStatus(status) {
-        if (!this._destroyed && this._onStatusChange) {
+        this.status = status;
+        if (!this._destroyed && typeof this._onStatusChange === "function") {
             this._onStatusChange(status);
         }
     }
 
+    setStatusCallback(callback) {
+        this._onStatusChange = callback;
+    }
+
     async initialize(onStatusChange) {
-        this._onStatusChange = onStatusChange;
+        if (onStatusChange) {
+            this._onStatusChange = onStatusChange;
+        }
+        if (this.device && (this.status === STATUS.READY || this.status === STATUS.REGISTERING || this.status === STATUS.INCOMING || this.status === STATUS.CONNECTED)) {
+            console.log("[DeviceManager] Already initialized, status:", this.status);
+            this._setStatus(this.status);
+            return;
+        }
         this._destroyed = false;
 
         try {

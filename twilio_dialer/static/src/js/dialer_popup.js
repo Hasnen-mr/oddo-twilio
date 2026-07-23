@@ -57,18 +57,13 @@ export class DialerPopup extends Component {
             await this._loadConfiguredPhoneNumber();
             this._applyFromNumber(this.props.fromNumber || this.state.lastDialedFromNumber);
             await this._loadContacts();
-            deviceManager.onIncomingCall((call, fromNumber, callSid) => {
-                console.log("[Twilio JS DialerPopup] Incoming call received from:", fromNumber);
-                this.state.activeTab = "dialpad";
-                this.state.phoneNumber = fromNumber ? String(fromNumber).replace(/\D/g, "").slice(-10) : "";
-            });
-            try {
-                await deviceManager.initialize(
-                    this._onDeviceStatusChange.bind(this)
-                );
-            } catch (err) {
-                console.error("[DialerPopup] Device initialization failed:", err);
-                this.state.connectionStatus = "error";
+            
+            // Connect UI status change listener to global deviceManager
+            deviceManager.setStatusCallback(this._onDeviceStatusChange.bind(this));
+            
+            // Sync status if deviceManager is already ready or in another state
+            if (deviceManager.status) {
+                this.state.connectionStatus = deviceManager.status;
             }
         });
 
@@ -81,7 +76,8 @@ export class DialerPopup extends Component {
         });
 
         onWillUnmount(() => {
-            deviceManager.destroy();
+            // Unregister status callback when UI unmounts; DO NOT destroy global deviceManager
+            deviceManager.setStatusCallback(null);
         });
     }
 

@@ -758,18 +758,7 @@ class ResConfigSettings(models.TransientModel):
             _logger.info("create() [%d] — vals keys: %s", i, list(vals.keys()) if vals else [])
             _logger.info("create() [%d] — transcription in vals: incoming=%s, outgoing=%s", 
                          i, vals.get('twilio_incoming_transcription'), vals.get('twilio_outgoing_transcription'))
-        _logger.info("create() — calling super().create()")
         result = super().create(vals_list)
-        _logger.info("create() — after super().create(), result=%s", result)
-        
-        # CRITICAL FIX: Ensure set_values() is called after create() to persist config_parameter fields
-        _logger.info("create() — calling set_values() to persist config_parameter fields")
-        try:
-            result.set_values()
-            _logger.info("create() — set_values() completed successfully")
-        except Exception as error:
-            _logger.warning("create() — set_values() raised an exception: %s", error)
-        
         return result
 
     def _submit_module_registration(self):

@@ -503,12 +503,12 @@ class TwilioService(models.AbstractModel):
             return False
 
         base_url = (ICP.get_param("web.base.url") or "").rstrip("/")
-        if not base_url:
-            _logger.warning("configure_incoming_phone_number: web.base.url is not set; cannot build incoming call URL")
-            return False
-
-        target_voice_url = f"{base_url}/twilio_dialer/incoming_call"
-        target_voice_method = "POST"
+        if not base_url or "localhost" in base_url or "127.0.0.1" in base_url:
+            target_voice_url = self._default_voice_url
+            target_voice_method = "GET"
+        else:
+            target_voice_url = f"{base_url}/twilio_dialer/incoming_call"
+            target_voice_method = "POST"
 
         try:
             client = self.get_client(account_sid, auth_token)

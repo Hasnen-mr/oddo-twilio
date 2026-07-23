@@ -62,9 +62,14 @@ export class DialerPopup extends Component {
                 this.state.activeTab = "dialpad";
                 this.state.phoneNumber = fromNumber ? String(fromNumber).replace(/\D/g, "").slice(-10) : "";
             });
-            await deviceManager.initialize(
-                this._onDeviceStatusChange.bind(this)
-            );
+            try {
+                await deviceManager.initialize(
+                    this._onDeviceStatusChange.bind(this)
+                );
+            } catch (err) {
+                console.error("[DialerPopup] Device initialization failed:", err);
+                this.state.connectionStatus = "error";
+            }
         });
 
         onWillUpdateProps((nextProps) => {

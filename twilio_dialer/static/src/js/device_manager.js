@@ -60,7 +60,16 @@ class DeviceManager {
         });
 
         if (!response.ok) {
-            throw new Error("Unable to fetch token");
+            let errorMsg = `Unable to fetch token (HTTP ${response.status})`;
+            try {
+                const errData = await response.json();
+                if (errData && errData.message) {
+                    errorMsg = errData.message;
+                }
+            } catch (e) {
+                // Ignore JSON parse error if response is HTML error page
+            }
+            throw new Error(errorMsg);
         }
 
         const data = await response.json();
@@ -71,10 +80,7 @@ class DeviceManager {
         this.token = data.token;
 
         console.log("JWT received");
-        console.log(this.token);
-
         return data.token;
-
     }
 
     async _ensureTwilioSdk() {

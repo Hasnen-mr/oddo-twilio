@@ -20,12 +20,14 @@
             <span class="o_dialer_toggle_label">Open Dialer</span>
         </button>
         <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
-            <DialerPopup onClose.bind="closePanel"
-                         phone="state.phone"
-                         fromNumber="state.fromNumber"
-                         partnerId="state.partnerId"
-                         partnerName="state.partnerName"
-                         requestId="state.requestId"/>
+            <t t-if="state.isOpen">
+                <DialerPopup onClose.bind="closePanel"
+                             phone="state.phone"
+                             fromNumber="state.fromNumber"
+                             partnerId="state.partnerId"
+                             partnerName="state.partnerName"
+                             requestId="state.requestId"/>
+            </t>
         </div>
     </t>
 

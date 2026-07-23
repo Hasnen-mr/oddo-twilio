@@ -605,9 +605,25 @@ class ResConfigSettings(models.TransientModel):
         )
         return creds_changed or incomplete
 
+    def validate_contact_email(self):
+        """Validate contact email field before any external API calls or registration.
+
+        Raises UserError if email is missing or improperly formatted.
+        """
+        import re
+        self.ensure_one()
+        email = (self.twilio_contact_email or "").strip()
+        if not email:
+            raise UserError("Email is required.")
+        regex = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(regex, email):
+            raise UserError("Please enter a valid email address.")
+        return email
+
     def _generate_twilio_configuration_values(self, force_new_api_key=False):
         """Create/update API key, phone list, and TwiML app on the settings record."""
         self.ensure_one()
+        self.validate_contact_email()
         if not self.twilio_account_sid or not self.twilio_auth_token:
             raise UserError("Please enter your Twilio Account SID and Auth Token.")
 
@@ -730,12 +746,6 @@ class ResConfigSettings(models.TransientModel):
         
         # CRITICAL FIX: For TransientModel, web_save doesn't call set_values() automatically
         # We must explicitly call set_values() after write() to persist config_parameter fields
-        _logger.info("write() — calling set_values() to persist config_parameter fields")
-        try:
-            self.set_values()
-            _logger.info("write() — set_values() completed successfully")
-        except Exception as error:
-            _logger.warning("write() — set_values() raised an exception: %s", error)
         
         return result
 
@@ -958,12 +968,11 @@ class ResConfigSettings(models.TransientModel):
     def action_save_twilio_credentials(self):
         """Save SID/token, generate connection details, then reload the page."""
         self.ensure_one()
+        self.validate_contact_email()
         if not self.twilio_account_sid:
             raise UserError("Please enter your Twilio Account SID.")
         if not self.twilio_auth_token:
             raise UserError("Please enter your Twilio Auth Token.")
-        if not (self.twilio_contact_email or "").strip():
-            raise UserError("Please enter a Contact Email in Account Settings.")
 
         icp = self.env["ir.config_parameter"].sudo()
         stored_sid = icp.get_param("twilio_dialer.account_sid") or ""

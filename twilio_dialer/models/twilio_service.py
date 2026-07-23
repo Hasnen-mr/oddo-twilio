@@ -97,17 +97,23 @@ class TwilioService(models.AbstractModel):
         return phone_numbers
 
     def get_voice_url(self, env=None):
-        """Return the Smart Tools Voice URL used by the TwiML Application.
-
-        Uses the hosted extension call-setup endpoint by default so Odoo does
-        not need a public URL. An explicit non-Odoo override in ICP is kept.
-        """
         ICP = (env or self.env)["ir.config_parameter"].sudo()
+
         stored = (ICP.get_param("twilio_dialer.voice_url") or "").strip()
-        # Ignore old local/Odoo-built URLs from earlier versions
         if stored and "/twilio_dialer/call_setup" not in stored:
             return stored
-        return self._default_voice_url
+
+        base_url = (ICP.get_param("web.base.url") or "").rstrip("/")
+
+        # localhost should not be sent to Twilio
+        if (
+            not base_url
+            or "localhost" in base_url
+            or "127.0.0.1" in base_url
+        ):
+            return None
+
+        return f"{base_url}/twilio_dialer/call_setup"
 
     def generate_api_key(self, client, friendly_name=None):
         try:
@@ -131,11 +137,14 @@ class TwilioService(models.AbstractModel):
         )
         voice_url = voice_url or self._default_voice_url
         voice_method = voice_method or self._default_voice_method
+        
         payload = {
             "friendly_name": friendly_name or self._default_application_friendly_name,
-            "voice_url": voice_url,
-            "voice_method": voice_method,
         }
+
+        if voice_url:
+            payload["voice_url"] = voice_url
+            payload["voice_method"] = voice_method or self._default_voice_method
 
         _logger.info(
             "Creating TwiML Application: URL=%s voice_url=%s voice_method=%s",
@@ -467,6 +476,7 @@ class TwilioService(models.AbstractModel):
 
         voice_grant = VoiceGrant(
             outgoing_application_sid=application_sid,
+            incoming_allow=True,  # Required: allows the browser Device to receive incoming calls
         )
         token.add_grant(voice_grant)
 
@@ -492,7 +502,13 @@ class TwilioService(models.AbstractModel):
             _logger.warning("configure_incoming_phone_number: Twilio Phone Number missing.")
             return False
 
-        target_voice_url = "https://extension.mybroadcast.online/call-setup"
+        base_url = (ICP.get_param("web.base.url") or "").rstrip("/")
+        if not base_url:
+            _logger.warning("configure_incoming_phone_number: web.base.url is not set; cannot build incoming call URL")
+            return False
+
+        target_voice_url = f"{base_url}/twilio_dialer/incoming_call"
+        target_voice_method = "POST"
 
         try:
             client = self.get_client(account_sid, auth_token)
@@ -521,14 +537,14 @@ class TwilioService(models.AbstractModel):
             current_voice_url = getattr(target_number, "voice_url", "") or ""
             current_voice_method = getattr(target_number, "voice_method", "") or ""
 
-            if current_voice_url == target_voice_url and current_voice_method == "GET":
+            if current_voice_url == target_voice_url and current_voice_method == target_voice_method:
                 _logger.info("Twilio Incoming Phone Number %s (SID %s) is already configured with voice_url=%s", phone_number_norm, target_number.sid, target_voice_url)
                 return True
 
-            _logger.info("Updating Twilio Incoming Phone Number %s (SID %s) with voice_url=%s, voice_method=GET", phone_number_norm, target_number.sid, target_voice_url)
+            _logger.info("Updating Twilio Incoming Phone Number %s (SID %s) with voice_url=%s, voice_method=%s", phone_number_norm, target_number.sid, target_voice_url, target_voice_method)
             target_number.update(
                 voice_url=target_voice_url,
-                voice_method="GET",
+                voice_method=target_voice_method,
             )
             return True
 

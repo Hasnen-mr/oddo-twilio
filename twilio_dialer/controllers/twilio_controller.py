@@ -6,6 +6,12 @@ from odoo import http
 from odoo.exceptions import UserError, AccessDenied
 from odoo.http import request
 
+try:
+    from twilio.twiml.voice_response import VoiceResponse, Dial, Client, Say, Record, Reject, Hangup
+    _TWILIO_TWIML_AVAILABLE = True
+except ImportError:
+    _TWILIO_TWIML_AVAILABLE = False
+
 _logger = logging.getLogger(__name__)
 
 
@@ -83,23 +89,35 @@ class TwilioController(http.Controller):
             if not to_number:
                 raise UserError("Missing destination number for Twilio outbound call.")
 
-            twiml = (
-                '<?xml version="1.0" encoding="UTF-8"?>'
-                '<Response><Dial callerId="{caller_id}"><Number>{to_number}</Number></Dial></Response>'
-            ).format(
-                caller_id=escape(caller_id),
-                to_number=escape(to_number),
-            )
+            if _TWILIO_TWIML_AVAILABLE:
+                response = VoiceResponse()
+                dial = Dial(caller_id=caller_id)
+                dial.number(to_number)
+                response.append(dial)
+                twiml = str(response)
+            else:
+                twiml = (
+                    '<?xml version="1.0" encoding="UTF-8"?>'
+                    '<Response><Dial callerId="{caller_id}"><Number>{to_number}</Number></Dial></Response>'
+                ).format(
+                    caller_id=escape(caller_id),
+                    to_number=escape(to_number),
+                )
             return request.make_response(
                 twiml,
                 headers={"Content-Type": "text/xml; charset=utf-8"},
             )
         except Exception as e:
             _logger.error("Twilio call setup failed: %s", str(e))
-            twiml = (
-                '<?xml version="1.0" encoding="UTF-8"?>'
-                '<Response><Say>The Twilio caller ID is not configured correctly.</Say></Response>'
-            )
+            if _TWILIO_TWIML_AVAILABLE:
+                err_resp = VoiceResponse()
+                err_resp.say("The Twilio caller ID is not configured correctly.")
+                twiml = str(err_resp)
+            else:
+                twiml = (
+                    '<?xml version="1.0" encoding="UTF-8"?>'
+                    '<Response><Say>The Twilio caller ID is not configured correctly.</Say></Response>'
+                )
             return request.make_response(
                 twiml,
                 headers={"Content-Type": "text/xml; charset=utf-8"},
@@ -327,27 +345,47 @@ class TwilioController(http.Controller):
 
             # Default routing: Dial the browser VoIP Client identity matching JWT ("id_odoo_{account_sid}")
             client_identity = f"id_odoo_{account_sid}" if account_sid else "agent"
-            record_attr = ' record="record-from-answer-dual"' if record_call else ""
             caller_id_val = from_number or icp.get_param("twilio_dialer.phone_number") or ""
 
-            twiml = (
-                '<?xml version="1.0" encoding="UTF-8"?>'
-                '<Response>'
-                '<Dial callerId="{caller_id}" answerOnBridge="true"{record}>'
-                '<Client>{client}</Client>'
-                '</Dial>'
-                '</Response>'
-            ).format(
-                caller_id=escape(caller_id_val),
-                record=record_attr,
-                client=escape(client_identity),
-            )
-            _logger.info("[Twilio Incoming] TwiML generated (Browser Client %s): %s", client_identity, twiml)
+            if _TWILIO_TWIML_AVAILABLE:
+                # Use the official twilio-python SDK — guaranteed schema-correct TwiML
+                response = VoiceResponse()
+                dial = Dial(
+                    caller_id=caller_id_val,
+                    answer_on_bridge=True,
+                    record="record-from-answer-dual" if record_call else None,
+                )
+                dial.client(client_identity)
+                response.append(dial)
+                twiml = str(response)
+            else:
+                # Fallback: manual construction (plain text-content form — valid per Twilio docs)
+                record_attr = ' record="record-from-answer-dual"' if record_call else ""
+                twiml = (
+                    '<?xml version="1.0" encoding="UTF-8"?>'
+                    '<Response>'
+                    '<Dial callerId="{caller_id}" answerOnBridge="true"{record}>'
+                    '<Client>{client}</Client>'
+                    '</Dial>'
+                    '</Response>'
+                ).format(
+                    caller_id=escape(caller_id_val),
+                    record=record_attr,
+                    client=escape(client_identity),
+                )
+
+            _logger.info("[Twilio Incoming] TwiML (Browser Client %s): %s", client_identity, twiml)
             return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
         except Exception as e:
             _logger.exception("Incoming call handling failed: %s", e)
-            twiml = ('<?xml version="1.0" encoding="UTF-8"?>'
-                     '<Response><Say>We are unable to handle this call right now.</Say><Hangup/></Response>')
+            if _TWILIO_TWIML_AVAILABLE:
+                err_resp = VoiceResponse()
+                err_resp.say("We are unable to handle this call right now.")
+                err_resp.hangup()
+                twiml = str(err_resp)
+            else:
+                twiml = ('<?xml version="1.0" encoding="UTF-8"?>'
+                         '<Response><Say>We are unable to handle this call right now.</Say><Hangup/></Response>')
             return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
 
     @http.route(

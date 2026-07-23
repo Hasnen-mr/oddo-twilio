@@ -2071,57 +2071,83 @@ button.o_twilio_dash_open_dialer:hover {
     flex-shrink: 0;
 }
 
-// ── Footer menu ──────────────────────────────────────────
+// ── Footer Navigation Bar ──────────────────────────────────────────
 
+.o_dialer_footer,
 .o_dialer_footer_menu {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 2px;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
     padding: 8px 8px 10px;
-    background: #fff;
-    border-top: 1px solid $o_dialer-gray-200;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
     border-radius: 0 0 $o_dialer-radius-lg $o_dialer-radius-lg;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
 }
 
+.o_dialer_nav_btn,
 .o_dialer_footer_item {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 4px;
-    min-height: 62px;
-    padding: 8px 2px;
+    min-height: 48px;
+    padding: 6px 2px;
     border: none;
-    border-radius: $o_dialer-radius-sm;
+    border-radius: 12px;
     background: transparent;
-    color: $o_dialer-gray-500;
+    color: #6b7280;
     cursor: pointer;
-    transition: all $o_dialer-transition;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    outline: none;
+    user-select: none;
 
     i {
-        font-size: 15px;
+        font-size: 16px;
         line-height: 1;
+        transition: transform 0.2s ease, color 0.2s ease;
     }
 
     span {
-        font-size: 10px;
+        font-size: 10.5px;
         font-weight: 600;
         line-height: 1.1;
-        letter-spacing: 0.01em;
+        letter-spacing: -0.01em;
+        white-space: nowrap;
+        transition: color 0.2s ease;
     }
 
     &:hover {
-        background: $o_dialer-gray-100;
-        color: $o_dialer-gray-700;
+        background: #f3f4f6;
+        color: #374151;
+
+        i {
+            transform: translateY(-1px);
+        }
+    }
+
+    &:active {
+        transform: scale(0.96);
     }
 
     &--active {
         color: $o_dialer-primary;
-        background: rgba($o_dialer-primary, 0.08);
+        background: $o_dialer-primary-light;
+
+        i {
+            color: $o_dialer-primary;
+            transform: scale(1.1);
+        }
+
+        span {
+            color: $o_dialer-primary;
+            font-weight: 700;
+        }
 
         &:hover {
+            background: darken($o_dialer-primary-light, 3%);
             color: $o_dialer-primary;
-            background: rgba($o_dialer-primary, 0.12);
         }
     }
 }
@@ -3367,5 +3393,253 @@ button.o_twilio_dash_open_dialer:hover {
         margin: 0;
         padding: 16px 12px;
         text-align: center;
+    }
+}
+
+// ── Redesigned Modern Incoming Call UI ──────────────────────
+
+.o_dialer_incoming_view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px 16px;
+    background: #ffffff;
+    border-radius: $o_dialer-radius-lg;
+}
+
+.o_dialer_incoming_hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.o_dialer_incoming_avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $o_dialer-primary-light, lighten($o_dialer-primary, 45%));
+    color: $o_dialer-primary;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 14px rgba($o_dialer-primary, 0.15);
+    border: 2px solid #ffffff;
+}
+
+.o_dialer_incoming_caller {
+    font-size: 20px;
+    font-weight: 700;
+    color: $o_dialer-gray-900;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.2px;
+}
+
+.o_dialer_incoming_location {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: $o_dialer-gray-600;
+    margin-bottom: 12px;
+
+    .o_dialer_incoming_flag {
+        font-size: 16px;
+    }
+}
+
+.o_dialer_incoming_status_row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.o_dialer_incoming_badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba($o_dialer-success, 0.12);
+    color: darken($o_dialer-success, 5%);
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 20px;
+}
+
+.o_dialer_incoming_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: $o_dialer-success;
+    box-shadow: 0 0 0 2px rgba($o_dialer-success, 0.25);
+    animation: o_dialer_pulse 1.5s infinite;
+}
+
+@keyframes o_dialer_pulse {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba($o_dialer-success, 0.5);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba($o_dialer-success, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba($o_dialer-success, 0);
+    }
+}
+
+.o_dialer_incoming_timer {
+    font-size: 13px;
+    font-weight: 600;
+    color: $o_dialer-gray-700;
+    font-variant-numeric: tabular-nums;
+}
+
+.o_dialer_incoming_info_card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 14px;
+    background: $o_dialer-gray-100;
+    border: 1px solid $o_dialer-gray-200;
+    border-radius: $o_dialer-radius-sm;
+    font-size: 12px;
+    font-weight: 500;
+    color: $o_dialer-gray-700;
+    margin-bottom: 24px;
+
+    .o_dialer_incoming_info_icon {
+        color: $o_dialer-info;
+        font-size: 14px;
+    }
+}
+
+.o_dialer_incoming_actions {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    margin-bottom: 16px;
+}
+
+.o_dialer_incoming_btn {
+    flex: 1;
+    height: 46px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 10px;
+    padding: 0 16px;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+
+    i {
+        font-size: 16px;
+    }
+
+    &:hover {
+        transform: translateY(-1px);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+
+    &--accept {
+        background: #22c55e;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+
+        &:hover {
+            background: #16a34a;
+            box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+        }
+    }
+
+    &--decline {
+        background: #ef4444;
+        color: #ffffff;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+
+        &:hover {
+            background: #dc2626;
+            box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+        }
+    }
+}
+
+.o_dialer_incoming_secondary_row {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.o_dialer_incoming_keypad_toggle_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: transparent;
+    border: 1px solid $o_dialer-gray-300;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $o_dialer-gray-700;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    i {
+        font-size: 14px;
+        color: $o_dialer-gray-600;
+    }
+
+    &:hover {
+        background: $o_dialer-gray-100;
+        border-color: $o_dialer-gray-400;
+        color: $o_dialer-gray-900;
+
+        i {
+            color: $o_dialer-gray-900;
+        }
+    }
+}
+
+.o_dialer_incoming_back_row {
+    margin-bottom: 12px;
+}
+
+.o_dialer_back_btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: $o_dialer-gray-100;
+    border: 1px solid $o_dialer-gray-300;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: $o_dialer-gray-700;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    i {
+        font-size: 12px;
+    }
+
+    &:hover {
+        background: $o_dialer-gray-200;
+        color: $o_dialer-gray-900;
     }
 }

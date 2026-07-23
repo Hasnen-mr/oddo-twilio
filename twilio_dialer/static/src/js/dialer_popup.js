@@ -6,6 +6,7 @@ import { useService } from "@web/core/utils/hooks";
 import { COUNTRY_CODES } from "./country_codes";
 import { deviceManager } from "./device_manager";
 import { AutoDialerRunner } from "./auto_dialer_runner";
+import { splitPhoneNumber } from "./phone_utils";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 
@@ -45,10 +46,15 @@ export class DialerPopup extends Component {
             showCallerDropdown: false,
             callerNumbers: [],
             selectedCaller: null,
+            showIncomingKeypad: false,
+            callDuration: 0,
             autoDialerList: "",
             contactSearchQuery: "",
             contacts: [],
         });
+
+        this._callTimer = null;
+        this._callStartTime = null;
 
         this._applyIncomingPhone(this.props.phone);
         useExternalListener(window, "keydown", this._onKeydown.bind(this));
@@ -190,29 +196,70 @@ export class DialerPopup extends Component {
         if (!phone) {
             return;
         }
-        const digits = String(phone).replace(/\D/g, "");
-        if (!digits) {
-            return;
-        }
-        const matchedCountry = [...COUNTRY_CODES]
-            .sort((a, b) => b.code.length - a.code.length)
-            .find((country) => digits.startsWith(country.code.replace("+", "")));
-        if (matchedCountry) {
-            this.state.selectedCountry = matchedCountry;
-            this.state.phoneNumber = digits
-                .slice(matchedCountry.code.replace("+", "").length)
-                .slice(0, 15);
-        } else {
-            this.state.phoneNumber = digits.slice(-10);
-        }
+        const { country, nationalNumber } = splitPhoneNumber(phone);
+        this.state.selectedCountry = country;
+        this.state.phoneNumber = nationalNumber;
     }
 
     _onDeviceStatusChange(status) {
         this.state.connectionStatus = status;
-        if (status !== "connecting" && status !== "connected") {
+        if (status === "incoming") {
+            this.state.showIncomingKeypad = false;
+        }
+        if (status === "connected" || status === "connecting" || status === "incoming") {
+            this._startTimer();
+        } else {
+            this._stopTimer();
             this.state.isMuted = false;
             this.state.dtmfBuffer = "";
+            this.state.showIncomingKeypad = false;
         }
+    }
+
+    _startTimer() {
+        if (!this._callTimer) {
+            this._callStartTime = Date.now();
+            this.state.callDuration = 0;
+            this._callTimer = setInterval(() => {
+                if (this._callStartTime) {
+                    this.state.callDuration = Math.floor((Date.now() - this._callStartTime) / 1000);
+                }
+            }, 1000);
+        }
+    }
+
+    _stopTimer() {
+        if (this._callTimer) {
+            clearInterval(this._callTimer);
+            this._callTimer = null;
+        }
+        this._callStartTime = null;
+        this.state.callDuration = 0;
+    }
+
+    get formattedCallDuration() {
+        const dur = this.state.callDuration || 0;
+        const mins = String(Math.floor(dur / 60)).padStart(2, "0");
+        const secs = String(dur % 60).padStart(2, "0");
+        return `${mins}:${secs}`;
+    }
+
+    get fullIncomingDisplayNumber() {
+        if (this.props.phone) {
+            return this.props.phone;
+        }
+        if (this.state.phoneNumber) {
+            return (this.state.selectedCountry?.code || "") + " " + this.state.phoneNumber;
+        }
+        return "Unknown Caller";
+    }
+
+    toggleIncomingKeypad() {
+        this.state.showIncomingKeypad = !this.state.showIncomingKeypad;
+    }
+
+    backToIncomingView() {
+        this.state.showIncomingKeypad = false;
     }
 
     async _loadConfiguredPhoneNumber() {
@@ -503,19 +550,32 @@ export class DialerPopup extends Component {
     }
 
     onInput(ev) {
+        if (this.isCallActive || this.isIncoming) {
+            ev.target.value = this.state.phoneNumber;
+            return;
+        }
         this.state.phoneNumber = ev.target.value.replace(/\D/g, "").slice(0, 15);
         ev.target.value = this.state.phoneNumber;
     }
 
     backspace() {
+        if (this.isCallActive || this.isIncoming) {
+            return;
+        }
         this.state.phoneNumber = this.state.phoneNumber.slice(0, -1);
     }
 
     clearNumber() {
+        if (this.isCallActive || this.isIncoming) {
+            return;
+        }
         this.state.phoneNumber = "";
     }
 
     selectCountry(country) {
+        if (this.isCallActive || this.isIncoming) {
+            return;
+        }
         this.state.selectedCountry = country;
         this.state.showCountryDropdown = false;
         this.state.countrySearchQuery = "";
@@ -527,6 +587,9 @@ export class DialerPopup extends Component {
     }
 
     toggleCountryDropdown() {
+        if (this.isCallActive || this.isIncoming) {
+            return;
+        }
         this.state.showCountryDropdown = !this.state.showCountryDropdown;
         this.state.showCallerDropdown = false;
         if (this.state.showCountryDropdown) {

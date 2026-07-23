@@ -38,33 +38,39 @@ export function normalizePhoneNumber(number) {
 /** Split an E.164 / digit string into { country, nationalNumber }. */
 export function splitPhoneNumber(number) {
     const raw = String(number || "").trim();
-    const digits = raw.replace(/\D/g, "");
     const defaultCountry = getDefaultCountry();
+    if (!raw) {
+        return { country: defaultCountry, nationalNumber: "" };
+    }
+
+    const digits = raw.replace(/\D/g, "");
     if (!digits) {
         return { country: defaultCountry, nationalNumber: "" };
     }
 
-    const withPlus = raw.startsWith("+") ? `+${digits}` : digits;
-    const matchedCountry = [...COUNTRY_CODES]
-        .sort((a, b) => b.code.length - a.code.length)
-        .find((country) => {
-            const codeDigits = country.code.replace("+", "");
-            if (withPlus.startsWith("+")) {
-                return withPlus.startsWith(country.code);
-            }
-            return digits.startsWith(codeDigits);
-        });
+    // Priority 1: If string starts with '+', perform strict E.164 country code matching
+    if (raw.startsWith("+")) {
+        const matchedCountry = [...COUNTRY_CODES]
+            .sort((a, b) => b.code.length - a.code.length)
+            .find((country) => raw.startsWith(country.code));
 
-    if (!matchedCountry) {
-        return { country: defaultCountry, nationalNumber: digits.replace(/^0+/, "") };
+        if (matchedCountry) {
+            const codeDigits = matchedCountry.code.replace("+", "");
+            const national = digits.startsWith(codeDigits)
+                ? digits.slice(codeDigits.length)
+                : digits;
+            return {
+                country: matchedCountry,
+                nationalNumber: national,
+            };
+        }
     }
-    const codeDigits = matchedCountry.code.replace("+", "");
-    const national = digits.startsWith(codeDigits)
-        ? digits.slice(codeDigits.length)
-        : digits;
+
+    // Priority 2: Standard/Local number without '+' prefix (e.g. 8400880077)
+    // Never strip leading digits assuming they are country codes unless '+' was explicitly present
     return {
-        country: matchedCountry,
-        nationalNumber: national.replace(/^0+/, ""),
+        country: defaultCountry,
+        nationalNumber: digits,
     };
 }
 

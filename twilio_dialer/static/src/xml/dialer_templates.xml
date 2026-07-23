@@ -20,14 +20,12 @@
             <span class="o_dialer_toggle_label">Open Dialer</span>
         </button>
         <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
-            <t t-if="state.isOpen">
-                <DialerPopup onClose.bind="closePanel"
-                             phone="state.phone"
-                             fromNumber="state.fromNumber"
-                             partnerId="state.partnerId"
-                             partnerName="state.partnerName"
-                             requestId="state.requestId"/>
-            </t>
+            <DialerPopup onClose.bind="closePanel"
+                         phone="state.phone"
+                         fromNumber="state.fromNumber"
+                         partnerId="state.partnerId"
+                         partnerName="state.partnerName"
+                         requestId="state.requestId"/>
         </div>
     </t>
 
@@ -305,13 +303,13 @@
                     </t>
                 </t>
 
-                <!-- Auto Dialer tab — Queue Runner -->
-                <t t-elif="state.activeTab === 'auto_dialer'">
+                <!-- Auto Dialer tab — Queue Runner (always mounted, hidden via CSS when inactive) -->
+                <div t-att-style="state.activeTab !== 'auto_dialer' ? 'display:none' : ''">
                     <AutoDialerRunner/>
-                </t>
+                </div>
 
                 <!-- Contacts tab (opens Contacts menu) -->
-                <t t-elif="state.activeTab === 'contacts'">
+                <t t-if="state.activeTab === 'contacts'">
                     <div class="o_dialer_tab_panel">
                         <div class="o_dialer_tab_hero">
                             <i class="fa fa-address-book o_dialer_tab_hero_icon"/>
@@ -460,7 +458,7 @@
 
             <!-- Queue Selector Row -->
             <div class="o_dialer_section o_dialer_qrunner_selector_row">
-                <label class="o_dialer_label">Queue</label>
+                <label class="o_dialer_label">Campaign Queue</label>
                 <div class="o_dialer_qrunner_selector_wrap">
                     <select class="o_dialer_qrunner_select"
                             t-on-change="(ev) => this.onSelectQueue(ev.target.value)"
@@ -469,10 +467,17 @@
                         <t t-foreach="state.queues" t-as="q" t-key="q.id">
                             <option t-att-value="q.id"
                                     t-att-selected="state.activeQueue and state.activeQueue.id === q.id">
-                                <t t-esc="q.name"/>
+                                <t t-esc="q.name"/> (<t t-esc="q.pending_contacts"/> pending)
                             </option>
                         </t>
                     </select>
+                    <button type="button"
+                            class="o_dialer_icon_btn"
+                            title="Open Queue in Odoo"
+                            t-if="state.activeQueue"
+                            t-on-click.stop="openQueueInOdoo">
+                        <i class="fa fa-external-link"/>
+                    </button>
                     <button type="button"
                             class="o_dialer_icon_btn"
                             title="Refresh queue list"
@@ -487,17 +492,22 @@
             <t t-if="!state.activeQueue">
                 <div class="o_dialer_empty_card o_dialer_qrunner_empty">
                     <i class="fa fa-bolt"/>
-                    <span>No queue selected</span>
-                    <p>Choose a dialing queue above, then click Start.</p>
+                    <span>No Queue Selected</span>
+                    <p>Select a dialing queue above to view statistics and begin dialing.</p>
                 </div>
             </t>
 
             <t t-else="">
                 <!-- Queue Header: name + status badge -->
                 <div class="o_dialer_qrunner_header">
-                    <span class="o_dialer_qrunner_name" t-esc="state.activeQueue.name"/>
+                    <div class="o_dialer_qrunner_header_title">
+                        <span class="o_dialer_qrunner_name" t-esc="state.activeQueue.name"/>
+                        <span class="o_dialer_qrunner_pacing_badge">
+                            <i class="fa fa-clock-o"/> <t t-esc="pacingDelay"/>
+                        </span>
+                    </div>
                     <span class="o_dialer_qrunner_badge" t-att-class="statusBadgeClass">
-                        <t t-if="isRunning"><i class="fa fa-circle"/> </t>
+                        <t t-if="isRunning"><i class="fa fa-circle o_dialer_pulse_dot"/> </t>
                         <t t-esc="statusLabel"/>
                     </span>
                 </div>
@@ -508,9 +518,14 @@
                         <div class="o_dialer_qrunner_progress_fill"
                              t-att-style="'width:' + state.stats.progress + '%'"/>
                     </div>
-                    <span class="o_dialer_qrunner_progress_label">
-                        <t t-esc="state.stats.progress"/>%
-                    </span>
+                    <div class="o_dialer_qrunner_progress_info">
+                        <span class="o_dialer_qrunner_progress_label">
+                            <t t-esc="state.stats.progress"/>% Complete
+                        </span>
+                        <span class="o_dialer_qrunner_success_badge" t-if="state.stats.completed + state.stats.failed > 0">
+                            <i class="fa fa-trophy"/> <t t-esc="successRate"/>% Success Rate
+                        </span>
+                    </div>
                 </div>
 
                 <!-- Stats Grid -->
@@ -537,7 +552,7 @@
                     </div>
                 </div>
 
-                <!-- Queue Controls -->
+                <!-- Queue Primary Action Controls -->
                 <div class="o_dialer_qrunner_controls">
                     <t t-if="isDraft">
                         <button type="button"
@@ -545,7 +560,7 @@
                                 t-att-disabled="state.actionPending"
                                 t-on-click="onStart">
                             <i class="fa fa-play"/>
-                            <span>Start</span>
+                            <span>Start Campaign</span>
                         </button>
                     </t>
                     <t t-elif="isRunning">
@@ -561,7 +576,7 @@
                                 t-att-disabled="state.actionPending"
                                 t-on-click="onStop">
                             <i class="fa fa-stop"/>
-                            <span>Stop</span>
+                            <span>Stop Campaign</span>
                         </button>
                     </t>
                     <t t-elif="isPaused">
@@ -577,20 +592,20 @@
                                 t-att-disabled="state.actionPending"
                                 t-on-click="onStop">
                             <i class="fa fa-stop"/>
-                            <span>Stop</span>
+                            <span>Stop Campaign</span>
                         </button>
                     </t>
                     <t t-elif="isCompleted">
                         <div class="o_dialer_qrunner_done_msg">
                             <i class="fa fa-check-circle"/>
-                            <span>Queue finished</span>
+                            <span>Campaign Finished</span>
                         </div>
                     </t>
                 </div>
 
-                <!-- Current Contact Card -->
+                <!-- Highlighted Current Contact Card -->
                 <t t-if="state.currentLine and (isRunning or isPaused)">
-                    <div class="o_dialer_qrunner_contact_card">
+                    <div class="o_dialer_qrunner_contact_card o_dialer_qrunner_contact_card--active">
                         <div class="o_dialer_qrunner_contact_head">
                             <div class="o_dialer_qrunner_avatar">
                                 <i class="fa fa-user"/>
@@ -621,13 +636,9 @@
                                 <span t-esc="state.currentLine.notes"/>
                             </div>
                         </t>
-                        <div class="o_dialer_qrunner_call_hint">
-                            <i class="fa fa-arrow-up"/>
-                            <span>Switch to Dialpad and click Call</span>
-                        </div>
                     </div>
 
-                    <!-- Navigation row -->
+                    <!-- Secondary Navigation Toolbar -->
                     <div class="o_dialer_qrunner_nav">
                         <button type="button"
                                 class="o_dialer_icon_btn o_dialer_qrunner_nav_btn"
@@ -660,7 +671,7 @@
                 <t t-elif="isDraft and state.stats.total > 0">
                     <div class="o_dialer_qrunner_hint">
                         <i class="fa fa-info-circle"/>
-                        <span><t t-esc="state.stats.total"/> contact(s) ready. Click Start to begin.</span>
+                        <span><t t-esc="state.stats.total"/> contact(s) ready in queue. Click Start Campaign to begin.</span>
                     </div>
                 </t>
 
@@ -668,7 +679,7 @@
                     <div class="o_dialer_empty_card o_dialer_qrunner_empty">
                         <i class="fa fa-users"/>
                         <span>No contacts in this queue</span>
-                        <p>Go to Contacts and use "Add to Auto Dialer" to populate it.</p>
+                        <p>Open Contacts in Odoo and click "Add to Auto Dialer" to populate this queue.</p>
                     </div>
                 </t>
 

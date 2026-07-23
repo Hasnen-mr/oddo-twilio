@@ -31,8 +31,11 @@ export class DialerPopup extends Component {
         const savedCountry =
             this._findCountry(lastDial?.countryCode, lastDial?.countryLabel) || defaultCountry;
 
+        const hasAutoDialer = !!(this.props.autoDialerId || this.dialerState.autoDialerId);
+        const initialTab = hasAutoDialer && !this.props.phone ? "auto_dialer" : "dialpad";
+
         this.state = useState({
-            activeTab: "dialpad",
+            activeTab: initialTab,
             phoneNumber: "",
             lastDialedNumber: lastDial?.phoneNumber || "",
             lastDialedCountryCode: lastDial?.countryCode || savedCountry.code,
@@ -77,7 +80,13 @@ export class DialerPopup extends Component {
             if (nextProps.requestId !== this.props.requestId) {
                 this._applyIncomingPhone(nextProps.phone);
                 this._applyFromNumber(nextProps.fromNumber);
-                this.state.activeTab = "dialpad";
+                if (this.state.connectionStatus === "incoming") {
+                    this.state.activeTab = "dialpad";
+                } else if (nextProps.phone && !nextProps.autoDialerId) {
+                    this.state.activeTab = "dialpad";
+                } else if (nextProps.autoDialerId && !nextProps.phone) {
+                    this.state.activeTab = "auto_dialer";
+                }
             }
         });
 

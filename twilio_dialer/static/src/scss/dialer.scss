@@ -3206,6 +3206,45 @@ button.o_twilio_dash_open_dialer:hover {
         i { font-size: 16px; }
     }
 
+    .o_dialer_qrunner_header_title {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .o_dialer_qrunner_pacing_badge {
+        font-size: 11px;
+        color: $o_dialer-gray-500;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+
+        i { font-size: 10px; }
+    }
+
+    .o_dialer_pulse_dot {
+        animation: o_dialer_pulse 1.5s infinite;
+    }
+
+    .o_dialer_qrunner_progress_info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 4px;
+    }
+
+    .o_dialer_qrunner_success_badge {
+        font-size: 11px;
+        font-weight: 600;
+        color: $o_dialer-success;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+
+        i { font-size: 10px; }
+    }
+
     // Contact Card
     .o_dialer_qrunner_contact_card {
         background: $o_dialer-gray-100;
@@ -3215,6 +3254,13 @@ button.o_twilio_dash_open_dialer:hover {
         display: flex;
         flex-direction: column;
         gap: 8px;
+
+        &--active {
+            background: linear-gradient(135deg, #ffffff 0%, $o_dialer-primary-light 100%);
+            border: 1.5px solid rgba($o_dialer-primary, 0.4);
+            box-shadow: 0 4px 16px rgba($o_dialer-primary, 0.12);
+            transition: all 0.25s ease;
+        }
     }
 
     .o_dialer_qrunner_contact_head {

@@ -196,6 +196,13 @@ class TwilioAutoDialer(models.Model):
             next_seq += 10
             created_count += 1
 
+        if created_count > 0 and self.state in ("completed", "cancelled"):
+            self.write({"state": "draft"})
+            if not self.current_line_id or self.current_line_id.status != "pending":
+                next_p = self._get_next_pending_line()
+                if next_p:
+                    self.write({"current_line_id": next_p.id})
+
         _logger.info(
             "Auto Dialer Queue '%s' (ID %s): Added %s contact(s), skipped %s contact(s).",
             self.name, self.id, created_count, skipped_count
@@ -233,8 +240,14 @@ class TwilioAutoDialer(models.Model):
         return all_lines[idx + 1] if idx >= 0 and idx + 1 < len(all_lines) else all_lines[-1]
 
     def action_start(self):
-        """Start Queue: draft/paused -> running, loads first pending contact into pointer."""
+        """Start Queue: draft/paused/cancelled -> running, loads first pending contact into pointer."""
         self.ensure_one()
+        if self.state == "cancelled" or self.state == "completed":
+            pending_count = self.queue_line_ids.filtered(lambda l: l.status == "pending")
+            if not pending_count:
+                raise UserError("All contacts in this queue have already been processed.")
+            self.write({"state": "draft"})
+
         if not self.queue_line_ids:
             raise UserError("No contacts in this dialing queue. Please add contacts first.")
 
@@ -265,11 +278,18 @@ class TwilioAutoDialer(models.Model):
         return self.action_start()
 
     def action_stop(self):
-        """Stop Queue: changes state to cancelled, clears current pointer."""
+        """Stop Queue: changes state to paused (resumable), preserving pointer and statistics."""
+        self.ensure_one()
+        self.write({
+            "state": "paused",
+        })
+        return True
+
+    def action_cancel(self):
+        """Cancel Queue: permanently abandons the campaign."""
         self.ensure_one()
         self.write({
             "state": "cancelled",
-            "current_line_id": False,
         })
         return True
 
@@ -398,8 +418,13 @@ class TwilioAutoDialerLine(models.Model):
         string="Error Message",
     )
 
-    def update_status_from_call(self, status, call_log_id=None, notes=None, error_message=None):
-        """Update line status based on call lifecycle and advance dialer queue pointer."""
+    duration_sec = fields.Integer(
+        string="Call Duration (sec)",
+        default=0,
+    )
+
+    def update_status_from_call(self, status, call_log_id=None, notes=None, error_message=None, duration_sec=0):
+        """Update line status based on call lifecycle, update CRM partner, and advance dialer queue pointer."""
         self.ensure_one()
         vals = {}
         if notes:
@@ -408,6 +433,8 @@ class TwilioAutoDialerLine(models.Model):
             vals["error_message"] = error_message
         if call_log_id:
             vals["call_log_id"] = call_log_id
+        if duration_sec:
+            vals["duration_sec"] = duration_sec
 
         norm_status = (status or "").lower().replace("-", "_")
         if norm_status in ("calling", "in_progress", "connecting"):
@@ -427,6 +454,21 @@ class TwilioAutoDialerLine(models.Model):
             vals["last_call_date"] = fields.Datetime.now()
 
         self.write(vals)
+
+        # CRM Synchronization: Update res.partner contact details
+        if self.partner_id and vals.get("status") in ("completed", "busy", "no_answer", "failed", "skipped"):
+            try:
+                partner_vals = {}
+                if hasattr(self.partner_id, "twilio_last_call_date"):
+                    partner_vals["twilio_last_call_date"] = fields.Datetime.now()
+                if hasattr(self.partner_id, "twilio_last_call_status"):
+                    partner_vals["twilio_last_call_status"] = vals.get("status")
+                if hasattr(self.partner_id, "comment") and not self.partner_id.comment:
+                    partner_vals["comment"] = f"Auto Dialer Campaign: {self.dialer_id.name} | Result: {vals.get('status').title()}"
+                if partner_vals:
+                    self.partner_id.write(partner_vals)
+            except Exception as e:
+                _logger.warning("Failed to update partner %s from auto dialer line: %s", self.partner_id.id, e)
 
         # Advance queue pointer if finished calling
         if vals.get("status") in ("completed", "busy", "no_answer", "failed"):

@@ -31,6 +31,62 @@ class TwilioAutoDialerAddContactsWizard(models.TransientModel):
         required=True,
     )
 
+    total_selected_count = fields.Integer(
+        string="Total Selected",
+        compute="_compute_contact_stats",
+    )
+    valid_phone_count = fields.Integer(
+        string="Valid Phone Numbers",
+        compute="_compute_contact_stats",
+    )
+    no_phone_count = fields.Integer(
+        string="Missing Phone Numbers",
+        compute="_compute_contact_stats",
+    )
+    duplicate_count = fields.Integer(
+        string="Duplicate Numbers",
+        compute="_compute_contact_stats",
+    )
+    estimated_size = fields.Integer(
+        string="Estimated Campaign Size",
+        compute="_compute_contact_stats",
+    )
+
+    @api.depends("partner_ids", "dialer_id", "target_type")
+    def _compute_contact_stats(self):
+        for rec in self:
+            partners = rec.partner_ids
+            rec.total_selected_count = len(partners)
+            valid = 0
+            no_phone = 0
+            seen_phones = set()
+            duplicates = 0
+
+            # Get existing queue phones if adding to existing queue
+            if rec.target_type == "existing" and rec.dialer_id:
+                for line in rec.dialer_id.queue_line_ids:
+                    if line.phone:
+                        clean = "".join(c for c in line.phone if c.isdigit())
+                        if clean:
+                            seen_phones.add(clean)
+
+            for partner in partners:
+                # Phone priority: mobile -> phone
+                raw = partner.mobile or partner.phone or ""
+                digits = "".join(c for c in raw if c.isdigit())
+                if not raw or not digits:
+                    no_phone += 1
+                elif digits in seen_phones:
+                    duplicates += 1
+                else:
+                    valid += 1
+                    seen_phones.add(digits)
+
+            rec.valid_phone_count = valid
+            rec.no_phone_count = no_phone
+            rec.duplicate_count = duplicates
+            rec.estimated_size = valid
+
     @api.model
     def default_get(self, fields_list):
         res = super().default_get(fields_list)

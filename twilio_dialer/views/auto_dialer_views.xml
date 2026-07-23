@@ -37,12 +37,16 @@
         <field name="arch" type="xml">
             <form string="Dialing Queue">
                 <header>
-                    <button name="action_start" type="object" string="Start"
-                            class="btn-primary" disabled="1" title="Start dialing (Phase 2)"/>
+                    <button name="action_start" type="object" string="Start Campaign"
+                            class="btn-primary" invisible="state in ('running', 'completed')"/>
                     <button name="action_pause" type="object" string="Pause"
-                            class="btn-secondary" disabled="1" title="Pause dialing (Phase 2)"/>
+                            class="btn-warning" invisible="state != 'running'"/>
+                    <button name="action_resume" type="object" string="Resume"
+                            class="btn-primary" invisible="state != 'paused'"/>
                     <button name="action_stop" type="object" string="Stop"
-                            class="btn-danger" disabled="1" title="Stop dialing (Phase 2)"/>
+                            class="btn-secondary" invisible="state not in ('running', 'paused')"/>
+                    <button name="action_cancel" type="object" string="Cancel Queue"
+                            class="btn-danger" invisible="state == 'cancelled'"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,running,paused,completed,cancelled"/>
                 </header>
@@ -187,28 +191,39 @@
         <field name="model">twilio.auto.dialer.add.contacts.wizard</field>
         <field name="arch" type="xml">
             <form string="Add Contacts to Auto Dialer">
-                <group>
-                    <field name="target_type" widget="radio"/>
-                    <field name="campaign_name"
-                           invisible="target_type != 'new'"
-                           required="target_type == 'new'"/>
-                    <field name="dialer_id"
-                           invisible="target_type != 'existing'"
-                           required="target_type == 'existing'"
-                           options="{'no_create': True}"/>
-                </group>
-                <notebook>
-                    <page string="Selected Contacts">
-                        <field name="partner_ids" readonly="1">
-                            <list>
-                                <field name="name"/>
-                                <field name="phone"/>
-                                <field name="mobile"/>
-                                <field name="email"/>
-                            </list>
-                        </field>
-                    </page>
-                </notebook>
+                <sheet>
+                    <group>
+                        <group string="Queue Target">
+                            <field name="target_type" widget="radio"/>
+                            <field name="campaign_name"
+                                   invisible="target_type != 'new'"
+                                   required="target_type == 'new'"/>
+                            <field name="dialer_id"
+                                   invisible="target_type != 'existing'"
+                                   required="target_type == 'existing'"
+                                   options="{'no_create': True}"/>
+                        </group>
+                        <group string="Selection Preview">
+                            <field name="total_selected_count" readonly="1"/>
+                            <field name="valid_phone_count" readonly="1"/>
+                            <field name="no_phone_count" readonly="1"/>
+                            <field name="duplicate_count" readonly="1"/>
+                            <field name="estimated_size" readonly="1" class="fw-bold text-success"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Selected Contacts" name="selected_contacts">
+                            <field name="partner_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="phone"/>
+                                    <field name="mobile"/>
+                                    <field name="email"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
                 <footer>
                     <button name="action_add_to_queue" string="Add to Queue" type="object" class="btn-primary"/>
                     <button string="Cancel" class="btn-secondary" special="cancel"/>

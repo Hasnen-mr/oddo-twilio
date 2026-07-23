@@ -23,6 +23,7 @@ class DeviceManager {
         this.token = null;
         this.status = STATUS.DISCONNECTED;
         this._onStatusChange = null;
+        this._statusListeners = new Set();
         this._onIncomingCall = null;
         this._destroyed = false;
         this._activeConnection = null;
@@ -32,13 +33,30 @@ class DeviceManager {
 
     _setStatus(status) {
         this.status = status;
-        if (!this._destroyed && typeof this._onStatusChange === "function") {
-            this._onStatusChange(status);
+        if (!this._destroyed) {
+            if (typeof this._onStatusChange === "function") {
+                this._onStatusChange(status);
+            }
+            for (const listener of this._statusListeners) {
+                try {
+                    listener(status);
+                } catch (e) {
+                    console.error("[DeviceManager] Error in status listener:", e);
+                }
+            }
         }
     }
 
     setStatusCallback(callback) {
         this._onStatusChange = callback;
+    }
+
+    onStatusChange(callback) {
+        if (typeof callback === "function") {
+            this._statusListeners.add(callback);
+            return () => this._statusListeners.delete(callback);
+        }
+        return () => {};
     }
 
     async initialize(onStatusChange) {
@@ -451,6 +469,8 @@ class DeviceManager {
     }
 
     disconnect() {
+        console.error("[DEBUG TRACE] deviceManager.disconnect() requested!");
+        console.trace("[DEBUG TRACE] Stack trace for deviceManager.disconnect:");
         if (this._destroyed) {
             return;
         }
@@ -516,6 +536,8 @@ class DeviceManager {
         this._activePartnerId = null;
         this._activeQueueLineId = null;
         this._onStatusChange = null;
+        // Clear all multi-listeners so no stale callbacks remain after re-init
+        this._statusListeners.clear();
     }
 }
 

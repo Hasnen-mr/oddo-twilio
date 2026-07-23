@@ -3,6 +3,7 @@
 import { Component, useState, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
+import { deviceManager } from "./device_manager";
 
 /**
  * AutoDialerRunner — Phase 2A Queue Runner
@@ -17,6 +18,7 @@ export class AutoDialerRunner extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.action = useService("action");
         this.dialerSvc = useService("twilio_dialer");
 
         this.state = useState({
@@ -49,12 +51,217 @@ export class AutoDialerRunner extends Component {
         onWillStart(async () => {
             await this._loadQueues();
 
+            // Guard: unsubscribe any prior listener before registering a new one.
+            // Owl calls onWillStart exactly once per mount, but this is a safety net
+            // against edge cases (e.g. asset hot-reload re-mounting the component).
+            if (this._unsubStatus) {
+                this._unsubStatus();
+                this._unsubStatus = null;
+            }
+
+            // Listen to device status changes (ready/disconnected/error) to drive auto-dialing
+            this._unsubStatus = deviceManager.onStatusChange((status) => {
+                this._onDeviceStatusChanged(status);
+            });
+
             // Restore an in-progress queue from dialerSvc state (across tab switches)
             const svc = this.dialerSvc.state;
             if (svc.autoDialerId) {
                 await this._restoreQueue(svc.autoDialerId);
             }
         });
+
+        onWillUnmount(() => {
+            this._clearAutoTimers();
+            if (this._unsubStatus) {
+                this._unsubStatus();
+            }
+        });
+    }
+
+    _clearAutoTimers() {
+        if (this._delayTimer) {
+            clearTimeout(this._delayTimer);
+            this._delayTimer = null;
+        }
+        if (this._ringTimer) {
+            clearTimeout(this._ringTimer);
+            this._ringTimer = null;
+        }
+    }
+
+    // ── Device Status Callback & Automatic Progression ────────
+
+    async _onDeviceStatusChanged(status) {
+        if (!this.isRunning || this.state.queueState !== "running" || this._isStopped || !this.state.activeQueue) {
+            this._lastDeviceStatus = status;
+            this._clearAutoTimers();
+            return;
+        }
+
+        const wasCallActive = this._lastDeviceStatus === "connecting" || this._lastDeviceStatus === "connected";
+        console.log(`[AutoDialerRunner] Device status changed: ${this._lastDeviceStatus} -> ${status}`);
+        this._lastDeviceStatus = status;
+
+        if (status === "connecting" || status === "connected") {
+            // Call is active; clear max_ring_time timeout when call connects
+            if (status === "connected") {
+                if (this._ringTimer) {
+                    clearTimeout(this._ringTimer);
+                    this._ringTimer = null;
+                }
+            }
+            return;
+        }
+
+        // Progression MUST only occur if a call was previously active (connecting/connected)
+        // or if an explicit call failure/disconnect occurred while campaign is running.
+        if (wasCallActive && (status === "ready" || status === "disconnected" || status === "error")) {
+            this._clearAutoTimers();
+
+            // Refresh queue statistics from backend
+            await this._refreshQueue();
+
+            if (!this.isRunning || this.state.queueState !== "running" || this._isStopped) {
+                console.log("[AutoDialerRunner] Queue is no longer running (paused or stopped).");
+                this._clearAutoTimers();
+                return;
+            }
+
+            // Check if queue completed
+            if (this.state.stats.pending <= 0) {
+                console.log("[AutoDialerRunner] Campaign finished! Marking completed.");
+                await this._callQueueAction("action_stop");
+                this.state.queueState = "completed";
+                this.state.currentLine = null;
+                return;
+            }
+
+            // Schedule next call after call_delay
+            const delaySec = this.state.activeQueue.call_delay || 5;
+            console.log(`[AutoDialerRunner] Scheduling next call in ${delaySec}s...`);
+
+            this._delayTimer = setTimeout(async () => {
+                this._delayTimer = null;
+                if (this.isRunning && this.state.queueState === "running" && !this._isStopped) {
+                    await this._dialNextPendingContact();
+                } else {
+                    console.log("[AutoDialerRunner] Delay timer fired but campaign is not running. Ignoring.");
+                }
+            }, delaySec * 1000);
+        }
+    }
+
+    async _dialNextPendingContact() {
+        if (!this.isRunning || this.state.queueState !== "running" || this._isStopped || !this.state.activeQueue) {
+            this._clearAutoTimers();
+            return;
+        }
+
+        // Advance to next pending contact
+        await this._navigate("next");
+
+        if (!this.isRunning || this.state.queueState !== "running" || this._isStopped) {
+            this._clearAutoTimers();
+            return;
+        }
+
+        const line = this.state.currentLine;
+        if (!line || line.status !== "pending") {
+            // No more pending contacts
+            await this._refreshQueue();
+            if (this.state.stats.pending <= 0) {
+                this.state.queueState = "completed";
+                this.state.currentLine = null;
+            }
+            return;
+        }
+
+        // Initiate call using existing DeviceManager
+        await this._triggerCallForCurrentLine();
+    }
+
+    async _syncLineWithRetry(lineId, status, durationSec = 0, retries = 3) {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                const res = await rpc("/twilio_dialer/auto_dialer/sync_line", {
+                    line_id: lineId,
+                    status: status,
+                    duration_sec: durationSec,
+                });
+                if (res && res.success !== false) {
+                    return res;
+                }
+            } catch (err) {
+                console.warn(`[AutoDialerRunner] Sync line ${lineId} attempt ${attempt}/${retries} failed:`, err);
+                if (attempt === retries) {
+                    console.error(`[AutoDialerRunner] Sync line ${lineId} failed after ${retries} attempts.`);
+                } else {
+                    await new Promise((r) => setTimeout(r, 500 * attempt));
+                }
+            }
+        }
+        return null;
+    }
+
+    async _triggerCallForCurrentLine() {
+        const line = this.state.currentLine;
+        const queue = this.state.activeQueue;
+        if (!line || !queue || !this.isRunning || this.state.queueState !== "running" || this._isStopped || this._isDialing) {
+            return;
+        }
+
+        this._isDialing = true;
+        this._clearAutoTimers();
+        this._callStartTimeMs = Date.now();
+
+        const fullNumber = line.phone;
+        const fromNum = queue.from_number || "";
+
+        console.log(`[AutoDialerRunner] Auto-dialing ${fullNumber} (Line ID: ${line.id})...`);
+
+        // Set max_ring_time timeout (e.g. 30s)
+        const ringTimeSec = queue.max_ring_time || 30;
+        this._ringTimer = setTimeout(async () => {
+            // Guard: Only drop call if call is still connecting/ringing (NOT connected!)
+            if (deviceManager.status === "connecting" || deviceManager.status === "registering") {
+                console.warn(`[AutoDialerRunner] Ringing exceeded max_ring_time (${ringTimeSec}s). Hanging up...`);
+                this._ringTimer = null;
+                deviceManager.disconnect();
+                const dur = Math.floor((Date.now() - (this._callStartTimeMs || Date.now())) / 1000);
+                await this._syncLineWithRetry(line.id, "no_answer", dur);
+            } else {
+                console.log(`[AutoDialerRunner] Ring timer expired but call status is "${deviceManager.status}". Ignoring timeout.`);
+                this._ringTimer = null;
+            }
+        }, ringTimeSec * 1000);
+
+        try {
+            // Execute call via DeviceManager
+            const success = await deviceManager.makeCall(fullNumber, {
+                From: fromNum,
+                from_number: fromNum,
+            }, {
+                partnerId: null,
+                queueLineId: line.id,
+            });
+
+            if (!success) {
+                console.error(`[AutoDialerRunner] makeCall failed for ${fullNumber}. Marking failed.`);
+                this._clearAutoTimers();
+                const dur = Math.floor((Date.now() - (this._callStartTimeMs || Date.now())) / 1000);
+                await this._syncLineWithRetry(line.id, "failed", dur);
+                // Move to next contact after short delay
+                this._delayTimer = setTimeout(() => {
+                    this._delayTimer = null;
+                    if (this.isRunning && this.state.queueState === "running" && !this._isStopped) {
+                        this._dialNextPendingContact();
+                    }
+                }, (queue.call_delay || 5) * 1000);
+            }
+        } finally {
+            this._isDialing = false;
+        }
     }
 
     // ── Queue Loading ────────────────────────────────────────
@@ -64,21 +271,35 @@ export class AutoDialerRunner extends Component {
         try {
             const queues = await this.orm.searchRead(
                 "twilio.auto.dialer",
-                [["state", "in", ["draft", "running", "paused"]]],
+                ["|", ["state", "in", ["draft", "running", "paused"]], ["pending_contacts", ">", 0]],
                 ["id", "name", "state", "total_contacts", "pending_contacts",
                  "completed_contacts", "failed_contacts", "calling_contacts",
                  "busy_contacts", "no_answer_contacts", "skipped_contacts",
-                 "progress", "current_line_id", "from_number"],
+                 "progress", "current_line_id", "from_number", "call_delay", "max_ring_time"],
                 { order: "create_date desc", limit: 50 }
             );
             this.state.queues = queues;
 
-            // Auto-restore if dialerSvc already has an active queue
+            // Auto-restore active queue from service if present
             const svc = this.dialerSvc.state;
             if (svc.autoDialerId && !this.state.activeQueue) {
                 const found = queues.find((q) => q.id === svc.autoDialerId);
                 if (found) {
-                    this._applyQueueState(found, null);
+                    await this.onSelectQueue(found.id);
+                }
+            }
+
+            // Automatic Priority Selection if no queue currently active:
+            // Priority Order: 1. Running, 2. Paused/Stopped, 3. Draft, 4. Completed with pending
+            if (!this.state.activeQueue && queues.length > 0) {
+                const runningQ = queues.find((q) => q.state === "running");
+                const pausedQ = queues.find((q) => q.state === "paused");
+                const draftQ = queues.find((q) => q.state === "draft");
+                const completedQ = queues.find((q) => q.state === "completed" && q.pending_contacts > 0);
+
+                const targetQ = runningQ || pausedQ || draftQ || completedQ || queues[0];
+                if (targetQ) {
+                    await this.onSelectQueue(targetQ.id);
                 }
             }
         } catch (err) {
@@ -96,7 +317,7 @@ export class AutoDialerRunner extends Component {
                 ["id", "name", "state", "total_contacts", "pending_contacts",
                  "completed_contacts", "failed_contacts", "calling_contacts",
                  "busy_contacts", "no_answer_contacts", "skipped_contacts",
-                 "progress", "current_line_id", "from_number"]
+                 "progress", "current_line_id", "from_number", "call_delay", "max_ring_time"]
             );
             if (!queues.length) return;
             const queue = queues[0];
@@ -146,12 +367,15 @@ export class AutoDialerRunner extends Component {
             ["id", "name", "state", "total_contacts", "pending_contacts",
              "completed_contacts", "failed_contacts", "calling_contacts",
              "busy_contacts", "no_answer_contacts", "skipped_contacts",
-             "progress", "current_line_id", "from_number"]
+             "progress", "current_line_id", "from_number", "call_delay", "max_ring_time"]
         );
         this._applyQueueState(detail[0], null);
 
-        // If this queue already has an active line (running/paused), restore it
-        if (detail[0].current_line_id && (detail[0].state === "running" || detail[0].state === "paused")) {
+        // Fetch and apply current line contact info for the selected queue
+        if (detail[0].current_line_id) {
+            await this._fetchAndApplyCurrentLine(queue.id);
+        } else if (detail[0].pending_contacts > 0) {
+            // Navigate to first pending contact if no pointer set
             await this._fetchAndApplyCurrentLine(queue.id);
         }
     }
@@ -166,7 +390,7 @@ export class AutoDialerRunner extends Component {
                 this._applyCurrentLine(result);
             }
         } catch (err) {
-            // If "current" action not supported, fall back gracefully
+            // Fallback
         }
     }
 
@@ -180,20 +404,17 @@ export class AutoDialerRunner extends Component {
             notes: result.queue_notes,
             status: result.queue_status,
         };
-        // Sync into dialerService so the dialpad reflects this contact
-        this.dialerSvc.open({
-            phone: result.phone,
-            fromNumber: this.state.activeQueue?.from_number || "",
-            partnerId: result.partner_id || null,
-            partnerName: result.partner_name || result.phone,
-            autoDialerId: this.state.activeQueue?.id || null,
-            queueLineId: result.queue_line_id,
-            queueName: result.queue_name || "",
-            queuePosition: result.queue_position || "",
-            queueAttempts: result.queue_attempts || 0,
-            queueNotes: result.queue_notes || "",
-            queueStatus: result.queue_status || "",
-        });
+        // Update dialerSvc state properties without incrementing requestId (avoids infinite OWL re-render loops)
+        const svcState = this.dialerSvc.state;
+        svcState.phone = result.phone || "";
+        svcState.partnerName = result.partner_name || result.phone || "";
+        svcState.autoDialerId = this.state.activeQueue?.id || null;
+        svcState.queueLineId = result.queue_line_id;
+        svcState.queueName = result.queue_name || "";
+        svcState.queuePosition = result.queue_position || "";
+        svcState.queueAttempts = result.queue_attempts || 0;
+        svcState.queueNotes = result.queue_notes || "";
+        svcState.queueStatus = result.queue_status || "";
     }
 
     // ── Queue Controls ───────────────────────────────────────
@@ -213,10 +434,10 @@ export class AutoDialerRunner extends Component {
 
     async onStart() {
         if (!this.state.activeQueue || this.state.actionPending) return;
+        this._isStopped = false;
         this.state.actionPending = true;
         try {
-            // Call action_start which returns the dialer action params
-            const result = await rpc("/web/dataset/call_kw", {
+            await rpc("/web/dataset/call_kw", {
                 model: "twilio.auto.dialer",
                 method: "action_start",
                 args: [[this.state.activeQueue.id]],
@@ -225,23 +446,10 @@ export class AutoDialerRunner extends Component {
 
             await this._refreshQueue();
 
-            // Load the current line into the dialpad
-            const svc = this.dialerSvc.state;
-            const dialer = this.state.activeQueue;
-            if (dialer && this.state.currentLine) {
-                this.dialerSvc.open({
-                    phone: this.state.currentLine.phone,
-                    fromNumber: dialer.from_number || "",
-                    partnerId: null,
-                    partnerName: this.state.currentLine.partner_name || this.state.currentLine.phone,
-                    autoDialerId: dialer.id,
-                    queueLineId: this.state.currentLine.id,
-                    queueName: dialer.name,
-                    queuePosition: this.state.currentLine.queue_position || "",
-                    queueAttempts: this.state.currentLine.attempt_count || 0,
-                    queueNotes: this.state.currentLine.notes || "",
-                    queueStatus: this.state.currentLine.status || "pending",
-                });
+            if (this.state.currentLine && this.isRunning && !this._isStopped) {
+                this._loadCurrentLineIntoDialpad();
+                // Start auto-dialing first contact
+                await this._triggerCallForCurrentLine();
             }
         } catch (err) {
             console.error("[AutoDialerRunner] Start failed:", err);
@@ -251,18 +459,31 @@ export class AutoDialerRunner extends Component {
     }
 
     async onPause() {
+        console.log("[AutoDialerRunner] Pause requested. Halting campaign immediately.");
+        this._isStopped = true;
+        this.state.queueState = "paused";
+        this._clearAutoTimers();
+
+        if (deviceManager.status === "connecting" || deviceManager.status === "connected") {
+            deviceManager.disconnect();
+        }
+        this._clearAutoTimers();
+
         await this._callQueueAction("action_pause");
+        this.state.queueState = "paused";
+        this._clearAutoTimers();
     }
 
     async onResume() {
         if (!this.state.activeQueue || this.state.actionPending) return;
+        this._isStopped = false;
         this.state.actionPending = true;
         try {
             await this.orm.call("twilio.auto.dialer", "action_resume", [this.state.activeQueue.id]);
             await this._refreshQueue();
-            // Re-populate dialpad with current contact
-            if (this.state.currentLine) {
+            if (this.state.currentLine && this.isRunning && !this._isStopped) {
                 this._loadCurrentLineIntoDialpad();
+                await this._triggerCallForCurrentLine();
             }
         } catch (err) {
             console.error("[AutoDialerRunner] Resume failed:", err);
@@ -272,9 +493,21 @@ export class AutoDialerRunner extends Component {
     }
 
     async onStop() {
+        console.log("[AutoDialerRunner] Stop requested. Halting campaign immediately.");
+        this._isStopped = true;
+        this.state.queueState = "paused";
+        this._clearAutoTimers();
+
+        // If call is active, hang up
+        if (deviceManager.status === "connecting" || deviceManager.status === "connected") {
+            deviceManager.disconnect();
+        }
+        this._clearAutoTimers();
+
         await this._callQueueAction("action_stop");
+        this.state.queueState = "paused";
+        this._clearAutoTimers();
         this.state.currentLine = null;
-        // Clear queue state from dialerService
         this.dialerSvc.state.autoDialerId = null;
         this.dialerSvc.state.queueLineId = null;
     }
@@ -320,7 +553,7 @@ export class AutoDialerRunner extends Component {
                 ["id", "name", "state", "total_contacts", "pending_contacts",
                  "completed_contacts", "failed_contacts", "calling_contacts",
                  "busy_contacts", "no_answer_contacts", "skipped_contacts",
-                 "progress", "current_line_id", "from_number"]
+                 "progress", "current_line_id", "from_number", "call_delay", "max_ring_time"]
             );
             if (!detail.length) return;
             const queue = detail[0];
@@ -338,7 +571,6 @@ export class AutoDialerRunner extends Component {
                 progress: Math.round(queue.progress || 0),
             };
 
-            // If the queue now has a current_line_id and we don't have a current line, fetch it
             if (queue.current_line_id && !this.state.currentLine) {
                 await this._fetchCurrentLineData(queue.current_line_id[0]);
             }
@@ -376,19 +608,17 @@ export class AutoDialerRunner extends Component {
         const line = this.state.currentLine;
         const queue = this.state.activeQueue;
         if (!line || !queue) return;
-        this.dialerSvc.open({
-            phone: line.phone,
-            fromNumber: queue.from_number || "",
-            partnerId: null,
-            partnerName: line.partner_name || line.phone,
-            autoDialerId: queue.id,
-            queueLineId: line.id,
-            queueName: queue.name,
-            queuePosition: line.queue_position || "",
-            queueAttempts: line.attempt_count || 0,
-            queueNotes: line.notes || "",
-            queueStatus: line.status || "pending",
-        });
+        const svcState = this.dialerSvc.state;
+        svcState.phone = line.phone || "";
+        svcState.fromNumber = queue.from_number || "";
+        svcState.partnerName = line.partner_name || line.phone || "";
+        svcState.autoDialerId = queue.id;
+        svcState.queueLineId = line.id;
+        svcState.queueName = queue.name || "";
+        svcState.queuePosition = line.queue_position || "";
+        svcState.queueAttempts = line.attempt_count || 0;
+        svcState.queueNotes = line.notes || "";
+        svcState.queueStatus = line.status || "pending";
     }
 
     async onRefresh() {
@@ -455,5 +685,33 @@ export class AutoDialerRunner extends Component {
             cancelled: "Cancelled",
         };
         return map[s] || "Pending";
+    }
+
+    openQueueInOdoo() {
+        if (!this.state.activeQueue) return;
+        this.action.doAction({
+            name: this.state.activeQueue.name,
+            type: "ir.actions.act_window",
+            res_model: "twilio.auto.dialer",
+            res_id: this.state.activeQueue.id,
+            views: [[false, "form"]],
+            target: "current",
+        });
+    }
+
+    get successRate() {
+        const done = this.state.stats.completed || 0;
+        const failed = this.state.stats.failed || 0;
+        const processed = done + failed;
+        if (processed <= 0) return 0;
+        return Math.round((done / processed) * 100);
+    }
+
+    get pacingDelay() {
+        return (this.state.activeQueue?.call_delay || 5) + "s delay";
+    }
+
+    get maxRingTime() {
+        return (this.state.activeQueue?.max_ring_time || 30) + "s ring limit";
     }
 }

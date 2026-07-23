@@ -138,11 +138,11 @@ class TwilioController(http.Controller):
         return {"success": True}
 
     @http.route("/twilio_dialer/auto_dialer/sync_line", type="json", auth="user")
-    def sync_auto_dialer_line(self, line_id, status, call_log_id=None, notes=None):
+    def sync_auto_dialer_line(self, line_id, status, call_log_id=None, notes=None, duration_sec=0):
         line = request.env["twilio.auto.dialer.line"].sudo().browse(line_id)
         if not line.exists():
             return {"success": False, "message": "Line not found"}
-        line.update_status_from_call(status, call_log_id=call_log_id, notes=notes)
+        line.update_status_from_call(status, call_log_id=call_log_id, notes=notes, duration_sec=duration_sec)
         dialer = line.dialer_id
         current_line = dialer.current_line_id
         if current_line:

@@ -16,8 +16,8 @@
                     <field name="twilio_config_section" widget="twilio_config_nav" class="o_twilio_cfg_nav_field"/>
 
                     <!-- Connection overview (Account section) -->
-                    <block title="Connection" name="twilio_connection_overview"
-                           invisible="twilio_config_section != 'account'">
+                    <block title="Connection" name="twilio_connection_overview">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--account w-100">
                         <div class="o_twilio_cfg_banner w-100">
                             <div class="o_twilio_cfg_banner_left">
                                 <div class="o_twilio_cfg_banner_title">Twilio connection</div>
@@ -43,11 +43,12 @@
                             <i class="fa fa-lock"/>
                             <span><strong>Call Settings</strong> and <strong>AI Settings</strong> unlock after you save valid Twilio credentials and connect.</span>
                         </div>
+                        </div>
                     </block>
 
                     <!-- Account -->
-                    <block title="Account Details" name="twilio_account_details"
-                           invisible="twilio_config_section != 'account'">
+                    <block title="Account Details" name="twilio_account_details">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--account w-100">
                         <div class="o_twilio_cfg_grid w-100">
                             <div class="o_twilio_cfg_card">
                                 <div class="o_twilio_cfg_card_title">Credentials</div>
@@ -127,12 +128,15 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </block>
 
                     <!-- Call Settings -->
                     <block title="Call Settings" name="twilio_call_settings"
-                           invisible="twilio_config_section != 'call' or not twilio_is_connected">
+                           invisible="not twilio_is_connected">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--call w-100">
                         <field name="twilio_call_settings_error" invisible="1"/>
+                        <field name="twilio_ai_api_key_issue" invisible="1"/>
                         <field name="twilio_call_settings_autosave"
                                 widget="twilio_call_settings_autosave"
                                 nolabel="1"
@@ -162,49 +166,75 @@
                                 <div class="o_twilio_cfg_card_title">Incoming</div>
                                 <div class="o_twilio_cfg_card_sub">How inbound Twilio calls behave in Odoo.</div>
 
-                                <div class="o_twilio_cfg_switch_row">
+                                <div class="o_twilio_cfg_switch_row o_twilio_cfg_switch_row--master">
                                     <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Enable Incoming Calls</div>
                                         <div class="o_twilio_cfg_hint">Allow receiving calls in the dialer.</div>
                                     </div>
                                     <field name="twilio_incoming_enabled" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
-                                <div class="o_twilio_cfg_switch_row">
-                                    <div class="o_twilio_cfg_switch_text">
-                                        <div class="o_twilio_cfg_label">Record Incoming</div>
-                                        <div class="o_twilio_cfg_hint">Save recordings when available.</div>
+
+                                <div class="o_twilio_cfg_incoming_options" invisible="not twilio_incoming_enabled">
+                                    <div class="o_twilio_cfg_switch_row">
+                                        <div class="o_twilio_cfg_switch_text">
+                                            <div class="o_twilio_cfg_label">Record Incoming</div>
+                                            <div class="o_twilio_cfg_hint">Save recordings when available.</div>
+                                        </div>
+                                        <field name="twilio_incoming_record" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                     </div>
-                                    <field name="twilio_incoming_record" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
-                                </div>
-                                <div class="o_twilio_cfg_switch_row">
-                                    <div class="o_twilio_cfg_switch_text">
-                                        <div class="o_twilio_cfg_label">Enable Transcription</div>
-                                        <div class="o_twilio_cfg_hint">Transcribe recorded incoming calls.</div>
+                                    <div class="o_twilio_cfg_switch_row">
+                                        <div class="o_twilio_cfg_switch_text">
+                                            <div class="o_twilio_cfg_label">Enable Transcription</div>
+                                            <div class="o_twilio_cfg_hint">Transcribe recorded incoming calls.</div>
+                                        </div>
+                                        <field name="twilio_incoming_transcription" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                     </div>
-                                    <field name="twilio_incoming_transcription" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
-                                </div>
-                                <div class="o_twilio_cfg_switch_row">
-                                    <div class="o_twilio_cfg_switch_text">
-                                        <div class="o_twilio_cfg_label">Voicemail if Unanswered</div>
-                                        <div class="o_twilio_cfg_hint">Route missed calls to voicemail.</div>
+                                    <div class="o_twilio_cfg_api_warn"
+                                         invisible="not twilio_incoming_transcription or not twilio_ai_api_key_issue">
+                                        <i class="fa fa-exclamation-triangle"/>
+                                        <div class="o_twilio_cfg_api_warn_body">
+                                            <span>API key is not set, or API key is not valid.</span>
+                                            <field name="twilio_ai_settings_link"
+                                                   widget="twilio_ai_settings_link"
+                                                   options="{'label': 'Open AI Settings'}"
+                                                   nolabel="1"/>
+                                        </div>
                                     </div>
-                                    <field name="twilio_incoming_voicemail" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
-                                </div>
-                                <div class="o_twilio_cfg_field" invisible="not twilio_incoming_voicemail">
-                                    <label for="twilio_incoming_voicemail_text" class="o_twilio_cfg_label">Voicemail Text</label>
-                                    <field name="twilio_incoming_voicemail_text" class="o_twilio_cfg_input"/>
-                                </div>
-                                <div class="o_twilio_cfg_switch_row">
-                                    <div class="o_twilio_cfg_switch_text">
-                                        <div class="o_twilio_cfg_label">Forward Calls</div>
+                                    <div class="o_twilio_cfg_switch_row">
+                                        <div class="o_twilio_cfg_switch_text">
+                                            <div class="o_twilio_cfg_label">Welcome Greeting</div>
+                                            <div class="o_twilio_cfg_hint">Play a greeting message before connecting the call.</div>
+                                        </div>
+                                        <field name="twilio_incoming_welcome_greeting" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                     </div>
-                                    <field name="twilio_incoming_forward" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
-                                </div>
-                                <div class="o_twilio_cfg_field" invisible="not twilio_incoming_forward">
-                                    <label for="twilio_incoming_forward_to" class="o_twilio_cfg_label">Forward To</label>
-                                    <field name="twilio_incoming_forward_to"
-                                            widget="twilio_phone_country"
-                                            class="o_twilio_cfg_input o_twilio_forward_to_field"/>
+                                    <div class="o_twilio_cfg_field" invisible="not twilio_incoming_welcome_greeting">
+                                        <label for="twilio_incoming_welcome_greeting_text" class="o_twilio_cfg_label">Greeting Message Text</label>
+                                        <field name="twilio_incoming_welcome_greeting_text" class="o_twilio_cfg_input"/>
+                                    </div>
+                                    <div class="o_twilio_cfg_switch_row">
+                                        <div class="o_twilio_cfg_switch_text">
+                                            <div class="o_twilio_cfg_label">Voicemail if Unanswered</div>
+                                            <div class="o_twilio_cfg_hint">Route missed calls to voicemail.</div>
+                                        </div>
+                                        <field name="twilio_incoming_voicemail" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
+                                    </div>
+                                    <div class="o_twilio_cfg_field" invisible="not twilio_incoming_voicemail">
+                                        <label for="twilio_incoming_voicemail_text" class="o_twilio_cfg_label">Voicemail Text</label>
+                                        <field name="twilio_incoming_voicemail_text" class="o_twilio_cfg_input"/>
+                                    </div>
+                                    <div class="o_twilio_cfg_switch_row">
+                                        <div class="o_twilio_cfg_switch_text">
+                                            <div class="o_twilio_cfg_label">Forward Calls</div>
+                                            <div class="o_twilio_cfg_hint">Send inbound calls to another number.</div>
+                                        </div>
+                                        <field name="twilio_incoming_forward" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
+                                    </div>
+                                    <div class="o_twilio_cfg_field" invisible="not twilio_incoming_forward">
+                                        <label for="twilio_incoming_forward_to" class="o_twilio_cfg_label">Forward To</label>
+                                        <field name="twilio_incoming_forward_to"
+                                                widget="twilio_phone_country"
+                                                class="o_twilio_cfg_input o_twilio_forward_to_field"/>
+                                    </div>
                                 </div>
                             </div>
 
@@ -226,6 +256,17 @@
                                     </div>
                                     <field name="twilio_outgoing_transcription" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
+                                <div class="o_twilio_cfg_api_warn"
+                                     invisible="not twilio_outgoing_transcription or not twilio_ai_api_key_issue">
+                                    <i class="fa fa-exclamation-triangle"/>
+                                    <div class="o_twilio_cfg_api_warn_body">
+                                        <span>API key is not set, or API key is not valid.</span>
+                                        <field name="twilio_ai_settings_link"
+                                               widget="twilio_ai_settings_link"
+                                               options="{'label': 'Open AI Settings'}"
+                                               nolabel="1"/>
+                                    </div>
+                                </div>
                                 <div class="o_twilio_cfg_switch_row">
                                     <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Smart Copy</div>
@@ -235,11 +276,13 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </block>
 
                     <!-- AI Settings -->
                     <block title="AI Settings" name="twilio_ai_settings"
-                           invisible="twilio_config_section != 'ai' or not twilio_is_connected">
+                           invisible="not twilio_is_connected">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--ai w-100">
                         <div class="o_twilio_cfg_grid w-100">
                             <div class="o_twilio_cfg_card">
                                 <div class="o_twilio_cfg_card_title">Providers</div>
@@ -282,6 +325,11 @@
                                     </div>
                                     <field name="twilio_ai_enable_transcript" widget="boolean_toggle" class="o_twilio_cfg_switch"/>
                                 </div>
+                                <div class="o_twilio_cfg_api_warn"
+                                     invisible="not twilio_ai_enable_transcript or not twilio_ai_api_key_issue">
+                                    <i class="fa fa-exclamation-triangle"/>
+                                    <span>API key is not set, or API key is not valid.</span>
+                                </div>
                                 <div class="o_twilio_cfg_switch_row">
                                     <div class="o_twilio_cfg_switch_text">
                                         <div class="o_twilio_cfg_label">Create Summary</div>
@@ -298,12 +346,15 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
                     </block>
 
                     <!-- Billing -->
                     <block title="Billing" name="twilio_billing_settings"
-                           invisible="twilio_config_section != 'billing' or not twilio_is_connected">
+                           invisible="not twilio_is_connected">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--billing w-100">
                         <field name="twilio_billing_panel" widget="twilio_billing_panel" nolabel="1" class="w-100 o_twilio_cfg_billing_field"/>
+                        </div>
                     </block>
 
                 </app>

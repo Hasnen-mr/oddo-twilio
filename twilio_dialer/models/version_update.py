@@ -31,23 +31,7 @@ class TwilioVersionUpdate(models.AbstractModel):
             return {"available": False}
 
         uid = self.env.uid
-        snooze_until = self._get_param("twilio_dialer.update.snooze_until.%s" % uid)
-        if snooze_until:
-            try:
-                if fields.Datetime.to_datetime(snooze_until) > fields.Datetime.now():
-                    return {"available": False}
-            except Exception:
-                pass
-
-        # At most one auto-prompt per calendar day (until Remind / Okay)
-        today = fields.Date.context_today(self)
-        last_shown = self._get_param("twilio_dialer.update.last_shown.%s" % uid)
-        if last_shown == str(today):
-            return {"available": False}
-
-        remote = self._fetch_remote_version_info()
-        if not remote and self._get_param("twilio_dialer.update.demo") == "1":
-            remote = self._load_local_version_info()
+        remote = self._resolve_offer_info()
         if not remote:
             return {"available": False}
 
@@ -61,6 +45,27 @@ class TwilioVersionUpdate(models.AbstractModel):
         if dismissed and not self._is_newer(latest, dismissed):
             return {"available": False}
 
+        last_prompted = (
+            self._get_param("twilio_dialer.update.last_prompted_version.%s" % uid) or ""
+        ).strip()
+        offer_changed = bool(last_prompted) and self._is_newer(latest, last_prompted)
+
+        # Snooze blocks the same offer; a newer offer version breaks through.
+        snooze_until = self._get_param("twilio_dialer.update.snooze_until.%s" % uid)
+        if snooze_until and not offer_changed:
+            try:
+                if fields.Datetime.to_datetime(snooze_until) > fields.Datetime.now():
+                    return {"available": False}
+            except Exception:
+                pass
+
+        # At most one auto-prompt per calendar day for the same offer version.
+        # If the remote offer version changes to a newer one, prompt again.
+        today = fields.Date.context_today(self)
+        last_shown = self._get_param("twilio_dialer.update.last_shown.%s" % uid)
+        if last_shown == str(today) and not offer_changed and last_prompted == latest:
+            return {"available": False}
+
         features = remote.get("features") or []
         if isinstance(features, str):
             features = [line.strip() for line in features.splitlines() if line.strip()]
@@ -70,9 +75,16 @@ class TwilioVersionUpdate(models.AbstractModel):
             features = self._features_from_changes(installed, latest, remote)
 
         self._set_param("twilio_dialer.update.last_shown.%s" % uid, str(today))
+        self._set_param("twilio_dialer.update.last_prompted_version.%s" % uid, latest)
+        if offer_changed:
+            # New offer supersedes an older snooze window.
+            self._set_param("twilio_dialer.update.snooze_until.%s" % uid, False)
 
-        series = self._odoo_series(installed) or self._odoo_series(latest) or "19.0"
-        apps_url = "https://apps.odoo.com/apps/modules/%s/twilio_dialer" % series
+        series = self._odoo_series(installed) or self._odoo_series(latest) or "18.0"
+        apps_url = (
+            remote.get("download_url")
+            or "https://apps.odoo.com/apps/modules/%s/twilio_dialer" % series
+        )
 
         return {
             "available": True,
@@ -121,24 +133,55 @@ class TwilioVersionUpdate(models.AbstractModel):
         self.env["ir.config_parameter"].sudo().set_param(key, value or "")
 
     def _fetch_remote_version_info(self):
+        """Fetch offer JSON from each mirror; return the newest valid payload."""
+        candidates = []
         for url in VERSION_INFO_PATHS:
-            try:
-                request = Request(
-                    url,
-                    headers={
-                        "User-Agent": "Odoo-Twilio-Dialer-UpdateCheck/1.0",
-                        "Accept": "application/json",
-                    },
-                )
-                with urlopen(request, timeout=FETCH_TIMEOUT) as response:
-                    raw = response.read().decode("utf-8")
-                data = json.loads(raw)
-                if isinstance(data, dict) and data.get("version"):
-                    return data
-            except (HTTPError, URLError, TimeoutError, ValueError, OSError) as error:
-                _logger.info("Version check failed for %s: %s", url, error)
-            except Exception:
-                _logger.exception("Unexpected version check error for %s", url)
+            data = self._fetch_version_url(url)
+            if data:
+                candidates.append(data)
+        if not candidates:
+            return None
+        return max(
+            candidates,
+            key=lambda item: self._parse_version(item.get("version") or ""),
+        )
+
+    def _resolve_offer_info(self):
+        """Pick the newest offer from remote mirrors and optional local demo file."""
+        candidates = []
+        remote = self._fetch_remote_version_info()
+        if remote:
+            candidates.append(remote)
+        if self._get_param("twilio_dialer.update.demo") == "1":
+            local = self._load_local_version_info()
+            if local:
+                candidates.append(local)
+        if not candidates:
+            return None
+        return max(
+            candidates,
+            key=lambda item: self._parse_version(item.get("version") or ""),
+        )
+
+    def _fetch_version_url(self, url):
+        try:
+            request = Request(
+                url,
+                headers={
+                    "User-Agent": "Odoo-Twilio-Dialer-UpdateCheck/1.0",
+                    "Accept": "application/json",
+                },
+            )
+            with urlopen(request, timeout=FETCH_TIMEOUT) as response:
+                raw = response.read().decode("utf-8")
+            data = json.loads(raw)
+            if isinstance(data, dict) and data.get("version"):
+                return data
+            _logger.info("Version check ignored non-JSON/empty payload from %s", url)
+        except (HTTPError, URLError, TimeoutError, ValueError, OSError) as error:
+            _logger.info("Version check failed for %s: %s", url, error)
+        except Exception:
+            _logger.exception("Unexpected version check error for %s", url)
         return None
 
     def _load_local_version_info(self):

@@ -78,35 +78,49 @@
     </t>
 
     <t t-name="twilio_dialer.BillingPackages">
-        <section class="o_billing_glass o_billing_packages">
-            <header>
-                <div>
-                    <span class="o_billing_eyebrow">PLANS</span>
+        <section class="o_billing_packages">
+            <header class="o_billing_packages_header">
+                <div class="o_billing_packages_heading">
+                    <span class="o_billing_eyebrow">Plans</span>
                     <h2>Buy Call Credits</h2>
+                    <p>Top up your softphone balance. Pay securely with PayPal — credits apply to your Twilio account after purchase.</p>
                 </div>
-                <p>Pay securely with PayPal</p>
             </header>
             <div class="o_billing_package_grid">
                 <t t-foreach="packages" t-as="pkg" t-key="pkg.id">
                     <article class="o_billing_package"
                              t-att-class="pkg.featured ? 'o_billing_package--featured' : ''">
                         <t t-if="pkg.featured">
-                            <span class="o_billing_package_tag">Popular</span>
+                            <span class="o_billing_package_tag">Most Popular</span>
                         </t>
-                        <div class="o_billing_package_info">
+                        <div class="o_billing_package_top">
                             <span class="o_billing_package_label" t-esc="pkg.label"/>
-                            <b class="o_billing_package_price" t-esc="pkg.price"/>
+                            <div class="o_billing_package_price_row">
+                                <b class="o_billing_package_price" t-esc="pkg.price"/>
+                                <span class="o_billing_package_period">one-time</span>
+                            </div>
                             <span class="o_billing_package_calls">
-                                <t t-esc="pkg.calls"/> calls
+                                <i class="fa fa-phone"/>
+                                <t t-esc="pkg.calls"/> calls included
                             </span>
                         </div>
+                        <ul class="o_billing_package_features">
+                            <li><i class="fa fa-check"/> Softphone &amp; Auto Dialer</li>
+                            <li><i class="fa fa-check"/> Incoming &amp; outgoing calls</li>
+                            <li><i class="fa fa-check"/> Instant credit top-up</li>
+                            <li t-if="pkg.featured"><i class="fa fa-check"/> Best value per call</li>
+                        </ul>
                         <button class="btn o_billing_btn o_billing_btn--primary"
+                                t-att-class="pkg.featured ? 'o_billing_btn--featured' : ''"
                                 t-on-click="() => openUrl(pkg.url)">
-                            Buy Now
+                            Buy <t t-esc="pkg.label"/>
                         </button>
                     </article>
                 </t>
             </div>
+            <p class="o_billing_packages_note">
+                <i class="fa fa-lock"/> Secure checkout via PayPal. Credits are non-transferable.
+            </p>
         </section>
     </t>
 </templates>

@@ -22,17 +22,12 @@
               action="action_twilio_call_log"
               sequence="10"/>
 
-    <!-- Auto Dialer -->
+    <!-- Auto Dialer (opens page directly — no submenu) -->
     <menuitem id="menu_twilio_auto_dialer_parent"
               name="Auto Dialer"
               parent="menu_twilio_dialer_root"
-              sequence="20"/>
-
-    <menuitem id="menu_twilio_auto_dialer_queues"
-              name="Dialing Queues"
-              parent="menu_twilio_auto_dialer_parent"
               action="action_twilio_auto_dialer"
-              sequence="10"/>
+              sequence="20"/>
 
     <!-- Contacts -->
     <menuitem id="menu_twilio_contacts"

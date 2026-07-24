@@ -5,12 +5,15 @@ import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
+import { setUiField } from "./settings_ui_field";
 
 const WATCHED_FIELDS = [
     "twilio_phone_number",
     "twilio_incoming_enabled",
     "twilio_incoming_record",
     "twilio_incoming_transcription",
+    "twilio_incoming_welcome_greeting",
+    "twilio_incoming_welcome_greeting_text",
     "twilio_incoming_voicemail",
     "twilio_incoming_voicemail_text",
     "twilio_incoming_forward",
@@ -21,6 +24,7 @@ const WATCHED_FIELDS = [
 ];
 
 const TEXT_FIELDS = new Set([
+    "twilio_incoming_welcome_greeting_text",
     "twilio_incoming_voicemail_text",
     "twilio_incoming_forward_to",
 ]);
@@ -46,6 +50,12 @@ function changedFields(prev, next) {
         return WATCHED_FIELDS.slice();
     }
     return WATCHED_FIELDS.filter((name) => prev[name] !== next[name]);
+}
+
+function applyCallSettingPatch(record, patch) {
+    for (const [name, value] of Object.entries(patch)) {
+        setUiField(record, name, value);
+    }
 }
 
 export class CallSettingsAutosave extends Component {
@@ -82,21 +92,21 @@ export class CallSettingsAutosave extends Component {
                     const forwardJustTurnedOn = forward && !this._prevForward;
 
                     if (voicemailJustTurnedOn && forwardJustTurnedOn) {
-                        this.props.record.update({
+                        applyCallSettingPatch(this.props.record, {
                             twilio_incoming_forward: false,
                             twilio_incoming_forward_to: "",
                         });
                         this._prevVoicemail = true;
                         this._prevForward = false;
                     } else if (forwardJustTurnedOn) {
-                        this.props.record.update({
+                        applyCallSettingPatch(this.props.record, {
                             twilio_incoming_voicemail: false,
                             twilio_incoming_voicemail_text: "",
                         });
                         this._prevVoicemail = false;
                         this._prevForward = true;
                     } else {
-                        this.props.record.update({
+                        applyCallSettingPatch(this.props.record, {
                             twilio_incoming_forward: false,
                             twilio_incoming_forward_to: "",
                         });
@@ -168,6 +178,8 @@ export class CallSettingsAutosave extends Component {
             }
             this._lastSaved = snap;
             this._pending = null;
+            // Call settings were written via RPC; keep the form clean.
+            this.props.record.dirty = false;
             this.notification.add(_t("Settings updated successfully."), {
                 type: "success",
             });

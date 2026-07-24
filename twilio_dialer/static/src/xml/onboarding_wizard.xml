@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="twilio_dialer.OnboardingWizard">
+        <Dialog size="'lg'" contentClass="'o_twilio_onboard_dialog'"
+               title="dialogTitle">
+            <div class="o_twilio_onboard">
+                <div class="o_twilio_onboard_progress">
+                    <span class="o_twilio_onboard_step_label" t-esc="stepLabel"/>
+                    <div class="o_twilio_onboard_dots">
+                        <t t-foreach="[1,2,3,4]" t-as="n" t-key="n">
+                            <span t-att-class="{
+                                'o_twilio_onboard_dot': true,
+                                'is-active': state.step === n,
+                                'is-done': state.step &gt; n,
+                            }"/>
+                        </t>
+                    </div>
+                </div>
+
+                <div class="o_twilio_onboard_body">
+                    <t t-if="state.step === 1">
+                        <div class="o_twilio_onboard_icon">
+                            <i class="fa fa-phone"/>
+                        </div>
+                        <h3 class="o_twilio_onboard_title">Calling &amp; SMS in one module</h3>
+                        <p class="o_twilio_onboard_text">
+                            Softphone, click-to-call, auto dialer, SMS, recordings, and AI
+                            transcription — all inside Odoo with your own Twilio account.
+                        </p>
+                    </t>
+
+                    <t t-elif="state.step === 2">
+                        <div class="o_twilio_onboard_icon">
+                            <i class="fa fa-credit-card"/>
+                        </div>
+                        <h3 class="o_twilio_onboard_title">Twilio account required (upgraded)</h3>
+                        <p class="o_twilio_onboard_text">
+                            Create or upgrade a Twilio account to place and receive calls.
+                            There is <strong>no subscription</strong> for this module —
+                            Twilio uses a <strong>pay-as-you-go</strong> model for usage.
+                        </p>
+                        <ul class="o_twilio_onboard_list">
+                            <li>No monthly module fee</li>
+                            <li>Pay Twilio only for the minutes and messages you use</li>
+                            <li>Full control of your Twilio credentials</li>
+                        </ul>
+                    </t>
+
+                    <t t-elif="state.step === 3">
+                        <div class="o_twilio_onboard_icon">
+                            <i class="fa fa-plug"/>
+                        </div>
+                        <h3 class="o_twilio_onboard_title">Configure Twilio credentials</h3>
+                        <p class="o_twilio_onboard_text">
+                            Enter your Twilio Account SID and Auth Token. Email and phone
+                            are used for registration feedback. Odoo version is detected
+                            automatically and included with the login.
+                        </p>
+
+                        <div class="o_twilio_onboard_form">
+                            <label class="o_twilio_onboard_field">
+                                <span>Account SID</span>
+                                <input type="text"
+                                       class="form-control"
+                                       placeholder="ACxxxxxxxx"
+                                       t-att-disabled="state.connecting or state.connected"
+                                       t-model="state.accountSid"/>
+                            </label>
+                            <label class="o_twilio_onboard_field">
+                                <span>Auth Token</span>
+                                <input type="password"
+                                       class="form-control"
+                                       placeholder="Your Auth Token"
+                                       t-att-disabled="state.connecting or state.connected"
+                                       t-model="state.authToken"/>
+                            </label>
+                            <label class="o_twilio_onboard_field">
+                                <span>Email</span>
+                                <input type="email"
+                                       class="form-control"
+                                       placeholder="you@company.com"
+                                       t-att-disabled="state.connecting or state.connected"
+                                       t-model="state.email"/>
+                            </label>
+                            <label class="o_twilio_onboard_field">
+                                <span>Phone</span>
+                                <input type="tel"
+                                       class="form-control"
+                                       placeholder="+1…"
+                                       t-att-disabled="state.connecting or state.connected"
+                                       t-model="state.phone"/>
+                            </label>
+                        </div>
+
+                        <t t-if="state.error">
+                            <div class="alert alert-danger o_twilio_onboard_error" role="alert"
+                                 t-esc="state.error"/>
+                        </t>
+                    </t>
+
+                    <t t-elif="state.step === 4">
+                        <div class="o_twilio_onboard_icon o_twilio_onboard_icon--success">
+                            <i class="fa fa-check"/>
+                        </div>
+                        <h3 class="o_twilio_onboard_title">You're ready to call</h3>
+                        <p class="o_twilio_onboard_text">
+                            Twilio credentials are saved. Open the dialer after the softphone
+                            token registers successfully.
+                        </p>
+                        <t t-if="state.registeringToken">
+                            <div class="o_twilio_onboard_loading">
+                                <i class="fa fa-spinner fa-spin"/>
+                                <span>Registering Twilio token…</span>
+                            </div>
+                        </t>
+                        <t t-if="state.error">
+                            <div class="alert alert-danger o_twilio_onboard_error" role="alert"
+                                 t-esc="state.error"/>
+                        </t>
+                    </t>
+                </div>
+            </div>
+
+            <t t-set-slot="footer">
+                <t t-if="state.step &lt; 4 and !state.connected">
+                    <button type="button" class="btn btn-link me-auto"
+                            t-att-disabled="state.connecting"
+                            t-on-click="skipForNow">
+                        Skip for now
+                    </button>
+                </t>
+
+                <t t-if="state.step &gt; 1 and state.step &lt; 4 and !state.connected">
+                    <button type="button" class="btn btn-secondary"
+                            t-att-disabled="state.connecting"
+                            t-on-click="prevStep">
+                        Back
+                    </button>
+                </t>
+
+                <t t-if="state.step &lt; 3">
+                    <button type="button" class="btn btn-primary"
+                            t-on-click="nextStep">
+                        Next
+                    </button>
+                </t>
+
+                <t t-elif="state.step === 3 and !state.connected">
+                    <button type="button" class="btn btn-primary o_twilio_onboard_connect"
+                            t-att-disabled="!canConnect"
+                            t-on-click="onConnect">
+                        <t t-if="state.connecting">
+                            <i class="fa fa-spinner fa-spin me-1"/> Connecting…
+                        </t>
+                        <t t-else="">
+                            Connect
+                        </t>
+                    </button>
+                </t>
+
+                <t t-elif="state.step === 4 or state.connected">
+                    <button type="button" class="btn btn-primary"
+                            t-att-disabled="state.registeringToken"
+                            t-on-click="openDialer">
+                        <t t-if="state.registeringToken">
+                            <i class="fa fa-spinner fa-spin me-1"/> Registering…
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-phone me-1"/> Open Dialer
+                        </t>
+                    </button>
+                </t>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

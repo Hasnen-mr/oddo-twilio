@@ -77,6 +77,7 @@ class TwilioService(models.AbstractModel):
                     "phone_number": number.phone_number,
                     "friendly_name": number.friendly_name,
                     "voice_url": number.voice_url,
+                    "type": "incoming",
                 }
                 for number in client.incoming_phone_numbers.stream()
             ]
@@ -95,6 +96,40 @@ class TwilioService(models.AbstractModel):
 
         _logger.info("Found %s Twilio Incoming Phone Numbers.", len(phone_numbers))
         return phone_numbers
+
+    def get_outgoing_caller_ids(self, env=None):
+        """Verified Outgoing Caller IDs that can be used as outbound caller ID."""
+        env = env or self.env
+        ICP = env["ir.config_parameter"].sudo()
+        account_sid = ICP.get_param("twilio_dialer.account_sid")
+        auth_token = ICP.get_param("twilio_dialer.auth_token")
+
+        if not account_sid or not auth_token:
+            return []
+
+        try:
+            client = self.get_client(account_sid, auth_token)
+            caller_ids = [
+                {
+                    "sid": record.sid,
+                    "phone_number": record.phone_number,
+                    "friendly_name": record.friendly_name,
+                    "type": "outgoing_caller_id",
+                }
+                for record in client.outgoing_caller_ids.stream()
+            ]
+        except TwilioRestException as e:
+            if e.status in (401, 403):
+                _logger.warning("Twilio credentials invalid while listing outgoing caller IDs.")
+                return []
+            _logger.error("Twilio API error while retrieving outgoing caller IDs: %s", str(e))
+            return []
+        except Exception as e:
+            _logger.error("Failed to retrieve Twilio outgoing caller IDs: %s", str(e))
+            return []
+
+        _logger.info("Found %s Twilio Outgoing Caller IDs.", len(caller_ids))
+        return caller_ids
 
     def get_voice_url(self, env=None):
         ICP = (env or self.env)["ir.config_parameter"].sudo()
@@ -441,29 +476,115 @@ class TwilioService(models.AbstractModel):
         text = getattr(transcription, "text_content", "") or ""
         return text.strip()
 
-    def generate_access_token(self, env):
+    def ensure_voice_credentials(self, env, force_refresh=False):
+        """Ensure API key + TwiML app exist in Twilio; recreate if missing/stale.
+
+        Used when AccessTokenInvalid (20101) occurs because stored keys/apps
+        were deleted in the Twilio console.
+        """
+        ICP = env["ir.config_parameter"].sudo()
+        account_sid = (ICP.get_param("twilio_dialer.account_sid") or "").strip()
+        auth_token = (ICP.get_param("twilio_dialer.auth_token") or "").strip()
+        api_key_sid = (ICP.get_param("twilio_dialer.api_key_sid") or "").strip()
+        api_secret = (ICP.get_param("twilio_dialer.api_secret") or "").strip()
+        application_sid = (ICP.get_param("twilio_dialer.application_sid") or "").strip()
+
+        if not account_sid or not auth_token:
+            raise UserError(
+                "Twilio Account SID and Auth Token are required. "
+                "Open Configuration and save your credentials."
+            )
+
+        client = self.get_client(account_sid, auth_token)
+        changed = False
+
+        need_new_api_key = force_refresh or not api_key_sid or not api_secret
+        if not need_new_api_key:
+            try:
+                client.keys(api_key_sid).fetch()
+            except TwilioRestException as err:
+                if err.status == 404:
+                    _logger.warning(
+                        "Twilio API Key %s not found; regenerating.", api_key_sid
+                    )
+                    need_new_api_key = True
+                else:
+                    raise UserError(
+                        "Unable to verify Twilio API Key:\n%s" % err
+                    ) from err
+
+        if need_new_api_key:
+            api_key = self.generate_api_key(client)
+            api_key_sid = api_key["api_key_sid"]
+            api_secret = api_key["api_secret"]
+            ICP.set_param("twilio_dialer.api_key_sid", api_key_sid)
+            ICP.set_param("twilio_dialer.api_secret", api_secret)
+            ICP.set_param(
+                "twilio_dialer.api_key_friendly_name",
+                api_key.get("api_key_friendly_name", ""),
+            )
+            changed = True
+
+        voice_url = self.get_voice_url(env) or self._default_voice_url
+        # Recreate TwiML app only when missing or deleted (not on every token refresh).
+        need_new_app = not application_sid
+        if not need_new_app:
+            try:
+                client.applications(application_sid).fetch()
+            except TwilioRestException as err:
+                if err.status == 404:
+                    _logger.warning(
+                        "TwiML Application %s not found; recreating.",
+                        application_sid,
+                    )
+                    need_new_app = True
+                else:
+                    raise UserError(
+                        "Unable to verify TwiML Application:\n%s" % err
+                    ) from err
+
+        if need_new_app:
+            twiml_app = self.create_twiml_application(
+                client,
+                voice_url,
+                voice_method=self._default_voice_method,
+            )
+            application_sid = twiml_app["application_sid"]
+            ICP.set_param("twilio_dialer.application_sid", application_sid)
+            ICP.set_param(
+                "twilio_dialer.application_friendly_name",
+                twiml_app.get("application_friendly_name", ""),
+            )
+            ICP.set_param(
+                "twilio_dialer.voice_method",
+                twiml_app.get("voice_method", self._default_voice_method),
+            )
+            ICP.set_param("twilio_dialer.voice_url", voice_url)
+            changed = True
+
+        return {
+            "changed": changed,
+            "account_sid": account_sid,
+            "api_key_sid": api_key_sid,
+            "api_secret": api_secret,
+            "application_sid": application_sid,
+        }
+
+    def generate_access_token(self, env, force_refresh=False):
         ICP = env["ir.config_parameter"].sudo()
 
-        account_sid = ICP.get_param("twilio_dialer.account_sid")
-        api_key_sid = ICP.get_param("twilio_dialer.api_key_sid")
-        api_secret = ICP.get_param("twilio_dialer.api_secret")
-        application_sid = ICP.get_param("twilio_dialer.application_sid")
+        account_sid = (ICP.get_param("twilio_dialer.account_sid") or "").strip()
+        api_key_sid = (ICP.get_param("twilio_dialer.api_key_sid") or "").strip()
+        api_secret = (ICP.get_param("twilio_dialer.api_secret") or "").strip()
+        application_sid = (ICP.get_param("twilio_dialer.application_sid") or "").strip()
 
-        missing = []
-        if not account_sid:
-            missing.append("Account SID")
-        if not api_key_sid:
-            missing.append("API Key SID")
-        if not api_secret:
-            missing.append("API Secret")
-        if not application_sid:
-            missing.append("Application SID")
-
-        if missing:
-            raise UserError(
-                "Twilio configuration is incomplete. Missing: %s"
-                % ", ".join(missing)
-            )
+        incomplete = not all([account_sid, api_key_sid, api_secret, application_sid])
+        if force_refresh or incomplete:
+            creds = self.ensure_voice_credentials(env, force_refresh=force_refresh)
+            account_sid = creds["account_sid"]
+            api_key_sid = creds["api_key_sid"]
+            api_secret = creds["api_secret"]
+            application_sid = creds["application_sid"]
 
         identity = "id_odoo_%s" % account_sid
 
@@ -483,76 +604,91 @@ class TwilioService(models.AbstractModel):
         return token.to_jwt()
 
     def configure_incoming_phone_number(self, phone_number=None, env=None):
-        """Update the Twilio Incoming Phone Number to point to the Odoo incoming call webhook.
+        """Assign the stored TwiML Application SID to every Twilio Incoming Phone Number.
 
-        Sets voice_url=<web.base.url>/twilio_dialer/incoming_call and voice_method="POST".
-        Idempotent: skips update if the phone number is already configured with the target URL.
+        When Incoming Calls is enabled, each account phone number is updated with
+        ``voice_application_sid`` from ``twilio_dialer.application_sid`` so Twilio
+        routes voice through the Odoo TwiML Application.
         """
         env = env or self.env
         ICP = env["ir.config_parameter"].sudo()
         account_sid = ICP.get_param("twilio_dialer.account_sid")
         auth_token = ICP.get_param("twilio_dialer.auth_token")
-        phone_number = phone_number or ICP.get_param("twilio_dialer.phone_number")
+        application_sid = (ICP.get_param("twilio_dialer.application_sid") or "").strip()
 
         if not account_sid or not auth_token:
-            _logger.warning("configure_incoming_phone_number: Account SID or Auth Token missing.")
+            _logger.warning(
+                "configure_incoming_phone_number: Account SID or Auth Token missing."
+            )
             return False
 
-        if not phone_number:
-            _logger.warning("configure_incoming_phone_number: Twilio Phone Number missing.")
+        if not application_sid:
+            _logger.warning(
+                "configure_incoming_phone_number: TwiML Application SID missing in Odoo."
+            )
             return False
-
-        base_url = (ICP.get_param("web.base.url") or "").rstrip("/")
-        if not base_url or "localhost" in base_url or "127.0.0.1" in base_url:
-            target_voice_url = self._default_voice_url
-            target_voice_method = "GET"
-        else:
-            target_voice_url = f"{base_url}/twilio_dialer/incoming_call"
-            target_voice_method = "POST"
 
         try:
             client = self.get_client(account_sid, auth_token)
-            phone_number_norm = self.validate_phone_number(phone_number)
-            phone_clean = phone_number_norm.replace("+", "").strip()
-
-            matched_numbers = client.incoming_phone_numbers.list(phone_number=phone_number_norm)
-            all_numbers = []
-            if not matched_numbers:
-                all_numbers = list(client.incoming_phone_numbers.stream())
-                matched_numbers = [
-                    num for num in all_numbers
-                    if (getattr(num, "phone_number", "") or "").replace("+", "").strip() == phone_clean
-                ]
-            if not matched_numbers:
-                if not all_numbers:
-                    all_numbers = list(client.incoming_phone_numbers.stream())
-                if len(all_numbers) == 1:
-                    matched_numbers = [all_numbers[0]]
-
-            if not matched_numbers:
-                _logger.warning("configure_incoming_phone_number: Number %s not found in Twilio account %s", phone_number_norm, account_sid)
+            numbers = list(client.incoming_phone_numbers.stream())
+            if not numbers:
+                _logger.warning(
+                    "configure_incoming_phone_number: No Incoming Phone Numbers found "
+                    "in Twilio account %s",
+                    account_sid,
+                )
                 return False
 
-            target_number = matched_numbers[0]
-            current_voice_url = getattr(target_number, "voice_url", "") or ""
-            current_voice_method = getattr(target_number, "voice_method", "") or ""
+            updated = 0
+            skipped = 0
+            for number in numbers:
+                number_sid = getattr(number, "sid", "") or ""
+                phone = getattr(number, "phone_number", "") or ""
+                current_app = (getattr(number, "voice_application_sid", None) or "").strip()
 
-            if current_voice_url == target_voice_url and current_voice_method == target_voice_method:
-                _logger.info("Twilio Incoming Phone Number %s (SID %s) is already configured with voice_url=%s", phone_number_norm, target_number.sid, target_voice_url)
-                return True
+                if current_app == application_sid:
+                    skipped += 1
+                    _logger.info(
+                        "Phone number %s (%s) already has Application SID %s",
+                        phone,
+                        number_sid,
+                        application_sid,
+                    )
+                    continue
 
-            _logger.info("Updating Twilio Incoming Phone Number %s (SID %s) with voice_url=%s, voice_method=%s", phone_number_norm, target_number.sid, target_voice_url, target_voice_method)
-            target_number.update(
-                voice_url=target_voice_url,
-                voice_method=target_voice_method,
+                _logger.info(
+                    "Assigning Application SID %s to phone number %s (%s)",
+                    application_sid,
+                    phone,
+                    number_sid,
+                )
+                number.update(voice_application_sid=application_sid)
+                updated += 1
+
+            _logger.info(
+                "Incoming call Application assign complete: updated=%s skipped=%s total=%s app=%s",
+                updated,
+                skipped,
+                len(numbers),
+                application_sid,
             )
             return True
 
         except TwilioRestException as e:
-            _logger.error("Twilio REST API error while configuring incoming phone number %s: %s", phone_number, e)
-            raise UserError(f"Twilio API error while configuring incoming phone number:\n{str(e)}")
+            _logger.error(
+                "Twilio REST API error while assigning Application SID to phone numbers: %s",
+                e,
+            )
+            raise UserError(
+                "Twilio API error while assigning Application to phone numbers:\n%s" % e
+            )
         except UserError:
             raise
         except Exception as e:
-            _logger.exception("Unexpected error while configuring incoming phone number: %s", e)
-            raise UserError(f"Failed to configure Twilio Incoming Phone Number:\n{str(e)}")
+            _logger.exception(
+                "Unexpected error while assigning Application SID to phone numbers: %s",
+                e,
+            )
+            raise UserError(
+                "Failed to assign TwiML Application to Twilio phone numbers:\n%s" % e
+            )

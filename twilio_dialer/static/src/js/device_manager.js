@@ -29,6 +29,9 @@ class DeviceManager {
         this._activeConnection = null;
         this._activePartnerId = null;
         this._activeQueueLineId = null;
+        this._tokenRegenAttempted = false;
+        this._registering = false;
+        this._dndEnabled = false;
     }
 
     _setStatus(status) {
@@ -59,9 +62,28 @@ class DeviceManager {
         return () => {};
     }
 
+    _isAccessTokenInvalid(error) {
+        if (!error) {
+            return false;
+        }
+        const code = error.code || error.twilioError?.code;
+        const name = String(error.name || error.twilioError?.name || "");
+        const message = String(error.message || "");
+        return (
+            code === 20101 ||
+            name.includes("AccessTokenInvalid") ||
+            message.includes("AccessTokenInvalid") ||
+            message.includes("unable to validate your Access Token")
+        );
+    }
+
     async initialize(onStatusChange) {
         if (onStatusChange) {
             this._onStatusChange = onStatusChange;
+        }
+        if (this._dndEnabled) {
+            this._setStatus(STATUS.DISCONNECTED);
+            return;
         }
         if (this.device && (this.status === STATUS.READY || this.status === STATUS.REGISTERING || this.status === STATUS.INCOMING || this.status === STATUS.CONNECTED)) {
             console.log("[DeviceManager] Already initialized, status:", this.status);
@@ -69,24 +91,144 @@ class DeviceManager {
             return;
         }
         this._destroyed = false;
+        this._tokenRegenAttempted = false;
 
         try {
             this._setStatus(STATUS.INITIALIZING);
             this._setStatus(STATUS.FETCHING_TOKEN);
 
-            const token = await this._fetchToken();
+            const token = await this._fetchToken(false);
             if (this._destroyed) return;
 
             this._setStatus(STATUS.REGISTERING);
             await this._createDevice(token);
         } catch (error) {
             console.error("[DeviceManager] initialize() failed:", error);
+            if (!this._destroyed && this._isAccessTokenInvalid(error)) {
+                await this._recoverInvalidAccessToken(error);
+                return;
+            }
             this._setStatus(STATUS.ERROR);
         }
     }
 
-    async _fetchToken() {
-        const response = await fetch("/twilio_dialer/token", {
+    /**
+     * Tear down the Device, fetch a fresh token (optionally regenerating
+     * Twilio credentials), register, and resolve when READY or ERROR.
+     * @returns {Promise<boolean>} true when registered successfully
+     */
+    async ensureRegistered({ regenerate = false, timeoutMs = 45000 } = {}) {
+        this._destroyed = false;
+        this._dndEnabled = false;
+        this._tokenRegenAttempted = false;
+        this._teardownDevice({ keepListeners: true });
+
+        let settled = false;
+        let resolveFn = () => {};
+        const result = new Promise((resolve) => {
+            resolveFn = resolve;
+        });
+        const finish = (ok) => {
+            if (settled) {
+                return;
+            }
+            settled = true;
+            clearTimeout(timer);
+            unsub();
+            resolveFn(ok);
+        };
+        const timer = setTimeout(() => finish(false), timeoutMs);
+        const unsub = this.onStatusChange((status) => {
+            if (status === STATUS.READY) {
+                finish(true);
+            } else if (status === STATUS.ERROR) {
+                finish(false);
+            }
+        });
+
+        try {
+            this._setStatus(STATUS.INITIALIZING);
+            this._setStatus(STATUS.FETCHING_TOKEN);
+            const token = await this._fetchToken(regenerate);
+            if (this._destroyed) {
+                finish(false);
+                return result;
+            }
+            this._setStatus(STATUS.REGISTERING);
+            await this._createDevice(token);
+            if (this.status === STATUS.READY) {
+                finish(true);
+            }
+        } catch (error) {
+            console.error("[DeviceManager] ensureRegistered() failed:", error);
+            if (!this._destroyed && this._isAccessTokenInvalid(error)) {
+                try {
+                    await this._recoverInvalidAccessToken(error);
+                    if (this.status === STATUS.READY) {
+                        finish(true);
+                        return result;
+                    }
+                } catch (recoverError) {
+                    console.error("[DeviceManager] recover during ensureRegistered failed:", recoverError);
+                }
+            }
+            this._setStatus(STATUS.ERROR);
+            finish(false);
+        }
+
+        return result;
+    }
+
+    get isDoNotDisturb() {
+        return this._dndEnabled;
+    }
+
+    async setDoNotDisturb(enabled) {
+        this._dndEnabled = !!enabled;
+        if (this._dndEnabled) {
+            if (this.device && typeof this.device.unregister === "function") {
+                try {
+                    const result = this.device.unregister();
+                    if (result && typeof result.then === "function") {
+                        await result;
+                    }
+                } catch (err) {
+                    console.warn("[DeviceManager] DND unregister failed:", err);
+                }
+            }
+            this._setStatus(STATUS.DISCONNECTED);
+            return true;
+        }
+        return this.ensureRegistered({ regenerate: false });
+    }
+
+    _teardownDevice({ keepListeners = false } = {}) {
+        if (this.device) {
+            try {
+                if (typeof this.device.destroy === "function") {
+                    this.device.destroy();
+                }
+            } catch (err) {
+                console.warn("[DeviceManager] device.destroy() error:", err);
+            }
+            this.device = null;
+        }
+        this.token = null;
+        this._activeConnection = null;
+        this._activePartnerId = null;
+        this._activeQueueLineId = null;
+        this._registering = false;
+        if (!keepListeners) {
+            this._onStatusChange = null;
+            this._statusListeners.clear();
+        }
+    }
+
+    async _fetchToken(regenerate = false) {
+        const url = regenerate
+            ? "/twilio_dialer/token?refresh=1"
+            : "/twilio_dialer/token";
+        const response = await fetch(url, {
             method: "GET",
             credentials: "same-origin",
         });
@@ -111,7 +253,7 @@ class DeviceManager {
         }
         this.token = data.token;
 
-        console.log("JWT received");
+        console.log(regenerate ? "JWT regenerated" : "JWT received");
         return data.token;
     }
 
@@ -126,11 +268,65 @@ class DeviceManager {
         return window.Twilio;
     }
 
+    _teardownDevice() {
+        if (!this.device) {
+            return;
+        }
+        try {
+            if (typeof this.device.removeAllListeners === "function") {
+                this.device.removeAllListeners();
+            }
+        } catch (e) {
+            // ignore
+        }
+        try {
+            if (typeof this.device.destroy === "function") {
+                this.device.destroy();
+            } else if (typeof this.device.unregister === "function") {
+                const result = this.device.unregister();
+                if (result && typeof result.catch === "function") {
+                    result.catch(() => {});
+                }
+            }
+        } catch (e) {
+            console.warn("[DeviceManager] device teardown warning:", e);
+        }
+        this.device = null;
+        this._activeConnection = null;
+    }
+
+    async _recoverInvalidAccessToken(error) {
+        if (this._destroyed || this._tokenRegenAttempted) {
+            console.error("[DeviceManager] Access token still invalid after regenerate:", error);
+            this._setStatus(STATUS.ERROR);
+            return;
+        }
+        this._tokenRegenAttempted = true;
+        console.warn(
+            "[DeviceManager] AccessTokenInvalid — regenerating Twilio credentials and token..."
+        );
+        try {
+            this._teardownDevice();
+            this._setStatus(STATUS.FETCHING_TOKEN);
+            const token = await this._fetchToken(true);
+            if (this._destroyed) {
+                return;
+            }
+            this._setStatus(STATUS.REGISTERING);
+            await this._createDevice(token);
+        } catch (regenError) {
+            console.error("[DeviceManager] Token regenerate failed:", regenError);
+            this._setStatus(STATUS.ERROR);
+        }
+    }
+
     async _createDevice(token) {
         if (this._destroyed) return;
 
         const Twilio = await this._ensureTwilioSdk();
         if (this._destroyed) return;
+
+        this._teardownDevice();
 
         this.device = new Twilio.Device(token, {
             codecPreferences: ["opus", "pcmu"],
@@ -150,13 +346,23 @@ class DeviceManager {
 
             console.groupEnd();
 
-            if (!this._destroyed) {
-                this._setStatus(STATUS.ERROR);
+            if (this._destroyed) {
+                return;
             }
+            if (this._isAccessTokenInvalid(error)) {
+                // Fire-and-forget; catch so UncaughtPromiseError is avoided.
+                this._recoverInvalidAccessToken(error).catch((err) => {
+                    console.error("[DeviceManager] recover failed:", err);
+                    this._setStatus(STATUS.ERROR);
+                });
+                return;
+            }
+            this._setStatus(STATUS.ERROR);
         });
 
         this.device.on("registered", () => {
             if (!this._destroyed) {
+                this._tokenRegenAttempted = false;
                 this._setStatus(STATUS.READY);
             }
             console.log("[Twilio JS] Device registered successfully");
@@ -180,6 +386,17 @@ class DeviceManager {
 
         this.device.on("incoming", (call) => {
             console.log("[Twilio JS] device.on('incoming') event fired!", call);
+            if (this._dndEnabled) {
+                console.log("[Twilio JS] DND enabled — rejecting incoming call");
+                try {
+                    if (typeof call.reject === "function") {
+                        call.reject();
+                    }
+                } catch (err) {
+                    console.warn("[Twilio JS] DND reject failed:", err);
+                }
+                return;
+            }
             this._activeConnection = call;
             const fromNumber = call.parameters?.From || call.parameters?.from || "Unknown";
             const callSid = call.parameters?.CallSid || "";
@@ -196,9 +413,26 @@ class DeviceManager {
         });
 
         console.log("[Twilio JS] Creating Twilio Device with token identity");
-        console.log(this.device);
 
-        this.device.register();
+        if (this._registering) {
+            return;
+        }
+        this._registering = true;
+        try {
+            const registerResult = this.device.register();
+            if (registerResult && typeof registerResult.then === "function") {
+                await registerResult;
+            }
+        } catch (error) {
+            console.error("[Twilio JS] device.register() failed:", error);
+            if (this._isAccessTokenInvalid(error)) {
+                await this._recoverInvalidAccessToken(error);
+                return;
+            }
+            throw error;
+        } finally {
+            this._registering = false;
+        }
     }
 
     onIncomingCall(callback) {
@@ -368,7 +602,7 @@ class DeviceManager {
 
     async _refreshToken() {
         try {
-            const token = await this._fetchToken();
+            const token = await this._fetchToken(false);
             if (!this.device || this._destroyed) {
                 return;
             }
@@ -379,31 +613,32 @@ class DeviceManager {
             }
         } catch (error) {
             console.error("Failed to refresh Twilio token:", error);
-            if (!this._destroyed) {
-                try {
-                    const retryToken = await this._fetchToken();
-                    if (this.device && !this._destroyed) {
-                        const retryResult = this.device.updateToken(retryToken);
-                        if (retryResult && typeof retryResult.then === "function") {
-                            await retryResult;
-                        }
-                        this._setStatus(STATUS.READY);
-                        return;
-                    }
-                } catch (retryError) {
-                    console.error("Twilio token refresh retry failed:", retryError);
-                }
-
-                try {
-                    if (this.device && typeof this.device.register === "function") {
-                        this.device.register();
-                    }
-                } catch (registerError) {
-                    console.error("Twilio device re-register failed:", registerError);
-                }
-
-                this._setStatus(STATUS.ERROR);
+            if (this._destroyed) {
+                return;
             }
+            if (this._isAccessTokenInvalid(error)) {
+                await this._recoverInvalidAccessToken(error);
+                return;
+            }
+            try {
+                const retryToken = await this._fetchToken(true);
+                if (this.device && !this._destroyed) {
+                    const retryResult = this.device.updateToken(retryToken);
+                    if (retryResult && typeof retryResult.then === "function") {
+                        await retryResult;
+                    }
+                    this._setStatus(STATUS.READY);
+                    return;
+                }
+            } catch (retryError) {
+                console.error("Twilio token refresh retry failed:", retryError);
+                if (this._isAccessTokenInvalid(retryError)) {
+                    await this._recoverInvalidAccessToken(retryError);
+                    return;
+                }
+            }
+
+            this._setStatus(STATUS.ERROR);
         }
     }
 
@@ -462,6 +697,11 @@ class DeviceManager {
             console.log("Solutions:", error.solutions);
 
             console.groupEnd();
+
+            if (this._isAccessTokenInvalid(error)) {
+                await this._recoverInvalidAccessToken(error);
+                return false;
+            }
 
             this._setStatus(STATUS.ERROR);
             return false;
@@ -527,17 +767,8 @@ class DeviceManager {
 
     destroy() {
         this._destroyed = true;
-        if (this.device) {
-            this.device.destroy();
-            this.device = null;
-        }
-        this.token = null;
-        this._activeConnection = null;
-        this._activePartnerId = null;
-        this._activeQueueLineId = null;
-        this._onStatusChange = null;
-        // Clear all multi-listeners so no stale callbacks remain after re-init
-        this._statusListeners.clear();
+        this._dndEnabled = false;
+        this._teardownDevice({ keepListeners: false });
     }
 }
 

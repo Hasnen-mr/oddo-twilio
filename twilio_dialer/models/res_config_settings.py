@@ -4,6 +4,8 @@ import logging
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
+from odoo.release import version as odoo_release_version
+from twilio.base.exceptions import TwilioRestException
 from ..services import MyBroadcastAPI, MyBroadcastAPIError, ZantaTechAPI, ZantaTechAPIError
 
 _logger = logging.getLogger(__name__)
@@ -96,6 +98,12 @@ class ResConfigSettings(models.TransientModel):
     twilio_incoming_voicemail_text = fields.Text(
         string="Voicemail Text",
     )
+    twilio_incoming_welcome_greeting = fields.Boolean(
+        string="Welcome Greeting",
+    )
+    twilio_incoming_welcome_greeting_text = fields.Text(
+        string="Greeting Message Text",
+    )
     twilio_incoming_forward = fields.Boolean(
         string="Forward Calls",
     )
@@ -121,6 +129,10 @@ class ResConfigSettings(models.TransientModel):
     twilio_call_settings_error = fields.Char(readonly=True)
     twilio_call_settings_autosave = fields.Char(
         string="Call Settings Autosave",
+        default="1",
+    )
+    twilio_ai_settings_link = fields.Char(
+        string="AI Settings Link",
         default="1",
     )
 
@@ -177,6 +189,56 @@ class ResConfigSettings(models.TransientModel):
         default=False,
         help="When enabled, transcript/summary are generated automatically after a completed call (when recording or notes are available).",
     )
+    twilio_ai_api_key_issue = fields.Boolean(
+        string="AI API Key Issue",
+        compute="_compute_twilio_ai_api_key_issue",
+    )
+
+    @api.depends(
+        "twilio_ai_provider",
+        "twilio_openai_api_key",
+        "twilio_anthropic_api_key",
+        "twilio_gemini_api_key",
+        "twilio_deepgram_api_key",
+    )
+    def _compute_twilio_ai_api_key_issue(self):
+        icp = self.env["ir.config_parameter"].sudo()
+        param_map = {
+            "openai": "twilio_dialer.openai_api_key",
+            "anthropic": "twilio_dialer.anthropic_api_key",
+            "gemini": "twilio_dialer.gemini_api_key",
+            "deepgram": "twilio_dialer.deepgram_api_key",
+        }
+        for record in self:
+            provider = record.twilio_ai_provider or icp.get_param(
+                "twilio_dialer.ai_provider", "openai"
+            ) or "openai"
+            field_map = {
+                "openai": record.twilio_openai_api_key,
+                "anthropic": record.twilio_anthropic_api_key,
+                "gemini": record.twilio_gemini_api_key,
+                "deepgram": record.twilio_deepgram_api_key,
+            }
+            # Password fields often round-trip empty; fall back to stored config.
+            api_key = (field_map.get(provider) or "").strip()
+            if not api_key:
+                api_key = (icp.get_param(param_map.get(provider, ""), "") or "").strip()
+            record.twilio_ai_api_key_issue = not self._is_plausible_ai_api_key(
+                provider, api_key
+            )
+
+    @staticmethod
+    def _is_plausible_ai_api_key(provider, api_key):
+        """Lightweight local check — empty or obviously bad keys are flagged."""
+        if not api_key:
+            return False
+        if len(api_key) < 12:
+            return False
+        if provider == "openai":
+            return api_key.startswith("sk-")
+        if provider == "anthropic":
+            return api_key.startswith("sk-ant-")
+        return True
 
     @api.depends("twilio_api_key_sid", "twilio_application_sid")
     def _compute_twilio_status(self):
@@ -259,6 +321,11 @@ class ResConfigSettings(models.TransientModel):
             "twilio_incoming_record": incoming.get("record"),
             "twilio_incoming_voicemail": incoming.get("voicemail"),
             "twilio_incoming_voicemail_text": incoming.get("voicemailText", ""),
+            "twilio_incoming_welcome_greeting": incoming.get("welcomeGreeting", incoming.get("welcome")),
+            "twilio_incoming_welcome_greeting_text": incoming.get(
+                "welcomeGreetingText",
+                incoming.get("welcomeText", ""),
+            ),
             "twilio_incoming_forward": incoming.get("forward"),
             "twilio_incoming_forward_to": incoming.get("forwardTo", ""),
             "twilio_outgoing_record": outgoing.get("record"),
@@ -355,6 +422,8 @@ class ResConfigSettings(models.TransientModel):
             "twilio_incoming_transcription": self.twilio_incoming_transcription,
             "twilio_incoming_voicemail": self.twilio_incoming_voicemail,
             "twilio_incoming_voicemail_text": self.twilio_incoming_voicemail_text or "",
+            "twilio_incoming_welcome_greeting": self.twilio_incoming_welcome_greeting,
+            "twilio_incoming_welcome_greeting_text": self.twilio_incoming_welcome_greeting_text or "",
             "twilio_incoming_forward": self.twilio_incoming_forward,
             "twilio_incoming_forward_to": self.twilio_incoming_forward_to or "",
             "twilio_outgoing_record": self.twilio_outgoing_record,
@@ -407,6 +476,8 @@ class ResConfigSettings(models.TransientModel):
 
         voicemail = bool(values.get("twilio_incoming_voicemail"))
         voicemail_text = values.get("twilio_incoming_voicemail_text") or ""
+        welcome_greeting = bool(values.get("twilio_incoming_welcome_greeting"))
+        welcome_greeting_text = values.get("twilio_incoming_welcome_greeting_text") or ""
         forward = bool(values.get("twilio_incoming_forward"))
         forward_to = values.get("twilio_incoming_forward_to") or ""
 
@@ -421,9 +492,14 @@ class ResConfigSettings(models.TransientModel):
         outgoing_transcription = bool(values.get("twilio_outgoing_transcription"))
 
         icp = self.env["ir.config_parameter"].sudo()
-        # Persist per-channel transcription settings
+        # Persist local copies for webhook fallback / greeting playback
         icp.set_param("twilio_dialer.incoming_transcription", incoming_transcription)
         icp.set_param("twilio_dialer.outgoing_transcription", outgoing_transcription)
+        icp.set_param("twilio_dialer.incoming_welcome_greeting", welcome_greeting)
+        icp.set_param(
+            "twilio_dialer.incoming_welcome_greeting_text",
+            welcome_greeting_text,
+        )
 
         # Ensure AI transcript flag is enabled automatically when any UI transcription
         # option is turned on. Do not automatically disable AI transcripts when the
@@ -485,9 +561,15 @@ class ResConfigSettings(models.TransientModel):
 
         if values.get("twilio_incoming_enabled"):
             try:
-                self.env["twilio.service"].configure_incoming_phone_number(phone_number=phone_number)
+                # Assign stored TwiML Application SID to every Twilio phone number.
+                self.env["twilio.service"].configure_incoming_phone_number(
+                    phone_number=phone_number
+                )
             except Exception as error:
-                _logger.warning("Failed to configure Twilio Incoming Phone Number webhook: %s", error)
+                _logger.warning(
+                    "Failed to assign TwiML Application to Twilio phone numbers: %s",
+                    error,
+                )
 
         settings = {
             "incomingCallSetting": {
@@ -496,6 +578,8 @@ class ResConfigSettings(models.TransientModel):
                 "transcription": incoming_transcription,
                 "voicemail": voicemail,
                 "voicemailText": voicemail_text,
+                "welcomeGreeting": welcome_greeting,
+                "welcomeGreetingText": welcome_greeting_text,
                 "forward": forward,
                 "forwardTo": forward_to,
             },
@@ -631,7 +715,24 @@ class ResConfigSettings(models.TransientModel):
         client = service.get_client(self.twilio_account_sid, self.twilio_auth_token)
         icp = self.env["ir.config_parameter"].sudo()
 
-        if force_new_api_key or not self.twilio_api_key_sid or not self.twilio_api_secret:
+        # Recreate API key when missing, forced, or deleted in Twilio (causes AccessTokenInvalid 20101).
+        need_new_api_key = force_new_api_key or not self.twilio_api_key_sid or not self.twilio_api_secret
+        if not need_new_api_key and self.twilio_api_key_sid:
+            try:
+                client.keys(self.twilio_api_key_sid).fetch()
+            except TwilioRestException as err:
+                if err.status == 404:
+                    _logger.warning(
+                        "Stored Twilio API Key %s not found; regenerating.",
+                        self.twilio_api_key_sid,
+                    )
+                    need_new_api_key = True
+                else:
+                    raise UserError(
+                        "Unable to verify Twilio API Key:\n%s" % err
+                    ) from err
+
+        if need_new_api_key:
             api_key = service.generate_api_key(client)
             self.twilio_api_key_sid = api_key["api_key_sid"]
             self.twilio_api_secret = api_key["api_secret"]
@@ -657,8 +758,22 @@ class ResConfigSettings(models.TransientModel):
                     voice_url,
                     voice_method="GET",
                 )
-        except UserError:
-            if not self.twilio_application_sid:
+        except UserError as error:
+            # Stale Application SID (deleted in Twilio console) → create a new one.
+            err_text = str(error).lower()
+            if self.twilio_application_sid and (
+                "20404" in err_text or "not found" in err_text or "404" in err_text
+            ):
+                _logger.warning(
+                    "Stored TwiML Application %s not found; recreating.",
+                    self.twilio_application_sid,
+                )
+                twiml_app = service.create_twiml_application(
+                    client,
+                    voice_url,
+                    voice_method="GET",
+                )
+            elif not self.twilio_application_sid:
                 twiml_app = service.create_twiml_application(
                     client,
                     voice_url,
@@ -761,7 +876,7 @@ class ResConfigSettings(models.TransientModel):
         result = super().create(vals_list)
         return result
 
-    def _submit_module_registration(self):
+    def _submit_module_registration(self, odoo_version=None):
         """Notify ZantaTech when a Twilio account is connected to the module."""
         self.ensure_one()
         icp = self.env["ir.config_parameter"].sudo()
@@ -779,12 +894,16 @@ class ResConfigSettings(models.TransientModel):
             or icp.get_param("twilio_dialer.contact_phone")
             or ""
         )
+        version = (odoo_version or "").strip() or odoo_release_version
+        title = "Odoo Module login"
+        if version:
+            title = "%s %s" % (title, version)
         payload = {
             "accountSid": account_sid,
             "email": email,
             "phone": phone,
             "message": "New Registration",
-            "title": "Odoo Module login",
+            "title": title,
         }
         try:
             ZantaTechAPI().submit_feedback(payload)
@@ -1006,3 +1125,58 @@ class ResConfigSettings(models.TransientModel):
             "Twilio Configuration",
             "Synced again. API key, application ID, and phone numbers are up to date.",
         )
+
+    @api.model
+    def twilio_wizard_connect(
+        self,
+        account_sid="",
+        auth_token="",
+        email="",
+        phone="",
+        odoo_version="",
+    ):
+        """Connect Twilio from the dashboard onboarding wizard.
+
+        Saves credentials, generates API key / TwiML app / phone numbers,
+        submits registration feedback (email, phone, Odoo version), and
+        returns a JSON-friendly result for the OWL wizard.
+        """
+        account_sid = (account_sid or "").strip()
+        auth_token = (auth_token or "").strip()
+        email = (email or "").strip()
+        phone = (phone or "").strip()
+        odoo_version = (odoo_version or "").strip()
+
+        if not account_sid:
+            return {"success": False, "error": "Please enter your Twilio Account SID."}
+        if not auth_token:
+            return {"success": False, "error": "Please enter your Twilio Auth Token."}
+        if not email:
+            return {"success": False, "error": "Email is required."}
+
+        settings = self.create(
+            {
+                "twilio_account_sid": account_sid,
+                "twilio_auth_token": auth_token,
+                "twilio_contact_email": email,
+                "twilio_contact_phone": phone or False,
+            }
+        )
+        try:
+            settings.validate_contact_email()
+            settings._generate_twilio_configuration_values(force_new_api_key=True)
+            settings.with_context(twilio_skip_auto_generate=True).set_values()
+            settings._submit_module_registration(odoo_version=odoo_version)
+        except UserError as error:
+            return {"success": False, "error": str(error)}
+        except Exception as error:
+            _logger.exception("Twilio wizard connect failed")
+            return {
+                "success": False,
+                "error": "Could not connect Twilio: %s" % error,
+            }
+
+        return {
+            "success": True,
+            "phone_number": settings.twilio_phone_number or "",
+        }

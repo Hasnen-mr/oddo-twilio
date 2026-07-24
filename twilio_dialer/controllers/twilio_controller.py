@@ -19,9 +19,24 @@ class TwilioController(http.Controller):
 
     @http.route("/twilio_dialer/token", type="http", auth="user", methods=["GET"])
     def get_token(self, **kwargs):
+        """Return a Voice Access Token.
+
+        Pass refresh=1 (or regenerate=1) to recreate API key / TwiML app when
+        Twilio rejects the token (AccessTokenInvalid 20101).
+        """
         try:
-            token = request.env["twilio.service"].generate_access_token(request.env)
-            return request.make_json_response({"success": True, "token": token})
+            force_refresh = str(
+                kwargs.get("refresh") or kwargs.get("regenerate") or ""
+            ).lower() in ("1", "true", "yes")
+            service = request.env["twilio.service"]
+            token = service.generate_access_token(
+                request.env, force_refresh=force_refresh
+            )
+            return request.make_json_response({
+                "success": True,
+                "token": token,
+                "regenerated": force_refresh,
+            })
         except Exception as e:
             _logger.error("Failed to generate Twilio access token: %s", str(e))
             return request.make_json_response(
@@ -44,6 +59,23 @@ class TwilioController(http.Controller):
             if not phone_numbers:
                 phone_numbers = service.get_incoming_phone_numbers()
 
+            # Ensure type is set on cached incoming numbers.
+            for item in phone_numbers:
+                if isinstance(item, dict) and not item.get("type"):
+                    item["type"] = "incoming"
+
+            seen = {
+                item.get("phone_number")
+                for item in phone_numbers
+                if isinstance(item, dict) and item.get("phone_number")
+            }
+            for caller_id in service.get_outgoing_caller_ids():
+                number = caller_id.get("phone_number")
+                if not number or number in seen:
+                    continue
+                seen.add(number)
+                phone_numbers.append(caller_id)
+
             return {
                 "phone_number": phone_number,
                 "phone_numbers": phone_numbers,
@@ -64,12 +96,24 @@ class TwilioController(http.Controller):
     )
     def call_setup(self, **kwargs):
         try:
+            params = kwargs or dict(request.httprequest.form) or dict(request.httprequest.args)
+            direction = (
+                params.get("Direction")
+                or params.get("direction")
+                or request.httprequest.args.get("Direction", "")
+                or ""
+            ).lower()
+
+            # Phone numbers assigned to the TwiML App hit this URL for inbound PSTN calls.
+            if direction.startswith("inbound"):
+                return self.incoming_call(**kwargs)
+
             caller_id = (
-                kwargs.get("From")
-                or kwargs.get("from")
-                or kwargs.get("from_number")
-                or kwargs.get("CallerId")
-                or kwargs.get("callerId")
+                params.get("From")
+                or params.get("from")
+                or params.get("from_number")
+                or params.get("CallerId")
+                or params.get("callerId")
                 or request.httprequest.args.get("From", "")
                 or request.httprequest.args.get("from", "")
                 or request.httprequest.args.get("from_number", "")
@@ -80,8 +124,8 @@ class TwilioController(http.Controller):
                 caller_id = request.env["twilio.service"].get_verified_twilio_phone_number()
 
             to_number = (
-                kwargs.get("To")
-                or kwargs.get("to")
+                params.get("To")
+                or params.get("to")
                 or request.httprequest.args.get("To", "")
                 or request.httprequest.args.get("to", "")
             )
@@ -311,6 +355,24 @@ class TwilioController(http.Controller):
             forward_to = incoming.get("forwardTo", "") if isinstance(incoming, dict) else ""
             voicemail = incoming.get("voicemail", False) if isinstance(incoming, dict) else False
             voicemail_text = incoming.get("voicemailText", "") if isinstance(incoming, dict) else ""
+            welcome_greeting = incoming.get("welcomeGreeting", incoming.get("welcome", False)) if isinstance(incoming, dict) else False
+            welcome_greeting_text = (
+                incoming.get("welcomeGreetingText", incoming.get("welcomeText", ""))
+                if isinstance(incoming, dict)
+                else ""
+            )
+            # Fallback to locally persisted greeting values
+            if not welcome_greeting:
+                welcome_greeting = icp.get_param("twilio_dialer.incoming_welcome_greeting") in (
+                    "True",
+                    "true",
+                    "1",
+                )
+            if not welcome_greeting_text:
+                welcome_greeting_text = icp.get_param(
+                    "twilio_dialer.incoming_welcome_greeting_text",
+                    "",
+                ) or ""
 
             # If incoming calls are not allowed, reject
             if not allow:
@@ -318,16 +380,25 @@ class TwilioController(http.Controller):
                 return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
 
             caller_id = icp.get_param("twilio_dialer.phone_number") or None
+            greeting_say = ""
+            if welcome_greeting:
+                greeting_say = (
+                    welcome_greeting_text.strip()
+                    if isinstance(welcome_greeting_text, str) and welcome_greeting_text.strip()
+                    else "Thank you for calling. Please wait while we connect you."
+                )
 
             # Build TwiML response based on routing settings
             if forward and forward_to and isinstance(forward_to, str) and forward_to.strip() and any(ch.isdigit() for ch in forward_to):
                 # Forward to external phone number
                 number = escape(forward_to)
                 record_attr = ' record="record-from-answer-dual"' if record_call else ""
+                say_xml = f"<Say>{escape(greeting_say)}</Say>" if greeting_say else ""
                 twiml = (
                     '<?xml version="1.0" encoding="UTF-8"?>'
-                    '<Response><Dial callerId="{caller_id}" answerOnBridge="true"{record}>{number}</Dial></Response>'
+                    '<Response>{say}<Dial callerId="{caller_id}" answerOnBridge="true"{record}>{number}</Dial></Response>'
                 ).format(
+                    say=say_xml,
                     caller_id=escape(caller_id or from_number or ""),
                     record=record_attr,
                     number=number,
@@ -338,8 +409,11 @@ class TwilioController(http.Controller):
             if voicemail and not forward:
                 # Answer and record voicemail
                 say = escape(voicemail_text) if voicemail_text else "Please leave a message after the tone."
-                twiml = ('<?xml version="1.0" encoding="UTF-8"?>'
-                         '<Response><Say>{say}</Say><Record maxLength="120" playBeep="true"/></Response>').format(say=say)
+                greet_xml = f"<Say>{escape(greeting_say)}</Say>" if greeting_say else ""
+                twiml = (
+                    '<?xml version="1.0" encoding="UTF-8"?>'
+                    '<Response>{greet}<Say>{say}</Say><Record maxLength="120" playBeep="true"/></Response>'
+                ).format(greet=greet_xml, say=say)
                 _logger.info("[Twilio Incoming] TwiML generated (Voicemail): %s", twiml)
                 return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
 
@@ -350,6 +424,8 @@ class TwilioController(http.Controller):
             if _TWILIO_TWIML_AVAILABLE:
                 # Use the official twilio-python SDK — guaranteed schema-correct TwiML
                 response = VoiceResponse()
+                if greeting_say:
+                    response.say(greeting_say)
                 dial = Dial(
                     caller_id=caller_id_val,
                     answer_on_bridge=True,
@@ -361,14 +437,17 @@ class TwilioController(http.Controller):
             else:
                 # Fallback: manual construction (plain text-content form — valid per Twilio docs)
                 record_attr = ' record="record-from-answer-dual"' if record_call else ""
+                say_xml = f"<Say>{escape(greeting_say)}</Say>" if greeting_say else ""
                 twiml = (
                     '<?xml version="1.0" encoding="UTF-8"?>'
                     '<Response>'
+                    '{say}'
                     '<Dial callerId="{caller_id}" answerOnBridge="true"{record}>'
                     '<Client>{client}</Client>'
                     '</Dial>'
                     '</Response>'
                 ).format(
+                    say=say_xml,
                     caller_id=escape(caller_id_val),
                     record=record_attr,
                     client=escape(client_identity),

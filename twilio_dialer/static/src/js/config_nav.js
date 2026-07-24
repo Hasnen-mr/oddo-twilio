@@ -6,6 +6,7 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { BillingDashboard } from "./billing";
+import { setUiField } from "./settings_ui_field";
 
 const SECTIONS = [
     { id: "call", label: _t("Call Settings"), icon: "fa-phone" },
@@ -84,25 +85,65 @@ export class TwilioConfigNav extends Component {
         if (!this.isConnected && section.id !== "account") {
             return;
         }
-        await this.props.record.update({ twilio_config_section: section.id });
+        this._setConfigSection(section.id);
     }
 
     backToDashboard() {
+        // Tab browsing must not block leave with a false "unsaved changes" dialog.
+        const record = this.props.record;
+        if (record && !this._hasRealPendingEdits(record)) {
+            record.dirty = false;
+        }
         this.action.doAction("twilio_dialer.action_twilio_dashboard");
     }
 
-    async _applyDefaultSection() {
+    /**
+     * Switch tabs via CSS + UI field sync. Never use record.update() so the
+     * settings form stays clean and no save dialog appears.
+     */
+    _setConfigSection(sectionId) {
+        const record = this.props.record;
+        const wasDirty = record.dirty;
+        setUiField(record, "twilio_config_section", sectionId);
+        this._applySectionAttr(sectionId);
+        // Field remounts / commits can flip dirty during a tab switch — restore.
+        const clearSpurious = () => {
+            if (!wasDirty && record.dirty) {
+                record.dirty = false;
+            }
+        };
+        queueMicrotask(clearSpurious);
+        setTimeout(clearSpurious, 0);
+        setTimeout(clearSpurious, 120);
+    }
+
+    _hasRealPendingEdits(record) {
+        // New settings records keep baseline values in `_changes` while dirty=false.
+        // Only treat the form as needing save when Odoo marked it dirty.
+        return !!record.dirty;
+    }
+
+    _applySectionAttr(sectionId) {
+        const appBlock = this._findAppBlock();
+        if (!appBlock) {
+            return;
+        }
+        appBlock.setAttribute("data-twilio-section", sectionId || "call");
+    }
+
+    _applyDefaultSection() {
         if (this._syncingSection) {
             return;
         }
         const target = this.isConnected ? "call" : "account";
         const current = this.props.record.data.twilio_config_section;
-        if (current === target) {
-            return;
-        }
         this._syncingSection = true;
         try {
-            await this.props.record.update({ twilio_config_section: target });
+            if (current !== target) {
+                this._setConfigSection(target);
+            } else {
+                this._applySectionAttr(target);
+            }
         } finally {
             this._syncingSection = false;
         }
@@ -118,6 +159,7 @@ export class TwilioConfigNav extends Component {
             return;
         }
         appBlock.classList.add("o_twilio_cfg_shell");
+        this._applySectionAttr(this.activeSection);
         const host =
             this.rootRef.el.closest(".o_setting_box") ||
             this.rootRef.el.closest(".o_settings_container") ||

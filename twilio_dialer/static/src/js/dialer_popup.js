@@ -9,6 +9,7 @@ import { AutoDialerRunner } from "./auto_dialer_runner";
 import { splitPhoneNumber } from "./phone_utils";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
+const CONTACT_PAGE_SIZE = 30;
 
 export class DialerPopup extends Component {
     static template = "twilio_dialer.DialerPopup";
@@ -54,10 +55,16 @@ export class DialerPopup extends Component {
             autoDialerList: "",
             contactSearchQuery: "",
             contacts: [],
+            contactsOffset: 0,
+            contactsHasMore: true,
+            contactsLoading: false,
+            dndEnabled: deviceManager.isDoNotDisturb,
+            refreshingToken: false,
         });
 
         this._callTimer = null;
         this._callStartTime = null;
+        this._contactSearchTimer = null;
 
         this._applyIncomingPhone(this.props.phone);
         useExternalListener(window, "keydown", this._onKeydown.bind(this));
@@ -65,7 +72,6 @@ export class DialerPopup extends Component {
         onWillStart(async () => {
             await this._loadConfiguredPhoneNumber();
             this._applyFromNumber(this.props.fromNumber || this.state.lastDialedFromNumber);
-            await this._loadContacts();
             
             // Connect UI status change listener to global deviceManager
             deviceManager.setStatusCallback(this._onDeviceStatusChange.bind(this));
@@ -91,6 +97,7 @@ export class DialerPopup extends Component {
         });
 
         onWillUnmount(() => {
+            clearTimeout(this._contactSearchTimer);
             // Unregister status callback when UI unmounts; DO NOT destroy global deviceManager
             deviceManager.setStatusCallback(null);
         });
@@ -287,15 +294,20 @@ export class DialerPopup extends Component {
                 continue;
             }
             seen.add(number);
+            const isOutgoingCallerId = item.type === "outgoing_caller_id";
             callers.push({
                 number,
-                friendlyName: item.friendly_name || "Twilio Number",
+                type: isOutgoingCallerId ? "outgoing_caller_id" : "incoming",
+                friendlyName:
+                    item.friendly_name ||
+                    (isOutgoingCallerId ? "Outgoing Caller ID" : "Twilio Number"),
             });
         }
 
         if (result.phone_number && !seen.has(result.phone_number)) {
             callers.unshift({
                 number: result.phone_number,
+                type: "incoming",
                 friendlyName: "Twilio Number",
             });
         }
@@ -329,29 +341,79 @@ export class DialerPopup extends Component {
         this.state.selectedCaller = caller;
     }
 
-    async _loadContacts() {
+    _contactDomain() {
+        const hasPhone = ["|", ["phone", "!=", false], ["mobile", "!=", false]];
+        const query = (this.state.contactSearchQuery || "").trim();
+        if (!query) {
+            return hasPhone;
+        }
+        return [
+            "&",
+            ...hasPhone,
+            "|",
+            "|",
+            "|",
+            "|",
+            ["name", "ilike", query],
+            ["phone", "ilike", query],
+            ["mobile", "ilike", query],
+            ["parent_name", "ilike", query],
+            ["email", "ilike", query],
+        ];
+    }
+
+    _mapPartnerToContact(partner) {
+        const phone = partner.mobile || partner.phone || "";
+        const name = partner.name || "Unknown";
+        const company =
+            partner.commercial_company_name ||
+            partner.parent_name ||
+            "";
+        const companyLabel = company && company !== name ? company : "";
+        const parts = name.trim().split(/\s+/);
+        const initials = ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
+        return {
+            id: partner.id,
+            name,
+            company: companyLabel,
+            phone,
+            initials,
+        };
+    }
+
+    async _loadContacts({ reset = false } = {}) {
+        if (this.state.contactsLoading) {
+            return;
+        }
+        if (!reset && !this.state.contactsHasMore) {
+            return;
+        }
+
+        this.state.contactsLoading = true;
         try {
+            const offset = reset ? 0 : this.state.contactsOffset;
             const partners = await this.orm.searchRead(
                 "res.partner",
-                ["|", ["phone", "!=", false], ["mobile", "!=", false]],
-                ["name", "phone", "mobile"],
-                { limit: 50, order: "name asc" }
+                this._contactDomain(),
+                ["name", "phone", "mobile", "parent_name", "commercial_company_name", "email"],
+                { limit: CONTACT_PAGE_SIZE, offset, order: "name asc" }
             );
-            this.state.contacts = (partners || []).map((partner) => {
-                const phone = partner.mobile || partner.phone || "";
-                const name = partner.name || "Unknown";
-                const parts = name.trim().split(/\s+/);
-                const initials = ((parts[0]?.[0] || "") + (parts[1]?.[0] || "")).toUpperCase() || "?";
-                return {
-                    id: partner.id,
-                    name,
-                    phone,
-                    initials,
-                };
-            }).filter((contact) => contact.phone);
+            const mapped = (partners || [])
+                .map((partner) => this._mapPartnerToContact(partner))
+                .filter((contact) => contact.phone);
+
+            this.state.contacts = reset ? mapped : [...this.state.contacts, ...mapped];
+            this.state.contactsOffset = offset + (partners || []).length;
+            this.state.contactsHasMore = (partners || []).length >= CONTACT_PAGE_SIZE;
         } catch (error) {
             console.error("Failed to load contacts:", error);
-            this.state.contacts = [];
+            if (reset) {
+                this.state.contacts = [];
+                this.state.contactsOffset = 0;
+                this.state.contactsHasMore = false;
+            }
+        } finally {
+            this.state.contactsLoading = false;
         }
     }
 
@@ -359,7 +421,9 @@ export class DialerPopup extends Component {
         this.state.activeTab = tab;
         this.closeAllDropdowns();
         if (tab === "contacts") {
-            this.openContacts();
+            this._loadContacts({ reset: true });
+        } else if (tab === "settings") {
+            this.openConfiguration();
         }
     }
 
@@ -370,11 +434,40 @@ export class DialerPopup extends Component {
         }
     }
 
-    openContacts() {
-        this.action.doAction("contacts.action_contacts");
-        if (this.props.onClose) {
-            this.props.onClose();
+    openConfiguration() {
+        // Keep / force dialer open while Configuration loads in the main area.
+        const dialer = this.env.services.twilio_dialer;
+        if (dialer?.state) {
+            dialer.state.isOpen = true;
         }
+        this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
+    }
+
+    openContacts() {
+        // Open Contacts in main area; keep dialer open.
+        const dialer = this.env.services.twilio_dialer;
+        if (dialer?.state) {
+            dialer.state.isOpen = true;
+        }
+        this.action.doAction("contacts.action_contacts");
+    }
+
+    openContactDetail(contact) {
+        if (!contact?.id) {
+            return;
+        }
+        const dialer = this.env.services.twilio_dialer;
+        if (dialer?.state) {
+            dialer.state.isOpen = true;
+        }
+        this.action.doAction({
+            type: "ir.actions.act_window",
+            name: contact.name || "Contact",
+            res_model: "res.partner",
+            res_id: contact.id,
+            views: [[false, "form"]],
+            target: "current",
+        });
     }
 
     onAutoDialerListInput(ev) {
@@ -383,41 +476,72 @@ export class DialerPopup extends Component {
 
     onContactSearch(ev) {
         this.state.contactSearchQuery = ev.target.value;
+        clearTimeout(this._contactSearchTimer);
+        this._contactSearchTimer = setTimeout(() => {
+            this._loadContacts({ reset: true });
+        }, 300);
+    }
+
+    onContactListScroll(ev) {
+        const el = ev.currentTarget;
+        if (!el || this.state.contactsLoading || !this.state.contactsHasMore) {
+            return;
+        }
+        if (el.scrollTop + el.clientHeight >= el.scrollHeight - 48) {
+            this._loadContacts({ reset: false });
+        }
     }
 
     get filteredContacts() {
-        const query = this.state.contactSearchQuery.toLowerCase().trim();
-        if (!query) {
-            return this.state.contacts;
+        return this.state.contacts;
+    }
+
+    _applyContactPhone(contact) {
+        if (!contact?.phone) {
+            return false;
         }
-        return this.state.contacts.filter(
-            (contact) =>
-                contact.name.toLowerCase().includes(query) ||
-                contact.phone.toLowerCase().includes(query)
-        );
+        const { country, nationalNumber } = splitPhoneNumber(contact.phone);
+        this.state.selectedCountry = country;
+        this.state.phoneNumber = nationalNumber || contact.phone.replace(/\D/g, "").slice(-15);
+        return !!this.state.phoneNumber;
     }
 
     dialContact(contact) {
-        if (!contact?.phone) {
+        if (!this._applyContactPhone(contact) || this.state.dndEnabled || this.isCallActive) {
             return;
         }
-        const digits = contact.phone.replace(/\D/g, "");
-        const matchedCountry = COUNTRY_CODES.find((country) =>
-            digits.startsWith(country.code.replace("+", ""))
-        );
-        if (matchedCountry) {
-            this.state.selectedCountry = matchedCountry;
-            this.state.phoneNumber = digits
-                .slice(matchedCountry.code.replace("+", "").length)
-                .slice(0, 10);
-        } else {
-            this.state.phoneNumber = digits.slice(-10);
+        this.state.activeTab = "dialpad";
+        this.closeAllDropdowns();
+    }
+
+    callContact(contact) {
+        if (!this._applyContactPhone(contact) || this.state.dndEnabled || this.isCallActive) {
+            return;
         }
-        this.setActiveTab("dialpad");
+        this.state.activeTab = "dialpad";
+        this.closeAllDropdowns();
+        // Place the call once the dial pad is active and caller ID is ready.
+        Promise.resolve().then(() => {
+            if (this.canCall) {
+                this.onCall();
+            }
+        });
     }
 
     get countryCodes() {
         return COUNTRY_CODES;
+    }
+
+    get twilioCallerNumbers() {
+        return (this.state.callerNumbers || []).filter(
+            (caller) => caller.type !== "outgoing_caller_id"
+        );
+    }
+
+    get outgoingCallerIds() {
+        return (this.state.callerNumbers || []).filter(
+            (caller) => caller.type === "outgoing_caller_id"
+        );
     }
 
     get filteredCountries() {
@@ -480,7 +604,8 @@ export class DialerPopup extends Component {
             !!this.state.lastDialedNumber &&
             this.state.lastDialedNumber.length >= 5 &&
             !this.isCallActive &&
-            this.state.connectionStatus === "ready"
+            this.state.connectionStatus === "ready" &&
+            !this.state.dndEnabled
         );
     }
 
@@ -494,7 +619,26 @@ export class DialerPopup extends Component {
             this.state.phoneNumber.length <= 15 &&
             !!this.state.selectedCaller &&
             !this.isCallActive &&
-            this.state.connectionStatus === "ready"
+            this.state.connectionStatus === "ready" &&
+            !this.state.dndEnabled
+        );
+    }
+
+    get isTokenBusy() {
+        return (
+            this.state.refreshingToken ||
+            ["initializing", "fetching_token", "registering"].includes(this.state.connectionStatus)
+        );
+    }
+
+    get showTokenOverlay() {
+        if (this.isCallActive || this.isIncoming || this.state.dndEnabled) {
+            return false;
+        }
+        return (
+            this.isTokenBusy ||
+            this.state.connectionStatus === "error" ||
+            this.state.connectionStatus === "disconnected"
         );
     }
 
@@ -507,13 +651,16 @@ export class DialerPopup extends Component {
             connecting: "connecting",
             connected: "ready",
             ready: "ready",
-            disconnected: "disconnected",
+            disconnected: this.state.dndEnabled ? "ready" : "disconnected",
             error: "disconnected",
         };
         return map[this.state.connectionStatus] || "offline";
     }
 
     get statusLabel() {
+        if (this.state.dndEnabled) {
+            return "Do Not Disturb";
+        }
         const labels = {
             initializing: "Initializing...",
             fetching_token: "Fetching Token...",
@@ -529,6 +676,9 @@ export class DialerPopup extends Component {
     }
 
     appendDigit(digit) {
+        if (this.state.dndEnabled && !this.isCallActive && !this.isIncoming) {
+            return;
+        }
         if (this.isCallActive) {
             const sent = deviceManager.sendDigits(digit);
             if (sent) {
@@ -559,7 +709,7 @@ export class DialerPopup extends Component {
     }
 
     onInput(ev) {
-        if (this.isCallActive || this.isIncoming) {
+        if (this.isCallActive || this.isIncoming || this.state.dndEnabled) {
             ev.target.value = this.state.phoneNumber;
             return;
         }
@@ -568,21 +718,21 @@ export class DialerPopup extends Component {
     }
 
     backspace() {
-        if (this.isCallActive || this.isIncoming) {
+        if (this.isCallActive || this.isIncoming || this.state.dndEnabled) {
             return;
         }
         this.state.phoneNumber = this.state.phoneNumber.slice(0, -1);
     }
 
     clearNumber() {
-        if (this.isCallActive || this.isIncoming) {
+        if (this.isCallActive || this.isIncoming || this.state.dndEnabled) {
             return;
         }
         this.state.phoneNumber = "";
     }
 
     selectCountry(country) {
-        if (this.isCallActive || this.isIncoming) {
+        if (this.isCallActive || this.isIncoming || this.state.dndEnabled) {
             return;
         }
         this.state.selectedCountry = country;
@@ -596,7 +746,7 @@ export class DialerPopup extends Component {
     }
 
     toggleCountryDropdown() {
-        if (this.isCallActive || this.isIncoming) {
+        if (this.isCallActive || this.isIncoming || this.state.dndEnabled) {
             return;
         }
         this.state.showCountryDropdown = !this.state.showCountryDropdown;
@@ -616,6 +766,9 @@ export class DialerPopup extends Component {
     }
 
     toggleCallerDropdown() {
+        if (this.state.dndEnabled) {
+            return;
+        }
         this.state.showCallerDropdown = !this.state.showCallerDropdown;
         this.state.showCountryDropdown = false;
     }
@@ -689,5 +842,47 @@ export class DialerPopup extends Component {
             return;
         }
         this.onCall();
+    }
+
+    async onToggleDnd() {
+        if (this.isCallActive || this.isIncoming || this.state.refreshingToken) {
+            return;
+        }
+        const next = !this.state.dndEnabled;
+        this.state.dndEnabled = next;
+        if (next) {
+            this.closeAllDropdowns();
+        }
+        try {
+            await deviceManager.setDoNotDisturb(next);
+            this.state.dndEnabled = deviceManager.isDoNotDisturb;
+            this.state.connectionStatus = deviceManager.status;
+        } catch (err) {
+            console.error("[DialerPopup] DND toggle failed:", err);
+            this.state.dndEnabled = deviceManager.isDoNotDisturb;
+        }
+    }
+
+    async onRefreshToken() {
+        if (this.state.refreshingToken || this.isCallActive || this.isIncoming) {
+            return;
+        }
+        this.state.refreshingToken = true;
+        this.state.dndEnabled = false;
+        try {
+            const ready = await deviceManager.ensureRegistered({
+                regenerate: true,
+                timeoutMs: 45000,
+            });
+            this.state.connectionStatus = deviceManager.status;
+            if (!ready) {
+                this.state.connectionStatus = "error";
+            }
+        } catch (err) {
+            console.error("[DialerPopup] Token refresh failed:", err);
+            this.state.connectionStatus = "error";
+        } finally {
+            this.state.refreshingToken = false;
+        }
     }
 }

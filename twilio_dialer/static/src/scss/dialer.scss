@@ -36,7 +36,7 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     position: fixed;
     right: 20px;
     top: 72px;
-    width: 408px;
+    width: 347px; // ~15% narrower than 408px
     z-index: 1050;
     transform: translateX(calc(100% + 30px));
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -477,101 +477,32 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     }
 }
 
-.o_twilio_dash_status {
+.o_twilio_dash_title_row {
     display: flex;
     align-items: center;
-    gap: 14px;
-    margin: 8px 0 4px;
-    padding: 14px 16px;
-    border-radius: 14px;
-    border: 1px solid transparent;
-}
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
 
-.o_twilio_dash_status--corner {
-    flex: 0 1 360px;
-    max-width: 380px;
-    margin: 0;
-    padding: 12px 14px;
-    text-align: left;
-}
-
-.o_twilio_dash_status_icon {
-    display: grid;
-    place-items: center;
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    flex-shrink: 0;
-    font-size: 18px;
-}
-
-.o_twilio_dash_status--corner .o_twilio_dash_status_icon {
-    width: 34px;
-    height: 34px;
-    font-size: 15px;
-}
-
-.o_twilio_dash_status_body {
-    flex: 1 1 auto;
-    min-width: 0;
-
-    strong {
-        display: block;
-        font-size: 14px;
-        font-weight: 700;
-        line-height: 1.3;
-    }
-
-    p {
-        margin: 2px 0 0;
-        font-size: 13px;
-        line-height: 1.4;
-        opacity: 0.9;
+    h1 {
+        margin: 0;
     }
 }
 
-.o_twilio_dash_status--corner .o_twilio_dash_status_body {
-    strong {
-        font-size: 13px;
-    }
-
-    p {
-        font-size: 12px;
-    }
-}
-
-.o_twilio_dash_status--ok {
-    color: #2f1d2a;
-    background: linear-gradient(135deg, #f3edf2 0%, #fff 70%);
-    border-color: rgba(113, 75, 103, 0.2);
-
-    .o_twilio_dash_status_icon {
-        background: rgba(113, 75, 103, 0.14);
-        color: #714b67;
-    }
-}
-
-.o_twilio_dash_status--warn {
-    color: #7c2d12;
-    background: linear-gradient(135deg, #fff7ed 0%, #fff 70%);
-    border-color: rgba(234, 88, 12, 0.22);
-
-    .o_twilio_dash_status_icon {
-        background: rgba(234, 88, 12, 0.12);
-        color: #c2410c;
-    }
-}
-
-@media (max-width: 900px) {
-    .o_twilio_dash_hero {
-        flex-direction: column;
-    }
-
-    .o_twilio_dash_status--corner {
-        flex: 1 1 auto;
-        max-width: none;
-        width: 100%;
-    }
+.o_twilio_dash_connected_tag {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    border-radius: 999px;
+    background: #16a34a;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(22, 163, 74, 0.25);
 }
 
 @keyframes o_twilio_dash_dialer_shake {
@@ -713,7 +644,211 @@ button.o_twilio_dash_open_dialer:hover {
     font-weight: 600;
 }
 
-/* Compact cross-promo for Duplicate Contact */
+/* Dashboard: main content left + vertical advertise sidebar right */
+.o_form_view.o_twilio_dashboard_shell .o_form_sheet,
+.o_form_view .o_form_sheet:has(> .o_twilio_dash_sidebar),
+.o_form_view .o_form_sheet:has(.o_twilio_dash_sidebar) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    grid-template-rows: auto auto;
+    gap: 18px 24px;
+    align-items: start;
+    max-width: 1440px !important;
+    width: 100%;
+}
+
+.o_form_view.o_twilio_dashboard_shell .o_twilio_dash_header,
+.o_form_view .o_form_sheet:has(.o_twilio_dash_sidebar) > .o_twilio_dash_header {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    min-width: 0;
+}
+
+.o_form_view.o_twilio_dashboard_shell .o_twilio_dash_main,
+.o_form_view .o_form_sheet:has(.o_twilio_dash_sidebar) > .o_twilio_dash_main {
+    grid-column: 1;
+    grid-row: 2;
+    min-width: 0;
+}
+
+.o_form_view.o_twilio_dashboard_shell .o_twilio_dash_sidebar,
+.o_form_view .o_form_sheet:has(.o_twilio_dash_sidebar) > .o_twilio_dash_sidebar {
+    grid-column: 2;
+    grid-row: 2;
+    width: 300px;
+    max-width: 300px;
+    position: sticky;
+    top: 16px;
+    align-self: start;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.o_twilio_dash_phone_capsule {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    height: 42px;
+    margin: 0;
+    padding: 0 16px !important;
+    border: 1px solid rgba($o_dialer-primary, 0.22) !important;
+    border-radius: $o_dialer-radius-pill !important;
+    background: linear-gradient(
+        135deg,
+        lighten($o_dialer-primary-light, 2%),
+        darken($o_dialer-primary-light, 4%)
+    ) !important;
+    box-shadow:
+        0 2px 8px rgba($o_dialer-primary, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    cursor: pointer;
+    color: $o_dialer-primary !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.01em;
+    line-height: 1 !important;
+    text-decoration: none !important;
+    transition:
+        transform 0.18s ease,
+        box-shadow 0.18s ease,
+        filter 0.18s ease;
+    animation: o-dialer-capsule-bounce 3.4s ease-in-out infinite;
+
+    i,
+    .fa {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 25px;
+        height: 25px;
+        margin: 0 !important;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.72);
+        box-shadow: inset 0 0 0 1px rgba($o_dialer-primary, 0.1);
+        font-size: 13px !important;
+        transform: rotate(15deg);
+    }
+
+    &:hover {
+        color: darken($o_dialer-primary, 8%) !important;
+        filter: brightness(1.02);
+        transform: translateY(-1px);
+        box-shadow:
+            0 4px 12px rgba($o_dialer-primary, 0.24),
+            inset 0 1px 0 rgba(255, 255, 255, 0.85);
+        animation-play-state: paused;
+        text-decoration: none !important;
+        background: linear-gradient(
+            135deg,
+            lighten($o_dialer-primary-light, 3%),
+            darken($o_dialer-primary-light, 2%)
+        ) !important;
+
+        i,
+        .fa {
+            background: #fff;
+            box-shadow: 0 3px 8px rgba($o_dialer-primary, 0.18);
+        }
+    }
+
+    &:active {
+        transform: translateY(0) scale(0.98);
+    }
+
+    &:focus-visible {
+        outline: 2px solid rgba($o_dialer-primary, 0.42);
+        outline-offset: 3px;
+    }
+}
+
+.o_twilio_dash_phone_capsule_visual,
+.o_twilio_dash_phone_capsule_core,
+.o_twilio_dash_phone_capsule_ring,
+.o_twilio_dash_phone_capsule_label {
+    display: none;
+}
+
+.o_twilio_dash_ad {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-height: 420px;
+    padding: 20px 16px;
+    border-radius: 14px;
+    color: #374151;
+    background: #fff;
+    border: 1.5px solid rgba(113, 75, 103, 0.45);
+    box-shadow:
+        0 0 0 3px rgba(113, 75, 103, 0.08),
+        0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.o_twilio_dash_ad_icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: rgba(113, 75, 103, 0.1);
+    color: #714b67;
+    font-size: 18px;
+}
+
+.o_twilio_dash_ad_title {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1f2937;
+}
+
+.o_twilio_dash_ad_text {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #6b7280;
+}
+
+.o_twilio_dash_ad_tags {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+
+    span {
+        display: block;
+        width: fit-content;
+        font-size: 11px;
+        font-weight: 600;
+        padding: 5px 10px;
+        border-radius: 999px;
+        color: #714b67;
+        background: rgba(113, 75, 103, 0.08);
+        border: 1px solid rgba(113, 75, 103, 0.16);
+    }
+}
+
+.o_twilio_dash_ad_cta {
+    margin-top: auto;
+    border: 1px solid rgba(113, 75, 103, 0.35) !important;
+    border-radius: 10px !important;
+    background: #fff !important;
+    color: #714b67 !important;
+    font-weight: 700 !important;
+    font-size: 13px !important;
+    padding: 10px 12px !important;
+    width: 100%;
+}
+
+.o_twilio_dash_ad_cta:hover {
+    background: rgba(113, 75, 103, 0.06) !important;
+    border-color: #714b67 !important;
+}
+
+/* Compact cross-promo for Duplicate Contact (legacy strip) */
 .o_twilio_promo_strip {
     display: flex;
     align-items: center;
@@ -787,6 +922,31 @@ button.o_twilio_dash_open_dialer:hover {
 
 .o_twilio_promo_strip_cta:hover {
     background: #fff8e8 !important;
+}
+
+@media (max-width: 992px) {
+    .o_form_view.o_twilio_dashboard_shell .o_form_sheet,
+    .o_form_view .o_form_sheet:has(.o_twilio_dash_sidebar) {
+        grid-template-columns: 1fr;
+    }
+
+    .o_form_view.o_twilio_dashboard_shell .o_twilio_dash_sidebar,
+    .o_form_view .o_form_sheet:has(.o_twilio_dash_sidebar) > .o_twilio_dash_sidebar {
+        grid-column: 1;
+        grid-row: auto;
+        width: 100%;
+        max-width: none;
+        position: static;
+    }
+
+    .o_twilio_dash_ad {
+        min-height: 0;
+    }
+
+    .o_twilio_dash_ad_tags {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
 }
 
 @media (max-width: 768px) {
@@ -1023,16 +1183,26 @@ button.o_twilio_dash_open_dialer:hover {
     border-radius: $o_dialer-radius-lg;
     box-shadow: $o_dialer-shadow-lg;
     border: 1px solid $o_dialer-gray-200;
-    overflow: visible;
+    overflow: hidden;
     font-family: $o_dialer-font;
-    min-height: 620px;
+    // Fixed height across all tabs so switching screens does not resize the panel.
+    // Avoid Sass min() with calc() — it breaks Odoo asset compilation.
+    height: 640px;
     max-height: calc(100vh - 96px);
 }
 
 .o_dialer_body {
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
+    overflow-x: hidden;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+
+    > * {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
 }
 
 // ── Header ───────────────────────────────────────────────
@@ -1046,6 +1216,7 @@ button.o_twilio_dash_open_dialer:hover {
     border-bottom: 1px solid rgba($o_dialer-primary, 0.14);
     border-radius: $o_dialer-radius-lg $o_dialer-radius-lg 0 0;
     overflow: hidden;
+    flex-shrink: 0;
 }
 
 .o_dialer_header_left {
@@ -1219,14 +1390,38 @@ button.o_twilio_dash_open_dialer:hover {
     border-radius: $o_dialer-radius-sm;
     box-shadow: $o_dialer-shadow;
     z-index: 1050;
-    max-height: 160px;
+    max-height: 220px;
     overflow-y: auto;
     padding: 4px;
+}
+
+.o_dialer_caller_group_label {
+    padding: 6px 10px 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: $o_dialer-gray-500;
+    line-height: 1.2;
+
+    &--sep {
+        margin-top: 4px;
+        padding-top: 10px;
+        border-top: 1px solid $o_dialer-gray-200;
+    }
+}
+
+.o_dialer_caller_empty {
+    padding: 12px 10px;
+    font-size: 12px;
+    color: $o_dialer-gray-500;
+    text-align: center;
 }
 
 .o_dialer_caller_option {
     display: flex;
     flex-direction: column;
+    gap: 2px;
     width: 100%;
     padding: 8px 10px;
     border: none;
@@ -1258,6 +1453,19 @@ button.o_twilio_dash_open_dialer:hover {
 .o_dialer_caller_option_number {
     font-size: 11px;
     color: $o_dialer-gray-500;
+}
+
+.o_dialer_caller_option_type {
+    align-self: flex-start;
+    margin-top: 2px;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba($o_dialer-primary, 0.1);
+    color: $o_dialer-primary;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
 }
 
 .o_dialer_icon_btn {
@@ -1603,6 +1811,172 @@ button.o_twilio_dash_open_dialer:hover {
 
 // ── Action Buttons ───────────────────────────────────────
 
+.o_dialer_keypad_view {
+    position: relative;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.o_dialer_keypad_view--dimmed {
+    > :not(.o_dialer_token_overlay):not(.o_dialer_dnd_overlay) {
+        opacity: 0.38;
+        pointer-events: none;
+        filter: grayscale(0.15);
+        transition: opacity 0.2s ease;
+    }
+}
+
+.o_dialer_keypad_view--dnd {
+    > :not(.o_dialer_dnd_overlay):not(.o_dialer_actions):not(.o_dialer_token_overlay) {
+        opacity: 0.32;
+        pointer-events: none;
+        filter: grayscale(0.2);
+        transition: opacity 0.2s ease, filter 0.2s ease;
+    }
+
+    .o_dialer_actions {
+        position: relative;
+        z-index: 6;
+    }
+}
+
+.o_dialer_token_overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    pointer-events: auto;
+}
+
+.o_dialer_dnd_overlay {
+    position: absolute;
+    inset: 0;
+    bottom: 88px;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.42);
+}
+
+.o_dialer_dnd_card {
+    width: 100%;
+    max-width: 250px;
+    text-align: center;
+    padding: 18px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba($o_dialer-primary, 0.22);
+    box-shadow: $o_dialer-shadow;
+    color: $o_dialer-gray-700;
+    pointer-events: none;
+
+    .o_dialer_dnd_card_icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 44px;
+        height: 44px;
+        margin: 0 auto 8px;
+        border-radius: 50%;
+        background: rgba($o_dialer-primary, 0.1);
+        color: $o_dialer-primary;
+
+        .o_dialer_dnd_icon {
+            width: 22px;
+            height: 22px;
+        }
+    }
+
+    strong {
+        display: block;
+        margin: 0 0 4px;
+        color: $o_dialer-gray-900;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1.3;
+    }
+
+    p {
+        margin: 0;
+        font-size: 12px;
+        line-height: 1.4;
+        color: $o_dialer-gray-500;
+    }
+}
+
+.o_dialer_token_card {
+    width: 100%;
+    max-width: 260px;
+    text-align: center;
+    padding: 18px 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid $o_dialer-gray-200;
+    box-shadow: $o_dialer-shadow;
+    color: $o_dialer-gray-700;
+
+    strong {
+        display: block;
+        margin: 8px 0 4px;
+        color: $o_dialer-gray-900;
+        font-size: 14px;
+    }
+
+    p {
+        margin: 0 0 12px;
+        font-size: 12px;
+        line-height: 1.4;
+        color: $o_dialer-gray-600;
+    }
+}
+
+.o_dialer_token_spinner {
+    font-size: 22px;
+    color: $o_dialer-primary;
+}
+
+.o_dialer_token_warn {
+    font-size: 22px;
+    color: darken($o_dialer-warning, 12%);
+}
+
+.o_dialer_token_refresh_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    min-width: 120px;
+    height: 36px;
+    padding: 0 14px;
+    border: none;
+    border-radius: 18px;
+    background: $o_dialer-primary;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    opacity: 0.92;
+    transition: opacity $o_dialer-transition, transform $o_dialer-transition, background $o_dialer-transition;
+
+    &:hover:not(:disabled) {
+        opacity: 1;
+        background: darken($o_dialer-primary, 6%);
+    }
+
+    &:disabled {
+        opacity: 0.55;
+        cursor: wait;
+    }
+}
+
 .o_dialer_actions {
     display: flex;
     align-items: center;
@@ -1614,6 +1988,16 @@ button.o_twilio_dash_open_dialer:hover {
     &--in-call {
         gap: 10px;
     }
+}
+
+.o_dialer_action_row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    align-items: center;
+    justify-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 0 10px;
 }
 
 @keyframes o-dialer-call-bounce {
@@ -1656,9 +2040,9 @@ button.o_twilio_dash_open_dialer:hover {
         height: 62px;
         padding: 0;
         border-radius: 50%;
-        background-color: $o_dialer-success;
+        background-color: $o_dialer-primary;
         color: #fff;
-        box-shadow: 0 4px 12px rgba($o_dialer-success, 0.32);
+        box-shadow: 0 4px 12px rgba($o_dialer-primary, 0.32);
         animation: o-dialer-call-bounce 2.4s ease-in-out infinite;
 
         i {
@@ -1666,20 +2050,20 @@ button.o_twilio_dash_open_dialer:hover {
         }
 
         &:hover:not(:disabled) {
-            background-color: darken($o_dialer-success, 6%);
-            box-shadow: 0 6px 16px rgba($o_dialer-success, 0.42);
+            background-color: darken($o_dialer-primary, 6%);
+            box-shadow: 0 6px 16px rgba($o_dialer-primary, 0.42);
             animation-play-state: paused;
             transform: translateY(-1px);
         }
 
         &:active:not(:disabled) {
-            background-color: darken($o_dialer-success, 10%);
+            background-color: darken($o_dialer-primary, 10%);
             animation: none;
             transform: scale(0.97);
         }
 
         &:disabled {
-            background-color: lighten($o_dialer-success, 20%);
+            background-color: lighten($o_dialer-primary, 28%);
             color: rgba(255, 255, 255, 0.7);
             cursor: not-allowed;
             box-shadow: none;
@@ -1750,20 +2134,29 @@ button.o_twilio_dash_open_dialer:hover {
     }
 
     &--redial {
-        flex: 0 0 48px;
-        width: 48px;
-        height: 48px;
+        flex: 0 0 62px;
+        width: 62px;
+        height: 62px;
         padding: 0;
+        flex-direction: column;
+        gap: 2px;
         border-radius: 50%;
         background-color: $o_dialer-gray-100;
         color: $o_dialer-gray-700;
         border: 1px solid $o_dialer-gray-300;
-        align-self: center;
 
         i {
-            font-size: 18px;
+            font-size: 16px;
             line-height: 1;
             display: block;
+        }
+
+        span {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            line-height: 1;
         }
 
         &:hover:not(:disabled) {
@@ -1781,6 +2174,48 @@ button.o_twilio_dash_open_dialer:hover {
             cursor: not-allowed;
         }
     }
+
+    &--dnd {
+        flex: 0 0 62px;
+        width: 62px;
+        height: 62px;
+        padding: 0;
+        flex-direction: column;
+        gap: 2px;
+        border-radius: 50%;
+        background-color: $o_dialer-gray-100;
+        color: $o_dialer-gray-700;
+        border: 1px solid $o_dialer-gray-300;
+
+        span {
+            font-size: 8px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            line-height: 1;
+        }
+
+        &:hover:not(:disabled) {
+            background-color: $o_dialer-gray-200;
+            color: $o_dialer-gray-900;
+        }
+
+        &:active:not(:disabled) {
+            transform: scale(0.97);
+        }
+
+        &.o_dialer_action_btn--dnd-active {
+            background-color: rgba($o_dialer-primary, 0.12);
+            border-color: rgba($o_dialer-primary, 0.4);
+            color: $o_dialer-primary;
+        }
+    }
+}
+
+.o_dialer_dnd_icon {
+    width: 18px;
+    height: 18px;
+    display: block;
 }
 
 .o_dialer_keypad--dtmf {
@@ -1824,11 +2259,124 @@ button.o_twilio_dash_open_dialer:hover {
 // ── Tab panels ───────────────────────────────────────────
 
 .o_dialer_tab_panel {
-    padding: 18px 18px 20px;
+    padding: 16px 16px 18px;
     display: flex;
     flex-direction: column;
     gap: 14px;
-    min-height: 480px;
+    height: 100%;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.o_dialer_launch_panel {
+    justify-content: center;
+}
+
+.o_dialer_launch_card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    padding: 22px 18px;
+    border: 1px solid rgba($o_dialer-primary, 0.14);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #fff 0%, $o_dialer-primary-light 160%);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    box-sizing: border-box;
+}
+
+.o_dialer_launch_icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba($o_dialer-primary, 0.12);
+    color: $o_dialer-primary;
+    font-size: 22px;
+    margin-top: 8px;
+}
+
+.o_dialer_launch_title {
+    margin: 4px 0 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: $o_dialer-gray-900;
+}
+
+.o_dialer_launch_copy {
+    margin: 0;
+    max-width: 240px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: $o_dialer-gray-600;
+}
+
+.o_dialer_launch_tips {
+    list-style: none;
+    margin: 6px 0 0;
+    padding: 0;
+    width: 100%;
+    max-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    text-align: left;
+
+    li {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.85);
+        border: 1px solid $o_dialer-gray-200;
+        font-size: 12px;
+        line-height: 1.4;
+        color: $o_dialer-gray-700;
+    }
+
+    i {
+        margin-top: 1px;
+        color: $o_dialer-success;
+        font-size: 11px;
+        flex-shrink: 0;
+    }
+}
+
+.o_dialer_launch_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    max-width: 260px;
+    min-height: 44px;
+    margin-top: auto;
+    padding: 0 14px;
+    border: none;
+    border-radius: 11px;
+    background: linear-gradient(135deg, $o_dialer-primary, darken($o_dialer-primary, 6%));
+    color: #fff;
+    font-family: $o_dialer-font;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba($o_dialer-primary, 0.28);
+    transition: transform $o_dialer-transition, filter $o_dialer-transition;
+
+    &:hover {
+        transform: translateY(-1px);
+        filter: brightness(1.03);
+    }
+
+    i {
+        font-size: 12px;
+    }
 }
 
 .o_dialer_tab_hero {
@@ -1916,6 +2464,11 @@ button.o_twilio_dash_open_dialer:hover {
     }
 }
 
+.o_dialer_auto_tab {
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
 .o_dialer_tab_actions {
     display: flex;
     gap: 8px;
@@ -1956,12 +2509,88 @@ button.o_twilio_dash_open_dialer:hover {
     }
 }
 
+.o_dialer_contacts {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    min-height: 0;
+    padding: 12px 12px 8px;
+}
+
+.o_dialer_contacts_toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.o_dialer_contacts_search {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+
+    > .fa-search {
+        position: absolute;
+        left: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: $o_dialer-gray-500;
+        font-size: 12px;
+        pointer-events: none;
+    }
+}
+
+.o_dialer_contacts_search_input {
+    width: 100%;
+    height: 36px;
+    padding: 8px 10px 8px 30px;
+    border: 1px solid $o_dialer-gray-300;
+    border-radius: 10px;
+    background: #fff;
+    color: $o_dialer-gray-800;
+    font-size: 13px;
+    outline: none;
+
+    &:focus {
+        border-color: $o_dialer-primary;
+        box-shadow: 0 0 0 2px rgba($o_dialer-primary, 0.12);
+    }
+
+    &::placeholder {
+        color: $o_dialer-gray-500;
+    }
+}
+
+.o_dialer_contacts_open_app {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border: 1px solid $o_dialer-gray-300;
+    border-radius: 10px;
+    background: #fff;
+    color: $o_dialer-gray-600;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    &:hover {
+        border-color: rgba($o_dialer-primary, 0.35);
+        color: $o_dialer-primary;
+        background: rgba($o_dialer-primary, 0.06);
+    }
+}
+
 .o_dialer_contact_list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    max-height: 384px;
+    gap: 6px;
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none;
     overflow-y: auto;
+    padding-right: 2px;
 }
 
 .o_dialer_contact_item {
@@ -1969,26 +2598,23 @@ button.o_twilio_dash_open_dialer:hover {
     align-items: center;
     gap: 10px;
     width: 100%;
-    padding: 8px 10px;
-    border: none;
-    border-radius: $o_dialer-radius-sm;
-    background: transparent;
+    padding: 10px;
+    border: 1px solid $o_dialer-gray-200;
+    border-radius: 12px;
+    background: #fff;
     text-align: left;
-    cursor: pointer;
-    transition: background-color $o_dialer-transition;
+    cursor: default;
+    transition: border-color $o_dialer-transition, box-shadow $o_dialer-transition;
 
     &:hover {
-        background: $o_dialer-gray-100;
-
-        .o_dialer_contact_call {
-            color: $o_dialer-success;
-        }
+        border-color: rgba($o_dialer-primary, 0.28);
+        box-shadow: 0 2px 8px rgba(47, 29, 42, 0.06);
     }
 }
 
 .o_dialer_contact_avatar {
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border-radius: $o_dialer-radius-circle;
     background: linear-gradient(135deg, rgba($o_dialer-primary, 0.15), rgba($o_dialer-primary, 0.28));
     color: darken($o_dialer-primary, 8%);
@@ -2017,15 +2643,98 @@ button.o_twilio_dash_open_dialer:hover {
     white-space: nowrap;
 }
 
+.o_dialer_contact_company {
+    font-size: 11px;
+    font-weight: 500;
+    color: $o_dialer-gray-600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .o_dialer_contact_phone {
     font-size: 11px;
     color: $o_dialer-gray-500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.o_dialer_contact_actions {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.o_dialer_contact_btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    min-width: 68px;
+    height: 26px;
+    padding: 0 8px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    i {
+        font-size: 11px;
+    }
+
+    &:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+    }
+
+    &--detail {
+        background: #fff;
+        border-color: $o_dialer-gray-300;
+        color: $o_dialer-gray-700;
+
+        &:hover:not(:disabled) {
+            border-color: rgba($o_dialer-primary, 0.35);
+            color: $o_dialer-primary;
+            background: rgba($o_dialer-primary, 0.06);
+        }
+    }
+
+    &--call {
+        background: rgba($o_dialer-success, 0.12);
+        border-color: rgba($o_dialer-success, 0.28);
+        color: darken($o_dialer-success, 8%);
+
+        &:hover:not(:disabled) {
+            background: rgba($o_dialer-success, 0.18);
+            border-color: rgba($o_dialer-success, 0.45);
+        }
+    }
 }
 
 .o_dialer_contact_call {
     color: $o_dialer-gray-400;
     font-size: 14px;
     flex-shrink: 0;
+}
+
+.o_dialer_contacts_status {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px 8px;
+    color: $o_dialer-gray-500;
+    font-size: 12px;
+
+    &--more {
+        padding: 8px;
+        opacity: 0.8;
+    }
 }
 
 .o_dialer_help_list {
@@ -2076,13 +2785,14 @@ button.o_twilio_dash_open_dialer:hover {
 .o_dialer_footer,
 .o_dialer_footer_menu {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 4px;
     padding: 8px 8px 10px;
     background: #ffffff;
     border-top: 1px solid #e5e7eb;
     border-radius: 0 0 $o_dialer-radius-lg $o_dialer-radius-lg;
     box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+    flex-shrink: 0;
 }
 
 .o_dialer_nav_btn,
@@ -2172,7 +2882,7 @@ button.o_twilio_dash_open_dialer:hover {
     }
 
     .o_dialer_popup {
-        min-height: 0;
+        height: 640px;
         max-height: calc(100vh - 80px);
     }
 
@@ -2193,18 +2903,19 @@ button.o_twilio_dash_open_dialer:hover {
     }
 
     .o_dialer_action_btn--call {
-        width: 58px;
-        height: 58px;
-        flex-basis: 58px;
+        width: 56px;
+        height: 56px;
+        flex-basis: 56px;
     }
 
-    .o_dialer_action_btn--redial {
-        width: 44px;
-        height: 44px;
-        flex-basis: 44px;
+    .o_dialer_action_btn--redial,
+    .o_dialer_action_btn--dnd {
+        width: 56px;
+        height: 56px;
+        flex-basis: 56px;
 
         i {
-            font-size: 16px;
+            font-size: 15px;
         }
     }
 
@@ -2366,6 +3077,39 @@ button.o_twilio_dash_open_dialer:hover {
         grid-template-columns: 230px minmax(0, 1fr);
         gap: 0 24px;
         align-items: start;
+
+        // CSS tab panels — keep fields mounted so switching never dirties the form.
+        &[data-twilio-section="call"] {
+            > .o_settings_container:has(.o_twilio_cfg_panel--account),
+            > .o_settings_container:has(.o_twilio_cfg_panel--ai),
+            > .o_settings_container:has(.o_twilio_cfg_panel--billing) {
+                display: none !important;
+            }
+        }
+
+        &[data-twilio-section="ai"] {
+            > .o_settings_container:has(.o_twilio_cfg_panel--account),
+            > .o_settings_container:has(.o_twilio_cfg_panel--call),
+            > .o_settings_container:has(.o_twilio_cfg_panel--billing) {
+                display: none !important;
+            }
+        }
+
+        &[data-twilio-section="account"] {
+            > .o_settings_container:has(.o_twilio_cfg_panel--call),
+            > .o_settings_container:has(.o_twilio_cfg_panel--ai),
+            > .o_settings_container:has(.o_twilio_cfg_panel--billing) {
+                display: none !important;
+            }
+        }
+
+        &[data-twilio-section="billing"] {
+            > .o_settings_container:has(.o_twilio_cfg_panel--account),
+            > .o_settings_container:has(.o_twilio_cfg_panel--call),
+            > .o_settings_container:has(.o_twilio_cfg_panel--ai) {
+                display: none !important;
+            }
+        }
     }
 
     .o_settings_container {
@@ -2977,6 +3721,87 @@ button.o_twilio_dash_open_dialer:hover {
         .form-check-label:empty {
             display: none;
         }
+
+        &--master {
+            padding-bottom: 14px;
+            margin-bottom: 2px;
+            border-bottom: 1px solid rgba(113, 75, 103, 0.16);
+
+            .o_twilio_cfg_label {
+                font-size: 15px;
+                font-weight: 700;
+                color: #1f2937;
+                letter-spacing: 0.01em;
+            }
+
+            .o_twilio_cfg_hint {
+                font-size: 12.5px;
+                color: #64748b;
+                margin-top: 3px;
+            }
+        }
+    }
+
+    .o_twilio_cfg_incoming_options {
+        margin-top: 4px;
+        padding-left: 8px;
+        border-left: 2px solid rgba(113, 75, 103, 0.18);
+    }
+
+    .o_twilio_cfg_api_warn {
+        display: flex;
+        align-items: flex-start;
+        gap: 6px;
+        margin: -2px 0 10px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        background: #fff7ed;
+        border: 1px solid rgba(234, 88, 12, 0.22);
+        color: #9a3412;
+        font-size: 11.5px;
+        line-height: 1.4;
+
+        .fa {
+            margin-top: 1px;
+            color: #ea580c;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+    }
+
+    .o_twilio_cfg_api_warn_body {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        min-width: 0;
+    }
+
+    .o_twilio_cfg_ai_link {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 5px;
+        padding: 0 !important;
+        margin: 0 !important;
+        border: 0 !important;
+        background: transparent !important;
+        color: #714b67 !important;
+        font-size: 11.5px !important;
+        font-weight: 700 !important;
+        line-height: 1.3 !important;
+        text-decoration: none !important;
+        box-shadow: none !important;
+
+        .fa {
+            color: #714b67 !important;
+            font-size: 10px !important;
+            margin: 0 !important;
+        }
+
+        &:hover {
+            color: darken(#714b67, 8%) !important;
+            text-decoration: underline !important;
+        }
     }
 
     @media (max-width: 992px) {
@@ -3023,15 +3848,65 @@ button.o_twilio_dash_open_dialer:hover {
 .o_dialer_qrunner {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 4px 0 2px;
+    gap: 12px;
+    height: 100%;
+    min-height: 0;
+    padding: 0;
+    box-sizing: border-box;
 
-    // Queue Selector Row
-    .o_dialer_qrunner_selector_row {
+    .o_dialer_qrunner_label {
+        margin: 0;
+        font-size: 11px;
+        font-weight: 700;
+        color: $o_dialer-gray-600;
+        text-transform: uppercase;
+        letter-spacing: 0.45px;
+    }
+
+    .o_dialer_qrunner_selector_card {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        padding-bottom: 6px;
+        gap: 8px;
+        padding: 12px;
+        border: 1px solid rgba($o_dialer-primary, 0.12);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #fff 0%, $o_dialer-primary-light 180%);
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+
+    .o_dialer_qrunner_label_row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+
+    .o_dialer_qrunner_settings_btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        height: 28px;
+        padding: 0 10px;
+        border: 1px solid rgba($o_dialer-primary, 0.2);
+        border-radius: 999px;
+        background: #fff;
+        color: $o_dialer-primary;
+        font-family: $o_dialer-font;
+        font-size: 11px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        transition: background $o_dialer-transition, border-color $o_dialer-transition, box-shadow $o_dialer-transition;
+
+        .fa {
+            font-size: 12px;
+        }
+
+        &:hover {
+            background: $o_dialer-primary-light;
+            border-color: rgba($o_dialer-primary, 0.35);
+            box-shadow: 0 2px 8px rgba($o_dialer-primary, 0.12);
+        }
     }
 
     .o_dialer_qrunner_selector_wrap {
@@ -3040,24 +3915,31 @@ button.o_twilio_dash_open_dialer:hover {
         gap: 6px;
     }
 
-    .o_dialer_qrunner_select {
+    .o_dialer_qrunner_select_shell {
+        position: relative;
         flex: 1;
         min-width: 0;
-        height: 36px;
-        padding: 0 10px;
+    }
+
+    .o_dialer_qrunner_select {
+        width: 100%;
+        height: 38px;
+        padding: 0 32px 0 12px;
         font-family: $o_dialer-font;
         font-size: 13px;
+        font-weight: 500;
         color: $o_dialer-gray-800;
-        background: $o_dialer-gray-100;
+        background: #fff;
         border: 1px solid $o_dialer-gray-300;
-        border-radius: $o_dialer-radius-sm;
+        border-radius: 10px;
         appearance: none;
         cursor: pointer;
-        transition: border-color $o_dialer-transition;
+        transition: border-color $o_dialer-transition, box-shadow $o_dialer-transition;
 
         &:focus {
             outline: none;
             border-color: $o_dialer-primary;
+            box-shadow: 0 0 0 3px rgba($o_dialer-primary, 0.14);
         }
 
         &:disabled {
@@ -3066,200 +3948,394 @@ button.o_twilio_dash_open_dialer:hover {
         }
     }
 
-    // Queue Header
-    .o_dialer_qrunner_header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
+    .o_dialer_qrunner_select_caret {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 11px;
+        color: $o_dialer-gray-500;
+        pointer-events: none;
     }
 
-    .o_dialer_qrunner_name {
-        font-size: 13px;
-        font-weight: 600;
-        color: $o_dialer-gray-800;
-        flex: 1;
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    // Status Badge
-    .o_dialer_qrunner_badge {
+    .o_dialer_qrunner_tool_btn {
         display: inline-flex;
         align-items: center;
-        gap: 4px;
-        padding: 2px 8px;
-        border-radius: $o_dialer-radius-pill;
-        font-size: 11px;
-        font-weight: 600;
-        white-space: nowrap;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        flex: 0 0 38px;
+        border: 1px solid $o_dialer-gray-300;
+        border-radius: 10px;
+        background: #fff;
+        color: $o_dialer-gray-700;
+        cursor: pointer;
+        transition: background $o_dialer-transition, border-color $o_dialer-transition, color $o_dialer-transition;
 
-        &--draft    { background: $o_dialer-gray-200; color: $o_dialer-gray-700; }
-        &--running  { background: rgba($o_dialer-success, 0.15); color: darken($o_dialer-success, 8%);
-                      .fa { font-size: 8px; animation: o_dialer_qrunner_pulse 1.4s infinite; } }
-        &--paused   { background: rgba($o_dialer-warning, 0.18); color: darken($o_dialer-warning, 25%); }
-        &--completed { background: rgba($o_dialer-success, 0.12); color: darken($o_dialer-success, 10%); }
-        &--cancelled { background: rgba($o_dialer-danger, 0.1); color: $o_dialer-danger; }
+        &:hover:not(:disabled) {
+            background: $o_dialer-primary-light;
+            border-color: rgba($o_dialer-primary, 0.3);
+            color: $o_dialer-primary;
+        }
+
+        &:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
     }
 
-    @keyframes o_dialer_qrunner_pulse {
-        0%, 100% { opacity: 1; }
-        50%       { opacity: 0.35; }
-    }
-
-    // Progress Bar
-    .o_dialer_qrunner_progress_wrap {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .o_dialer_qrunner_progress_bar {
-        flex: 1;
-        height: 6px;
-        background: $o_dialer-gray-200;
-        border-radius: $o_dialer-radius-pill;
-        overflow: hidden;
-    }
-
-    .o_dialer_qrunner_progress_fill {
-        height: 100%;
-        background: linear-gradient(90deg, $o_dialer-primary, lighten($o_dialer-primary, 15%));
-        border-radius: $o_dialer-radius-pill;
-        transition: width 0.4s ease;
-        min-width: 4px;
-    }
-
-    .o_dialer_qrunner_progress_label {
-        font-size: 11px;
-        font-weight: 600;
-        color: $o_dialer-gray-600;
-        min-width: 30px;
-        text-align: right;
-    }
-
-    // Stats Grid
-    .o_dialer_qrunner_stats {
-        display: grid;
-        grid-template-columns: repeat(5, 1fr);
-        gap: 4px;
-    }
-
-    .o_dialer_qrunner_stat {
+    .o_dialer_qrunner_campaign_card {
         display: flex;
         flex-direction: column;
-        align-items: center;
-        padding: 6px 4px;
-        background: $o_dialer-gray-100;
+        gap: 12px;
+        padding: 12px;
         border: 1px solid $o_dialer-gray-200;
-        border-radius: $o_dialer-radius-sm;
-        text-align: center;
-
-        &--pending  { border-color: rgba($o_dialer-info, 0.3); }
-        &--done     { border-color: rgba($o_dialer-success, 0.3); }
-        &--fail     { border-color: rgba($o_dialer-danger, 0.3); }
-        &--skip     { border-color: rgba($o_dialer-warning, 0.3); }
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
     }
 
-    .o_dialer_qrunner_stat_value {
-        font-size: 15px;
-        font-weight: 700;
-        color: $o_dialer-gray-800;
-        line-height: 1;
-    }
-
-    .o_dialer_qrunner_stat_label {
-        font-size: 9px;
-        font-weight: 600;
-        color: $o_dialer-gray-500;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        margin-top: 2px;
-    }
-
-    // Controls Row
-    .o_dialer_qrunner_controls {
+    .o_dialer_qrunner_header {
         display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
         gap: 8px;
-        justify-content: center;
-    }
-
-    .o_dialer_qrunner_ctrl_btn {
-        flex: 1;
-        justify-content: center;
-        gap: 6px;
-
-        i { font-size: 12px; }
-    }
-
-    .o_dialer_qrunner_done_msg {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        color: $o_dialer-success;
-        font-size: 13px;
-        font-weight: 600;
-        padding: 8px 0;
-
-        i { font-size: 16px; }
     }
 
     .o_dialer_qrunner_header_title {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 6px;
+        min-width: 0;
+        flex: 1;
     }
 
-    .o_dialer_qrunner_pacing_badge {
-        font-size: 11px;
-        color: $o_dialer-gray-500;
-        font-weight: 500;
+    .o_dialer_qrunner_name {
+        font-size: 14px;
+        font-weight: 700;
+        color: $o_dialer-gray-900;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .o_dialer_qrunner_meta_chips {
         display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .o_dialer_qrunner_chip {
+        display: inline-flex;
         align-items: center;
         gap: 4px;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: $o_dialer-gray-100;
+        border: 1px solid $o_dialer-gray-200;
+        color: $o_dialer-gray-600;
+        font-size: 10px;
+        font-weight: 600;
 
-        i { font-size: 10px; }
+        i {
+            font-size: 10px;
+            color: $o_dialer-gray-500;
+        }
+    }
+
+    .o_dialer_qrunner_badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+        flex-shrink: 0;
+
+        &--draft {
+            background: $o_dialer-gray-100;
+            color: $o_dialer-gray-700;
+            border: 1px solid $o_dialer-gray-200;
+        }
+
+        &--running {
+            background: rgba($o_dialer-success, 0.12);
+            color: darken($o_dialer-success, 8%);
+            border: 1px solid rgba($o_dialer-success, 0.28);
+
+            .fa {
+                font-size: 8px;
+            }
+        }
+
+        &--paused {
+            background: rgba($o_dialer-warning, 0.16);
+            color: darken($o_dialer-warning, 28%);
+            border: 1px solid rgba($o_dialer-warning, 0.35);
+        }
+
+        &--completed {
+            background: rgba($o_dialer-success, 0.1);
+            color: darken($o_dialer-success, 10%);
+            border: 1px solid rgba($o_dialer-success, 0.25);
+        }
+
+        &--cancelled {
+            background: rgba($o_dialer-danger, 0.08);
+            color: $o_dialer-danger;
+            border: 1px solid rgba($o_dialer-danger, 0.22);
+        }
+    }
+
+    @keyframes o_dialer_qrunner_pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.35; }
     }
 
     .o_dialer_pulse_dot {
-        animation: o_dialer_pulse 1.5s infinite;
+        animation: o_dialer_qrunner_pulse 1.4s infinite;
+    }
+
+    .o_dialer_qrunner_progress_wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .o_dialer_qrunner_progress_bar {
+        height: 8px;
+        background: $o_dialer-gray-100;
+        border: 1px solid $o_dialer-gray-200;
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .o_dialer_qrunner_progress_fill {
+        height: 100%;
+        background: linear-gradient(90deg, $o_dialer-primary, lighten($o_dialer-primary, 14%));
+        border-radius: 999px;
+        transition: width 0.4s ease;
+        min-width: 0;
     }
 
     .o_dialer_qrunner_progress_info {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-top: 4px;
+        gap: 8px;
+    }
+
+    .o_dialer_qrunner_progress_label {
+        font-size: 11px;
+        font-weight: 700;
+        color: $o_dialer-gray-600;
     }
 
     .o_dialer_qrunner_success_badge {
-        font-size: 11px;
-        font-weight: 600;
-        color: $o_dialer-success;
         display: inline-flex;
         align-items: center;
         gap: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        color: darken($o_dialer-success, 4%);
 
-        i { font-size: 10px; }
+        i {
+            font-size: 10px;
+        }
     }
 
-    // Contact Card
-    .o_dialer_qrunner_contact_card {
-        background: $o_dialer-gray-100;
-        border: 1px solid rgba($o_dialer-primary, 0.14);
-        border-radius: $o_dialer-radius;
-        padding: 12px;
+    .o_dialer_qrunner_stats {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        gap: 6px;
+    }
+
+    .o_dialer_qrunner_stat {
         display: flex;
         flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 8px 2px;
+        background: $o_dialer-gray-100;
+        border: 1px solid $o_dialer-gray-200;
+        border-radius: 10px;
+        text-align: center;
+
+        &--pending {
+            background: rgba($o_dialer-info, 0.06);
+            border-color: rgba($o_dialer-info, 0.22);
+
+            .o_dialer_qrunner_stat_value {
+                color: darken($o_dialer-info, 8%);
+            }
+        }
+
+        &--done {
+            background: rgba($o_dialer-success, 0.06);
+            border-color: rgba($o_dialer-success, 0.22);
+
+            .o_dialer_qrunner_stat_value {
+                color: darken($o_dialer-success, 6%);
+            }
+        }
+
+        &--fail {
+            background: rgba($o_dialer-danger, 0.05);
+            border-color: rgba($o_dialer-danger, 0.2);
+
+            .o_dialer_qrunner_stat_value {
+                color: $o_dialer-danger;
+            }
+        }
+
+        &--skip {
+            background: rgba($o_dialer-warning, 0.08);
+            border-color: rgba($o_dialer-warning, 0.28);
+
+            .o_dialer_qrunner_stat_value {
+                color: darken($o_dialer-warning, 28%);
+            }
+        }
+    }
+
+    .o_dialer_qrunner_stat_value {
+        font-size: 15px;
+        font-weight: 800;
+        color: $o_dialer-gray-800;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .o_dialer_qrunner_stat_label {
+        font-size: 9px;
+        font-weight: 700;
+        color: $o_dialer-gray-500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+    }
+
+    .o_dialer_qrunner_controls {
+        display: flex;
         gap: 8px;
+    }
+
+    .o_dialer_qrunner_ctrl_btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        flex: 1;
+        min-height: 42px;
+        padding: 0 12px;
+        border: none;
+        border-radius: 11px;
+        font-family: $o_dialer-font;
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform $o_dialer-transition, box-shadow $o_dialer-transition, filter $o_dialer-transition;
+
+        i {
+            font-size: 12px;
+        }
+
+        &:hover:not(:disabled) {
+            transform: translateY(-1px);
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        &--start {
+            background: linear-gradient(135deg, $o_dialer-success, darken($o_dialer-success, 6%));
+            color: #fff;
+            box-shadow: 0 4px 12px rgba($o_dialer-success, 0.28);
+
+            &:hover:not(:disabled) {
+                filter: brightness(1.03);
+            }
+        }
+
+        &--pause {
+            background: #fff;
+            color: darken($o_dialer-warning, 28%);
+            border: 1px solid rgba($o_dialer-warning, 0.45);
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+        }
+
+        &--stop {
+            background: linear-gradient(135deg, $o_dialer-danger, darken($o_dialer-danger, 6%));
+            color: #fff;
+            box-shadow: 0 4px 12px rgba($o_dialer-danger, 0.24);
+        }
+    }
+
+    .o_dialer_qrunner_done_msg {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 11px;
+        background: rgba($o_dialer-success, 0.1);
+        border: 1px solid rgba($o_dialer-success, 0.25);
+        color: darken($o_dialer-success, 6%);
+        font-size: 13px;
+        font-weight: 700;
+
+        i {
+            font-size: 15px;
+        }
+    }
+
+    .o_dialer_qrunner_contact_card {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid $o_dialer-gray-200;
 
         &--active {
-            background: linear-gradient(135deg, #ffffff 0%, $o_dialer-primary-light 100%);
-            border: 1.5px solid rgba($o_dialer-primary, 0.4);
-            box-shadow: 0 4px 16px rgba($o_dialer-primary, 0.12);
-            transition: all 0.25s ease;
+            background: linear-gradient(160deg, #fff 0%, $o_dialer-primary-light 100%);
+            border-color: rgba($o_dialer-primary, 0.35);
+            box-shadow: 0 6px 18px rgba($o_dialer-primary, 0.12);
+        }
+
+        &--paused {
+            background: linear-gradient(160deg, #fff 0%, rgba($o_dialer-warning, 0.12) 100%);
+            border-color: rgba($o_dialer-warning, 0.4);
+        }
+    }
+
+    .o_dialer_qrunner_contact_eyebrow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11px;
+        font-weight: 700;
+        color: $o_dialer-primary;
+        text-transform: uppercase;
+        letter-spacing: 0.35px;
+
+        > span:first-child {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .fa {
+            font-size: 8px;
         }
     }
 
@@ -3270,33 +4346,33 @@ button.o_twilio_dash_open_dialer:hover {
     }
 
     .o_dialer_qrunner_avatar {
-        width: 36px;
-        height: 36px;
-        border-radius: $o_dialer-radius-circle;
-        background: $o_dialer-primary-light;
         display: flex;
         align-items: center;
         justify-content: center;
+        width: 40px;
+        height: 40px;
         flex-shrink: 0;
+        border-radius: 50%;
+        background: rgba($o_dialer-primary, 0.12);
+        color: $o_dialer-primary;
 
         i {
             font-size: 16px;
-            color: $o_dialer-primary;
         }
     }
 
     .o_dialer_qrunner_contact_info {
-        flex: 1;
-        min-width: 0;
         display: flex;
         flex-direction: column;
         gap: 2px;
+        min-width: 0;
+        flex: 1;
     }
 
     .o_dialer_qrunner_contact_name {
-        font-size: 13px;
-        font-weight: 600;
-        color: $o_dialer-gray-800;
+        font-size: 14px;
+        font-weight: 700;
+        color: $o_dialer-gray-900;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -3304,97 +4380,103 @@ button.o_twilio_dash_open_dialer:hover {
 
     .o_dialer_qrunner_contact_phone {
         font-size: 12px;
+        font-weight: 500;
         color: $o_dialer-gray-600;
         font-variant-numeric: tabular-nums;
     }
 
-    // Line Status Badge (inside contact card)
     .o_dialer_qrunner_line_badge {
-        padding: 2px 7px;
-        border-radius: $o_dialer-radius-pill;
+        padding: 3px 8px;
+        border-radius: 999px;
         font-size: 10px;
-        font-weight: 600;
+        font-weight: 700;
         white-space: nowrap;
         flex-shrink: 0;
+        text-transform: none;
+        letter-spacing: 0;
 
-        &--pending   { background: $o_dialer-gray-200; color: $o_dialer-gray-700; }
-        &--calling   { background: rgba($o_dialer-info, 0.15); color: darken($o_dialer-info, 10%); }
+        &--pending { background: $o_dialer-gray-200; color: $o_dialer-gray-700; }
+        &--calling { background: rgba($o_dialer-info, 0.15); color: darken($o_dialer-info, 10%); }
         &--completed { background: rgba($o_dialer-success, 0.15); color: darken($o_dialer-success, 8%); }
-        &--busy      { background: rgba($o_dialer-warning, 0.2); color: darken($o_dialer-warning, 30%); }
-        &--failed    { background: rgba($o_dialer-danger, 0.12); color: $o_dialer-danger; }
-        &--skipped   { background: rgba($o_dialer-gray-500, 0.15); color: $o_dialer-gray-600; }
+        &--busy { background: rgba($o_dialer-warning, 0.2); color: darken($o_dialer-warning, 30%); }
+        &--failed,
+        &--no_answer { background: rgba($o_dialer-danger, 0.12); color: $o_dialer-danger; }
+        &--skipped,
+        &--cancelled { background: rgba($o_dialer-gray-500, 0.15); color: $o_dialer-gray-600; }
     }
 
-    // Meta row
     .o_dialer_qrunner_contact_meta {
         display: flex;
-        gap: 14px;
+        flex-wrap: wrap;
+        gap: 8px 14px;
     }
 
     .o_dialer_qrunner_meta_item {
-        display: flex;
+        display: inline-flex;
         align-items: center;
         gap: 5px;
         font-size: 11px;
+        font-weight: 600;
         color: $o_dialer-gray-600;
 
-        i { color: $o_dialer-gray-500; font-size: 11px; }
+        i {
+            color: $o_dialer-gray-500;
+            font-size: 11px;
+        }
     }
 
-    // Notes
     .o_dialer_qrunner_notes {
         display: flex;
         align-items: flex-start;
         gap: 6px;
-        font-size: 12px;
-        color: $o_dialer-gray-700;
-        background: #fff;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.85);
         border: 1px solid $o_dialer-gray-200;
-        border-radius: $o_dialer-radius-sm;
-        padding: 6px 8px;
+        font-size: 12px;
         line-height: 1.45;
+        color: $o_dialer-gray-700;
 
-        i { color: $o_dialer-gray-400; margin-top: 1px; flex-shrink: 0; }
-        span { overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        i {
+            color: $o_dialer-gray-400;
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
     }
 
-    // Call hint
-    .o_dialer_qrunner_call_hint {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 11px;
-        color: $o_dialer-primary;
-        font-weight: 600;
-        padding-top: 2px;
-
-        i { font-size: 11px; }
-    }
-
-    // Navigation Row
     .o_dialer_qrunner_nav {
         display: flex;
         gap: 8px;
-        justify-content: center;
     }
 
     .o_dialer_qrunner_nav_btn {
-        flex: 1;
-        height: 34px;
-        display: flex;
+        display: inline-flex;
         align-items: center;
         justify-content: center;
         gap: 5px;
-        font-size: 12px;
-        font-weight: 600;
-        color: $o_dialer-gray-700;
-        background: $o_dialer-gray-100;
+        flex: 1;
+        height: 36px;
         border: 1px solid $o_dialer-gray-300;
-        border-radius: $o_dialer-radius-sm;
+        border-radius: 10px;
+        background: #fff;
+        color: $o_dialer-gray-700;
+        font-family: $o_dialer-font;
+        font-size: 12px;
+        font-weight: 700;
         cursor: pointer;
-        transition: background $o_dialer-transition, border-color $o_dialer-transition;
+        transition: background $o_dialer-transition, border-color $o_dialer-transition, color $o_dialer-transition;
 
-        i { font-size: 11px; }
+        i {
+            font-size: 11px;
+        }
 
         &:hover:not(:disabled) {
             background: $o_dialer-primary-light;
@@ -3408,37 +4490,76 @@ button.o_twilio_dash_open_dialer:hover {
         }
 
         &--skip {
-            color: darken($o_dialer-warning, 30%);
-            border-color: rgba($o_dialer-warning, 0.35);
-            background: rgba($o_dialer-warning, 0.06);
+            color: darken($o_dialer-warning, 28%);
+            border-color: rgba($o_dialer-warning, 0.4);
+            background: rgba($o_dialer-warning, 0.08);
 
             &:hover:not(:disabled) {
-                background: rgba($o_dialer-warning, 0.15);
-                border-color: rgba($o_dialer-warning, 0.5);
+                background: rgba($o_dialer-warning, 0.16);
+                border-color: rgba($o_dialer-warning, 0.55);
+                color: darken($o_dialer-warning, 32%);
             }
         }
     }
 
-    // Info hint
     .o_dialer_qrunner_hint {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
         gap: 8px;
-        font-size: 12px;
-        color: $o_dialer-gray-600;
-        padding: 8px 10px;
+        padding: 10px 12px;
+        border-radius: 10px;
         background: rgba($o_dialer-info, 0.07);
         border: 1px solid rgba($o_dialer-info, 0.18);
-        border-radius: $o_dialer-radius-sm;
+        font-size: 12px;
+        line-height: 1.45;
+        color: $o_dialer-gray-700;
 
-        i { color: $o_dialer-info; }
+        i {
+            color: $o_dialer-info;
+            margin-top: 1px;
+        }
     }
 
-    // Empty state override
     .o_dialer_qrunner_empty {
-        margin: 0;
-        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding: 28px 16px;
         text-align: center;
+        border: 1px dashed rgba($o_dialer-primary, 0.22);
+        border-radius: 12px;
+        background: linear-gradient(180deg, #fff 0%, $o_dialer-primary-light 160%);
+
+        &--compact {
+            padding: 18px 14px;
+        }
+
+        strong {
+            font-size: 13px;
+            font-weight: 700;
+            color: $o_dialer-gray-800;
+        }
+
+        p {
+            margin: 0;
+            max-width: 240px;
+            font-size: 12px;
+            line-height: 1.45;
+            color: $o_dialer-gray-600;
+        }
+    }
+
+    .o_dialer_qrunner_empty_icon {
+        display: grid;
+        place-items: center;
+        width: 42px;
+        height: 42px;
+        margin-bottom: 4px;
+        border-radius: 12px;
+        background: rgba($o_dialer-primary, 0.12);
+        color: $o_dialer-primary;
+        font-size: 16px;
     }
 }
 
@@ -3448,9 +4569,13 @@ button.o_twilio_dash_open_dialer:hover {
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    height: 100%;
+    min-height: 0;
     padding: 24px 16px 16px;
     background: #ffffff;
     border-radius: $o_dialer-radius-lg;
+    box-sizing: border-box;
 }
 
 .o_dialer_incoming_hero {

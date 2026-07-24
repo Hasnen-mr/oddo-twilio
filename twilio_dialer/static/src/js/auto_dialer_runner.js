@@ -699,6 +699,14 @@ export class AutoDialerRunner extends Component {
         });
     }
 
+    openSettings() {
+        // Open Auto Dialer campaigns list; keep dialer panel open.
+        if (this.dialerSvc?.state) {
+            this.dialerSvc.state.isOpen = true;
+        }
+        this.action.doAction("twilio_dialer.action_twilio_auto_dialer");
+    }
+
     get successRate() {
         const done = this.state.stats.completed || 0;
         const failed = this.state.stats.failed || 0;

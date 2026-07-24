@@ -24,3 +24,11 @@ local-dev/
 odoo.conf
 installed_packages.txt
 to do.txt
+
+llm
+llm_mcp_server
+llm_tool
+mcp_server
+muk_mcp
+muk_web_utils
+web_json_editor

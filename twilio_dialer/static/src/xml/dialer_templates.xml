@@ -23,9 +23,9 @@
             <DialerPopup onClose.bind="closePanel"
                          phone="state.phone"
                          fromNumber="state.fromNumber"
-                         partnerId="state.partnerId"
+                         partnerId="state.partnerId || undefined"
                          partnerName="state.partnerName"
-                         requestId="state.requestId"/>
+                         requestId="state.requestId || undefined"/>
         </div>
     </t>
 

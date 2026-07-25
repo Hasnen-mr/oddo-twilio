@@ -123,14 +123,6 @@
             </div>
 
             <t t-set-slot="footer">
-                <t t-if="state.step &lt; 4 and !state.connected">
-                    <button type="button" class="btn btn-link me-auto"
-                            t-att-disabled="state.connecting"
-                            t-on-click="skipForNow">
-                        Skip for now
-                    </button>
-                </t>
-
                 <t t-if="state.step &gt; 1 and state.step &lt; 4 and !state.connected">
                     <button type="button" class="btn btn-secondary"
                             t-att-disabled="state.connecting"

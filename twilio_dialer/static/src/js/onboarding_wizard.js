@@ -34,6 +34,19 @@ export class TwilioOnboardingWizard extends Component {
             error: "",
         });
 
+        // Required setup: block Escape / X / backdrop dismiss until Open Dialer succeeds.
+        this._canClose = false;
+        const dialogData = this.env.dialogData;
+        if (dialogData) {
+            const originalClose = dialogData.close;
+            dialogData.close = () => {
+                if (this._canClose) {
+                    originalClose();
+                }
+            };
+            dialogData.dismiss = () => {};
+        }
+
         onMounted(() => {
             document.body.classList.add("o_twilio_onboard_open");
             this._prefillContact();
@@ -41,6 +54,12 @@ export class TwilioOnboardingWizard extends Component {
         onWillUnmount(() => {
             document.body.classList.remove("o_twilio_onboard_open");
         });
+    }
+
+    _closeWizard() {
+        this._canClose = true;
+        document.body.classList.remove("o_twilio_onboard_open");
+        this.props.close();
     }
 
     get dialogTitle() {
@@ -105,11 +124,6 @@ export class TwilioOnboardingWizard extends Component {
         }
     }
 
-    skipForNow() {
-        document.body.classList.remove("o_twilio_onboard_open");
-        this.props.close();
-    }
-
     async onConnect() {
         if (!this.canConnect) {
             return;
@@ -167,8 +181,7 @@ export class TwilioOnboardingWizard extends Component {
             }
             if (opened) {
                 this.state.tokenReady = true;
-                document.body.classList.remove("o_twilio_onboard_open");
-                this.props.close();
+                this._closeWizard();
             } else {
                 this.state.error = _t(
                     "Twilio token did not register properly. Stay on this step and try Open Dialer again, or use Refresh on the dialer."

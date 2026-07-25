@@ -100,7 +100,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'support': "developer.lifetips@gmail.com",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.75',
+    'version': '18.0.1.2.76',
     'license': 'LGPL-3',
 
     'depends': [

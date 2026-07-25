@@ -28,6 +28,11 @@ body.o_twilio_onboard_open .modal-backdrop {
 
     .modal-header {
         border-bottom: 1px solid #eef1f4;
+
+        /* Required wizard — no dismiss control */
+        .btn-close {
+            display: none !important;
+        }
     }
 
     .modal-footer {

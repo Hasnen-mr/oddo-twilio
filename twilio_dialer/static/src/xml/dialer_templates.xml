@@ -25,6 +25,7 @@
                          fromNumber="state.fromNumber"
                          partnerId="state.partnerId || undefined"
                          partnerName="state.partnerName"
+                         autoDialerId="state.autoDialerId || undefined"
                          requestId="state.requestId || undefined"/>
         </div>
     </t>
@@ -77,8 +78,14 @@
                             </div>
 
                             <div class="o_dialer_incoming_info_card">
-                                <i class="fa fa-info-circle o_dialer_incoming_info_icon"/>
-                                <span>You have an incoming call</span>
+                                <div class="d-flex flex-column align-items-center gap-1 text-center w-100">
+                                    <div class="o_dialer_incoming_number_line">
+                                        <strong class="me-1">From:</strong> <span t-esc="fullIncomingDisplayNumber"/>
+                                    </div>
+                                    <div class="o_dialer_incoming_number_line" t-if="incomingToDisplayNumber">
+                                        <strong class="me-1">To:</strong> <span t-esc="incomingToDisplayNumber"/>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="o_dialer_incoming_actions">

@@ -44,19 +44,18 @@ class TwilioBillingService(models.AbstractModel):
             _logger.warning("MyBroadcast Billing returned a non-object payload: %r", payload)
             raise UserError("Billing service returned an invalid response.")
 
-        incoming = self._number(payload, "incoming")
-        outgoing = self._number(payload, "outgoing")
-        limit = self._number(payload, "limit")
-        if None in (incoming, outgoing, limit):
-            raise UserError("Billing service returned incomplete or invalid usage data.")
+        incoming = self._number(payload, "incoming") or 0
+        outgoing = self._number(payload, "outgoing") or 0
         usage = incoming + outgoing
+        # Set limit to a huge number or represent unlimited in the backend response
+        limit = 999999
         return {
             "accountSid": account_sid,
             "incoming": incoming,
             "outgoing": outgoing,
             "usage": usage,
-            "limit": limit,
-            "remaining": max(limit - usage, 0),
+            "limit": "Unlimited",
+            "remaining": "Unlimited",
             "paymentDone": payload.get("payment_done") if isinstance(payload.get("payment_done"), bool) else False,
             "paymentDue": payload.get("payment_due") if isinstance(payload.get("payment_due"), bool) else False,
             "email": payload.get("email") if isinstance(payload.get("email"), str) else False,

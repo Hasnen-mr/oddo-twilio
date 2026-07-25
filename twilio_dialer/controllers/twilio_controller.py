@@ -108,7 +108,7 @@ class TwilioController(http.Controller):
             if direction.startswith("inbound"):
                 return self.incoming_call(**kwargs)
 
-            caller_id = (
+            raw_caller_id = (
                 params.get("From")
                 or params.get("from")
                 or params.get("from_number")
@@ -119,8 +119,10 @@ class TwilioController(http.Controller):
                 or request.httprequest.args.get("from_number", "")
                 or request.httprequest.args.get("CallerId", "")
                 or request.httprequest.args.get("callerId", "")
+                or ""
             )
-            if not caller_id:
+            caller_id = raw_caller_id.strip() if isinstance(raw_caller_id, str) else ""
+            if not caller_id or not caller_id.startswith("+"):
                 caller_id = request.env["twilio.service"].get_verified_twilio_phone_number()
 
             to_number = (
@@ -147,6 +149,7 @@ class TwilioController(http.Controller):
                     caller_id=escape(caller_id),
                     to_number=escape(to_number),
                 )
+            _logger.info("[Twilio TwiML Output] Request params: %s | Generated TwiML: %s", params, twiml)
             return request.make_response(
                 twiml,
                 headers={"Content-Type": "text/xml; charset=utf-8"},

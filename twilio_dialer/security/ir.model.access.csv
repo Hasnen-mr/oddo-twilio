@@ -13,3 +13,5 @@ access_twilio_dialer_dashboard_user,twilio.dialer.dashboard.user,model_twilio_di
 access_twilio_dashboard_date_line_user,twilio.dashboard.date.line.user,model_twilio_dialer_dashboard_date_line,base.group_user,1,1,1,1
 access_twilio_dashboard_agent_line_user,twilio.dashboard.agent.line.user,model_twilio_dialer_dashboard_agent_line,base.group_user,1,1,1,1
 access_twilio_version_update_user,twilio.version.update.user,model_twilio_version_update,base.group_user,1,0,0,0
+access_twilio_auto_dialer_import_history_user,twilio.auto.dialer.import.history.user,model_twilio_auto_dialer_import_history,base.group_user,1,1,1,1
+access_twilio_auto_dialer_import_wizard_user,twilio.auto.dialer.import.wizard.user,model_twilio_auto_dialer_import_wizard,base.group_user,1,1,1,1

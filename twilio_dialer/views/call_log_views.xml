@@ -32,7 +32,7 @@
                 <field name="direction"/>
                 <field name="call_type" optional="show"/>
                 <field name="from_number" optional="hide"/>
-                <field name="to_number"/>
+                <field name="to_number" widget="twilio_call_button"/>
                 <field name="status" widget="badge"
                           decoration-success="status == 'completed'"
                           decoration-warning="status in ('busy','no_answer','ringing','in_progress')"
@@ -130,6 +130,12 @@
                         <label for="name"/>
                         <h1><field name="name" readonly="1"/></h1>
                         <h2><field name="display_name" readonly="1"/></h2>
+                        <div class="o_twilio_call_log_phone_row">
+                            <field name="to_number"
+                                   widget="twilio_call_button"
+                                   readonly="1"
+                                   nolabel="1"/>
+                        </div>
                     </div>
 
                     <group>
@@ -138,9 +144,10 @@
                             <field name="direction"/>
                             <field name="call_type"/>
                             <field name="from_number"/>
-                            <field name="to_number"/>
+                            <field name="to_number" widget="twilio_call_button"/>
                             <field name="outcome"/>
                         </group>
+
                         <group string="Timing &amp; Agent">
                             <field name="user_id" widget="many2one_avatar_user"/>
                             <field name="company_id" groups="base.group_multi_company"/>

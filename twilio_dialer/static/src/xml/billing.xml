@@ -101,7 +101,7 @@
                             </div>
                             <span class="o_billing_package_calls">
                                 <i class="fa fa-phone"/>
-                                <t t-esc="pkg.calls"/> calls included
+                                <t t-esc="pkg.calls"/> calls
                             </span>
                         </div>
                         <ul class="o_billing_package_features">

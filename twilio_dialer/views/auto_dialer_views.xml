@@ -20,6 +20,10 @@
                        decoration-warning="state == 'paused'"
                        decoration-muted="state == 'draft'"
                        decoration-danger="state == 'cancelled'"/>
+                <button name="action_start" type="object" icon="fa-play" class="o_dialer_qbtn o_dialer_qbtn_start me-1" title="Start Campaign" invisible="state in ('running', 'completed')"/>
+                <button name="action_start" type="object" icon="fa-refresh" class="o_dialer_qbtn o_dialer_qbtn_restart me-1" title="Restart Campaign" invisible="state != 'completed'"/>
+                <button name="action_pause" type="object" icon="fa-pause" class="o_dialer_qbtn o_dialer_qbtn_pause me-1" title="Pause Campaign" invisible="state != 'running'"/>
+                <button name="action_stop" type="object" icon="fa-stop" class="o_dialer_qbtn o_dialer_qbtn_stop me-1" title="Stop Campaign" invisible="state not in ('running', 'paused')"/>
                 <field name="total_contacts"/>
                 <field name="pending_contacts"/>
                 <field name="completed_contacts"/>
@@ -45,6 +49,10 @@
                             class="btn-primary" invisible="state != 'paused'"/>
                     <button name="action_stop" type="object" string="Stop"
                             class="btn-secondary" invisible="state not in ('running', 'paused')"/>
+                    <button name="action_open_import_wizard" type="object" string="Import CSV"
+                            class="btn-info" icon="fa-upload"/>
+                    <button name="action_export_csv" type="object" string="Export CSV"
+                            class="btn-secondary" icon="fa-download" invisible="total_contacts == 0"/>
                     <button name="action_cancel" type="object" string="Cancel Queue"
                             class="btn-danger" invisible="state == 'cancelled'"/>
                     <field name="state" widget="statusbar"
@@ -92,6 +100,7 @@
                             <field name="progress" widget="progressbar"/>
                         </group>
                         <group string="Statistics Summary">
+                            <field name="description" placeholder="Optional campaign notes / objective..."/>
                             <field name="total_contacts" readonly="1"/>
                             <field name="pending_contacts" readonly="1"/>
                             <field name="completed_contacts" readonly="1"/>
@@ -100,7 +109,22 @@
                     </group>
 
                     <notebook>
-                        <page string="Queue Lines" name="queue_lines">
+                        <page string="Contacts" name="select_contacts">
+                            <div class="mb-3">
+                                <button name="action_add_selected_contacts" type="object" string="Add Selected to Queue" class="btn-primary icon-fa-user-plus me-2"/>
+                                <button name="action_open_import_wizard" type="object" string="Import CSV" class="btn-secondary icon-fa-upload"/>
+                            </div>
+                            <field name="partner_ids" domain="['|', ('phone', '!=', False), ('mobile', '!=', False)]">
+                                <list string="Select Contacts">
+                                    <field name="name"/>
+                                    <field name="phone"/>
+                                    <field name="mobile"/>
+                                    <field name="email"/>
+                                    <field name="company_id" groups="base.group_multi_company"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Campaign Records" name="queue_lines">
                             <field name="queue_line_ids">
                                 <list editable="bottom"
                                       decoration-success="status == 'completed'"
@@ -110,8 +134,10 @@
                                       decoration-muted="status == 'pending'">
                                     <field name="sequence" widget="handle"/>
                                     <field name="sequence" string="Seq"/>
-                                    <field name="partner_id"/>
+                                    <field name="partner_id" string="Contact" options="{'no_create': True}"/>
                                     <field name="phone"/>
+                                    <field name="mobile" optional="show"/>
+                                    <field name="email" optional="show"/>
                                     <field name="status" widget="badge"
                                            decoration-success="status == 'completed'"
                                            decoration-info="status == 'calling'"
@@ -119,9 +145,25 @@
                                            decoration-danger="status in ('failed','cancelled')"
                                            decoration-muted="status == 'pending'"/>
                                     <field name="attempt_count" string="Attempts"/>
+                                    <field name="duration_sec" string="Duration (s)"/>
                                     <field name="last_call_date"/>
                                     <field name="notes"/>
-                                    <field name="error_message" optional="show"/>
+                                    <field name="error_message" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Import History" name="import_history">
+                            <field name="import_history_ids" readonly="1">
+                                <list>
+                                    <field name="file_name"/>
+                                    <field name="user_id" widget="many2one_avatar_user"/>
+                                    <field name="import_date"/>
+                                    <field name="total_records"/>
+                                    <field name="imported_records"/>
+                                    <field name="duplicate_records"/>
+                                    <field name="invalid_records"/>
+                                    <field name="skipped_records"/>
+                                    <field name="notes"/>
                                 </list>
                             </field>
                         </page>
@@ -143,6 +185,7 @@
             </form>
         </field>
     </record>
+
 
     <!-- Search View for Dialing Queue -->
     <record id="view_twilio_auto_dialer_search" model="ir.ui.view">
@@ -242,4 +285,41 @@
         <field name="binding_view_types">list</field>
     </record>
 
+    <!-- CSV Import Wizard Form View -->
+    <record id="view_twilio_auto_dialer_import_wizard_form" model="ir.ui.view">
+        <field name="name">twilio.auto.dialer.import.wizard.form</field>
+        <field name="model">twilio.auto.dialer.import.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Import Contacts via CSV">
+                <sheet>
+                    <group invisible="state != 'upload'">
+                        <group string="Select CSV File">
+                            <field name="dialer_id" readonly="1"/>
+                            <field name="csv_file" filename="file_name"/>
+                            <field name="file_name" invisible="1"/>
+                            <field name="duplicate_handling" widget="radio"/>
+                        </group>
+                    </group>
+                    <group invisible="state != 'preview'">
+                        <group string="Import Summary Preview">
+                            <field name="total_rows" readonly="1"/>
+                            <field name="valid_rows" readonly="1" class="text-success fw-bold"/>
+                            <field name="duplicate_rows" readonly="1" class="text-warning fw-bold"/>
+                            <field name="invalid_rows" readonly="1" class="text-danger fw-bold"/>
+                        </group>
+                        <group string="Status">
+                            <field name="preview_data" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_preview" string="Preview &amp; Validate" type="object" class="btn-primary" invisible="state != 'upload'"/>
+                    <button name="action_import" string="Confirm &amp; Import" type="object" class="btn-success" invisible="state != 'preview'"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
 </odoo>
+

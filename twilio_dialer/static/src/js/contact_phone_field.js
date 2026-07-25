@@ -1,12 +1,23 @@
 /** @odoo-module **/
 
-import { Component } from "@odoo/owl";
+import { Component, xml } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
+import { registry } from "@web/core/registry";
+import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { PhoneField, phoneField, formPhoneField } from "@web/views/fields/phone/phone_field";
 
-class ContactCallButton extends Component {
+// ── Shared call-button component ─────────────────────────────────────────────
+//
+// Used in two contexts:
+//   1. Inline in a PhoneField (Contacts view) — receives { record, name }
+//   2. Standalone field widget (Call Log form)  — receives { record, name }
+//
+// Both contexts pass the same props: the record object and the field name whose
+// value holds the phone number to dial.
+
+export class ContactCallButton extends Component {
     static template = "twilio_dialer.ContactCallButton";
     static props = {
         record: { type: Object },
@@ -24,18 +35,22 @@ class ContactCallButton extends Component {
 
     openDialer() {
         if (!this.phone) {
-            this.notification.add(_t("This contact does not have a phone number."), {
+            this.notification.add(_t("No phone number available to dial."), {
                 type: "warning",
             });
             return;
         }
         this.dialer.open({
             phone: this.phone,
-            partnerId: this.props.record.resId,
-            partnerName: this.props.record.data.name || "",
+            partnerId: this.props.record.data.partner_id?.[0] || this.props.record.resId || null,
+            partnerName: this.props.record.data.partner_id?.[1]
+                || this.props.record.data.name
+                || "",
         });
     }
 }
+
+// ── Inline usage: injected into PhoneField (Contacts, etc.) ──────────────────
 
 patch(PhoneField, {
     components: {
@@ -63,3 +78,47 @@ const patchDescription = () => ({
 
 patch(phoneField, patchDescription());
 patch(formPhoneField, patchDescription());
+
+// ── Standalone usage: "twilio_call_button" field widget ──────────────────────
+//
+// Usage in an Odoo form view:
+//   <field name="to_number" widget="twilio_call_button" readonly="1"/>
+//
+// This renders the phone number as plain text followed immediately by the same
+// red circular call button — identical to the one on the Contacts page.
+
+class TwilioCallButtonField extends Component {
+    static template = "twilio_dialer.TwilioCallButtonField";
+    static props = {
+        ...standardFieldProps,
+    };
+
+    setup() {
+        this.dialer = useService("twilio_dialer");
+        this.notification = useService("notification");
+    }
+
+    get phone() {
+        return this.props.record.data[this.props.name] || "";
+    }
+
+    openDialer() {
+        if (!this.phone) {
+            this.notification.add(_t("No phone number available to dial."), {
+                type: "warning",
+            });
+            return;
+        }
+        this.dialer.open({
+            phone: this.phone,
+            partnerId: this.props.record.data.partner_id?.[0] || null,
+            partnerName: this.props.record.data.partner_id?.[1] || "",
+        });
+    }
+}
+
+registry.category("fields").add("twilio_call_button", {
+    component: TwilioCallButtonField,
+    displayName: _t("Twilio Call Button"),
+    supportedTypes: ["char"],
+});

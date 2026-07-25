@@ -44,6 +44,8 @@ class TwilioService(models.AbstractModel):
     def get_twilio_phone_number(self):
         ICP = self.env["ir.config_parameter"].sudo()
         phone_number = ICP.get_param("twilio_dialer.phone_number")
+        if not phone_number:
+            return ""
         return self.validate_phone_number(phone_number)
 
     def get_verified_twilio_phone_number(self):

@@ -399,6 +399,7 @@ class DeviceManager {
             }
             this._activeConnection = call;
             const fromNumber = call.parameters?.From || call.parameters?.from || "Unknown";
+            const toNumber = call.parameters?.To || call.parameters?.to || "";
             const callSid = call.parameters?.CallSid || "";
 
             this._attachCallListeners(call, callSid, fromNumber);
@@ -408,7 +409,7 @@ class DeviceManager {
             }
 
             if (typeof this._onIncomingCall === "function") {
-                this._onIncomingCall(call, fromNumber, callSid);
+                this._onIncomingCall(call, fromNumber, callSid, toNumber);
             }
         });
 
@@ -479,7 +480,18 @@ class DeviceManager {
             return;
         }
 
+        const logState = (event) => {
+            console.log(`[Twilio Call Event: ${event}]`, {
+                timestamp: new Date().toISOString(),
+                callSid: call.parameters?.CallSid || callSid,
+                deviceManagerStatus: this.status,
+                activeQueueLineId: this._activeQueueLineId,
+                callState: typeof call.status === "function" ? call.status() : "unknown"
+            });
+        };
+
         call.on("accept", () => {
+            logState("accept");
             this._syncCallLog(call, callSid, phoneNumber, "in_progress");
             if (!this._destroyed) {
                 this._setStatus(STATUS.CONNECTED);
@@ -489,12 +501,14 @@ class DeviceManager {
         });
 
         call.on("ringing", () => {
+            logState("ringing");
             this._syncCallLog(call, callSid, phoneNumber, "ringing");
             console.log(" Ringing");
             console.log(call.parameters);
         });
 
         call.on("disconnect", () => {
+            logState("disconnect");
             this._syncCallLog(
                 call,
                 callSid,
@@ -505,11 +519,12 @@ class DeviceManager {
             if (!this._destroyed) {
                 this._setStatus(STATUS.READY);
             }
-        console.log(" Call Disconnected");
-        console.log(call.parameters);
+            console.log(" Call Disconnected");
+            console.log(call.parameters);
         });
 
         call.on("cancel", () => {
+            logState("cancel");
             this._syncCallLog(call, callSid, phoneNumber, "canceled");
             this._activeConnection = null;
             if (!this._destroyed) {
@@ -518,6 +533,7 @@ class DeviceManager {
         });
 
         call.on("reject", () => {
+            logState("reject");
             this._syncCallLog(call, callSid, phoneNumber, "rejected");
             this._activeConnection = null;
             if (!this._destroyed) {
@@ -527,16 +543,12 @@ class DeviceManager {
 
         call.on("error", (error) => {
             console.group("Twilio Call Error");
-
             console.error("Full Error:", error);
             console.log("Code:", error.code);
             console.log("Message:", error.message);
-            console.log("Explanation:", error.explanation);
-            console.log("Causes:", error.causes);
-            console.log("Solutions:", error.solutions);
-            console.log("Original Error:", error.originalError);
-
             console.groupEnd();
+
+            logState(`error (code: ${error.code}, msg: ${error.message})`);
 
             this._syncCallLog(call, callSid, phoneNumber, "failed");
             this._activeConnection = null;
@@ -551,22 +563,39 @@ class DeviceManager {
         const statusMap = {
             "in-progress": "in_progress",
             "no-answer": "no_answer",
+            "busy": "busy",
+            "failed": "failed",
+            "canceled": "canceled",
+            "rejected": "rejected"
         };
-        return statusMap[call.parameters?.CallStatus] || call.parameters?.CallStatus || fallback;
+        const callStatus = call.parameters?.CallStatus || "";
+        if (callStatus && statusMap[callStatus]) {
+            return statusMap[callStatus];
+        }
+        return fallback;
     }
 
-    async _createCallLog(callSid, phoneNumber, partnerId = null) {
-        await rpc("/twilio_dialer/call_log/create", {
-            call_sid: callSid,
-            to_number: phoneNumber,
-            partner_id: partnerId,
-        });
+    async _createCallLog(callSid, phoneNumber, partnerId = null, retries = 3) {
+        for (let attempt = 1; attempt <= retries; attempt++) {
+            try {
+                await rpc("/twilio_dialer/call_log/create", {
+                    call_sid: callSid,
+                    to_number: phoneNumber,
+                    partner_id: partnerId,
+                });
+                return;
+            } catch (err) {
+                console.warn(`[DeviceManager] _createCallLog attempt ${attempt}/${retries} failed:`, err);
+                if (attempt === retries) throw err;
+                await new Promise((r) => setTimeout(r, 500 * attempt));
+            }
+        }
     }
 
     async _syncCallLog(call, fallbackCallSid, phoneNumber, status) {
-        const callSid = call.parameters?.CallSid || fallbackCallSid;
+        const callSid = call.parameters?.CallSid || call.parameters?.callSid || fallbackCallSid || this._activeConnection?.parameters?.CallSid;
         if (!callSid) {
-            console.warn("Twilio Call SID is not available for call log update.");
+            console.warn("[DeviceManager] Twilio Call SID is not available yet for call log update. Skipping transient sync.");
             return;
         }
 
@@ -642,8 +671,30 @@ class DeviceManager {
         }
     }
 
+    normalizePhoneNumber(phoneNumber, defaultCountryCode = "+91") {
+        let cleaned = (phoneNumber || "").toString().trim().replace(/[^0-9+]/g, "");
+        if (!cleaned) return "";
+
+        if (cleaned.startsWith("+")) {
+            return cleaned;
+        }
+
+        const countryDigits = defaultCountryCode.replace(/\D/g, "");
+        if (countryDigits && cleaned.startsWith(countryDigits)) {
+            return "+" + cleaned;
+        }
+
+        if (cleaned.startsWith("0")) {
+            cleaned = cleaned.replace(/^0+/, "");
+        }
+
+        const prefix = defaultCountryCode.startsWith("+") ? defaultCountryCode : "+" + defaultCountryCode;
+        return prefix + cleaned;
+    }
+
     async makeCall(phoneNumber, customParameters = {}, callContext = {}) {
         if (!this.device || this._destroyed || !phoneNumber) {
+            console.error("[DeviceManager] makeCall failed checks: device=" + !!this.device + ", destroyed=" + this._destroyed + ", phoneNumber=" + phoneNumber);
             return false;
         }
 
@@ -652,13 +703,34 @@ class DeviceManager {
         this._activeQueueLineId = callContext.queueLineId || null;
 
         try {
-            console.log("Dialing:", phoneNumber);
+            // Normalize destination phone number to clean E.164 using shared helper
+            const cleanNumber = this.normalizePhoneNumber(phoneNumber);
+            const fromNumber = customParameters.From || customParameters.from_number || customParameters.callerId || "";
+
+            console.log("[DeviceManager] makeCall trace:", {
+                phoneNumber: cleanNumber,
+                customParameters: customParameters,
+                callContext: callContext,
+                selectedCaller: fromNumber
+            });
+
+            const connectParams = {
+                To: cleanNumber,
+                to: cleanNumber,
+                phone: cleanNumber,
+                destination: cleanNumber,
+                From: fromNumber,
+                from_number: fromNumber,
+                callerId: fromNumber,
+                ...customParameters,
+            };
+
+            if (window.TWILIO_DIALER_DEBUG) {
+                console.log("[DEBUG TRACE] device.connect params:", JSON.stringify(connectParams, null, 2));
+            }
 
             const call = await this.device.connect({
-                params: {
-                    To: phoneNumber,
-                    ...customParameters,
-                },
+                params: connectParams,
             });
 
             console.group("Call Debug");

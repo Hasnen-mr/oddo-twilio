@@ -9,14 +9,14 @@ const CALL_PACKAGES = Object.freeze([
     {
         id: "starter",
         price: "$10",
-        calls: "400",
+        calls: "Unlimited",
         label: "Starter",
         url: "https://www.paypal.com/ncp/payment/9CCGLBAKUAR46",
     },
     {
         id: "growth",
         price: "$20",
-        calls: "1,000",
+        calls: "Unlimited",
         label: "Growth",
         url: "https://www.paypal.com/ncp/payment/77XHCYQR32VB2",
         featured: true,
@@ -24,7 +24,7 @@ const CALL_PACKAGES = Object.freeze([
     {
         id: "business",
         price: "$80",
-        calls: "5,000",
+        calls: "Unlimited",
         label: "Business",
         url: "https://www.paypal.com/ncp/payment/Y77RLPSJT29VS",
     },
@@ -68,10 +68,17 @@ export class BillingDashboard extends Component {
 
     get progress() {
         const billing = this.state.billing;
-        return billing?.limit ? Math.min((billing.usage / billing.limit) * 100, 100) : 0;
+        if (!billing || billing.limit === "Unlimited" || !billing.limit) {
+            return 0;
+        }
+        return Math.min((billing.usage / billing.limit) * 100, 100);
     }
 
     get usageState() {
+        const billing = this.state.billing;
+        if (billing && billing.limit === "Unlimited") {
+            return "healthy";
+        }
         return this.progress >= 100 ? "over-limit" : this.progress >= 80 ? "warning" : "healthy";
     }
 }

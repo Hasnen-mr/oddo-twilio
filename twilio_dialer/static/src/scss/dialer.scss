@@ -30,7 +30,89 @@ $o_dialer-transition: 0.2s ease;
 
 $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 
-// ── Panel Container (Fixed Right-Side) ──────────────────
+// ── List View Queue Circular Action Buttons (Spotify/Linear aesthetic) ─────────
+
+.o_list_renderer {
+    .btn.o_dialer_qbtn {
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        border: none;
+        border-radius: 50% !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        line-height: 1;
+        cursor: pointer;
+        vertical-align: middle;
+        transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+
+        i {
+            margin: 0 !important;
+            transition: transform 0.18s ease;
+        }
+
+        &:hover {
+            transform: translateY(-1px) scale(1.08);
+        }
+
+        &:active {
+            transform: translateY(0) scale(0.96);
+        }
+    }
+
+    // 1. Start Campaign — Vibrant Emerald Play Button
+    .btn.o_dialer_qbtn_start {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.35);
+
+        &:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.48);
+        }
+    }
+
+    // 2. Restart Campaign — Royal Indigo/Violet Refresh Button
+    .btn.o_dialer_qbtn_restart {
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+
+        &:hover {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.48);
+            i {
+                transform: rotate(180deg);
+            }
+        }
+    }
+
+    // 3. Pause Campaign — Warm Amber/Orange Pause Button
+    .btn.o_dialer_qbtn_pause {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+
+        &:hover {
+            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.48);
+        }
+    }
+
+    // 4. Stop Campaign — Slate/Graphite Stop Button
+    .btn.o_dialer_qbtn_stop {
+        background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        color: #ffffff;
+        box-shadow: 0 2px 6px rgba(100, 116, 139, 0.28);
+
+        &:hover {
+            background: linear-gradient(135deg, #475569 0%, #334155 100%);
+            box-shadow: 0 4px 10px rgba(100, 116, 139, 0.4);
+        }
+    }
+}
 
 .o_dialer_panel {
     position: fixed;
@@ -55,25 +137,26 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
     flex: 0 0 auto;
     align-items: center;
     justify-content: center;
-    width: 32px;
-    height: 32px;
+    width: 24px;
+    height: 24px;
     padding: 0;
     border: 0;
     border-radius: 50%;
-    background: #dc2626;
+    background: #ef4444;
     color: #fff;
-    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.28);
+    font-size: 11px;
+    box-shadow: 0 1px 4px rgba(239, 68, 68, 0.22);
     cursor: pointer;
-    transition: transform 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    vertical-align: middle;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
 
     &:hover:not(:disabled) {
-        background: #b91c1c;
-        box-shadow: 0 4px 10px rgba(220, 38, 38, 0.35);
-        transform: translateY(-1px);
+        background: #dc2626;
+        box-shadow: 0 2px 6px rgba(239, 68, 68, 0.32);
     }
 
     &:focus-visible {
-        outline: 2px solid rgba(220, 38, 38, 0.4);
+        outline: 2px solid rgba(239, 68, 68, 0.35);
         outline-offset: 2px;
     }
 
@@ -81,6 +164,45 @@ $o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetic
         background: #cbd5e1;
         box-shadow: none;
         cursor: not-allowed;
+    }
+}
+
+// ── Standalone twilio_call_button field widget wrapper ───────────────────────
+// Used in Call Log form and any other model where the widget is applied.
+// Lays out the phone number text and the circular call button inline.
+
+.o_twilio_call_btn_field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: 8px;
+    min-width: 0;
+    vertical-align: middle;
+    line-height: 1.2;
+
+    .o_twilio_call_btn_number {
+        font-size: inherit;
+        color: inherit;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
+// ── Call Log form — phone row below the reference heading ────────────────────
+
+.o_twilio_call_log_phone_row {
+    display: flex;
+    align-items: center;
+    margin-top: 4px;
+    margin-bottom: 8px;
+
+    // Match h2 visual weight used by oe_title
+    .o_twilio_call_btn_number {
+        font-size: 1.35rem;
+        font-weight: 500;
+        color: #1f2937;
     }
 }
 

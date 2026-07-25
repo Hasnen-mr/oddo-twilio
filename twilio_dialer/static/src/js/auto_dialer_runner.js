@@ -195,7 +195,11 @@ export class AutoDialerRunner extends Component {
             } catch (err) {
                 console.warn(`[AutoDialerRunner] Sync line ${lineId} attempt ${attempt}/${retries} failed:`, err);
                 if (attempt === retries) {
-                    console.error(`[AutoDialerRunner] Sync line ${lineId} failed after ${retries} attempts.`);
+                    console.error(`[AutoDialerRunner] Network sync exhausted after ${retries} attempts. Safely pausing campaign.`);
+                    this._isStopped = true;
+                    this.state.queueState = "paused";
+                    this._clearAutoTimers();
+                    throw err; // Re-throw error so application layer is notified
                 } else {
                     await new Promise((r) => setTimeout(r, 500 * attempt));
                 }
@@ -237,6 +241,11 @@ export class AutoDialerRunner extends Component {
         }, ringTimeSec * 1000);
 
         try {
+            console.log("[AutoDialerRunner] Placing call via deviceManager:", {
+                fullNumber: fullNumber,
+                fromNum: fromNum,
+                lineId: line.id
+            });
             // Execute call via DeviceManager
             const success = await deviceManager.makeCall(fullNumber, {
                 From: fromNum,
@@ -280,12 +289,13 @@ export class AutoDialerRunner extends Component {
             );
             this.state.queues = queues;
 
-            // Auto-restore active queue from service if present
+            // Auto-restore active queue from service if present (e.g., when a user starts a campaign from form view)
             const svc = this.dialerSvc.state;
-            if (svc.autoDialerId && !this.state.activeQueue) {
+            if (svc.autoDialerId) {
                 const found = queues.find((q) => q.id === svc.autoDialerId);
                 if (found) {
                     await this.onSelectQueue(found.id);
+                    return;
                 }
             }
 
@@ -486,7 +496,8 @@ export class AutoDialerRunner extends Component {
                 await this._triggerCallForCurrentLine();
             }
         } catch (err) {
-            console.error("[AutoDialerRunner] Resume failed:", err);
+            console.warn("[AutoDialerRunner] Resume caught expected error or server offline:", err.message || err);
+            await this._refreshQueue();
         } finally {
             this.state.actionPending = false;
         }
@@ -498,13 +509,18 @@ export class AutoDialerRunner extends Component {
         this.state.queueState = "paused";
         this._clearAutoTimers();
 
-        // If call is active, hang up
-        if (deviceManager.status === "connecting" || deviceManager.status === "connected") {
-            deviceManager.disconnect();
+        // If call is active or connecting, hang up WebRTC connection immediately
+        if (deviceManager.status === "connecting" || deviceManager.status === "connected" || deviceManager.status === "registering") {
+            try {
+                deviceManager.disconnect();
+            } catch (e) {
+                console.warn("[AutoDialerRunner] Disconnect on stop caught:", e);
+            }
         }
         this._clearAutoTimers();
 
         await this._callQueueAction("action_stop");
+        this._isStopped = true;
         this.state.queueState = "paused";
         this._clearAutoTimers();
         this.state.currentLine = null;
@@ -571,8 +587,10 @@ export class AutoDialerRunner extends Component {
                 progress: Math.round(queue.progress || 0),
             };
 
-            if (queue.current_line_id && !this.state.currentLine) {
+            if (queue.current_line_id) {
                 await this._fetchCurrentLineData(queue.current_line_id[0]);
+            } else {
+                this.state.currentLine = null;
             }
         } catch (err) {
             console.error("[AutoDialerRunner] Refresh failed:", err);

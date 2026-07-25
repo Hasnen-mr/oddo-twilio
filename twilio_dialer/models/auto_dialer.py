@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*-
+import base64
+import csv
+import io
 import logging
 
 from odoo import api, fields, models
@@ -41,16 +43,37 @@ class TwilioAutoDialer(models.Model):
         index=True,
     )
 
+    def _default_from_number(self):
+        return self.env["twilio.service"].get_twilio_phone_number()
+
     from_number = fields.Char(
         string="From Number",
+        default=_default_from_number,
         tracking=True,
         help="Twilio phone number used as Caller ID for this campaign queue.",
+    )
+
+    description = fields.Text(string="Description")
+    active = fields.Boolean(string="Active", default=True)
+
+    partner_ids = fields.Many2many(
+        "res.partner",
+        "twilio_auto_dialer_partner_rel",
+        "dialer_id",
+        "partner_id",
+        string="Select Contacts",
+        help="Select Odoo contacts to automatically generate Queue Lines.",
     )
 
     queue_line_ids = fields.One2many(
         "twilio.auto.dialer.line",
         "dialer_id",
         string="Queue Lines",
+    )
+    import_history_ids = fields.One2many(
+        "twilio.auto.dialer.import.history",
+        "dialer_id",
+        string="Import History",
     )
 
     total_contacts = fields.Integer(
@@ -209,6 +232,31 @@ class TwilioAutoDialer(models.Model):
         )
         return {"created": created_count, "skipped": skipped_count}
 
+    def action_add_selected_contacts(self):
+        """Button action on form view to convert selected partner_ids into Queue Lines."""
+        self.ensure_one()
+        if not self.partner_ids:
+            raise UserError("Please select at least one Contact from the list before clicking 'Add Selected to Queue'.")
+
+        selected_count = len(self.partner_ids)
+        res = self.action_add_contacts(self.partner_ids)
+        added_count = res.get("created", 0)
+        skipped_count = res.get("skipped", 0)
+
+        # Clear selection after adding
+        self.write({"partner_ids": [(5, 0, 0)]})
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "display_notification",
+            "params": {
+                "title": "Contacts Added to Queue",
+                "message": f"Selected: {selected_count} | Added: {added_count} | Already in Queue: {skipped_count}",
+                "sticky": False,
+                "type": "success",
+            },
+        }
+
     def _get_next_pending_line(self, from_line=None):
         self.ensure_one()
         domain = [("dialer_id", "=", self.id), ("status", "=", "pending")]
@@ -243,27 +291,55 @@ class TwilioAutoDialer(models.Model):
         """Start Queue: draft/paused/cancelled -> running, loads first pending contact into pointer."""
         self.ensure_one()
         if self.state == "cancelled" or self.state == "completed":
-            pending_count = self.queue_line_ids.filtered(lambda l: l.status == "pending")
-            if not pending_count:
-                raise UserError("All contacts in this queue have already been processed.")
-            self.write({"state": "draft"})
+            # Restart campaign: Reset all processed queue lines back to pending
+            self.queue_line_ids.write({"status": "pending", "attempt_count": 0, "last_call_date": False})
+            self.write({"state": "draft", "current_line_id": False})
+
+        # If user selected contacts in partner_ids tab but hasn't clicked 'Add Selected to Queue' yet, convert them automatically!
+        if self.partner_ids:
+            self.action_add_contacts(self.partner_ids)
+            self.write({"partner_ids": [(5, 0, 0)]})
 
         if not self.queue_line_ids:
-            raise UserError("No contacts in this dialing queue. Please add contacts first.")
+            raise UserError("No contacts in this dialing queue. Please select contacts or import a CSV file first.")
 
-        target_line = self.current_line_id if self.current_line_id and self.current_line_id.status == "pending" else self._get_next_pending_line()
+        # Determine the line to dial
+        target_line = False
+
+        # 1. Check current line if still pending or retryable (e.g. busy/no_answer/failed)
+        if self.current_line_id and self.current_line_id.status in ("pending", "calling", "busy", "no_answer", "failed"):
+            target_line = self.current_line_id
+            if target_line.status != "pending":
+                target_line.write({"status": "pending"})
+
+        # 2. Otherwise find the next pending line
+        if not target_line:
+            target_line = self._get_next_pending_line(from_line=self.current_line_id)
+
+        # 3. If no pending line found ahead, look for any pending line in the entire queue
         if not target_line:
             pending = self.queue_line_ids.filtered(lambda l: l.status == "pending")
             if pending:
                 target_line = pending[0]
-            else:
-                self.state = "completed"
-                raise UserError("All contacts in this queue have already been completed or processed.")
 
-        self.write({
+        # 4. If all lines were completed/processed, automatically reset all queue contacts back to pending so pressing Start seamlessly restarts the campaign!
+        if not target_line:
+            self.queue_line_ids.write({"status": "pending", "attempt_count": 0, "last_call_date": False})
+            pending = self.queue_line_ids.filtered(lambda l: l.status == "pending")
+            if pending:
+                target_line = pending[0]
+            else:
+                self.write({"state": "completed", "current_line_id": False})
+                raise UserError("No contacts available in this queue to dial.")
+
+        vals = {
             "state": "running",
             "current_line_id": target_line.id,
-        })
+        }
+        if not self.from_number:
+            vals["from_number"] = self.env["twilio.service"].get_twilio_phone_number()
+
+        self.write(vals)
         return self.action_open_current_dialer()
 
     def action_pause(self):
@@ -326,6 +402,48 @@ class TwilioAutoDialer(models.Model):
                 self.current_line_id = False
         return self.action_open_current_dialer()
 
+    def action_open_import_wizard(self):
+        self.ensure_one()
+        return {
+            "name": f"Import Contacts into {self.name}",
+            "type": "ir.actions.act_window",
+            "res_model": "twilio.auto.dialer.import.wizard",
+            "view_mode": "form",
+            "target": "new",
+            "context": {
+                "default_dialer_id": self.id,
+            },
+        }
+
+    def action_export_csv(self):
+        self.ensure_one()
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Sequence", "Contact Name", "Phone Number", "Status", "Attempts", "Last Call Date", "Notes"])
+        for line in self.queue_line_ids:
+            writer.writerow([
+                line.sequence,
+                line.partner_id.name if line.partner_id else "",
+                line.phone or "",
+                line.status or "",
+                line.attempt_count or 0,
+                line.last_call_date or "",
+                line.notes or "",
+            ])
+        csv_data = output.getvalue().encode("utf-8")
+        attachment = self.env["ir.attachment"].create({
+            "name": f"{self.name}_contacts.csv",
+            "datas": base64.b64encode(csv_data),
+            "res_model": self._name,
+            "res_id": self.id,
+            "mimetype": "text/csv",
+        })
+        return {
+            "type": "ir.actions.act_url",
+            "url": f"/web/content/{attachment.id}?download=true",
+            "target": "self",
+        }
+
     def action_open_current_dialer(self):
         """Populate current contact into dialer UI."""
         self.ensure_one()
@@ -374,15 +492,54 @@ class TwilioAutoDialerLine(models.Model):
         string="Contact",
         index=True,
     )
+    name = fields.Char(
+        string="Name",
+        related="partner_id.name",
+        store=True,
+        readonly=False,
+    )
     phone = fields.Char(
         string="Phone Number",
         required=True,
         index=True,
     )
+    mobile = fields.Char(
+        string="Mobile",
+        related="partner_id.mobile",
+        store=True,
+        readonly=False,
+    )
+    email = fields.Char(
+        string="Email",
+        related="partner_id.email",
+        store=True,
+        readonly=False,
+    )
+    company_name = fields.Char(
+        string="Company",
+        related="partner_id.parent_id.name",
+        store=True,
+        readonly=True,
+    )
     sequence = fields.Integer(
         string="Sequence",
         default=10,
     )
+
+    @api.onchange("partner_id")
+    def _onchange_partner_id(self):
+        if self.partner_id:
+            raw_phone = self.partner_id.mobile or self.partner_id.phone or ""
+            if raw_phone:
+                digits_only = "".join(c for c in raw_phone if c.isdigit())
+                if raw_phone.startswith("+"):
+                    self.phone = raw_phone
+                elif raw_phone.startswith("91") and len(digits_only) >= 12:
+                    self.phone = "+" + raw_phone
+                elif raw_phone.startswith("0"):
+                    self.phone = "+91" + raw_phone.lstrip("0")
+                else:
+                    self.phone = "+91" + raw_phone
     status = fields.Selection(
         [
             ("pending", "Pending"),

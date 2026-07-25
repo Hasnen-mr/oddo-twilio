@@ -21,6 +21,7 @@ export class DialerPopup extends Component {
         fromNumber: { type: String, optional: true },
         partnerId: { type: Number, optional: true },
         partnerName: { type: String, optional: true },
+        autoDialerId: { type: Number, optional: true },
         requestId: { type: Number, optional: true },
     };
 
@@ -33,7 +34,7 @@ export class DialerPopup extends Component {
             this._findCountry(lastDial?.countryCode, lastDial?.countryLabel) || defaultCountry;
 
         const hasAutoDialer = !!(this.props.autoDialerId || this.dialerState.autoDialerId);
-        const initialTab = hasAutoDialer && !this.props.phone ? "auto_dialer" : "dialpad";
+        const initialTab = hasAutoDialer ? "auto_dialer" : "dialpad";
 
         this.state = useState({
             activeTab: initialTab,
@@ -50,6 +51,7 @@ export class DialerPopup extends Component {
             showCallerDropdown: false,
             callerNumbers: [],
             selectedCaller: null,
+            systemPhoneNumber: "",
             showIncomingKeypad: false,
             callDuration: 0,
             autoDialerList: "",
@@ -88,10 +90,10 @@ export class DialerPopup extends Component {
                 this._applyFromNumber(nextProps.fromNumber);
                 if (this.state.connectionStatus === "incoming") {
                     this.state.activeTab = "dialpad";
+                } else if (nextProps.autoDialerId) {
+                    this.state.activeTab = "auto_dialer";
                 } else if (nextProps.phone && !nextProps.autoDialerId) {
                     this.state.activeTab = "dialpad";
-                } else if (nextProps.autoDialerId && !nextProps.phone) {
-                    this.state.activeTab = "auto_dialer";
                 }
             }
         });
@@ -270,6 +272,14 @@ export class DialerPopup extends Component {
         return "Unknown Caller";
     }
 
+    get incomingToDisplayNumber() {
+        const raw = this.props.fromNumber || this.dialerState.fromNumber || "";
+        if (raw && !raw.startsWith("client:") && !raw.startsWith("id_odoo_")) {
+            return raw;
+        }
+        return this.state.selectedCaller?.number || this.state.systemPhoneNumber || "";
+    }
+
     toggleIncomingKeypad() {
         this.state.showIncomingKeypad = !this.state.showIncomingKeypad;
     }
@@ -280,6 +290,7 @@ export class DialerPopup extends Component {
 
     async _loadConfiguredPhoneNumber() {
         const result = await rpc("/twilio_dialer/phone_number");
+        this.state.systemPhoneNumber = result.phone_number || "";
         const preferredNumber =
             this.props.fromNumber ||
             this.state.selectedCaller?.number ||

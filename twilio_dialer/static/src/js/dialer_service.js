@@ -30,9 +30,10 @@ export const dialerService = {
         });
 
         // Automatically open the dialer popup when an incoming call arrives
-        deviceManager.onIncomingCall((call, fromNumber, callSid) => {
-            console.log("[dialerService] Incoming call received:", fromNumber, callSid);
-            dialerState.phone = fromNumber ? String(fromNumber).replace(/\D/g, "").slice(-10) : "";
+        deviceManager.onIncomingCall((call, fromNumber, callSid, toNumber) => {
+            console.log("[dialerService] Incoming call received:", fromNumber, callSid, toNumber);
+            dialerState.phone = fromNumber || "";
+            dialerState.fromNumber = (toNumber && !toNumber.startsWith("client:") && !toNumber.startsWith("id_odoo_")) ? toNumber : "";
             dialerState.requestId += 1;
             dialerState.isOpen = true;
         });

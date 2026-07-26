@@ -98,9 +98,10 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'author': "Solutions Master",
     'website': "https://extension.mybroadcast.online",
     'support': "developer.lifetips@gmail.com",
+    'live_test_url': "https://extension.mybroadcast.online",
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.78',
+    'version': '18.0.1.2.79',
     'license': 'LGPL-3',
 
     'depends': [

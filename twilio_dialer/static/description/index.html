@@ -27,6 +27,194 @@
     </div>
 </section>
 
+<section class="oe_container" style="margin-top:8px; margin-bottom:8px;">
+    <div class="row">
+        <div class="col-12 text-center mb-3">
+            <h3 style="color:#875A7B; font-weight:700; font-size:26px;">See it in action</h3>
+            <p style="color:#666666; font-size:15px; line-height:1.6; max-width:760px; margin:0 auto;">
+                One screen at a time — use Next / Previous to explore the dialer, settings, and call logs.
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-10 offset-md-1 col-12">
+            <style type="text/css">
+                .o_twilio_gallery { position: relative; max-width: 920px; margin: 0 auto; }
+                .o_twilio_gallery input[type="radio"] { display: none; }
+                .o_twilio_gallery .o_twilio_slide {
+                    display: none;
+                    background: #ffffff;
+                    border: 1px solid #e8dff0;
+                    border-radius: 14px;
+                    overflow: hidden;
+                    box-shadow: 0 6px 20px rgba(135, 90, 123, 0.10);
+                }
+                .o_twilio_gallery .o_twilio_slide img {
+                    display: block;
+                    width: 100%;
+                    height: auto;
+                }
+                .o_twilio_gallery .o_twilio_slide_body {
+                    padding: 14px 16px 16px;
+                    border-top: 1px solid #f0eaf4;
+                    text-align: left;
+                }
+                .o_twilio_gallery .o_twilio_slide_tag {
+                    color: #875A7B;
+                    font-size: 11px;
+                    font-weight: 700;
+                    letter-spacing: 0.06em;
+                    text-transform: uppercase;
+                    margin-bottom: 4px;
+                }
+                .o_twilio_gallery .o_twilio_slide_title {
+                    color: #333333;
+                    font-size: 16px;
+                    font-weight: 700;
+                    display: block;
+                    margin-bottom: 4px;
+                }
+                .o_twilio_gallery .o_twilio_slide_text {
+                    color: #666666;
+                    font-size: 13px;
+                    line-height: 1.5;
+                    margin: 0;
+                }
+                #o_twilio_g1:checked ~ .o_twilio_slides .o_twilio_slide_1,
+                #o_twilio_g2:checked ~ .o_twilio_slides .o_twilio_slide_2,
+                #o_twilio_g3:checked ~ .o_twilio_slides .o_twilio_slide_3 { display: block; }
+
+                .o_twilio_gallery_nav {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    gap: 12px;
+                    margin-top: 16px;
+                    flex-wrap: wrap;
+                }
+                .o_twilio_gallery_nav label {
+                    display: inline-block;
+                    cursor: pointer;
+                    background: #875A7B;
+                    color: #ffffff;
+                    font-weight: 700;
+                    font-size: 14px;
+                    border-radius: 10px;
+                    padding: 10px 20px;
+                    margin: 0;
+                    user-select: none;
+                }
+                .o_twilio_gallery_nav label:hover { filter: brightness(1.05); }
+                .o_twilio_gallery_dots { display: flex; gap: 8px; align-items: center; }
+                .o_twilio_gallery_dots label {
+                    width: 10px;
+                    height: 10px;
+                    padding: 0;
+                    border-radius: 50%;
+                    background: #d4c4d4;
+                    font-size: 0;
+                    line-height: 0;
+                }
+                #o_twilio_g1:checked ~ .o_twilio_gallery_nav .o_twilio_dot_1,
+                #o_twilio_g2:checked ~ .o_twilio_gallery_nav .o_twilio_dot_2,
+                #o_twilio_g3:checked ~ .o_twilio_gallery_nav .o_twilio_dot_3 {
+                    background: #875A7B;
+                }
+                /* Show only the matching Prev/Next pair per slide */
+                .o_twilio_gallery_nav .o_twilio_prev,
+                .o_twilio_gallery_nav .o_twilio_next { display: none; }
+                #o_twilio_g1:checked ~ .o_twilio_gallery_nav .o_twilio_prev_1,
+                #o_twilio_g2:checked ~ .o_twilio_gallery_nav .o_twilio_prev_2,
+                #o_twilio_g3:checked ~ .o_twilio_gallery_nav .o_twilio_prev_3,
+                #o_twilio_g1:checked ~ .o_twilio_gallery_nav .o_twilio_next_1,
+                #o_twilio_g2:checked ~ .o_twilio_gallery_nav .o_twilio_next_2,
+                #o_twilio_g3:checked ~ .o_twilio_gallery_nav .o_twilio_next_3 { display: inline-block; }
+                .o_twilio_gallery_count {
+                    color: #888888;
+                    font-size: 13px;
+                    font-weight: 600;
+                    min-width: 48px;
+                    text-align: center;
+                }
+                #o_twilio_g1:checked ~ .o_twilio_gallery_nav .o_twilio_count_1,
+                #o_twilio_g2:checked ~ .o_twilio_gallery_nav .o_twilio_count_2,
+                #o_twilio_g3:checked ~ .o_twilio_gallery_nav .o_twilio_count_3 { display: inline; }
+                .o_twilio_gallery_nav .o_twilio_count_1,
+                .o_twilio_gallery_nav .o_twilio_count_2,
+                .o_twilio_gallery_nav .o_twilio_count_3 { display: none; }
+            </style>
+
+            <div class="o_twilio_gallery">
+                <input type="radio" name="o_twilio_gallery" id="o_twilio_g1" checked="checked"/>
+                <input type="radio" name="o_twilio_gallery" id="o_twilio_g2"/>
+                <input type="radio" name="o_twilio_gallery" id="o_twilio_g3"/>
+
+                <div class="o_twilio_slides">
+                    <div class="o_twilio_slide o_twilio_slide_1">
+                        <img src="screenshot_dashboard.png"
+                             alt="Twilio Call Auto Dialer dashboard with softphone dial pad, KPIs, and Connected status"/>
+                        <div class="o_twilio_slide_body">
+                            <div class="o_twilio_slide_tag">Dashboard &amp; Softphone</div>
+                            <span class="o_twilio_slide_title">Live dialer on your Odoo dashboard</span>
+                            <p class="o_twilio_slide_text">
+                                Open the VoIP softphone anytime, see Today / 7-day / 30-day call KPIs, completion rate, and campaign activity at a glance.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="o_twilio_slide o_twilio_slide_2">
+                        <img src="screenshot_settings.png"
+                             alt="Twilio Call Settings with caller ID, incoming calls toggle, recording and transcription options"/>
+                        <div class="o_twilio_slide_body">
+                            <div class="o_twilio_slide_tag">Call Settings</div>
+                            <span class="o_twilio_slide_title">Caller ID, recording &amp; transcription</span>
+                            <p class="o_twilio_slide_text">
+                                Pick your Twilio number, enable incoming calls, and toggle outgoing recording, AI transcription, and Smart Copy from one settings screen.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="o_twilio_slide o_twilio_slide_3">
+                        <img src="screenshot_call_logs.png"
+                             alt="Twilio Call Logs list with status, duration, agent, redial and follow-up actions"/>
+                        <div class="o_twilio_slide_body">
+                            <div class="o_twilio_slide_tag">Call Logs</div>
+                            <span class="o_twilio_slide_title">Every call logged in Odoo</span>
+                            <p class="o_twilio_slide_text">
+                                Track direction, status, duration, and agent. Redial or schedule follow-up in one click — list, pivot, graph, and calendar views included.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="o_twilio_gallery_nav">
+                    <!-- Prev: wrap around -->
+                    <label class="o_twilio_prev o_twilio_prev_1" for="o_twilio_g3">← Previous</label>
+                    <label class="o_twilio_prev o_twilio_prev_2" for="o_twilio_g1">← Previous</label>
+                    <label class="o_twilio_prev o_twilio_prev_3" for="o_twilio_g2">← Previous</label>
+
+                    <div class="o_twilio_gallery_dots">
+                        <label class="o_twilio_dot_1" for="o_twilio_g1" title="Dashboard">1</label>
+                        <label class="o_twilio_dot_2" for="o_twilio_g2" title="Settings">2</label>
+                        <label class="o_twilio_dot_3" for="o_twilio_g3" title="Call Logs">3</label>
+                    </div>
+
+                    <span class="o_twilio_gallery_count">
+                        <span class="o_twilio_count_1">1 / 3</span>
+                        <span class="o_twilio_count_2">2 / 3</span>
+                        <span class="o_twilio_count_3">3 / 3</span>
+                    </span>
+
+                    <!-- Next: wrap around -->
+                    <label class="o_twilio_next o_twilio_next_1" for="o_twilio_g2">Next →</label>
+                    <label class="o_twilio_next o_twilio_next_2" for="o_twilio_g3">Next →</label>
+                    <label class="o_twilio_next o_twilio_next_3" for="o_twilio_g1">Next →</label>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <section class="oe_container" style="background-color:#f5efff; border-radius:12px; padding:28px 20px;">
     <div class="row">
         <div class="col-12 text-center mb-4">

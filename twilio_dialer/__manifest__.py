@@ -128,6 +128,9 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'images': [
         'static/description/cover.png',
         'static/description/main_screenshot.png',
+        'static/description/screenshot_dashboard.png',
+        'static/description/screenshot_settings.png',
+        'static/description/screenshot_call_logs.png',
     ],
 
     'installable': True,

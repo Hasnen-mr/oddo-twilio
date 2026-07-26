@@ -1,26 +1,43 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Twilio Calling System for Odoo | VoIP Softphone | Auto Dialer | AI Transcription",
+    'name': "Odoo Twilio Dialer | VoIP Softphone Auto Dialer Call Center | Click to Call Recording",
 
-    'summary': "Twilio VoIP Softphone, Auto Dialer, Click-to-Call, Call Recording, AI Transcription, AI Summary, Voicemail & CRM Call Logs for Odoo.",
+    'summary': "Twilio VoIP softphone, auto dialer, power dialer, click-to-call, call recording, AI transcription, voicemail & CRM call logs for Odoo sales and call center teams.",
 
     'description': """
-Twilio Calling System for Odoo
-==============================
+Odoo Twilio Dialer — VoIP Softphone, Auto Dialer & Call Center Software
+=======================================================================
 
-Complete Twilio cloud calling solution for Odoo with VoIP softphone, click-to-call,
-auto dialer, call recording, voicemail, AI transcription, AI call summaries, and
-automatic call logging inside your CRM.
+SEO title: Odoo Twilio Dialer | VoIP Softphone | Auto Dialer | Click to Call | Call Center Software
 
+Short description:
+Best Twilio cloud calling system for Odoo with browser VoIP softphone, power auto dialer,
+click-to-call, call recording, voicemail, AI transcription, AI call summary, inbound and
+outbound dialer, and automatic CRM call logs for sales dialer and contact center teams.
+
+Full description:
 Transform Odoo into a cloud telephony workspace powered by your own Twilio account —
-no external softphone required.
+no external softphone required. Ideal if you are evaluating business phone and dialer
+platforms and want calling native inside Odoo.
+
+Top calling software names (category keywords)
+----------------------------------------------
+Aircall, RingCentral, Dialpad, Five9, JustCall, Talkdesk, Genesys Cloud, Vonage, 8x8, PhoneBurner
+
+Dialer & calling SEO keywords
+-----------------------------
+Odoo Twilio dialer, VoIP softphone, auto dialer, power dialer, predictive dialer, sales dialer,
+outbound dialer, inbound call center, click to call, browser dialer, cloud phone system,
+business phone system, telephony CRM, call recording software, call tracking, call logs,
+AI call transcription, AI call summary, contact center software, SIP softphone, Odoo VoIP,
+Twilio Voice SDK, CRM dialer integration, telemarketing dialer, customer support calling
 
 Key Features
 ------------
 * Twilio Voice Calling (inbound & outbound)
 * Browser-based VoIP Softphone
 * One-click Click-to-Call from Contacts
-* Auto Dialer campaigns
+* Auto Dialer / Power Dialer campaigns
 * Voicemail configuration
 * Call Recording options
 * AI Call Transcription
@@ -67,22 +84,15 @@ Perfect For
 * Logistics
 * Financial Services
 
-Supported Keywords
-------------------
-Twilio Voice · VoIP · Browser Softphone · Click-to-Call · Auto Dialer ·
-Call Recording · AI Transcription · AI Summary · Voicemail · Call Logs ·
-Activity Timeline · CRM Integration · Secure Authentication
-
-Pricing (free with fair usage)
-------------------------------
-* Free to install — no module purchase fee while this offer is active
-* Monthly fair-usage allowance for normal business use
-* Higher volume via In-App Purchase add-ons when needed
+Pricing
+-------
+* One-time Odoo Apps Store license (USD)
+* Optional In-App Purchase add-ons for higher volume
 * Twilio voice minutes billed on your own Twilio account
 
 Requirements
 ------------
-* Odoo 18
+* Odoo 14 / 15 / 16 / 17 / 18 / 19 (matching branch)
 * Paid Twilio account with phone number and balance
 * Public HTTPS URL for TwiML voice callbacks (production)
 * Optional: AI provider API key for transcription and summary
@@ -103,7 +113,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.80',
+    'version': '18.0.1.2.81',
     'license': 'LGPL-3',
 
     'depends': [

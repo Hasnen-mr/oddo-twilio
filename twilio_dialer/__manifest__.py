@@ -99,9 +99,11 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'website': "https://extension.mybroadcast.online",
     'support': "developer.lifetips@gmail.com",
     'live_test_url': "https://extension.mybroadcast.online",
+    'price': 99.00,
+    'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.79',
+    'version': '18.0.1.2.80',
     'license': 'LGPL-3',
 
     'depends': [
@@ -127,11 +129,10 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     ],
 
     'images': [
-        'static/description/cover.png',
-        'static/description/main_screenshot.png',
         'static/description/screenshot_dashboard.png',
         'static/description/screenshot_settings.png',
         'static/description/screenshot_call_logs.png',
+        'static/description/product_overview.png',
     ],
 
     'installable': True,

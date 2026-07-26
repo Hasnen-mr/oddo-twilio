@@ -37,7 +37,8 @@ export class TwilioDashboardFormController extends FormController {
             requestAnimationFrame(scrollTwilioDashboardToTop);
             setTimeout(scrollTwilioDashboardToTop, 50);
             setTimeout(scrollTwilioDashboardToTop, 200);
-            this._maybeOpenOnboarding();
+            // Open after the form paints so a wizard error cannot blank the view.
+            setTimeout(() => this._maybeOpenOnboarding(), 100);
         });
     }
 
@@ -51,33 +52,38 @@ export class TwilioDashboardFormController extends FormController {
         }
         this._onboardingShown = true;
         let connected = false;
-        this.dialog.add(
-            TwilioOnboardingWizard,
-            {
-                onConnected: () => {
-                    connected = true;
-                },
-                onOpenDialer: async () => {
-                    const ready = await deviceManager.ensureRegistered({
-                        regenerate: true,
-                        timeoutMs: 45000,
-                    });
-                    if (ready) {
-                        this.dialer.open();
-                    }
-                    return ready;
-                },
-            },
-            {
-                onClose: () => {
-                    if (connected) {
-                        this.action.doAction("twilio_dialer.action_twilio_dashboard", {
-                            stackPosition: "replaceCurrentAction",
+        try {
+            this.dialog.add(
+                TwilioOnboardingWizard,
+                {
+                    onConnected: () => {
+                        connected = true;
+                    },
+                    onOpenDialer: async () => {
+                        const ready = await deviceManager.ensureRegistered({
+                            regenerate: true,
+                            timeoutMs: 45000,
                         });
-                    }
+                        if (ready) {
+                            this.dialer.open();
+                        }
+                        return ready;
+                    },
                 },
-            }
-        );
+                {
+                    onClose: () => {
+                        if (connected) {
+                            this.action.doAction("twilio_dialer.action_twilio_dashboard", {
+                                stackPosition: "replaceCurrentAction",
+                            });
+                        }
+                    },
+                }
+            );
+        } catch (err) {
+            console.error("[TwilioDashboard] Failed to open onboarding wizard:", err);
+            this._onboardingShown = false;
+        }
     }
 }
 

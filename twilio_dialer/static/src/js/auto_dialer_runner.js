@@ -289,7 +289,9 @@ export class AutoDialerRunner extends Component {
             );
             this.state.queues = queues;
 
-            // Auto-restore active queue from service if present (e.g., when a user starts a campaign from form view)
+            // Restore only an in-progress queue already tied to this dialer session.
+            // Do not auto-select draft/paused queues on every page load — that raced the
+            // dashboard form mount and hammered /auto_dialer/navigate.
             const svc = this.dialerSvc.state;
             if (svc.autoDialerId) {
                 const found = queues.find((q) => q.id === svc.autoDialerId);
@@ -299,17 +301,11 @@ export class AutoDialerRunner extends Component {
                 }
             }
 
-            // Automatic Priority Selection if no queue currently active:
-            // Priority Order: 1. Running, 2. Paused/Stopped, 3. Draft, 4. Completed with pending
+            // If a campaign is actively running, keep the runner pointed at it.
             if (!this.state.activeQueue && queues.length > 0) {
                 const runningQ = queues.find((q) => q.state === "running");
-                const pausedQ = queues.find((q) => q.state === "paused");
-                const draftQ = queues.find((q) => q.state === "draft");
-                const completedQ = queues.find((q) => q.state === "completed" && q.pending_contacts > 0);
-
-                const targetQ = runningQ || pausedQ || draftQ || completedQ || queues[0];
-                if (targetQ) {
-                    await this.onSelectQueue(targetQ.id);
+                if (runningQ) {
+                    await this.onSelectQueue(runningQ.id);
                 }
             }
         } catch (err) {

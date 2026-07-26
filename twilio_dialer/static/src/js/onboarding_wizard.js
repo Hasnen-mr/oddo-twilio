@@ -34,26 +34,33 @@ export class TwilioOnboardingWizard extends Component {
             error: "",
         });
 
-        // Required setup: block Escape / X / backdrop dismiss until Open Dialer succeeds.
+        // Required setup: block Escape / X dismiss until Open Dialer succeeds.
         this._canClose = false;
-        const dialogData = this.env.dialogData;
-        if (dialogData) {
-            const originalClose = dialogData.close;
-            dialogData.close = () => {
-                if (this._canClose) {
-                    originalClose();
-                }
-            };
-            dialogData.dismiss = () => {};
-        }
 
         onMounted(() => {
             document.body.classList.add("o_twilio_onboard_open");
+            this._lockDismiss();
             this._prefillContact();
         });
         onWillUnmount(() => {
             document.body.classList.remove("o_twilio_onboard_open");
         });
+    }
+
+    _lockDismiss() {
+        const dialogData = this.env.dialogData;
+        if (!dialogData || dialogData._twilioOnboardLocked) {
+            return;
+        }
+        dialogData._twilioOnboardLocked = true;
+        const originalClose = dialogData.close.bind(dialogData);
+        dialogData.close = () => {
+            if (this._canClose) {
+                originalClose();
+            }
+        };
+        // Prevent Dialog.dismiss() (Escape / header X) from closing early.
+        dialogData.dismiss = async () => {};
     }
 
     _closeWizard() {

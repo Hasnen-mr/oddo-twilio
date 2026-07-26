@@ -161,6 +161,7 @@ class TwilioDialerDashboard(models.TransientModel):
             "agent_line_ids": agent_lines,
         }
 
+    @api.model
     def action_open_dashboard(self):
         dashboard = self.create(self._dashboard_values())
         return {
@@ -169,6 +170,7 @@ class TwilioDialerDashboard(models.TransientModel):
             "res_model": self._name,
             "res_id": dashboard.id,
             "view_mode": "form",
+            "views": [(False, "form")],
             "target": "current",
         }
 

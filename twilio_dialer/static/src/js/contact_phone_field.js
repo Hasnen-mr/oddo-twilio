@@ -7,6 +7,7 @@ import { patch } from "@web/core/utils/patch";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { PhoneField, phoneField, formPhoneField } from "@web/views/fields/phone/phone_field";
+import { TwilioSmsMessagingDialog } from "./sms_messaging_dialog";
 
 // ── Shared call-button component ─────────────────────────────────────────────
 //
@@ -95,6 +96,7 @@ class TwilioCallButtonField extends Component {
 
     setup() {
         this.dialer = useService("twilio_dialer");
+        this.dialog = useService("dialog");
         this.notification = useService("notification");
     }
 
@@ -113,6 +115,23 @@ class TwilioCallButtonField extends Component {
             phone: this.phone,
             partnerId: this.props.record.data.partner_id?.[0] || null,
             partnerName: this.props.record.data.partner_id?.[1] || "",
+        });
+    }
+
+    openSms() {
+        if (!this.phone) {
+            this.notification.add(_t("No phone number available to send SMS."), {
+                type: "warning",
+            });
+            return;
+        }
+        const partnerId = this.props.record.data.partner_id?.[0] || null;
+        const partnerName = this.props.record.data.partner_id?.[1] || "";
+        this.dialog.add(TwilioSmsMessagingDialog, {
+            initialPhone: this.phone,
+            initialPartnerId: partnerId,
+            initialPartnerName: partnerName,
+            onClose: () => {},
         });
     }
 }

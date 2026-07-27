@@ -121,6 +121,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
         'contacts',
         'mail',
         'phone_validation',
+        'crm',
     ],
 
     'data': [
@@ -132,6 +133,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
         'views/sms_template_views.xml',
         'views/auto_dialer_views.xml',
         'views/res_partner_views.xml',
+        'views/crm_lead_views.xml',
         'views/terms_privacy_views.xml',
         'views/contact_us_views.xml',
         'views/help_views.xml',

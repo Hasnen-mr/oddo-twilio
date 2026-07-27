@@ -12,4 +12,16 @@
         </field>
     </record>
 
+    <!-- Inject twilio_call_button into Contacts List View -->
+    <record id="view_partner_tree_twilio_call" model="ir.ui.view">
+        <field name="name">res.partner.tree.twilio.call</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_tree"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="widget">twilio_call_button</attribute>
+            </xpath>
+        </field>
+    </record>
+
 </odoo>

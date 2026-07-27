@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Inject twilio_call_button into CRM Opportunity Form View for phone and mobile fields -->
+    <record id="crm_lead_view_form_twilio_call" model="ir.ui.view">
+        <field name="name">crm.lead.form.twilio.call</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_lead_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="widget">twilio_call_button</attribute>
+            </xpath>
+            <xpath expr="//field[@name='mobile']" position="attributes">
+                <attribute name="widget">twilio_call_button</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inject twilio_call_button into CRM Opportunity List/Tree View -->
+    <record id="crm_case_tree_view_oppor_twilio_call" model="ir.ui.view">
+        <field name="name">crm.lead.tree.opportunity.twilio.call</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_oppor"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="widget">twilio_call_button</attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inject twilio_call_button into CRM Lead List/Tree View -->
+    <record id="crm_case_tree_view_leads_twilio_call" model="ir.ui.view">
+        <field name="name">crm.lead.tree.lead.twilio.call</field>
+        <field name="model">crm.lead</field>
+        <field name="inherit_id" ref="crm.crm_case_tree_view_leads"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='phone']" position="attributes">
+                <attribute name="widget">twilio_call_button</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

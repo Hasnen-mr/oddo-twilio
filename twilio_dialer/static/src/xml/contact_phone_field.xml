@@ -31,15 +31,24 @@
     -->
 
     <t t-name="twilio_dialer.TwilioCallButtonField">
-        <div class="o_twilio_call_btn_field">
-            <span class="o_twilio_call_btn_number" t-esc="phone"/>
-            <button type="button"
-                    class="o_twilio_contact_call_button"
-                    t-att-disabled="!phone"
-                    t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
-                    t-on-click.stop="openDialer">
-                <i class="fa fa-phone" aria-label="Call"/>
-            </button>
+        <div class="o_twilio_call_btn_field d-inline-flex align-items-center w-100 justify-content-between">
+            <span class="o_twilio_call_btn_number text-truncate me-2" t-esc="phone"/>
+            <div class="d-inline-flex align-items-center flex-shrink-0">
+                <button type="button"
+                        class="o_twilio_contact_call_button"
+                        t-att-disabled="!phone"
+                        t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
+                        t-on-click.stop="openDialer">
+                    <i class="fa fa-phone" aria-label="Call"/>
+                </button>
+                <button type="button"
+                        class="o_twilio_contact_sms_button"
+                        t-att-disabled="!phone"
+                        t-att-title="phone ? 'Send SMS via Twilio' : 'No phone number available.'"
+                        t-on-click.stop="openSms">
+                    <i class="fa fa-comment" aria-label="SMS"/>
+                </button>
+            </div>
         </div>
     </t>
 

@@ -3,7 +3,7 @@
 
     <!-- WhatsApp / Telegram Style Full-Screen 2-Panel Messaging Dialog -->
     <t t-name="twilio_dialer.TwilioSmsMessagingDialog">
-        <div class="o_twilio_messaging_dialog_backdrop" t-on-click.self="onClose">
+        <div class="o_twilio_messaging_dialog_backdrop">
             <div class="o_twilio_messaging_dialog">
 
                 <!-- Left Panel: Contacts Sidebar -->
@@ -12,7 +12,7 @@
                     <div class="o_twilio_sidebar_header">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-link text-decoration-none text-slate-700 p-0 me-1 d-flex align-items-center gap-1 fw-medium" t-on-click="onClose" title="Back to previous page">
+                                <button type="button" class="btn btn-link text-decoration-none text-slate-700 p-0 me-1 d-flex align-items-center gap-1 fw-medium shadow-none border-0" t-on-click="(ev) => this.onClose(ev)" title="Back to previous page">
                                     <i class="fa fa-arrow-left text-primary"/> <span>Back</span>
                                 </button>
                                 <h5 class="fw-bold m-0 text-slate-800">

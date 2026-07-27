@@ -7,7 +7,7 @@ from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import VoiceGrant
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
-from odoo import models
+from odoo import models, fields
 from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
@@ -23,11 +23,98 @@ class TwilioService(models.AbstractModel):
     # Twilio calls this URL for outbound dial instructions — no public Odoo URL required.
     _default_voice_url = "https://extension.mybroadcast.online/call-setup"
 
+    def get_twilio_client(self, env=None):
+        env = env or self.env
+        ICP = env["ir.config_parameter"].sudo()
+        account_sid = (ICP.get_param("twilio_dialer.account_sid") or "").strip()
+        auth_token = (ICP.get_param("twilio_dialer.auth_token") or "").strip()
+
+        if not account_sid or not auth_token:
+            raise UserError("Twilio Account SID and Auth Token must be configured in Settings.")
+
+        return self.get_client(account_sid, auth_token)
+
     def get_client(self, account_sid, auth_token):
         try:
             return Client(account_sid, auth_token)
         except Exception as e:
             raise UserError(f"Failed to initialize Twilio client:\n{str(e)}")
+
+    def fetch_sms_history(self, phone, limit=50):
+        """Centralized helper to fetch live SMS history for a phone number."""
+        if not phone:
+            return []
+        client = self.get_twilio_client()
+
+        # Fetch messages To recipient and From recipient
+        messages_to = client.messages.list(to=phone, limit=limit)
+        messages_from = client.messages.list(from_=phone, limit=limit)
+        all_messages = messages_to + messages_from
+        all_messages.sort(key=lambda m: m.date_created or m.date_sent)
+
+        conversation = []
+        for m in all_messages:
+            is_inbound = "inbound" in (m.direction or "")
+            conversation.append({
+                "sid": m.sid,
+                "body": m.body or "",
+                "direction": "inbound" if is_inbound else "outbound",
+                "from": m.from_ or "",
+                "to": m.to or "",
+                "status": m.status or "",
+                "date": (m.date_created or m.date_sent).strftime("%Y-%m-%d %H:%M:%S") if (m.date_created or m.date_sent) else "",
+            })
+        return conversation
+
+    def send_sms_message(self, recipient, body, partner_id=None):
+        """Centralized helper to send an SMS via Twilio REST API and log Contact Chatter activity."""
+        if not recipient or not body:
+            raise UserError("Recipient phone number and message body are required.")
+
+        from_number = self.get_twilio_phone_number()
+        if not from_number:
+            raise UserError("No valid Twilio phone number configured for sending SMS.")
+
+        client = self.get_twilio_client()
+        message = client.messages.create(
+            from_=from_number,
+            to=recipient,
+            body=body,
+        )
+
+        # Contact Chatter activity
+        partner = None
+        if partner_id:
+            partner = self.env["res.partner"].browse(partner_id).exists()
+        if not partner:
+            # Shared E.164 phone normalization matching
+            digits = re.sub(r"\D", "", recipient)
+            if digits:
+                search_term = digits[-10:]
+                partner = self.env["res.partner"].search([
+                    "|", ("phone", "like", search_term), ("mobile", "like", search_term)
+                ], limit=1)
+
+        if partner:
+            partner_name = partner.name or "Contact"
+            chatter_body = (
+                f"📤 Outgoing SMS To: {partner_name} ({recipient})\n"
+                f"Message: {body}\n"
+                f"Status: {message.status or 'queued'}"
+            )
+            partner.message_post(
+                body=chatter_body,
+                subject="Outgoing SMS",
+                message_type="comment",
+                subtype_xmlid="mail.mt_note",
+            )
+
+        return {
+            "success": True,
+            "sid": message.sid,
+            "status": message.status or "sent",
+            "message": "SMS sent successfully.",
+        }
 
     def validate_phone_number(self, phone_number):
         normalized = (phone_number or "").strip()

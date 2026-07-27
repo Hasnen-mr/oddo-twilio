@@ -22,6 +22,13 @@
               action="action_twilio_call_log"
               sequence="10"/>
 
+    <!-- Dedicated SMS Workspace (opens dashboard directly — matching Auto Dialer / Dashboard / Call Logs) -->
+    <menuitem id="menu_twilio_sms_parent"
+              name="SMS"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_sms_workspace"
+              sequence="15"/>
+
     <!-- Auto Dialer (opens page directly — no submenu) -->
     <menuitem id="menu_twilio_auto_dialer_parent"
               name="Auto Dialer"
@@ -36,7 +43,7 @@
               action="contacts.action_contacts"
               sequence="25"/>
 
-    <!-- Configuration (Billing is inside the Configuration left sidebar) -->
+    <!-- Configuration -->
     <menuitem id="menu_twilio_dialer_configuration"
               name="Configuration"
               parent="menu_twilio_dialer_root"

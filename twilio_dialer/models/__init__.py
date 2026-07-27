@@ -13,3 +13,6 @@ from . import dashboard
 from . import billing
 from . import version_update
 from . import csv_import
+from . import sms_log
+from . import sms_template
+from . import sms_workspace

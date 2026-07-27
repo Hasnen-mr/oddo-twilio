@@ -15,3 +15,12 @@ access_twilio_dashboard_agent_line_user,twilio.dashboard.agent.line.user,model_t
 access_twilio_version_update_user,twilio.version.update.user,model_twilio_version_update,base.group_user,1,0,0,0
 access_twilio_auto_dialer_import_history_user,twilio.auto.dialer.import.history.user,model_twilio_auto_dialer_import_history,base.group_user,1,1,1,1
 access_twilio_auto_dialer_import_wizard_user,twilio.auto.dialer.import.wizard.user,model_twilio_auto_dialer_import_wizard,base.group_user,1,1,1,1
+access_twilio_sms_log_user,twilio.sms.log.user,model_twilio_sms_log,base.group_user,1,1,1,1
+access_twilio_sms_log_manager,twilio.sms.log.manager,model_twilio_sms_log,base.group_system,1,1,1,1
+access_twilio_sms_template_user,twilio.sms.template.user,model_twilio_sms_template,base.group_user,1,0,0,0
+access_twilio_sms_template_manager,twilio.sms.template.manager,model_twilio_sms_template,base.group_system,1,1,1,1
+access_twilio_sms_template_category_user,twilio.sms.template.category.user,model_twilio_sms_template_category,base.group_user,1,0,0,0
+access_twilio_sms_template_category_manager,twilio.sms.template.category.manager,model_twilio_sms_template_category,base.group_system,1,1,1,1
+access_twilio_sms_quick_reply_user,twilio.sms.quick.reply.user,model_twilio_sms_quick_reply,base.group_user,1,0,0,0
+access_twilio_sms_quick_reply_manager,twilio.sms.quick.reply.manager,model_twilio_sms_quick_reply,base.group_system,1,1,1,1
+access_twilio_sms_workspace_user,twilio.sms.workspace.user,model_twilio_sms_workspace,base.group_user,1,1,1,1

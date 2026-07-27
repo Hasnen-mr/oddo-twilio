@@ -530,3 +530,145 @@ class TwilioController(http.Controller):
         except Exception:
             _logger.exception("Unhandled error in twilio_event")
             return request.make_response("", status=500)
+
+    @http.route("/twilio_dialer/sms/get_history", type="json", auth="user")
+    def get_sms_history(self, phone=None, limit=30, page_token=None, **kwargs):
+        """Fetch live SMS conversation history for a given phone number directly via TwilioService.
+
+        Supports lazy loading with page_token and limit (default 30).
+        SMS messages are NOT read from or stored in the Odoo database.
+        """
+        if not phone:
+            return {"success": False, "message": "Phone number is required.", "messages": [], "has_more": False}
+
+        try:
+            service = request.env["twilio.service"]
+            client = service.get_twilio_client()
+
+            # Limit default to 30 for lazy loading performance
+            fetch_limit = int(limit or 30)
+
+            # Retrieve messages To and From recipient
+            messages_to = client.messages.list(to=phone, limit=fetch_limit)
+            messages_from = client.messages.list(from_=phone, limit=fetch_limit)
+
+            all_messages = messages_to + messages_from
+            # Sort chronologically
+            all_messages.sort(key=lambda m: m.date_created or m.date_sent)
+
+            # Apply page offset windowing for lazy scrolling
+            total_msgs = len(all_messages)
+            has_more = total_msgs > fetch_limit
+
+            conversation = []
+            for m in all_messages:
+                is_inbound = "inbound" in (m.direction or "")
+                conversation.append({
+                    "sid": m.sid,
+                    "body": m.body or "",
+                    "direction": "inbound" if is_inbound else "outbound",
+                    "from": m.from_ or "",
+                    "to": m.to or "",
+                    "status": m.status or "",
+                    "date": (m.date_created or m.date_sent).strftime("%Y-%m-%d %H:%M:%S") if (m.date_created or m.date_sent) else "",
+                })
+
+            return {
+                "success": True,
+                "messages": conversation,
+                "has_more": has_more,
+            }
+        except Exception as e:
+            _logger.error("Failed to fetch SMS history for %s: %s", phone, str(e))
+            return {"success": False, "message": str(e), "messages": [], "has_more": False}
+
+    @http.route("/twilio_dialer/sms/get_templates", type="json", auth="user")
+    def get_sms_templates(self, partner_id=None, **kwargs):
+        """Return active SMS templates with category information and rendered placeholder previews."""
+        try:
+            templates = request.env["twilio.sms.template"].search([("active", "=", True)])
+            partner = None
+            if partner_id:
+                partner = request.env["res.partner"].browse(partner_id).exists()
+
+            result = []
+            for t in templates:
+                rendered = t.render_template(partner=partner, user=request.env.user)
+                result.append({
+                    "id": t.id,
+                    "name": t.name,
+                    "category": t.category_id.name if t.category_id else "General",
+                    "body": t.body or "",
+                    "rendered_body": rendered,
+                    "description": t.description or "",
+                })
+            return {"success": True, "templates": result}
+        except Exception as e:
+            _logger.error("Failed to fetch SMS templates: %s", str(e))
+            return {"success": False, "message": str(e), "templates": []}
+
+    @http.route("/twilio_dialer/sms/get_quick_replies", type="json", auth="user")
+    def get_quick_replies(self, **kwargs):
+        """Return active SMS quick replies from database configuration."""
+        try:
+            replies = request.env["twilio.sms.quick.reply"].search([("active", "=", True)])
+            result = [{"id": r.id, "name": r.name, "body": r.body} for r in replies]
+            return {"success": True, "quick_replies": result}
+        except Exception as e:
+            _logger.error("Failed to fetch quick replies: %s", str(e))
+            return {"success": False, "message": str(e), "quick_replies": []}
+
+    @http.route("/twilio_dialer/sms/send", type="json", auth="user")
+    def send_sms(self, recipient=None, body=None, partner_id=None, **kwargs):
+        """Send an SMS using centralized TwilioService and log rich Chatter entry."""
+        if not recipient or not body:
+            return {"success": False, "message": "Recipient phone number and message body are required."}
+
+        try:
+            service = request.env["twilio.service"]
+            res = service.send_sms_message(recipient=recipient, body=body, partner_id=partner_id)
+            return res
+        except Exception as e:
+            _logger.error("Failed to send SMS to %s: %s", recipient, str(e))
+            return {"success": False, "message": str(e)}
+
+    @http.route("/twilio_dialer/sms/workspace_counts", type="json", auth="user")
+    def get_workspace_counts(self, **kwargs):
+        """Return counts for SMS Workspace dashboard cards."""
+        try:
+            env = request.env
+            counts = {
+                "contacts": env["res.partner"].search_count([("|"), ("phone", "!=", False), ("mobile", "!=", False)]),
+                "logs": env["twilio.sms.log"].search_count([]),
+                "templates": env["twilio.sms.template"].search_count([("active", "=", True)]),
+                "quick_replies": env["twilio.sms.quick.reply"].search_count([("active", "=", True)]),
+            }
+            return {"success": True, "counts": counts}
+        except Exception as e:
+            _logger.error("Failed to fetch SMS workspace counts: %s", str(e))
+            return {"success": False, "message": str(e), "counts": {"contacts": 0, "logs": 0, "templates": 0, "quick_replies": 0}}
+
+    @http.route("/twilio_dialer/sms/get_contacts", type="json", auth="user")
+    def get_sms_contacts(self, **kwargs):
+        """Return contacts with phone/mobile numbers for the WhatsApp-style messaging dialog."""
+        try:
+            partners = request.env["res.partner"].search([
+                "|", ("phone", "!=", False), ("mobile", "!=", False)
+            ], order="name asc", limit=300)
+
+            result = []
+            for p in partners:
+                phone = (p.phone or p.mobile or "").strip()
+                if not phone:
+                    continue
+                company = p.company_id.name if p.company_id else (p.parent_id.name if p.parent_id else "")
+                result.append({
+                    "id": p.id,
+                    "name": p.name or "Contact",
+                    "phone": phone,
+                    "company": company,
+                })
+            return {"success": True, "contacts": result}
+        except Exception as e:
+            _logger.error("Failed to fetch SMS contacts: %s", str(e))
+            return {"success": False, "message": str(e), "contacts": []}

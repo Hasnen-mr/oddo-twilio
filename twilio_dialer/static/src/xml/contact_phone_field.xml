@@ -19,6 +19,7 @@
         <xpath expr="//div[hasclass('o_phone_content')]" position="inside">
             <t t-if="props.enableDialerCall">
                 <ContactCallButton record="props.record" name="props.name"/>
+                <ContactSmsButton record="props.record" name="props.name"/>
             </t>
         </xpath>
     </t>

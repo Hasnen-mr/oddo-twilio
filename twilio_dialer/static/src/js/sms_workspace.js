@@ -25,6 +25,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
                 quick_replies: 0,
             },
             drafts: [],
+            recentLogs: [],
         });
 
         onWillStart(async () => {
@@ -80,6 +81,12 @@ export class TwilioSmsWorkspaceClientAction extends Component {
                 }
             }
             this.state.drafts = foundDrafts;
+
+            // Load recent SMS logs for the embedded workspace table
+            const logsRes = await rpc("/twilio_dialer/sms/get_recent_logs", { limit: 50 });
+            if (logsRes && logsRes.success) {
+                this.state.recentLogs = logsRes.logs || [];
+            }
         } catch (err) {
             console.error("[SMS Workspace] Failed to load workspace data:", err);
         } finally {
@@ -94,10 +101,15 @@ export class TwilioSmsWorkspaceClientAction extends Component {
         });
     }
 
+    scrollToLogs() {
+        const elem = document.getElementById("o_twilio_sms_logs_section");
+        if (elem) {
+            elem.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+    }
+
     openSmsLogs() {
-        this.action.doAction("twilio_dialer.action_twilio_sms_log", {
-            clearBreadcrumbs: false,
-        });
+        this.scrollToLogs();
     }
 
     openSmsTemplates() {
@@ -109,6 +121,16 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     openQuickReplies() {
         this.action.doAction("twilio_dialer.action_twilio_sms_quick_reply", {
             clearBreadcrumbs: false,
+        });
+    }
+
+    openSmsForPhone(phone, partnerId, partnerName) {
+        if (!phone) return;
+        this.dialog.add(TwilioSmsMessagingDialog, {
+            initialPhone: phone,
+            initialPartnerId: partnerId || false,
+            initialPartnerName: partnerName || "Contact",
+            onClose: () => this.loadWorkspaceData(),
         });
     }
 

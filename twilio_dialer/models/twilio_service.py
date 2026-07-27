@@ -7,6 +7,7 @@ from twilio.jwt.access_token import AccessToken
 from twilio.jwt.access_token.grants import VoiceGrant
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
+from markupsafe import Markup, escape
 from odoo import models, fields
 from odoo.exceptions import UserError
 
@@ -97,15 +98,19 @@ class TwilioService(models.AbstractModel):
 
         if partner:
             partner_name = partner.name or "Contact"
-            chatter_body = (
-                f"📤 Outgoing SMS To: {partner_name} ({recipient})\n"
-                f"Message: {body}\n"
-                f"Status: {message.status or 'queued'}"
+            chatter_body = Markup(
+                "<b>Subject:</b> Outgoing Message<br/>"
+                "<b>From:</b> %s<br/>"
+                "<b>To:</b> %s (%s)<br/>"
+                "<b>SMS Text:</b> %s"
+            ) % (
+                escape(from_number or "Twilio"),
+                escape(partner_name),
+                escape(recipient or ""),
+                escape(body or ""),
             )
             partner.message_post(
                 body=chatter_body,
-                subject="Outgoing SMS",
-                message_type="comment",
                 subtype_xmlid="mail.mt_note",
             )
 

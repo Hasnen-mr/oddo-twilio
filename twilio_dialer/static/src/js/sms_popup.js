@@ -22,6 +22,7 @@ export class TwilioSmsPopup extends Component {
     setup() {
         this.notification = useService("notification");
         this.chatBodyRef = useRef("chatBody");
+        this.messageInputRef = useRef("messageInput");
 
         // Restore saved draft per contact (with 30-day expiration check)
         const savedDraft = this.getDraft();
@@ -60,6 +61,7 @@ export class TwilioSmsPopup extends Component {
 
         onMounted(() => {
             this.scrollToBottom();
+            this.focusInput();
             document.addEventListener("visibilitychange", this._onVisibilityChange);
         });
 
@@ -158,6 +160,17 @@ export class TwilioSmsPopup extends Component {
             (msg.to || "").toLowerCase().includes(query) ||
             (msg.status || "").toLowerCase().includes(query)
         );
+    }
+
+    focusInput() {
+        setTimeout(() => {
+            if (this.messageInputRef.el) {
+                this.messageInputRef.el.focus();
+                // Move cursor to end of text if draft text is restored
+                const len = this.messageInputRef.el.value.length;
+                this.messageInputRef.el.setSelectionRange(len, len);
+            }
+        }, 100);
     }
 
     scrollToBottom() {

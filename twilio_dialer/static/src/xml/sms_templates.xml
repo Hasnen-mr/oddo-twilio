@@ -153,6 +153,7 @@
                     </div>
 
                     <textarea class="o_twilio_sms_textarea"
+                              t-ref="messageInput"
                               placeholder="Type your message..."
                               t-model="state.messageText"
                               t-on-input="onInputMessage"

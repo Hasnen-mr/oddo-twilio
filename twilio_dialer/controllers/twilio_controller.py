@@ -632,6 +632,16 @@ class TwilioController(http.Controller):
             _logger.error("Failed to send SMS to %s: %s", recipient, str(e))
             return {"success": False, "message": str(e)}
 
+    @http.route("/twilio_dialer/sms/get_recent_logs", type="json", auth="user")
+    def get_recent_logs(self, limit=20, **kwargs):
+        """Return recent SMS logs for the embedded SMS Workspace logs table."""
+        try:
+            logs = request.env["twilio.sms.log"].search_read(domain=[], limit=limit)
+            return {"success": True, "logs": logs}
+        except Exception as e:
+            _logger.error("Failed to fetch recent SMS logs: %s", str(e))
+            return {"success": False, "message": str(e), "logs": []}
+
     @http.route("/twilio_dialer/sms/workspace_counts", type="json", auth="user")
     def get_workspace_counts(self, **kwargs):
         """Return counts for SMS Workspace dashboard cards."""

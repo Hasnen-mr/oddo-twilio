@@ -210,7 +210,7 @@ class TwilioDialerDashboard(models.TransientModel):
         return action
 
     def action_open_auto_dialer(self):
-        return self.env["twilio.auto.dialer"].action_open_auto_dialer()
+        return self.env.ref("twilio_dialer.action_twilio_auto_dialer").read()[0]
 
     def action_open_contacts(self):
         return self.env.ref("contacts.action_contacts").read()[0]

@@ -113,7 +113,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.82',
+    'version': '18.0.1.2.83',
     'license': 'LGPL-3',
 
     'depends': [
@@ -123,6 +123,12 @@ Bitly: https://bit.ly/odoo-twilio-dialer
         'phone_validation',
         'crm',
     ],
+
+    'external_dependencies': {
+        'python': [
+            'twilio',
+        ],
+    },
 
     'data': [
         'security/ir.model.access.csv',

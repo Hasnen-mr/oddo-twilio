@@ -8,10 +8,10 @@
             <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
                 <div>
                     <h2 class="fw-bold mb-1 text-slate-800">
-                        <i class="fa fa-comments text-primary me-2"/>SMS Workspace
+                        <i class="fa fa-comments text-primary me-2"/>SMS
                     </h2>
                     <p class="text-muted mb-0">
-                        Centralized management hub for Twilio SMS messaging, contact conversations, templates, and quick replies.
+                        Message, logs, templates, and quick replies.
                     </p>
                 </div>
                 <button type="button" class="btn btn-outline-primary btn-sm" t-on-click="loadWorkspaceData">
@@ -27,108 +27,54 @@
             </t>
 
             <t t-else="">
-                <!-- Section 1: Management Cards Grid (4 Cards: 1. Message, 2. SMS Logs, 3. SMS Templates, 4. Quick Replies) -->
-                <div class="row g-4 mb-5">
-
-                    <!-- Card 1: Message (Takes to Contact List / WhatsApp-style messaging) -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm o_twilio_workspace_card" t-on-click="openMessagesList">
-                            <div class="card-body p-4 d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
-                                        <div class="o_twilio_card_icon bg-primary-subtle text-primary">
-                                            <i class="fa fa-paper-plane fa-lg"/>
-                                        </div>
-                                        <span class="badge bg-primary rounded-pill px-3 py-2" t-esc="state.counts.contacts + ' Contacts'"/>
-                                    </div>
-                                    <h5 class="fw-bold text-slate-800 mb-2">1. Message</h5>
-                                    <p class="small text-muted mb-3">
-                                        Select any contact from your list to open live SMS chat &amp; message them directly.
-                                    </p>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-primary w-100 mt-2">
-                                    Start Messaging <i class="fa fa-arrow-right ms-1"/>
-                                </button>
-                            </div>
+                <!-- Priority: quick action buttons (short labels) -->
+                <div class="o_twilio_sms_quick_actions mb-4">
+                    <div class="o_twilio_sms_quick_btn" t-on-click="openMessagesList" role="button" tabindex="0">
+                        <button type="button" class="btn btn-primary o_twilio_sms_action_btn">
+                            <i class="fa fa-paper-plane me-2"/>Message
+                            <span class="badge bg-white text-primary ms-2" t-esc="state.counts.contacts"/>
+                        </button>
+                        <div class="o_twilio_sms_action_hint">
+                            Select any contact from your list to open live SMS chat &amp; message them directly.
                         </div>
                     </div>
 
-                    <!-- Card 2: SMS Logs -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm o_twilio_workspace_card" t-on-click="openSmsLogs">
-                            <div class="card-body p-4 d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
-                                        <div class="o_twilio_card_icon bg-success-subtle text-success">
-                                            <i class="fa fa-history fa-lg"/>
-                                        </div>
-                                        <span class="badge bg-success rounded-pill px-3 py-2" t-esc="state.counts.logs + ' Logs'"/>
-                                    </div>
-                                    <h5 class="fw-bold text-slate-800 mb-2">2. SMS Logs</h5>
-                                    <p class="small text-muted mb-3">
-                                        View live incoming and outgoing Twilio SMS message history.
-                                    </p>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-success w-100 mt-2">
-                                    Open Logs <i class="fa fa-arrow-right ms-1"/>
-                                </button>
-                            </div>
+                    <div class="o_twilio_sms_quick_btn" t-on-click="openSmsLogs" role="button" tabindex="0">
+                        <button type="button" class="btn btn-success o_twilio_sms_action_btn">
+                            <i class="fa fa-history me-2"/>Logs
+                            <span class="badge bg-white text-success ms-2" t-esc="state.counts.logs"/>
+                        </button>
+                        <div class="o_twilio_sms_action_hint">
+                            View live incoming and outgoing Twilio SMS message history.
                         </div>
                     </div>
 
-                    <!-- Card 3: SMS Templates -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm o_twilio_workspace_card" t-on-click="openSmsTemplates">
-                            <div class="card-body p-4 d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
-                                        <div class="o_twilio_card_icon bg-info-subtle text-info">
-                                            <i class="fa fa-file-text-o fa-lg"/>
-                                        </div>
-                                        <span class="badge bg-info rounded-pill px-3 py-2 text-white" t-esc="state.counts.templates + ' Templates'"/>
-                                    </div>
-                                    <h5 class="fw-bold text-slate-800 mb-2">3. SMS Templates</h5>
-                                    <p class="small text-muted mb-3">
-                                        Manage reusable text templates with dynamic placeholders.
-                                    </p>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-info w-100 mt-2">
-                                    Open Templates <i class="fa fa-arrow-right ms-1"/>
-                                </button>
-                            </div>
+                    <div class="o_twilio_sms_quick_btn" t-on-click="openSmsTemplates" role="button" tabindex="0">
+                        <button type="button" class="btn btn-info o_twilio_sms_action_btn text-white">
+                            <i class="fa fa-file-text-o me-2"/>Templates
+                            <span class="badge bg-white text-info ms-2" t-esc="state.counts.templates"/>
+                        </button>
+                        <div class="o_twilio_sms_action_hint">
+                            Manage reusable text templates with dynamic placeholders.
                         </div>
                     </div>
 
-                    <!-- Card 4: Quick Replies -->
-                    <div class="col-12 col-sm-6 col-lg-3">
-                        <div class="card h-100 border-0 shadow-sm o_twilio_workspace_card" t-on-click="openQuickReplies">
-                            <div class="card-body p-4 d-flex flex-column justify-content-between">
-                                <div>
-                                    <div class="d-flex align-items-center justify-content-between mb-3">
-                                        <div class="o_twilio_card_icon bg-warning-subtle text-warning">
-                                            <i class="fa fa-bolt fa-lg"/>
-                                        </div>
-                                        <span class="badge bg-warning rounded-pill px-3 py-2 text-dark" t-esc="state.counts.quick_replies + ' Quick Replies'"/>
-                                    </div>
-                                    <h5 class="fw-bold text-slate-800 mb-2">4. Quick Replies</h5>
-                                    <p class="small text-muted mb-3">
-                                        Configure quick response pills for one-click insertion.
-                                    </p>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-warning w-100 mt-2">
-                                    Manage Quick Replies <i class="fa fa-arrow-right ms-1"/>
-                                </button>
-                            </div>
+                    <div class="o_twilio_sms_quick_btn" t-on-click="openQuickReplies" role="button" tabindex="0">
+                        <button type="button" class="btn btn-warning o_twilio_sms_action_btn">
+                            <i class="fa fa-bolt me-2"/>Quick Replies
+                            <span class="badge bg-dark text-warning ms-2" t-esc="state.counts.quick_replies"/>
+                        </button>
+                        <div class="o_twilio_sms_action_hint">
+                            Configure quick response pills for one-click insertion.
                         </div>
                     </div>
-
                 </div>
 
                 <!-- Section 2: SMS Logs Table Section (Embedded inside SMS Workspace) -->
                 <div id="o_twilio_sms_logs_section" class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-white border-bottom pt-3 px-4 pb-3 d-flex align-items-center justify-content-between">
                         <h5 class="fw-bold m-0 text-slate-800">
-                            <i class="fa fa-history text-success me-2"/>SMS Logs
+                            <i class="fa fa-history text-success me-2"/>Logs
                         </h5>
                         <span class="badge bg-success rounded-pill px-3 py-2" t-esc="state.counts.logs + ' Messages'"/>
                     </div>

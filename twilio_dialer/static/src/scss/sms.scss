@@ -314,6 +314,51 @@
     min-height: 100%;
 }
 
+.o_twilio_sms_quick_actions {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.o_twilio_sms_quick_btn {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.o_twilio_sms_action_btn {
+    width: 100%;
+    font-weight: 700;
+    font-size: 14px;
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+    pointer-events: none; /* click handled by parent */
+}
+
+.o_twilio_sms_action_hint {
+    color: #64748b;
+    font-size: 12px;
+    line-height: 1.4;
+    min-height: 2.8em;
+}
+
+@media (max-width: 992px) {
+    .o_twilio_sms_quick_actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .o_twilio_sms_quick_actions {
+        grid-template-columns: 1fr;
+    }
+}
+
 .o_twilio_workspace_card {
     border-radius: 12px;
     cursor: pointer;

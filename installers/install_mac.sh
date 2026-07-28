@@ -145,6 +145,10 @@ ok "Copied module → $TARGET"
 # ── Step 3: update odoo.conf addons_path (optional) ──────────────────────────
 info "Step 3/4 — Updating odoo.conf addons_path (optional)..."
 if [[ -n "$ODOO_CONF" ]]; then
+  # Docker configs use container paths (/mnt/...). Never inject host paths there.
+  if grep -qE '/mnt/extra-addons' "$ODOO_CONF"; then
+    ok "Docker odoo.conf already uses /mnt/extra-addons (host path not needed)"
+  else
   echo "Found config: $ODOO_CONF"
   read -r -p "Add $ADDONS_DIR to addons_path in this file? [Y/n]: " upd
   if [[ ! "${upd:-Y}" =~ ^[Nn]$ ]]; then
@@ -180,6 +184,7 @@ PY
     warn "Skipped config update. Add this path manually:"
     echo "    $ADDONS_DIR"
   fi
+  fi
 else
   warn "No odoo.conf found. Add this to addons_path manually:"
   echo "    $ADDONS_DIR"
@@ -189,29 +194,66 @@ fi
 # ── Step 4: install Python dependency ────────────────────────────────────────
 info "Step 4/4 — Installing Python dependency (twilio)..."
 
-for py in \
-  "${ODOO_PYTHON:-}" \
-  "$SELECTED/venv/bin/python" \
-  "$SELECTED/.venv/bin/python" \
-  "$(command -v python3 || true)" \
-  "$(command -v python || true)"
-do
-  [[ -n "$py" && -x "$py" ]] || continue
-  PYTHON_BIN="$py"
-  break
-done
+# Ensure requirements.txt is UTF-8 (pip fails on UTF-16 / BOM files)
+REQ_UTF8="$(mktemp)"
+python3 - "$REQ_FILE" "$REQ_UTF8" <<'PY'
+import sys
+from pathlib import Path
+src, dst = Path(sys.argv[1]), Path(sys.argv[2])
+raw = src.read_bytes()
+if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff") or (len(raw) > 2 and raw[1::2] == b"\x00" * (len(raw)//2)):
+    text = raw.decode("utf-16")
+elif raw.startswith(b"\xef\xbb\xbf"):
+    text = raw.decode("utf-8-sig")
+else:
+    text = raw.decode("utf-8")
+# Keep only real requirement lines for a safe install file
+lines = []
+for line in text.splitlines():
+    s = line.strip()
+    if not s or s.startswith("#"):
+        continue
+    lines.append(s)
+dst.write_text("\n".join(lines) + "\n", encoding="utf-8")
+print("normalized", len(lines), "requirement(s)")
+PY
 
-[[ -n "$PYTHON_BIN" ]] || fail "Python not found. Install twilio manually: pip install -r requirements.txt"
-
-echo "Using: $PYTHON_BIN ($("$PYTHON_BIN" --version 2>&1))"
-read -r -p "Install requirements with this Python? [Y/n]: " do_pip
-if [[ ! "${do_pip:-Y}" =~ ^[Nn]$ ]]; then
-  "$PYTHON_BIN" -m pip install -r "$REQ_FILE"
-  ok "Python packages installed"
+# Docker / Colima local-dev: install into the Odoo container, not host Python
+if [[ -f "$SELECTED/docker-compose.yml" ]] && command -v docker >/dev/null 2>&1; then
+  warn "Detected Docker Compose Odoo — installing twilio inside the container."
+  (
+    cd "$SELECTED"
+    export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-local-dev}"
+    docker compose exec -u root -T odoo bash -lc \
+      'pip3 install --break-system-packages -r - 2>/dev/null || pip3 install -r -' < "$REQ_UTF8"
+  )
+  ok "Python packages installed in Odoo container"
 else
-  warn "Skipped pip. Later run:"
-  echo "    $PYTHON_BIN -m pip install -r $REQ_FILE"
+  for py in \
+    "${ODOO_PYTHON:-}" \
+    "$SELECTED/venv/bin/python" \
+    "$SELECTED/.venv/bin/python" \
+    "$(command -v python3 || true)" \
+    "$(command -v python || true)"
+  do
+    [[ -n "$py" && -x "$py" ]] || continue
+    PYTHON_BIN="$py"
+    break
+  done
+
+  [[ -n "$PYTHON_BIN" ]] || fail "Python not found. Install twilio manually: pip install -r requirements.txt"
+
+  echo "Using: $PYTHON_BIN ($("$PYTHON_BIN" --version 2>&1))"
+  read -r -p "Install requirements with this Python? [Y/n]: " do_pip
+  if [[ ! "${do_pip:-Y}" =~ ^[Nn]$ ]]; then
+    "$PYTHON_BIN" -m pip install -r "$REQ_UTF8"
+    ok "Python packages installed"
+  else
+    warn "Skipped pip. Later run:"
+    echo "    $PYTHON_BIN -m pip install -r $REQ_FILE"
+  fi
 fi
+rm -f "$REQ_UTF8"
 
 echo
 echo "=============================================="

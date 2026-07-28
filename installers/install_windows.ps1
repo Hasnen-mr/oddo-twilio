@@ -184,6 +184,24 @@ if ($odooConf) {
 # ── Step 4: install Python dependency ────────────────────────────────────────
 Write-Info "Step 4/4 — Installing Python dependency (twilio)..."
 
+# Normalize requirements to UTF-8 (pip fails on UTF-16)
+$reqUtf8 = Join-Path $env:TEMP "twilio_dialer_requirements_utf8.txt"
+$raw = [System.IO.File]::ReadAllBytes($ReqFile)
+$text = $null
+if (($raw.Length -ge 2) -and (($raw[0] -eq 0xFF -and $raw[1] -eq 0xFE) -or ($raw[0] -eq 0xFE -and $raw[1] -eq 0xFF) -or ($raw.Length -gt 3 -and $raw[1] -eq 0x00))) {
+    $text = [System.Text.Encoding]::Unicode.GetString($raw)
+} else {
+    $text = [System.Text.Encoding]::UTF8.GetString($raw)
+}
+$reqLines = @()
+foreach ($line in ($text -split "`r?`n")) {
+    $s = $line.Trim()
+    if (-not [string]::IsNullOrWhiteSpace($s) -and -not $s.StartsWith("#")) {
+        $reqLines += $s
+    }
+}
+[System.IO.File]::WriteAllText($reqUtf8, (($reqLines -join "`n") + "`n"), [System.Text.UTF8Encoding]::new($false))
+
 $pythonCandidates = @(
     $env:ODOO_PYTHON,
     (Join-Path $selected "venv\Scripts\python.exe"),
@@ -214,12 +232,13 @@ Write-Host "Using: $pythonBin"
 & $pythonBin --version
 $doPip = Read-Host "Install requirements with this Python? [Y/n]"
 if ($doPip -notmatch '^[Nn]$') {
-    & $pythonBin -m pip install -r $ReqFile
+    & $pythonBin -m pip install -r $reqUtf8
     Write-Ok "Python packages installed"
 } else {
     Write-Note "Skipped pip. Later run:"
     Write-Host "    $pythonBin -m pip install -r $ReqFile"
 }
+Remove-Item -Force $reqUtf8 -ErrorAction SilentlyContinue
 
 Write-Host ""
 Write-Host "=============================================="

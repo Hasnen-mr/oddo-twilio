@@ -113,7 +113,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.85',
+    'version': '16.0.1.2.85',
     'license': 'LGPL-3',
 
     'depends': [

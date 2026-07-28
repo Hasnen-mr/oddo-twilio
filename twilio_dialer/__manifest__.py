@@ -86,7 +86,7 @@ Perfect For
 
 Pricing
 -------
-* One-time Odoo Apps Store license (USD)
+* Free on the Odoo Apps Store
 * Optional In-App Purchase add-ons for higher volume
 * Twilio voice minutes billed on your own Twilio account
 
@@ -109,11 +109,11 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'website': "https://extension.mybroadcast.online",
     'support': "developer.lifetips@gmail.com",
     'live_test_url': "https://extension.mybroadcast.online",
-    'price': 99.00,
+    'price': 0.0,
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '18.0.1.2.84',
+    'version': '18.0.1.2.85',
     'license': 'LGPL-3',
 
     'depends': [

@@ -1,0 +1,7 @@
+# Python dependencies for Twilio Dialer (beyond standard Odoo packages).
+# Install into the Odoo Python environment:
+#   pip install -r requirements.txt
+#
+# Odoo already provides: requests, MarkupSafe, and other core libs.
+
+twilio>=9.0.0,<10

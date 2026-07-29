@@ -1,0 +1,39 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+
+# Odoo
+*.pyc
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+**/.DS_Store
+Thumbs.db
+
+# Local Odoo dev (Colima/Docker binaries)
+local-dev/
+.local-dev/bin/
+.local-dev/lima-root/
+*.dmg
+
+
+# Local development environment and configuration
+.venv/
+odoo.conf
+installed_packages.txt
+to do.txt
+
+# Third-party / local modules not part of this Apps package
+web_json_editor
+llm
+llm_mcp_server
+llm_tool
+mcp_server
+muk_mcp
+muk_web_utils

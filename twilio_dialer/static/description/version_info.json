@@ -1,0 +1,21 @@
+{
+  "module": "twilio_dialer",
+  "version": "18.0.1.2.76",
+  "title": "New Version Available",
+  "message": "A newer version of Twilio Dialer is available. Update from Apps to get the latest improvements.",
+  "release_date": "2026-07-24",
+  "download_url": "https://apps.odoo.com/apps/modules/18.0/twilio_dialer",
+  "features": [
+    "In-dialer Contacts with search, lazy pagination, Call and Detail actions",
+    "Forward To country picker with dial-code badges and E.164 preview",
+    "Calling From dropdown separated into Twilio Numbers and Caller ID",
+    "Do Not Disturb overlay that disables the dial pad while enabled",
+    "Configuration tab switching without false unsaved-changes prompts"
+  ],
+  "changelog": {
+    "18.0.1.2.76": [
+      "In-dialer Contacts with search, lazy pagination, Call and Detail actions",
+      "Forward To country picker redesign with dial-code badges"
+    ]
+  }
+}

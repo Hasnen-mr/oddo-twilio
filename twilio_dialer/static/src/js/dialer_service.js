@@ -1,0 +1,114 @@
+/** @odoo-module **/
+
+import { reactive } from "@odoo/owl";
+import { registry } from "@web/core/registry";
+import { normalizePhoneNumber } from "./phone_utils";
+import { deviceManager } from "./device_manager";
+
+const dialerState = reactive({
+    isOpen: false,
+    phone: "",
+    fromNumber: "",
+    partnerId: null,
+    partnerName: "",
+    requestId: 0,
+    autoDialerId: null,
+    queueLineId: null,
+    queueName: "",
+    queuePosition: "",
+    queueAttempts: 0,
+    queueNotes: "",
+    queueStatus: "",
+});
+
+export const dialerService = {
+    dependencies: [],
+    start(env) {
+        // Initialize DeviceManager once globally when the Odoo web client loads
+        deviceManager.initialize().catch((err) => {
+            console.error("[dialerService] DeviceManager global initialize failed:", err);
+        });
+
+        // Automatically open the dialer popup when an incoming call arrives
+        deviceManager.onIncomingCall((call, fromNumber, callSid, toNumber) => {
+            console.log("[dialerService] Incoming call received:", fromNumber, callSid, toNumber);
+            dialerState.phone = fromNumber || "";
+            dialerState.fromNumber = (toNumber && !toNumber.startsWith("client:") && !toNumber.startsWith("id_odoo_")) ? toNumber : "";
+            dialerState.requestId += 1;
+            dialerState.isOpen = true;
+        });
+
+        // Cleanup listener: Ensure Twilio WebSocket connections & Device instance are cleanly
+        // un-registered and destroyed when user logs out, closes browser tab, or unloads window.
+        const cleanupDevice = () => {
+            console.log("[dialerService] Unload/Logout cleanup: destroying deviceManager");
+            try {
+                deviceManager.destroy();
+            } catch (err) {
+                console.error("[dialerService] Error during deviceManager cleanup:", err);
+            }
+        };
+
+        window.addEventListener("pagehide", cleanupDevice);
+        window.addEventListener("beforeunload", cleanupDevice);
+
+        return {
+            get state() {
+                return dialerState;
+            },
+            open({
+                phone = "",
+                fromNumber = "",
+                partnerId = null,
+                partnerName = "",
+                autoDialerId = null,
+                queueLineId = null,
+                queueName = "",
+                queuePosition = "",
+                queueAttempts = 0,
+                queueNotes = "",
+                queueStatus = "",
+            } = {}) {
+                dialerState.phone = normalizePhoneNumber(phone);
+                dialerState.fromNumber = fromNumber || "";
+                dialerState.partnerId = partnerId || null;
+                dialerState.partnerName = partnerName || "";
+                dialerState.autoDialerId = autoDialerId || null;
+                dialerState.queueLineId = queueLineId || null;
+                dialerState.queueName = queueName || "";
+                dialerState.queuePosition = queuePosition || "";
+                dialerState.queueAttempts = queueAttempts || 0;
+                dialerState.queueNotes = queueNotes || "";
+                dialerState.queueStatus = queueStatus || "";
+                dialerState.requestId += 1;
+                dialerState.isOpen = true;
+            },
+            close() {
+                dialerState.isOpen = false;
+            },
+            toggle() {
+                dialerState.isOpen = !dialerState.isOpen;
+            },
+        };
+    },
+};
+
+registry.category("services").add("twilio_dialer", dialerService);
+
+registry.category("actions").add("twilio_dialer.open_dialer", (env, action) => {
+    const params = action.params || {};
+    env.services.twilio_dialer.open({
+        phone: params.phone || "",
+        fromNumber: params.from_number || "",
+        partnerId: params.partner_id || null,
+        partnerName: params.partner_name || "",
+        autoDialerId: params.auto_dialer_id || null,
+        queueLineId: params.queue_line_id || null,
+        queueName: params.queue_name || "",
+        queuePosition: params.queue_position || "",
+        queueAttempts: params.queue_attempts || 0,
+        queueNotes: params.queue_notes || "",
+        queueStatus: params.queue_status || "",
+    });
+    return Promise.resolve();
+});

@@ -108,7 +108,7 @@ Repository: https://github.com/Hasnen-mr/oddo-twilio
     'author': "Solutions Master",
     'website': "https://github.com/Hasnen-mr/oddo-twilio",
     'support': "developer.lifetips@gmail.com",
-    'live_test_url': "https://github.com/Hasnen-mr/oddo-twilio",
+    'live_test_url': "https://www.youtube.com/watch?v=bwgUI6tYrT8",
     'price': 0.0,
     'currency': 'USD',
 

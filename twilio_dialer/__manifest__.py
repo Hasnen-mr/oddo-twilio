@@ -108,7 +108,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'author': "Solutions Master",
     'website': "https://extension.mybroadcast.online",
     'support': "developer.lifetips@gmail.com",
-    'live_test_url': "https://extension.mybroadcast.online",
+    'live_test_url': "https://www.youtube.com/watch?v=bwgUI6tYrT8",
     'price': 0.0,
     'currency': 'USD',
 

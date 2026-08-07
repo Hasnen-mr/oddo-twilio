@@ -166,8 +166,29 @@ class TwilioAutoDialer(models.Model):
             record.failed_contacts = len(lines.filtered(lambda l: l.status in ("failed", "busy", "no_answer")))
             record.progress = (100.0 * completed / total) if total > 0 else 0.0
 
-    def action_add_contacts(self, partners):
-        """Add selected contacts to the dialing queue with smart validation."""
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        for record in records:
+            if record.partner_ids:
+                record._generate_queue_lines(record.partner_ids)
+                record.with_context(skip_queue_generation=True).write({"partner_ids": [(5, 0, 0)]})
+        return records
+
+    def write(self, vals):
+        res = super().write(vals)
+        if "partner_ids" in vals and not self.env.context.get("skip_queue_generation"):
+            for record in self:
+                if record.partner_ids:
+                    record._generate_queue_lines(record.partner_ids)
+                    record.with_context(skip_queue_generation=True).write({"partner_ids": [(5, 0, 0)]})
+        return res
+
+    def _generate_queue_lines(self, partners):
+        """
+        Private single source of truth for converting partners into twilio.auto.dialer.line records.
+        Executes phone normalization, duplicate prevention, sequence assignment, and line creation.
+        """
         self.ensure_one()
         if not partners:
             return {"created": 0, "skipped": 0}
@@ -232,6 +253,10 @@ class TwilioAutoDialer(models.Model):
         )
         return {"created": created_count, "skipped": skipped_count}
 
+    def action_add_contacts(self, partners):
+        """Add selected contacts to the dialing queue by delegating to _generate_queue_lines()."""
+        return self._generate_queue_lines(partners)
+
     def action_add_selected_contacts(self):
         """Button action on form view to convert selected partner_ids into Queue Lines."""
         self.ensure_one()
@@ -239,12 +264,12 @@ class TwilioAutoDialer(models.Model):
             raise UserError("Please select at least one Contact from the list before clicking 'Add Selected to Queue'.")
 
         selected_count = len(self.partner_ids)
-        res = self.action_add_contacts(self.partner_ids)
+        res = self._generate_queue_lines(self.partner_ids)
         added_count = res.get("created", 0)
         skipped_count = res.get("skipped", 0)
 
-        # Clear selection after adding
-        self.write({"partner_ids": [(5, 0, 0)]})
+        # Clear selection after adding safely via context flag
+        self.with_context(skip_queue_generation=True).write({"partner_ids": [(5, 0, 0)]})
 
         return {
             "type": "ir.actions.client",
@@ -297,8 +322,8 @@ class TwilioAutoDialer(models.Model):
 
         # If user selected contacts in partner_ids tab but hasn't clicked 'Add Selected to Queue' yet, convert them automatically!
         if self.partner_ids:
-            self.action_add_contacts(self.partner_ids)
-            self.write({"partner_ids": [(5, 0, 0)]})
+            self._generate_queue_lines(self.partner_ids)
+            self.with_context(skip_queue_generation=True).write({"partner_ids": [(5, 0, 0)]})
 
         if not self.queue_line_ids:
             raise UserError("No contacts in this dialing queue. Please select contacts or import a CSV file first.")

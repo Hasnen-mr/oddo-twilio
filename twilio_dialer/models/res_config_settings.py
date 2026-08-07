@@ -112,14 +112,18 @@ class ResConfigSettings(models.TransientModel):
     twilio_incoming_voicemail = fields.Boolean(
         string="Send Unanswered to Voicemail",
     )
-    twilio_incoming_voicemail_text = fields.Text(
+    twilio_incoming_voicemail_text = fields.Char(
         string="Voicemail Text",
+        config_parameter="twilio_dialer.incoming_voicemail_text",
     )
     twilio_incoming_welcome_greeting = fields.Boolean(
         string="Welcome Greeting",
+        config_parameter="twilio_dialer.incoming_welcome_greeting",
+        default=False,
     )
-    twilio_incoming_welcome_greeting_text = fields.Text(
+    twilio_incoming_welcome_greeting_text = fields.Char(
         string="Greeting Message Text",
+        config_parameter="twilio_dialer.incoming_welcome_greeting_text",
     )
     twilio_incoming_forward = fields.Boolean(
         string="Forward Calls",

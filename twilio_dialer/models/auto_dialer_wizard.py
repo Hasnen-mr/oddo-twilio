@@ -71,8 +71,8 @@ class TwilioAutoDialerAddContactsWizard(models.TransientModel):
                             seen_phones.add(clean)
 
             for partner in partners:
-                # Phone priority: mobile -> phone
-                raw = partner.mobile or partner.phone or ""
+                # Odoo 19: partner.mobile removed
+                raw = partner.phone or ""
                 digits = "".join(c for c in raw if c.isdigit())
                 if not raw or not digits:
                     no_phone += 1

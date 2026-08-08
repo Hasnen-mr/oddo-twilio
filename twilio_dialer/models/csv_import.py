@@ -208,7 +208,7 @@ class TwilioAutoDialerImportWizard(models.TransientModel):
                 continue
 
             partner = self.env["res.partner"].search([
-                "|", ("phone", "ilike", digits_only), ("mobile", "ilike", digits_only)
+                ("phone", "ilike", digits_only)
             ], limit=1)
 
             if not partner and r["name"]:

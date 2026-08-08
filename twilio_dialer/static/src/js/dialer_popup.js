@@ -353,7 +353,7 @@ export class DialerPopup extends Component {
     }
 
     _contactDomain() {
-        const hasPhone = ["|", ["phone", "!=", false], ["mobile", "!=", false]];
+        const hasPhone = [["phone", "!=", false]];
         const query = (this.state.contactSearchQuery || "").trim();
         if (!query) {
             return hasPhone;
@@ -364,17 +364,15 @@ export class DialerPopup extends Component {
             "|",
             "|",
             "|",
-            "|",
             ["name", "ilike", query],
             ["phone", "ilike", query],
-            ["mobile", "ilike", query],
             ["parent_name", "ilike", query],
             ["email", "ilike", query],
         ];
     }
 
     _mapPartnerToContact(partner) {
-        const phone = partner.mobile || partner.phone || "";
+        const phone = partner.phone || "";
         const name = partner.name || "Unknown";
         const company =
             partner.commercial_company_name ||
@@ -406,7 +404,7 @@ export class DialerPopup extends Component {
             const partners = await this.orm.searchRead(
                 "res.partner",
                 this._contactDomain(),
-                ["name", "phone", "mobile", "parent_name", "commercial_company_name", "email"],
+                ["name", "phone", "parent_name", "commercial_company_name", "email"],
                 { limit: CONTACT_PAGE_SIZE, offset, order: "name asc" }
             );
             const mapped = (partners || [])

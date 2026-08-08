@@ -99,7 +99,7 @@ export class TwilioOnboardingWizard extends Component {
             const users = await this.orm.searchRead(
                 "res.users",
                 [["id", "=", session.uid]],
-                ["email", "login", "phone", "mobile"],
+                ["email", "login", "phone"],
                 { limit: 1 }
             );
             const user = users[0] || {};
@@ -107,7 +107,7 @@ export class TwilioOnboardingWizard extends Component {
                 this.state.email = user.email || user.login || "";
             }
             if (!this.state.phone) {
-                this.state.phone = user.phone || user.mobile || "";
+                this.state.phone = user.phone || "";
             }
         } catch (err) {
             console.warn("[TwilioOnboarding] Prefill contact failed:", err);

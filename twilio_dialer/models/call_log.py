@@ -177,9 +177,10 @@ class TwilioCallLog(models.Model):
         "mail.message", string="Contact Chatter Message", copy=False, ondelete="set null"
     )
 
-    _sql_constraints = [
-        ("twilio_call_log_call_sid_unique", "unique(call_sid)", "The Twilio Call SID must be unique."),
-    ]
+    _twilio_call_log_call_sid_unique = models.Constraint(
+        "unique(call_sid)",
+        "The Twilio Call SID must be unique.",
+    )
 
     @api.depends("partner_id", "to_number", "from_number", "direction", "start_time")
     def _compute_display_name(self):
@@ -254,17 +255,12 @@ class TwilioCallLog(models.Model):
         partners = self.env["res.partner"].search(
             [
                 ("active", "=", True),
-                "|",
                 ("phone", "!=", False),
-                ("mobile", "!=", False),
             ],
             limit=2000,
         )
         for partner in partners:
-            if normalized_number in {
-                self._normalize_phone_number(partner.phone, partner),
-                self._normalize_phone_number(partner.mobile, partner),
-            }:
+            if normalized_number == self._normalize_phone_number(partner.phone, partner):
                 return partner
         return self.env["res.partner"]
 

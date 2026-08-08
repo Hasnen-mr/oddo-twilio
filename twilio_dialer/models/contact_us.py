@@ -44,7 +44,7 @@ class TwilioContactUs(models.TransientModel):
         if "help_email" in fields_list:
             values["help_email"] = contact_email or user.email or partner.email or ""
         if "help_phone" in fields_list:
-            values["help_phone"] = contact_phone or partner.phone or partner.mobile or ""
+            values["help_phone"] = contact_phone or partner.phone or ""
         if "help_account_sid" in fields_list:
             values["help_account_sid"] = icp.get_param("twilio_dialer.account_sid") or ""
         if "about_section" in fields_list:

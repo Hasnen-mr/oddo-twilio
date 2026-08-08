@@ -93,7 +93,7 @@ class TwilioService(models.AbstractModel):
             if digits:
                 search_term = digits[-10:]
                 partner = self.env["res.partner"].search([
-                    "|", ("phone", "like", search_term), ("mobile", "like", search_term)
+                    ("phone", "like", search_term)
                 ], limit=1)
 
         if partner:

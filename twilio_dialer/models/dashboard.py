@@ -138,7 +138,7 @@ class TwilioDialerDashboard(models.TransientModel):
                 [("state", "in", ("ready", "running", "paused"))]
             ),
             "callable_contacts": contacts.search_count(
-                ["|", ("phone", "!=", False), ("mobile", "!=", False)]
+                [("phone", "!=", False)]
             ),
             "today_calls": date_stats[today]["calls"],
             "seven_day_calls": sum(

@@ -114,11 +114,10 @@
                                 <button name="action_add_selected_contacts" type="object" string="Add Selected to Queue" class="btn-primary icon-fa-user-plus me-2"/>
                                 <button name="action_open_import_wizard" type="object" string="Import CSV" class="btn-secondary icon-fa-upload"/>
                             </div>
-                            <field name="partner_ids" domain="['|', ('phone', '!=', False), ('mobile', '!=', False)]">
+                            <field name="partner_ids" domain="[('phone', '!=', False)]">
                                 <list string="Select Contacts">
                                     <field name="name"/>
                                     <field name="phone"/>
-                                    <field name="mobile"/>
                                     <field name="email"/>
                                     <field name="company_id" groups="base.group_multi_company"/>
                                 </list>
@@ -136,7 +135,6 @@
                                     <field name="sequence" string="Seq"/>
                                     <field name="partner_id" string="Contact" options="{'no_create': True}"/>
                                     <field name="phone"/>
-                                    <field name="mobile" optional="show"/>
                                     <field name="email" optional="show"/>
                                     <field name="status" widget="badge"
                                            decoration-success="status == 'completed'"
@@ -200,11 +198,10 @@
                 <filter string="Running" name="running" domain="[('state', '=', 'running')]"/>
                 <filter string="Paused" name="paused" domain="[('state', '=', 'paused')]"/>
                 <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
-                <group expand="0" string="Group By">
-                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                <separator/>
+<filter string="State" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
-                </group>
-            </search>
+</search>
         </field>
     </record>
 
@@ -260,7 +257,6 @@
                                 <list>
                                     <field name="name"/>
                                     <field name="phone"/>
-                                    <field name="mobile"/>
                                     <field name="email"/>
                                 </list>
                             </field>

@@ -43,7 +43,7 @@ class TwilioController(http.Controller):
                 {"success": False, "message": str(e)}, status=400
             )
 
-    @http.route("/twilio_dialer/phone_number", type="json", auth="user")
+    @http.route("/twilio_dialer/phone_number", type="jsonrpc", auth="user")
     def get_phone_number(self):
         try:
             service = request.env["twilio.service"]
@@ -170,7 +170,7 @@ class TwilioController(http.Controller):
                 headers={"Content-Type": "text/xml; charset=utf-8"},
             )
 
-    @http.route("/twilio_dialer/call_log/create", type="json", auth="user")
+    @http.route("/twilio_dialer/call_log/create", type="jsonrpc", auth="user")
     def create_call_log(self, call_sid, to_number, partner_id=False):
         call_log = request.env["twilio.call.log"].create_outgoing_call(
             call_sid,
@@ -179,12 +179,12 @@ class TwilioController(http.Controller):
         )
         return {"id": call_log.id}
 
-    @http.route("/twilio_dialer/call_log/update", type="json", auth="user")
+    @http.route("/twilio_dialer/call_log/update", type="jsonrpc", auth="user")
     def update_call_log(self, call_sid, status):
         request.env["twilio.call.log"].update_call_status(call_sid, status)
         return {"success": True}
 
-    @http.route("/twilio_dialer/auto_dialer/sync_line", type="json", auth="user")
+    @http.route("/twilio_dialer/auto_dialer/sync_line", type="jsonrpc", auth="user")
     def sync_auto_dialer_line(self, line_id, status, call_log_id=None, notes=None, duration_sec=0):
         line = request.env["twilio.auto.dialer.line"].sudo().browse(line_id)
         if not line.exists():
@@ -215,7 +215,7 @@ class TwilioController(http.Controller):
             "queue_state": dialer.state,
         }
 
-    @http.route("/twilio_dialer/auto_dialer/navigate", type="json", auth="user")
+    @http.route("/twilio_dialer/auto_dialer/navigate", type="jsonrpc", auth="user")
     def navigate_auto_dialer(self, dialer_id, action_name):
         dialer = request.env["twilio.auto.dialer"].sudo().browse(dialer_id)
         if not dialer.exists():
@@ -252,7 +252,7 @@ class TwilioController(http.Controller):
             }
         return {"success": True, "queue_line_id": False, "queue_state": dialer.state}
 
-    @http.route("/twilio_dialer/billing", type="json", auth="user")
+    @http.route("/twilio_dialer/billing", type="jsonrpc", auth="user")
     def get_billing(self):
         try:
             return {"success": True, "billing": request.env["twilio.billing.service"].get_billing()}
@@ -531,7 +531,7 @@ class TwilioController(http.Controller):
             _logger.exception("Unhandled error in twilio_event")
             return request.make_response("", status=500)
 
-    @http.route("/twilio_dialer/sms/get_history", type="json", auth="user")
+    @http.route("/twilio_dialer/sms/get_history", type="jsonrpc", auth="user")
     def get_sms_history(self, phone=None, limit=30, page_token=None, **kwargs):
         """Fetch live SMS conversation history for a given phone number directly via TwilioService.
 
@@ -582,7 +582,7 @@ class TwilioController(http.Controller):
             _logger.error("Failed to fetch SMS history for %s: %s", phone, str(e))
             return {"success": False, "message": str(e), "messages": [], "has_more": False}
 
-    @http.route("/twilio_dialer/sms/get_templates", type="json", auth="user")
+    @http.route("/twilio_dialer/sms/get_templates", type="jsonrpc", auth="user")
     def get_sms_templates(self, partner_id=None, **kwargs):
         """Return active SMS templates with category information and rendered placeholder previews."""
         try:
@@ -607,7 +607,7 @@ class TwilioController(http.Controller):
             _logger.error("Failed to fetch SMS templates: %s", str(e))
             return {"success": False, "message": str(e), "templates": []}
 
-    @http.route("/twilio_dialer/sms/get_quick_replies", type="json", auth="user")
+    @http.route("/twilio_dialer/sms/get_quick_replies", type="jsonrpc", auth="user")
     def get_quick_replies(self, **kwargs):
         """Return active SMS quick replies from database configuration."""
         try:
@@ -618,7 +618,7 @@ class TwilioController(http.Controller):
             _logger.error("Failed to fetch quick replies: %s", str(e))
             return {"success": False, "message": str(e), "quick_replies": []}
 
-    @http.route("/twilio_dialer/sms/send", type="json", auth="user")
+    @http.route("/twilio_dialer/sms/send", type="jsonrpc", auth="user")
     def send_sms(self, recipient=None, body=None, partner_id=None, **kwargs):
         """Send an SMS using centralized TwilioService and log rich Chatter entry."""
         if not recipient or not body:
@@ -632,7 +632,7 @@ class TwilioController(http.Controller):
             _logger.error("Failed to send SMS to %s: %s", recipient, str(e))
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/sms/get_recent_logs", type="json", auth="user")
+    @http.route("/twilio_dialer/sms/get_recent_logs", type="jsonrpc", auth="user")
     def get_recent_logs(self, limit=20, **kwargs):
         """Return recent SMS logs for the embedded SMS Workspace logs table."""
         try:
@@ -642,13 +642,13 @@ class TwilioController(http.Controller):
             _logger.error("Failed to fetch recent SMS logs: %s", str(e))
             return {"success": False, "message": str(e), "logs": []}
 
-    @http.route("/twilio_dialer/sms/workspace_counts", type="json", auth="user")
+    @http.route("/twilio_dialer/sms/workspace_counts", type="jsonrpc", auth="user")
     def get_workspace_counts(self, **kwargs):
         """Return counts for SMS Workspace dashboard cards."""
         try:
             env = request.env
             counts = {
-                "contacts": env["res.partner"].search_count([("|"), ("phone", "!=", False), ("mobile", "!=", False)]),
+                "contacts": env["res.partner"].search_count([("phone", "!=", False)]),
                 "logs": env["twilio.sms.log"].search_count([]),
                 "templates": env["twilio.sms.template"].search_count([("active", "=", True)]),
                 "quick_replies": env["twilio.sms.quick.reply"].search_count([("active", "=", True)]),
@@ -658,17 +658,17 @@ class TwilioController(http.Controller):
             _logger.error("Failed to fetch SMS workspace counts: %s", str(e))
             return {"success": False, "message": str(e), "counts": {"contacts": 0, "logs": 0, "templates": 0, "quick_replies": 0}}
 
-    @http.route("/twilio_dialer/sms/get_contacts", type="json", auth="user")
+    @http.route("/twilio_dialer/sms/get_contacts", type="jsonrpc", auth="user")
     def get_sms_contacts(self, **kwargs):
-        """Return contacts with phone/mobile numbers for the WhatsApp-style messaging dialog."""
+        """Return contacts with phone numbers for the WhatsApp-style messaging dialog."""
         try:
             partners = request.env["res.partner"].search([
-                "|", ("phone", "!=", False), ("mobile", "!=", False)
+                ("phone", "!=", False)
             ], order="name asc", limit=300)
 
             result = []
             for p in partners:
-                phone = (p.phone or p.mobile or "").strip()
+                phone = (p.phone or "").strip()
                 if not phone:
                     continue
                 company = p.company_id.name if p.company_id else (p.parent_id.name if p.parent_id else "")

@@ -42,12 +42,11 @@
                 <filter string="Delivered" name="delivered" domain="[('status', '=', 'delivered')]"/>
                 <filter string="Sent" name="sent" domain="[('status', '=', 'sent')]"/>
                 <filter string="Failed" name="failed" domain="[('status', '=', 'failed')]"/>
-                <group expand="0" string="Group By">
-                    <filter string="Contact" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                <separator/>
+<filter string="Contact" name="group_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
                     <filter string="Direction" name="group_direction" context="{'group_by': 'direction'}"/>
-                </group>
-            </search>
+</search>
         </field>
     </record>
 

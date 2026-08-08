@@ -74,19 +74,15 @@ class TwilioSmsLog(models.TransientModel):
         if all_phone_digits:
             or_conditions = []
             for d in all_phone_digits:
-                or_conditions.extend([("phone", "like", d), ("mobile", "like", d)])
+                or_conditions.append(("phone", "like", d))
             
             # Combine domain with ORs
-            domain_partner = ["|"] * (len(or_conditions) - 1) + or_conditions
+            domain_partner = ["|"] * (len(or_conditions) - 1) + or_conditions if len(or_conditions) > 1 else or_conditions
             partners = self.env["res.partner"].search(domain_partner)
             for p in partners:
                 import re
                 if p.phone:
                     digits = re.sub(r"\D", "", p.phone)
-                    if len(digits) >= 10:
-                        partner_map[digits[-10:]] = (p.id, p.name)
-                if p.mobile:
-                    digits = re.sub(r"\D", "", p.mobile)
                     if len(digits) >= 10:
                         partner_map[digits[-10:]] = (p.id, p.name)
 

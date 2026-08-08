@@ -40,7 +40,6 @@ class TwilioSmsTemplate(models.Model):
         last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
 
         phone = partner.phone if partner else ""
-        mobile = partner.mobile if partner else ""
         email = partner.email if partner else ""
         company = partner.company_id.name if (partner and partner.company_id) else (partner.parent_id.name if (partner and partner.parent_id) else "")
         job_title = partner.function if partner else ""
@@ -51,8 +50,8 @@ class TwilioSmsTemplate(models.Model):
             r"\{\{\s*contact_name\s*\}\}": partner_name,
             r"\{\{\s*first_name\s*\}\}": first_name,
             r"\{\{\s*last_name\s*\}\}": last_name,
-            r"\{\{\s*phone\s*\}\}": phone or mobile,
-            r"\{\{\s*mobile\s*\}\}": mobile or phone,
+            r"\{\{\s*phone\s*\}\}": phone,
+            r"\{\{\s*mobile\s*\}\}": phone,
             r"\{\{\s*email\s*\}\}": email,
             r"\{\{\s*company\s*\}\}": company,
             r"\{\{\s*job_title\s*\}\}": job_title,

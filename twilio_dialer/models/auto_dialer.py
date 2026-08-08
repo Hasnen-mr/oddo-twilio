@@ -187,7 +187,8 @@ class TwilioAutoDialer(models.Model):
         skipped_count = 0
 
         for partner in partners:
-            raw_phone = partner.mobile or partner.phone or ""
+            # Odoo 19: res.partner.mobile removed — phone only
+            raw_phone = partner.phone or ""
             phone_clean = "".join(ch for ch in raw_phone.strip() if ch.isdigit() or ch == "+")
             digits_only = "".join(ch for ch in raw_phone if ch.isdigit())
 
@@ -503,12 +504,6 @@ class TwilioAutoDialerLine(models.Model):
         required=True,
         index=True,
     )
-    mobile = fields.Char(
-        string="Mobile",
-        related="partner_id.mobile",
-        store=True,
-        readonly=False,
-    )
     email = fields.Char(
         string="Email",
         related="partner_id.email",
@@ -529,7 +524,7 @@ class TwilioAutoDialerLine(models.Model):
     @api.onchange("partner_id")
     def _onchange_partner_id(self):
         if self.partner_id:
-            raw_phone = self.partner_id.mobile or self.partner_id.phone or ""
+            raw_phone = self.partner_id.phone or ""
             if raw_phone:
                 digits_only = "".join(c for c in raw_phone if c.isdigit())
                 if raw_phone.startswith("+"):

@@ -3,10 +3,16 @@ import re
 
 import requests
 from requests.auth import HTTPBasicAuth
-from twilio.jwt.access_token import AccessToken
-from twilio.jwt.access_token.grants import VoiceGrant
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioRestException
+try:
+    from twilio.jwt.access_token import AccessToken
+    from twilio.jwt.access_token.grants import VoiceGrant
+    from twilio.rest import Client
+    from twilio.base.exceptions import TwilioRestException
+    _TWILIO_LIB_AVAILABLE = True
+except ImportError:
+    AccessToken = VoiceGrant = Client = None
+    TwilioRestException = Exception
+    _TWILIO_LIB_AVAILABLE = False
 from markupsafe import Markup, escape
 from odoo import models, fields
 from odoo.exceptions import UserError

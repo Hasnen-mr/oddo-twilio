@@ -4,7 +4,7 @@ import { Component, useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
-import { PhoneField, phoneField, formPhoneField } from "@web/views/fields/phone/phone_field";
+import { PhoneField } from "@web/views/fields/phone/phone_field";
 import { TwilioSmsPopup } from "./sms_popup";
 import { TwilioSmsMessagingDialog } from "./sms_messaging_dialog";
 

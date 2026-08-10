@@ -98,12 +98,14 @@ class DeviceManager {
             this._setStatus(STATUS.FETCHING_TOKEN);
 
             const token = await this._fetchToken(false);
-            if (this._destroyed) return;
+            if (this._destroyed || !token) return;
 
             this._setStatus(STATUS.REGISTERING);
             await this._createDevice(token);
         } catch (error) {
-            console.error("[DeviceManager] initialize() failed:", error);
+            console.info("[DeviceManager] initialize(): Twilio unconfigured or waiting for settings:", error.message || error);
+            this._setStatus(STATUS.DISCONNECTED);
+            return;
             if (!this._destroyed && this._isAccessTokenInvalid(error)) {
                 await this._recoverInvalidAccessToken(error);
                 return;
@@ -249,6 +251,11 @@ class DeviceManager {
         const data = await response.json();
 
         if (!data.success) {
+            if (data.configured === false) {
+                console.info("[DeviceManager] Twilio credentials unconfigured:", data.message);
+                this._setStatus(STATUS.DISCONNECTED);
+                return null;
+            }
             throw new Error(data.message || "Token request failed");
         }
         this.token = data.token;

@@ -2,7 +2,10 @@
 import logging
 from odoo import models, fields, api
 from odoo.exceptions import UserError
-from twilio.rest import Client
+try:
+    from twilio.rest import Client
+except ImportError:
+    Client = None
 
 _logger = logging.getLogger(__name__)
 

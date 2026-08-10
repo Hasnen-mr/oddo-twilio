@@ -5,7 +5,11 @@ import logging
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.release import version as odoo_release_version
-from twilio.base.exceptions import TwilioRestException
+try:
+    from twilio.base.exceptions import TwilioRestException
+except ImportError:
+    TwilioRestException = Exception
+
 from ..services import MyBroadcastAPI, MyBroadcastAPIError, ZantaTechAPI, ZantaTechAPIError
 
 _logger = logging.getLogger(__name__)
@@ -13,23 +17,6 @@ _logger = logging.getLogger(__name__)
 
 class ResConfigSettings(models.TransientModel):
     _inherit = "res.config.settings"
-
-    # Complete MCP Settings compatibility fields for inherited views
-    mcp_enabled = fields.Boolean(string="Enable MCP Server", config_parameter="mcp_server.enabled", default=False)
-    mcp_enable_oauth = fields.Boolean(string="Enable OAuth", config_parameter="mcp_server.enable_oauth", default=False)
-    mcp_request_limit = fields.Integer(string="Request Limit", config_parameter="mcp_server.request_limit", default=100)
-    mcp_enable_logging = fields.Boolean(string="Enable Logging", config_parameter="mcp_server.enable_logging", default=False)
-    mcp_enable_rate_limiting = fields.Boolean(string="Enable Rate Limiting", config_parameter="mcp_server.enable_rate_limiting", default=False)
-    mcp_log_retention_days = fields.Integer(string="Log Retention Days", config_parameter="mcp_server.log_retention_days", default=30)
-    mcp_default_limit = fields.Integer(string="Default Limit", config_parameter="mcp_server.default_limit", default=80)
-    mcp_max_limit = fields.Integer(string="Max Limit", config_parameter="mcp_server.max_limit", default=1000)
-    mcp_max_smart_fields = fields.Integer(string="Max Smart Fields", config_parameter="mcp_server.max_smart_fields", default=10)
-    mcp_max_related_items = fields.Integer(string="Max Related Items", config_parameter="mcp_server.max_related_items", default=5)
-    mcp_allowed_origins = fields.Char(string="Allowed Origins", config_parameter="mcp_server.allowed_origins")
-    mcp_port = fields.Integer(string="MCP Port", config_parameter="mcp.port", default=8000)
-    mcp_host = fields.Char(string="MCP Host", config_parameter="mcp.host", default="127.0.0.1")
-    mcp_log_level = fields.Selection([("info", "Info"), ("debug", "Debug"), ("warning", "Warning"), ("error", "Error")], string="Log Level", config_parameter="mcp.log_level", default="info")
-    mcp_api_key = fields.Char(string="API Key", config_parameter="mcp.api_key")
 
     # Left-sidebar section on Configuration page (client-only, not persisted)
     twilio_config_section = fields.Selection(

@@ -47,22 +47,22 @@ $guesses = @(
 )
 
 foreach ($g in $guesses) {
-    if (Test-Path $g) { [void]$candidates.Add($g) }
+    if (Test-Path -LiteralPath $g) { [void]$candidates.Add($g) }
 }
 
 # Shallow search for odoo-bin / odoo.conf
 $searchRoots = @("$env:USERPROFILE\Documents", "$env:USERPROFILE", "C:\")
 foreach ($root in $searchRoots) {
-    if (-not (Test-Path $root)) { continue }
+    if (-not (Test-Path -LiteralPath $root)) { continue }
     try {
-        Get-ChildItem -Path $root -Recurse -Depth 3 -ErrorAction SilentlyContinue |
+        Get-ChildItem -LiteralPath $root -Recurse -Depth 3 -ErrorAction SilentlyContinue |
             Where-Object { $_.Name -in @("odoo-bin", "odoo.conf", "odoo-bin.exe") } |
             Select-Object -First 30 |
             ForEach-Object { [void]$candidates.Add($_.Directory.FullName) }
     } catch {}
 }
 
-$unique = @($candidates | Select-Object -Unique | Where-Object { Test-Path $_ })
+$unique = @($candidates | Select-Object -Unique | Where-Object { Test-Path -LiteralPath $_ })
 
 $selected = $null
 if ($unique.Count -gt 0) {

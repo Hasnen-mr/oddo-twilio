@@ -1,16 +1,9 @@
 import json
 import logging
-from xml.sax.saxutils import escape
 
 from odoo import http
-from odoo.exceptions import UserError, AccessDenied
+from odoo.exceptions import UserError
 from odoo.http import request
-
-try:
-    from twilio.twiml.voice_response import VoiceResponse, Dial, Client, Say, Record, Reject, Hangup
-    _TWILIO_TWIML_AVAILABLE = True
-except ImportError:
-    _TWILIO_TWIML_AVAILABLE = False
 
 _logger = logging.getLogger(__name__)
 

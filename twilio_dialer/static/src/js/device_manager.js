@@ -503,15 +503,11 @@ class DeviceManager {
             if (!this._destroyed) {
                 this._setStatus(STATUS.CONNECTED);
             }
-            console.log("Call Accepted");
-            console.log(call.parameters);
         });
 
         call.on("ringing", () => {
             logState("ringing");
             this._syncCallLog(call, callSid, phoneNumber, "ringing");
-            console.log(" Ringing");
-            console.log(call.parameters);
         });
 
         call.on("disconnect", () => {
@@ -526,8 +522,6 @@ class DeviceManager {
             if (!this._destroyed) {
                 this._setStatus(STATUS.READY);
             }
-            console.log(" Call Disconnected");
-            console.log(call.parameters);
         });
 
         call.on("cancel", () => {
@@ -549,12 +543,6 @@ class DeviceManager {
         });
 
         call.on("error", (error) => {
-            console.group("Twilio Call Error");
-            console.error("Full Error:", error);
-            console.log("Code:", error.code);
-            console.log("Message:", error.message);
-            console.groupEnd();
-
             logState(`error (code: ${error.code}, msg: ${error.message})`);
 
             this._syncCallLog(call, callSid, phoneNumber, "failed");
@@ -714,13 +702,6 @@ class DeviceManager {
             const cleanNumber = this.normalizePhoneNumber(phoneNumber);
             const fromNumber = customParameters.From || customParameters.from_number || customParameters.callerId || "";
 
-            console.log("[DeviceManager] makeCall trace:", {
-                phoneNumber: cleanNumber,
-                customParameters: customParameters,
-                callContext: callContext,
-                selectedCaller: fromNumber
-            });
-
             const connectParams = {
                 To: cleanNumber,
                 to: cleanNumber,
@@ -740,18 +721,6 @@ class DeviceManager {
                 params: connectParams,
             });
 
-            console.group("Call Debug");
-
-            console.log("Call:", call);
-            console.log("Parameters:", call.parameters);
-            console.log("CallSid:", call.parameters?.CallSid);
-            console.log("Status:", call.status?.());
-            console.log("Direction:", call.direction);
-
-            console.dir(call);
-
-            console.groupEnd();
-
             let callSid = call.parameters?.CallSid;
 
             if (!callSid) {
@@ -766,17 +735,6 @@ class DeviceManager {
             return true;
 
         } catch (error) {
-            console.group("CONNECT FAILED");
-
-            console.error(error);
-            console.log("Code:", error.code);
-            console.log("Message:", error.message);
-            console.log("Explanation:", error.explanation);
-            console.log("Causes:", error.causes);
-            console.log("Solutions:", error.solutions);
-
-            console.groupEnd();
-
             if (this._isAccessTokenInvalid(error)) {
                 await this._recoverInvalidAccessToken(error);
                 return false;
@@ -788,8 +746,6 @@ class DeviceManager {
     }
 
     disconnect() {
-        console.error("[DEBUG TRACE] deviceManager.disconnect() requested!");
-        console.trace("[DEBUG TRACE] Stack trace for deviceManager.disconnect:");
         if (this._destroyed) {
             return;
         }

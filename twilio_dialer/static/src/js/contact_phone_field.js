@@ -5,6 +5,7 @@ import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
 import { registry } from "@web/core/registry";
+import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import * as phoneFieldModule from "@web/views/fields/phone/phone_field";
 const PhoneField = phoneFieldModule.PhoneField;
 const phoneField = phoneFieldModule.phoneField;

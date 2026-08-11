@@ -1,5 +1,5 @@
 # Twilio Dialer - Windows installer (PowerShell)
-# Finds Odoo, copies the module into custom addons, installs Python deps.
+# Finds Odoo, extracts the corresponding tested version ZIP into custom addons, installs Python deps.
 # Run:
 #   powershell -ExecutionPolicy Bypass -File .\install_windows.ps1
 
@@ -20,14 +20,6 @@ Write-Host "=============================================="
 Write-Host "  Twilio Dialer installer (Windows)"
 Write-Host "=============================================="
 Write-Host ""
-Write-Info "Module source: $ModuleSrc"
-
-if (-not (Test-Path (Join-Path $ModuleSrc "__manifest__.py"))) {
-    Fail "Module folder not found: $ModuleSrc"
-}
-if (-not (Test-Path $ReqFile)) {
-    Fail "requirements.txt not found: $ReqFile"
-}
 
 # --- Step 1: locate Odoo / addons ---------------------------------------------
 Write-Info "Step 1/4 - Looking for Odoo directories..."
@@ -36,14 +28,22 @@ $candidates = New-Object System.Collections.Generic.List[string]
 $guesses = @(
     "$env:USERPROFILE\odoo",
     "$env:USERPROFILE\odoo18",
+    "$env:USERPROFILE\odoo17",
+    "$env:USERPROFILE\odoo19",
     "$env:USERPROFILE\Documents\odoo",
     "$env:USERPROFILE\Documents\odoo18",
+    "$env:USERPROFILE\Documents\odoo17",
+    "$env:USERPROFILE\Documents\odoo19",
     "C:\odoo",
     "C:\odoo18",
+    "C:\odoo17",
+    "C:\odoo19",
     "C:\Program Files\Odoo",
     'C:\Program Files (x86)\Odoo',
     "D:\odoo",
-    "D:\odoo18"
+    "D:\odoo18",
+    "D:\odoo17",
+    "D:\odoo19"
 )
 
 foreach ($g in $guesses) {
@@ -51,7 +51,7 @@ foreach ($g in $guesses) {
 }
 
 # Shallow search for odoo-bin / odoo.conf
-$searchRoots = @("$env:USERPROFILE\Documents", "$env:USERPROFILE", "C:\")
+$searchRoots = @("$env:USERPROFILE\Documents", "$env:USERPROFILE", "C:\Odoo", "D:\Odoo", "C:\Program Files\Odoo", 'C:\Program Files (x86)\Odoo')
 foreach ($root in $searchRoots) {
     if (-not (Test-Path -LiteralPath $root)) { continue }
     try {
@@ -120,7 +120,7 @@ if (-not $addonsDir) {
     Fail $msg
 }
 
-Write-Ok "Install addons folder: $addonsDir"
+Write-Ok "Target custom addons folder: $addonsDir"
 
 $odooConf = $null
 foreach ($conf in @(
@@ -132,24 +132,120 @@ foreach ($conf in @(
     if (Test-Path $conf) { $odooConf = $conf; break }
 }
 
-# --- Step 2: copy module ------------------------------------------------------
-Write-Info "Step 2/4 - Installing module into addons..."
+# --- Version Detection & ZIP Selection ----------------------------------------
+$odooVersion = $null
+
+$releasePy = Join-Path $selected "odoo\release.py"
+if (-not (Test-Path $releasePy)) {
+    $releasePy = Join-Path $selected "release.py"
+}
+if (Test-Path $releasePy) {
+    $relText = Get-Content -Raw -Path $releasePy -ErrorAction SilentlyContinue
+    if ($relText -match 'version\s*=\s*[''"](\d+\.\d+)') {
+        $v = $matches[1]
+        if ($v.StartsWith("17")) { $odooVersion = "17" }
+        elseif ($v.StartsWith("18")) { $odooVersion = "18" }
+        elseif ($v.StartsWith("19")) { $odooVersion = "19" }
+    }
+}
+
+if (-not $odooVersion) {
+    if ($selected -match "17") { $odooVersion = "17" }
+    elseif ($selected -match "19") { $odooVersion = "19" }
+    elseif ($selected -match "18") { $odooVersion = "18" }
+}
+
+if (-not $odooVersion) {
+    Write-Host ""
+    Write-Host "Select your Odoo Version:"
+    Write-Host "  [1] Odoo 17"
+    Write-Host "  [2] Odoo 18"
+    Write-Host "  [3] Odoo 19"
+    $vChoice = Read-Host "Select version [1-3]"
+    switch ($vChoice) {
+        "1" { $odooVersion = "17" }
+        "3" { $odooVersion = "19" }
+        default { $odooVersion = "18" }
+    }
+}
+
+Write-Ok "Detected/Selected Odoo Version: Odoo $odooVersion"
+
+$zipFile = $null
+$zipCandidates = @()
+
+if ($odooVersion -eq "17") {
+    $zipCandidates += (Join-Path $ScriptDir "twilio_dialer_17.0.zip")
+    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer_17.0.zip")
+    $zipCandidates += "D:\Odoo\custom_addons\twilio_dialer_17.0.zip"
+} elseif ($odooVersion -eq "19") {
+    $zipCandidates += (Join-Path $ScriptDir "twilio_dialer_19.0.zip")
+    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer_19.0.zip")
+    $zipCandidates += "D:\Odoo\custom_addons\twilio_dialer_19.0.zip"
+} else {
+    $zipCandidates += (Join-Path $ScriptDir "twilio_dialer.zip")
+    $zipCandidates += (Join-Path $ScriptDir "twilio_dialer_18.0.zip")
+    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer.zip")
+    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer_18.0.zip")
+    $zipCandidates += "D:\Odoo\custom_addons\twilio_dialer.zip"
+}
+
+foreach ($zc in $zipCandidates) {
+    if (Test-Path $zc) {
+        $zipFile = $zc
+        break
+    }
+}
+
+# --- Step 2: Extract module into custom addons --------------------------------
+Write-Info "Step 2/4 - Installing module into custom addons..."
 $target = Join-Path $addonsDir "twilio_dialer"
 
 if (Test-Path $target) {
     Write-Note "Existing module found at $target"
-    $repl = Read-Host "Replace it? [y/N]"
+    $repl = Read-Host "Replace existing installation? [y/N]"
     if ($repl -match '^[Yy]$') {
-        Remove-Item -Recurse -Force $target
+        $backupDir = Join-Path $addonsDir ("twilio_dialer_backup_" + (Get-Date -Format "yyyyMMddHHmmss"))
+        Write-Info "Creating safety backup at $backupDir..."
+        Move-Item -Path $target -Destination $backupDir -Force
     } else {
-        Fail "Aborted (module already exists)."
+        Fail "Aborted (existing module preserved)."
     }
 }
 
 New-Item -ItemType Directory -Force -Path $addonsDir | Out-Null
-Copy-Item -Recurse -Force $ModuleSrc $target
-Copy-Item -Force $ReqFile (Join-Path $addonsDir "twilio_dialer_requirements.txt")
-Write-Ok "Copied module -> $target"
+
+if ($zipFile -and (Test-Path $zipFile)) {
+    Write-Info "Extracting release ZIP: $zipFile -> $addonsDir"
+    Expand-Archive -Path $zipFile -DestinationPath $addonsDir -Force
+
+    # Resolve double nesting if present
+    $nestedTarget = Join-Path $target "twilio_dialer"
+    if ((Test-Path $nestedTarget) -and (Test-Path (Join-Path $nestedTarget "__manifest__.py"))) {
+        Write-Info "Resolving nested directory structure..."
+        $tempMove = Join-Path $addonsDir "twilio_dialer_temp"
+        Move-Item -Path $nestedTarget -Destination $tempMove -Force
+        Remove-Item -Path $target -Recurse -Force
+        Move-Item -Path $tempMove -Destination $target -Force
+    }
+} elseif (Test-Path (Join-Path $ModuleSrc "__manifest__.py")) {
+    Write-Info "Extracting/Copying module source: $ModuleSrc -> $target"
+    Copy-Item -Recurse -Force $ModuleSrc $target
+} else {
+    Fail "Could not find Twilio Dialer release ZIP or source folder for Odoo $odooVersion"
+}
+
+# Critical Structure Check
+$manifestPath = Join-Path $target "__manifest__.py"
+if (-not (Test-Path $manifestPath)) {
+    Fail "Verification Error: __manifest__.py not found at $manifestPath"
+}
+$nestedManifest = Join-Path $target "twilio_dialer\__manifest__.py"
+if (Test-Path $nestedManifest) {
+    Fail "Verification Error: Double nesting detected at $nestedManifest"
+}
+
+Write-Ok "Module verified at $target"
 
 # --- Step 3: update odoo.conf addons_path (optional) --------------------------
 Write-Info "Step 3/4 - Updating odoo.conf addons_path (optional)..."
@@ -185,36 +281,11 @@ if ($odooConf) {
         Write-Host "    $addonsDir"
     }
 } else {
-    Write-Note "No odoo.conf found. Add this to addons_path manually:"
-    Write-Host "    $addonsDir"
-    Write-Host "  Template: $(Join-Path $RepoRoot 'odoo.conf.example')"
+    Write-Note "No odoo.conf found. Ensure $addonsDir is included in your addons_path."
 }
 
-# --- Step 4: install Python dependency ----------------------------------------
-Write-Info "Step 4/4 - Installing Python dependency (twilio)..."
-
-# Normalize requirements to UTF-8 without BOM (pip fails on UTF-16)
-$reqUtf8 = Join-Path $env:TEMP "twilio_dialer_requirements_utf8.txt"
-$raw = [System.IO.File]::ReadAllBytes($ReqFile)
-$text = $null
-if (($raw.Length -ge 2) -and ($raw[0] -eq 0xFF -and $raw[1] -eq 0xFE)) {
-    $text = [System.Text.Encoding]::Unicode.GetString($raw)
-} elseif (($raw.Length -ge 2) -and ($raw[0] -eq 0xFE -and $raw[1] -eq 0xFF)) {
-    $text = [System.Text.Encoding]::BigEndianUnicode.GetString($raw)
-} elseif (($raw.Length -ge 3) -and ($raw[0] -eq 0xEF -and $raw[1] -eq 0xBB -and $raw[2] -eq 0xBF)) {
-    $text = [System.Text.Encoding]::UTF8.GetString($raw, 3, $raw.Length - 3)
-} else {
-    $text = [System.Text.Encoding]::UTF8.GetString($raw)
-}
-
-$reqLines = @()
-foreach ($line in ($text -split "`r?`n")) {
-    $s = $line.Trim()
-    if (-not [string]::IsNullOrWhiteSpace($s) -and -not $s.StartsWith("#")) {
-        $reqLines += $s
-    }
-}
-[System.IO.File]::WriteAllText($reqUtf8, (($reqLines -join "`n") + "`n"), [System.Text.UTF8Encoding]::new($false))
+# --- Step 4: install Python dependency (twilio & PyJWT) -----------------------
+Write-Info "Step 4/4 - Installing Python dependencies..."
 
 $pythonCandidates = @(
     $env:ODOO_PYTHON,
@@ -238,32 +309,31 @@ foreach ($py in $pythonCandidates) {
     } catch {}
 }
 
-if (-not $pythonBin) {
-    Fail "Python not found. Install twilio manually: pip install -r requirements.txt"
-}
-
-Write-Host "Using: $pythonBin"
-& $pythonBin --version
-$doPip = Read-Host "Install requirements with this Python? [Y/n]"
-if ($doPip -notmatch '^[Nn]$') {
-    & $pythonBin -m pip install -r $reqUtf8
-    Write-Ok "Python packages installed"
+if ($pythonBin) {
+    Write-Host "Using Python: $pythonBin"
+    $doPip = Read-Host "Install dependencies (twilio, PyJWT) with this Python? [Y/n]"
+    if ($doPip -notmatch '^[Nn]$') {
+        & $pythonBin -m pip install twilio PyJWT 2>$null
+        Write-Ok "Python packages installed"
+    }
 } else {
-    Write-Note "Skipped pip. Later run:"
-    Write-Host "    $pythonBin -m pip install -r $ReqFile"
+    Write-Note "Python environment not auto-detected. Ensure 'twilio' and 'PyJWT' packages are installed."
 }
-Remove-Item -Force $reqUtf8 -ErrorAction SilentlyContinue
 
+# --- Customer Next-Steps Instructions ----------------------------------------
 Write-Host ""
-Write-Host "=============================================="
-Write-Host "  Install complete"
-Write-Host "=============================================="
+Write-Host "==========================================================" -ForegroundColor Green
+Write-Host "  Twilio Dialer has been installed into your Odoo Apps folder." -ForegroundColor Green
+Write-Host "==========================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host "Next steps (use your EXISTING database + login):"
-Write-Host "  1. Restart Odoo"
-Write-Host "  2. Apps -> Update Apps List"
-Write-Host "  3. Install Twilio Dialer"
-Write-Host "  4. Open Twilio Dialer -> Configuration and enter Account SID / Auth Token"
+Write-Host "Next steps:" -ForegroundColor Yellow
+Write-Host "  1. Open Odoo."
+Write-Host "  2. Go to Settings."
+Write-Host "  3. Scroll down and activate Developer Mode."
+Write-Host "  4. Open Apps."
+Write-Host "  5. Search for `"Odoo Twilio Dialer`"."
+Write-Host "  6. Install the module."
+Write-Host "  7. Open Twilio Dialer and follow the setup wizard."
 Write-Host ""
-Write-Host ("Module path: " + $target)
+Write-Host "Diagnostic Info: Installed to $target" -ForegroundColor Gray
 Write-Host ""

@@ -3,7 +3,7 @@
 import { Component, useState, onWillStart, onMounted, onWillUnmount, useRef } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { normalizePhoneNumber } from "./phone_utils";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";

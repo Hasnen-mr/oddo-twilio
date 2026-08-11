@@ -2,7 +2,7 @@
 
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { useService } from "@web/core/utils/hooks";
 
 const CALL_PACKAGES = Object.freeze([

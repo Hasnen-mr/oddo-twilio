@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { Component, useExternalListener, useState, onWillStart, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { useService } from "@web/core/utils/hooks";
 import { COUNTRY_CODES } from "./country_codes";
 import { deviceManager } from "./device_manager";

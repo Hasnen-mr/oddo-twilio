@@ -2,7 +2,7 @@
 
 import { Component, useState, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { deviceManager } from "./device_manager";
 
 /**

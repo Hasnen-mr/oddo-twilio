@@ -6,10 +6,9 @@
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RepoRoot  = $ScriptDir
+$RepoRoot  = (Get-Item (Join-Path $ScriptDir "..")).FullName
 $ModuleSrc = Join-Path $RepoRoot "twilio_dialer"
-$ReqFile   = Join-Path $ModuleSrc "requirements.txt"
-if (-not (Test-Path $ReqFile)) { $ReqFile = Join-Path $RepoRoot "requirements.txt" }
+$ReqFile   = Join-Path $RepoRoot "requirements.txt"
 
 function Write-Info($msg)  { Write-Host "==> $msg" -ForegroundColor Cyan }
 function Write-Ok($msg)    { Write-Host "OK: $msg" -ForegroundColor Green }

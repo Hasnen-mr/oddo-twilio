@@ -4,9 +4,9 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-MODULE_SRC="$SCRIPT_DIR/twilio_dialer"
-REQ_FILE="$MODULE_SRC/requirements.txt"
-[[ -f "$REQ_FILE" ]] || REQ_FILE="$SCRIPT_DIR/requirements.txt"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+MODULE_SRC="$REPO_ROOT/twilio_dialer"
+REQ_FILE="$REPO_ROOT/requirements.txt"
 
 RED=$'\033[0;31m'
 GREEN=$'\033[0;32m'

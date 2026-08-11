@@ -292,7 +292,9 @@
         <field name="arch" type="xml">
             <form string="Import Contacts via CSV">
                 <sheet>
+                    <field name="state" invisible="1"/>
                     <group invisible="state != 'upload'">
+
                         <group string="Select CSV File">
                             <field name="dialer_id" readonly="1"/>
                             <field name="csv_file" filename="file_name"/>

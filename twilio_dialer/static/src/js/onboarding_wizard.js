@@ -160,8 +160,9 @@ export class TwilioOnboardingWizard extends Component {
                 if (this.props.onConnected) {
                     await this.props.onConnected(result);
                 }
+                await this.registerToken();
             } else {
-                this.state.error = (result && result.error) || _t("Connection failed.");
+                this.state.error = (result && result.error) || _t("Connection failed. Check your credentials.");
             }
         } catch (err) {
             const message =
@@ -175,31 +176,45 @@ export class TwilioOnboardingWizard extends Component {
         }
     }
 
-    async openDialer() {
+    async registerToken() {
         if (this.state.registeringToken) {
             return;
         }
         this.state.registeringToken = true;
         this.state.error = "";
         try {
-            let opened = false;
+            let registered = false;
             if (this.props.onOpenDialer) {
-                opened = await this.props.onOpenDialer();
+                registered = await this.props.onOpenDialer();
             }
-            if (opened) {
+            if (registered) {
                 this.state.tokenReady = true;
-                this._closeWizard();
+                this.state.error = "";
             } else {
+                this.state.tokenReady = false;
                 this.state.error = _t(
-                    "Twilio token did not register properly. Stay on this step and try Open Dialer again, or use Refresh on the dialer."
+                    "Credentials were saved, but softphone token registration failed or timed out. Check your network connection or click Retry Registration."
                 );
             }
         } catch (err) {
+            this.state.tokenReady = false;
             this.state.error =
                 (err && err.message) ||
-                _t("Could not register Twilio token. Please try again.");
+                _t("Could not register softphone token. Please try again.");
         } finally {
             this.state.registeringToken = false;
         }
     }
+
+    async openDialer() {
+        if (this.state.tokenReady) {
+            this._closeWizard();
+            return;
+        }
+        await this.registerToken();
+        if (this.state.tokenReady) {
+            this._closeWizard();
+        }
+    }
 }
+

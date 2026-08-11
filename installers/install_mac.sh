@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Twilio Dialer — macOS / Linux installer
-# Finds Odoo, copies the module into custom addons, installs Python deps.
+# Finds Odoo, extracts the corresponding tested version ZIP into custom addons, installs Python deps.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -24,10 +24,6 @@ echo "=============================================="
 echo "  Twilio Dialer installer (macOS / Linux)"
 echo "=============================================="
 echo
-info "Module source: $MODULE_SRC"
-
-[[ -f "$MODULE_SRC/__manifest__.py" ]] || fail "Module folder not found: $MODULE_SRC"
-[[ -f "$REQ_FILE" ]] || fail "requirements.txt not found: $REQ_FILE"
 
 # ── Step 1: locate Odoo / addons ─────────────────────────────────────────────
 info "Step 1/4 — Looking for Odoo directories..."
@@ -38,16 +34,23 @@ while IFS= read -r path; do
 done <<EOF
 $HOME/odoo
 $HOME/odoo18
+$HOME/odoo17
+$HOME/odoo19
 $HOME/odoo-18
+$HOME/odoo-17
+$HOME/odoo-19
 $HOME/src/odoo
 $HOME/Documents/odoo
 $HOME/Documents/odoo18
+$HOME/Documents/odoo17
+$HOME/Documents/odoo19
 /opt/odoo
 /opt/odoo18
+/opt/odoo17
+/opt/odoo19
 /usr/lib/python3/dist-packages/odoo
 EOF
 
-# Also search shallow for odoo-bin / odoo.conf under home Documents
 while IFS= read -r conf; do
   root="$(dirname "$conf")"
   CANDIDATES+=("$root")
@@ -93,17 +96,14 @@ fi
 
 [[ -n "${SELECTED:-}" && -d "$SELECTED" ]] || fail "Invalid path: ${SELECTED:-}"
 
-# Prefer a custom/extra addons folder under the selection
 if [[ -d "$SELECTED/custom_addons" ]]; then
   ADDONS_DIR="$SELECTED/custom_addons"
 elif [[ -d "$SELECTED/addons" && -f "$SELECTED/odoo-bin" ]]; then
-  # Prefer custom next to community addons
   ADDONS_DIR="$SELECTED/custom_addons"
   mkdir -p "$ADDONS_DIR"
 elif [[ -f "$SELECTED/__manifest__.py" ]]; then
   fail "You selected a single module folder. Select the parent addons directory instead."
 elif [[ -d "$SELECTED" ]]; then
-  # If user pointed at an addons dir that already contains modules, use it
   if compgen -G "$SELECTED/*/__manifest__.py" > /dev/null; then
     ADDONS_DIR="$SELECTED"
   else
@@ -112,9 +112,8 @@ elif [[ -d "$SELECTED" ]]; then
   fi
 fi
 
-ok "Install addons folder: $ADDONS_DIR"
+ok "Target custom addons folder: $ADDONS_DIR"
 
-# Find odoo.conf near selection
 for conf in "$SELECTED/odoo.conf" "$SELECTED/debian/odoo.conf" "$HOME/.odoorc" "/etc/odoo/odoo.conf"; do
   if [[ -f "$conf" ]]; then
     ODOO_CONF="$conf"
@@ -122,42 +121,119 @@ for conf in "$SELECTED/odoo.conf" "$SELECTED/debian/odoo.conf" "$HOME/.odoorc" "
   fi
 done
 
-# ── Step 2: copy module ──────────────────────────────────────────────────────
-info "Step 2/4 — Installing module into addons..."
+# ── Odoo Version Detection & ZIP Selection ────────────────────────────────────
+ODOO_VERSION=""
+
+if [[ -f "$SELECTED/odoo/release.py" ]]; then
+  REL_TEXT="$(cat "$SELECTED/odoo/release.py" 2>/dev/null || true)"
+elif [[ -f "$SELECTED/release.py" ]]; then
+  REL_TEXT="$(cat "$SELECTED/release.py" 2>/dev/null || true)"
+else
+  REL_TEXT=""
+fi
+
+if [[ "$REL_TEXT" =~ version[[:space:]]*=[[:space:]]*[\'\"]([0-9]+\.[0-9]+) ]]; then
+  VER="${BASH_REMATCH[1]}"
+  if [[ "$VER" == 17* ]]; then ODOO_VERSION="17"; fi
+  if [[ "$VER" == 18* ]]; then ODOO_VERSION="18"; fi
+  if [[ "$VER" == 19* ]]; then ODOO_VERSION="19"; fi
+fi
+
+if [[ -z "$ODOO_VERSION" ]]; then
+  if [[ "$SELECTED" == *17* ]]; then ODOO_VERSION="17"; fi
+  if [[ "$SELECTED" == *19* ]]; then ODOO_VERSION="19"; fi
+  if [[ "$SELECTED" == *18* ]]; then ODOO_VERSION="18"; fi
+fi
+
+if [[ -z "$ODOO_VERSION" ]]; then
+  echo
+  echo "Select your Odoo Version:"
+  echo "  [1] Odoo 17"
+  echo "  [2] Odoo 18"
+  echo "  [3] Odoo 19"
+  read -r -p "Select version [1-3]: " vchoice
+  case "$vchoice" in
+    1) ODOO_VERSION="17" ;;
+    3) ODOO_VERSION="19" ;;
+    *) ODOO_VERSION="18" ;;
+  esac
+fi
+
+ok "Detected/Selected Odoo Version: Odoo $ODOO_VERSION"
+
+ZIP_FILE=""
+ZIP_CANDIDATES=()
+if [[ "$ODOO_VERSION" == "17" ]]; then
+  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer_17.0.zip" "$REPO_ROOT/twilio_dialer_17.0.zip")
+elif [[ "$ODOO_VERSION" == "19" ]]; then
+  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer_19.0.zip" "$REPO_ROOT/twilio_dialer_19.0.zip")
+else
+  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer.zip" "$SCRIPT_DIR/twilio_dialer_18.0.zip" "$REPO_ROOT/twilio_dialer.zip" "$REPO_ROOT/twilio_dialer_18.0.zip")
+fi
+
+for z in "${ZIP_CANDIDATES[@]}"; do
+  if [[ -f "$z" ]]; then
+    ZIP_FILE="$z"
+    break
+  fi
+done
+
+# ── Step 2: Extract module ───────────────────────────────────────────────────
+info "Step 2/4 — Installing module into custom addons..."
 TARGET="$ADDONS_DIR/twilio_dialer"
 
 if [[ -e "$TARGET" ]]; then
   warn "Existing module found at $TARGET"
-  read -r -p "Replace it? [y/N]: " repl
+  read -r -p "Replace existing installation? [y/N]: " repl
   if [[ "${repl:-N}" =~ ^[Yy]$ ]]; then
-    rm -rf "$TARGET"
+    BACKUP_DIR="$ADDONS_DIR/twilio_dialer_backup_$(date +%Y%m%d%H%M%S)"
+    info "Creating safety backup at $BACKUP_DIR..."
+    mv "$TARGET" "$BACKUP_DIR"
   else
-    fail "Aborted (module already exists)."
+    fail "Aborted (existing module preserved)."
   fi
 fi
 
 mkdir -p "$ADDONS_DIR"
-cp -R "$MODULE_SRC" "$TARGET"
-# Keep requirements next to module for reference
-cp -f "$REQ_FILE" "$ADDONS_DIR/twilio_dialer_requirements.txt"
-ok "Copied module → $TARGET"
+
+if [[ -n "$ZIP_FILE" && -f "$ZIP_FILE" ]]; then
+  info "Extracting release ZIP: $ZIP_FILE → $ADDONS_DIR"
+  unzip -q -o "$ZIP_FILE" -d "$ADDONS_DIR"
+
+  # Handle double nesting if present
+  if [[ -d "$TARGET/twilio_dialer" && -f "$TARGET/twilio_dialer/__manifest__.py" ]]; then
+    info "Resolving nested directory structure..."
+    mv "$TARGET/twilio_dialer" "$ADDONS_DIR/twilio_dialer_temp"
+    rm -rf "$TARGET"
+    mv "$ADDONS_DIR/twilio_dialer_temp" "$TARGET"
+  fi
+elif [[ -d "$MODULE_SRC" && -f "$MODULE_SRC/__manifest__.py" ]]; then
+  info "Copying module source: $MODULE_SRC → $TARGET"
+  cp -R "$MODULE_SRC" "$TARGET"
+else
+  fail "Could not find Twilio Dialer release ZIP or source folder for Odoo $ODOO_VERSION"
+fi
+
+# Critical Structure Check
+[[ -f "$TARGET/__manifest__.py" ]] || fail "Verification Error: __manifest__.py not found at $TARGET/__manifest__.py"
+[[ ! -f "$TARGET/twilio_dialer/__manifest__.py" ]] || fail "Verification Error: Double nesting detected at $TARGET/twilio_dialer/__manifest__.py"
+
+ok "Module verified at $TARGET"
 
 # ── Step 3: update odoo.conf addons_path (optional) ──────────────────────────
 info "Step 3/4 — Updating odoo.conf addons_path (optional)..."
 if [[ -n "$ODOO_CONF" ]]; then
-  # Docker configs use container paths (/mnt/...). Never inject host paths there.
   if grep -qE '/mnt/extra-addons' "$ODOO_CONF"; then
     ok "Docker odoo.conf already uses /mnt/extra-addons (host path not needed)"
   else
-  echo "Found config: $ODOO_CONF"
-  read -r -p "Add $ADDONS_DIR to addons_path in this file? [Y/n]: " upd
-  if [[ ! "${upd:-Y}" =~ ^[Nn]$ ]]; then
-    if grep -qE '^\s*addons_path\s*=' "$ODOO_CONF"; then
-      if grep -qF "$ADDONS_DIR" "$ODOO_CONF"; then
-        ok "addons_path already includes this folder"
-      else
-        # Append path to existing addons_path line
-        python3 - "$ODOO_CONF" "$ADDONS_DIR" <<'PY'
+    echo "Found config: $ODOO_CONF"
+    read -r -p "Add $ADDONS_DIR to addons_path in this file? [Y/n]: " upd
+    if [[ ! "${upd:-Y}" =~ ^[Nn]$ ]]; then
+      if grep -qE '^\s*addons_path\s*=' "$ODOO_CONF"; then
+        if grep -qF "$ADDONS_DIR" "$ODOO_CONF"; then
+          ok "addons_path already includes this folder"
+        else
+          python3 - "$ODOO_CONF" "$ADDONS_DIR" <<'PY'
 import re, sys
 conf, addon = sys.argv[1], sys.argv[2]
 text = open(conf, encoding="utf-8").read()
@@ -174,58 +250,31 @@ if n:
 else:
     print("no-change")
 PY
-        ok "Updated addons_path in $ODOO_CONF"
+          ok "Updated addons_path in $ODOO_CONF"
+        fi
+      else
+        printf '\naddons_path = %s\n' "$ADDONS_DIR" >> "$ODOO_CONF"
+        ok "Added addons_path to $ODOO_CONF"
       fi
     else
-      printf '\naddons_path = %s\n' "$ADDONS_DIR" >> "$ODOO_CONF"
-      ok "Added addons_path to $ODOO_CONF"
+      warn "Skipped config update. Add this path manually:"
+      echo "    $ADDONS_DIR"
     fi
-  else
-    warn "Skipped config update. Add this path manually:"
-    echo "    $ADDONS_DIR"
-  fi
   fi
 else
-  warn "No odoo.conf found. Add this to addons_path manually:"
-  echo "    $ADDONS_DIR"
-  echo "  Template: $REPO_ROOT/odoo.conf.example"
+  warn "No odoo.conf found. Ensure $ADDONS_DIR is included in your addons_path."
 fi
 
 # ── Step 4: install Python dependency ────────────────────────────────────────
-info "Step 4/4 — Installing Python dependency (twilio)..."
+info "Step 4/4 — Installing Python dependencies (twilio, PyJWT)..."
 
-# Ensure requirements.txt is UTF-8 (pip fails on UTF-16 / BOM files)
-REQ_UTF8="$(mktemp)"
-python3 - "$REQ_FILE" "$REQ_UTF8" <<'PY'
-import sys
-from pathlib import Path
-src, dst = Path(sys.argv[1]), Path(sys.argv[2])
-raw = src.read_bytes()
-if raw.startswith(b"\xff\xfe") or raw.startswith(b"\xfe\xff") or (len(raw) > 2 and raw[1::2] == b"\x00" * (len(raw)//2)):
-    text = raw.decode("utf-16")
-elif raw.startswith(b"\xef\xbb\xbf"):
-    text = raw.decode("utf-8-sig")
-else:
-    text = raw.decode("utf-8")
-# Keep only real requirement lines for a safe install file
-lines = []
-for line in text.splitlines():
-    s = line.strip()
-    if not s or s.startswith("#"):
-        continue
-    lines.append(s)
-dst.write_text("\n".join(lines) + "\n", encoding="utf-8")
-print("normalized", len(lines), "requirement(s)")
-PY
-
-# Docker / Colima local-dev: install into the Odoo container, not host Python
 if [[ -f "$SELECTED/docker-compose.yml" ]] && command -v docker >/dev/null 2>&1; then
-  warn "Detected Docker Compose Odoo — installing twilio inside the container."
+  warn "Detected Docker Compose Odoo — installing twilio and PyJWT inside container."
   (
     cd "$SELECTED"
     export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-local-dev}"
     docker compose exec -u root -T odoo bash -lc \
-      'pip3 install --break-system-packages -r - 2>/dev/null || pip3 install -r -' < "$REQ_UTF8"
+      'pip3 install --break-system-packages twilio PyJWT 2>/dev/null || pip3 install twilio PyJWT'
   )
   ok "Python packages installed in Odoo container"
 else
@@ -241,30 +290,32 @@ else
     break
   done
 
-  [[ -n "$PYTHON_BIN" ]] || fail "Python not found. Install twilio manually: pip install -r requirements.txt"
-
-  echo "Using: $PYTHON_BIN ($("$PYTHON_BIN" --version 2>&1))"
-  read -r -p "Install requirements with this Python? [Y/n]: " do_pip
-  if [[ ! "${do_pip:-Y}" =~ ^[Nn]$ ]]; then
-    "$PYTHON_BIN" -m pip install -r "$REQ_UTF8"
-    ok "Python packages installed"
+  if [[ -n "$PYTHON_BIN" ]]; then
+    echo "Using: $PYTHON_BIN ($("$PYTHON_BIN" --version 2>&1))"
+    read -r -p "Install requirements with this Python? [Y/n]: " do_pip
+    if [[ ! "${do_pip:-Y}" =~ ^[Nn]$ ]]; then
+      "$PYTHON_BIN" -m pip install twilio PyJWT
+      ok "Python packages installed"
+    fi
   else
-    warn "Skipped pip. Later run:"
-    echo "    $PYTHON_BIN -m pip install -r $REQ_FILE"
+    warn "Python environment not auto-detected. Ensure 'twilio' and 'PyJWT' packages are installed."
   fi
 fi
-rm -f "$REQ_UTF8"
 
+# ── Customer Next-Steps Instructions ----------------------------------------
 echo
-echo "=============================================="
-echo "  Install complete"
-echo "=============================================="
+echo "${GREEN}==========================================================${NC}"
+echo "${GREEN}  Twilio Dialer has been installed into your Odoo Apps folder.${NC}"
+echo "${GREEN}==========================================================${NC}"
 echo
-echo "Next steps (use your EXISTING database + login):"
-echo "  1. Restart Odoo"
-echo "  2. Apps → Update Apps List"
-echo "  3. Install \"Twilio Dialer\""
-echo "  4. Open Twilio Dialer → Configuration and enter Account SID / Auth Token"
+echo "${YELLOW}Next steps:${NC}"
+echo "  1. Open Odoo."
+echo "  2. Go to Settings."
+echo "  3. Scroll down and activate Developer Mode."
+echo "  4. Open Apps."
+echo "  5. Search for \"Odoo Twilio Dialer\"."
+echo "  6. Install the module."
+echo "  7. Open Twilio Dialer and follow the setup wizard."
 echo
-echo "Module path: $TARGET"
+echo "Diagnostic Info: Installed to $TARGET"
 echo

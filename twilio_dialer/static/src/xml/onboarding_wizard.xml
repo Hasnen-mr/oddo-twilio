@@ -100,23 +100,36 @@
                     </t>
 
                     <t t-elif="state.step === 4">
-                        <div class="o_twilio_onboard_icon o_twilio_onboard_icon--success">
-                            <i class="fa fa-check"/>
-                        </div>
-                        <h3 class="o_twilio_onboard_title">You're ready to call</h3>
-                        <p class="o_twilio_onboard_text">
-                            Twilio credentials are saved. Open the dialer after the softphone
-                            token registers successfully.
-                        </p>
                         <t t-if="state.registeringToken">
-                            <div class="o_twilio_onboard_loading">
+                            <div class="o_twilio_onboard_icon">
                                 <i class="fa fa-spinner fa-spin"/>
-                                <span>Registering Twilio token…</span>
                             </div>
+                            <h3 class="o_twilio_onboard_title">Connecting to Twilio…</h3>
+                            <p class="o_twilio_onboard_text">
+                                Saving credentials and registering your softphone voice token. Please wait a moment…
+                            </p>
                         </t>
-                        <t t-if="state.error">
-                            <div class="alert alert-danger o_twilio_onboard_error" role="alert"
-                                 t-esc="state.error"/>
+                        <t t-elif="state.tokenReady">
+                            <div class="o_twilio_onboard_icon o_twilio_onboard_icon--success">
+                                <i class="fa fa-check"/>
+                            </div>
+                            <h3 class="o_twilio_onboard_title">Setup complete — you're ready to call</h3>
+                            <p class="o_twilio_onboard_text">
+                                Twilio credentials are saved and your softphone token is registered successfully.
+                            </p>
+                        </t>
+                        <t t-else="">
+                            <div class="o_twilio_onboard_icon">
+                                <i class="fa fa-exclamation-triangle text-warning" style="font-size: 2.5rem;"/>
+                            </div>
+                            <h3 class="o_twilio_onboard_title">Almost ready — connection needs attention</h3>
+                            <p class="o_twilio_onboard_text">
+                                Your Twilio credentials were saved successfully, but the softphone token registration needs attention.
+                            </p>
+                            <t t-if="state.error">
+                                <div class="alert alert-warning o_twilio_onboard_error" role="alert"
+                                     t-esc="state.error"/>
+                            </t>
                         </t>
                     </t>
                 </div>
@@ -152,16 +165,27 @@
                 </t>
 
                 <t t-elif="state.step === 4 or state.connected">
-                    <button type="button" class="btn btn-primary"
-                            t-att-disabled="state.registeringToken"
-                            t-on-click="openDialer">
-                        <t t-if="state.registeringToken">
+                    <t t-if="state.registeringToken">
+                        <button type="button" class="btn btn-primary" disabled="disabled">
                             <i class="fa fa-spinner fa-spin me-1"/> Registering…
-                        </t>
-                        <t t-else="">
+                        </button>
+                    </t>
+                    <t t-elif="state.tokenReady">
+                        <button type="button" class="btn btn-success"
+                                t-on-click="openDialer">
                             <i class="fa fa-phone me-1"/> Open Dialer
-                        </t>
-                    </button>
+                        </button>
+                    </t>
+                    <t t-else="">
+                        <button type="button" class="btn btn-secondary me-2"
+                                t-on-click="() => { this.state.step = 3; }">
+                            Check Credentials
+                        </button>
+                        <button type="button" class="btn btn-primary"
+                                t-on-click="registerToken">
+                            <i class="fa fa-refresh me-1"/> Retry Registration
+                        </button>
+                    </t>
                 </t>
             </t>
         </Dialog>

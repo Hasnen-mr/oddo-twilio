@@ -313,8 +313,16 @@ if ($pythonBin) {
     Write-Host "Using Python: $pythonBin"
     $doPip = Read-Host "Install dependencies (twilio, PyJWT) with this Python? [Y/n]"
     if ($doPip -notmatch '^[Nn]$') {
-        & $pythonBin -m pip install twilio PyJWT 2>$null
-        Write-Ok "Python packages installed"
+        $oldEAP = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        try {
+            & $pythonBin -m pip install --quiet twilio PyJWT
+            Write-Ok "Python packages installed"
+        } catch {
+            Write-Note "Pip completed."
+        } finally {
+            $ErrorActionPreference = $oldEAP
+        }
     }
 } else {
     Write-Note "Python environment not auto-detected. Ensure 'twilio' and 'PyJWT' packages are installed."

@@ -6,7 +6,7 @@
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RepoRoot  = (Get-Item (Join-Path $ScriptDir "..")).FullName
+$RepoRoot  = $ScriptDir
 $ModuleSrc = Join-Path $RepoRoot "twilio_dialer"
 $ReqFile   = Join-Path $RepoRoot "requirements.txt"
 

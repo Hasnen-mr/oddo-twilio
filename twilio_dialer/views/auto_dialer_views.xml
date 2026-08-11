@@ -6,7 +6,7 @@
         <field name="name">twilio.auto.dialer.list</field>
         <field name="model">twilio.auto.dialer</field>
         <field name="arch" type="xml">
-            <list string="Dialing Queues"
+            <tree string="Dialing Queues"
                   decoration-success="state == 'completed'"
                   decoration-info="state == 'running'"
                   decoration-warning="state == 'paused'"
@@ -30,7 +30,7 @@
                 <field name="failed_contacts"/>
                 <field name="progress" widget="progressbar"/>
                 <field name="create_date" string="Created On"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -115,18 +115,18 @@
                                 <button name="action_open_import_wizard" type="object" string="Import CSV" class="btn-secondary icon-fa-upload"/>
                             </div>
                             <field name="partner_ids" domain="['|', ('phone', '!=', False), ('mobile', '!=', False)]">
-                                <list string="Select Contacts">
+                                <tree string="Select Contacts">
                                     <field name="name"/>
                                     <field name="phone"/>
                                     <field name="mobile"/>
                                     <field name="email"/>
                                     <field name="company_id" groups="base.group_multi_company"/>
-                                </list>
+                                </tree>
                             </field>
                         </page>
                         <page string="Campaign Records" name="queue_lines">
                             <field name="queue_line_ids">
-                                <list editable="bottom"
+                                <tree editable="bottom"
                                       decoration-success="status == 'completed'"
                                       decoration-info="status == 'calling'"
                                       decoration-warning="status in ('busy','no_answer','skipped')"
@@ -149,12 +149,12 @@
                                     <field name="last_call_date"/>
                                     <field name="notes"/>
                                     <field name="error_message" optional="hide"/>
-                                </list>
+                                </tree>
                             </field>
                         </page>
                         <page string="Import History" name="import_history">
                             <field name="import_history_ids" readonly="1">
-                                <list>
+                                <tree>
                                     <field name="file_name"/>
                                     <field name="user_id" widget="many2one_avatar_user"/>
                                     <field name="import_date"/>
@@ -164,7 +164,7 @@
                                     <field name="invalid_records"/>
                                     <field name="skipped_records"/>
                                     <field name="notes"/>
-                                </list>
+                                </tree>
                             </field>
                         </page>
                         <page string="Queue Settings" name="queue_settings">
@@ -257,12 +257,12 @@
                     <notebook>
                         <page string="Selected Contacts" name="selected_contacts">
                             <field name="partner_ids" readonly="1">
-                                <list>
+                                <tree>
                                     <field name="name"/>
                                     <field name="phone"/>
                                     <field name="mobile"/>
                                     <field name="email"/>
-                                </list>
+                                </tree>
                             </field>
                         </page>
                     </notebook>

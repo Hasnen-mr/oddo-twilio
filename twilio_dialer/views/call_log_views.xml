@@ -13,7 +13,7 @@
         <field name="name">twilio.call.log.list</field>
         <field name="model">twilio.call.log</field>
         <field name="arch" type="xml">
-            <list string="Call Logs"
+            <tree string="Call Logs"
                   decoration-warning="status in ('busy','no_answer','ringing')"
                   decoration-danger="status in ('failed','canceled')"
                   decoration-info="follow_up_needed"
@@ -39,7 +39,7 @@
                           decoration-danger="status in ('failed','canceled')"/>
                 <field name="outcome" optional="show"/>
                 <field name="duration_display" string="Duration"/>
-                <field name="duration" column_invisible="1"/>
+                <field name="duration" invisible="1"/>
                 <field name="user_id" widget="many2one_avatar_user" optional="show"/>
                 <field name="follow_up_needed" widget="boolean_toggle" optional="show"/>
                 <field name="has_recording" optional="hide"/>
@@ -47,7 +47,7 @@
                 <field name="summary" optional="hide"/>
                 <button name="action_redial" type="object" string="Redial" icon="fa-phone"/>
                 <button name="action_mark_follow_up" type="object" string="Follow-up" icon="fa-calendar"/>
-            </list>
+            </tree>
         </field>
     </record>
 

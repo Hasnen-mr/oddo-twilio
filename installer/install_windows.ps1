@@ -22,10 +22,12 @@ Write-Host "=============================================="
 Write-Host ""
 
 # --- Step 1: locate Odoo / addons ---------------------------------------------
-Write-Info "Step 1/4 - Looking for Odoo directories..."
+Write-Info "Step 1/4 - Looking for Odoo directories across all drives..."
 
 $candidates = New-Object System.Collections.Generic.List[string]
-$guesses = @(
+
+# 1. User Profile guesses
+$userGuesses = @(
     "$env:USERPROFILE\odoo",
     "$env:USERPROFILE\odoo18",
     "$env:USERPROFILE\odoo17",
@@ -33,31 +35,41 @@ $guesses = @(
     "$env:USERPROFILE\Documents\odoo",
     "$env:USERPROFILE\Documents\odoo18",
     "$env:USERPROFILE\Documents\odoo17",
-    "$env:USERPROFILE\Documents\odoo19",
-    "C:\odoo",
-    "C:\odoo18",
-    "C:\odoo17",
-    "C:\odoo19",
-    "C:\Program Files\Odoo",
-    'C:\Program Files (x86)\Odoo',
-    "D:\odoo",
-    "D:\odoo18",
-    "D:\odoo17",
-    "D:\odoo19"
+    "$env:USERPROFILE\Documents\odoo19"
 )
-
-foreach ($g in $guesses) {
+foreach ($g in $userGuesses) {
     if (Test-Path -LiteralPath $g) { [void]$candidates.Add($g) }
 }
 
-# Shallow search for odoo-bin / odoo.conf
-$searchRoots = @("$env:USERPROFILE\Documents", "$env:USERPROFILE", "C:\Odoo", "D:\Odoo", "C:\Program Files\Odoo", 'C:\Program Files (x86)\Odoo')
-foreach ($root in $searchRoots) {
-    if (-not (Test-Path -LiteralPath $root)) { continue }
+# 2. Dynamically scan all connected drives (C:\, D:\, E:\, F:\, external drives)
+$systemDrives = Get-PSDrive -PSProvider FileSystem -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Root
+
+foreach ($driveRoot in $systemDrives) {
+    if (-not (Test-Path -LiteralPath $driveRoot)) { continue }
+
+    # Common root guesses per drive
+    $driveGuesses = @(
+        (Join-Path $driveRoot "odoo"),
+        (Join-Path $driveRoot "odoo17"),
+        (Join-Path $driveRoot "odoo18"),
+        (Join-Path $driveRoot "odoo19"),
+        (Join-Path $driveRoot "odoo-17"),
+        (Join-Path $driveRoot "odoo-18"),
+        (Join-Path $driveRoot "odoo-19"),
+        (Join-Path $driveRoot "Program Files\Odoo"),
+        (Join-Path $driveRoot "Program Files (x86)\Odoo"),
+        (Join-Path $driveRoot "src\odoo"),
+        (Join-Path $driveRoot "custom_addons")
+    )
+    foreach ($dg in $driveGuesses) {
+        if (Test-Path -LiteralPath $dg) { [void]$candidates.Add($dg) }
+    }
+
+    # Shallow search for odoo-bin / odoo.conf / odoo-bin.exe across drive roots
     try {
-        Get-ChildItem -LiteralPath $root -Recurse -Depth 3 -ErrorAction SilentlyContinue |
+        Get-ChildItem -LiteralPath $driveRoot -Recurse -Depth 3 -ErrorAction SilentlyContinue |
             Where-Object { $_.Name -in @("odoo-bin", "odoo.conf", "odoo-bin.exe") } |
-            Select-Object -First 30 |
+            Select-Object -First 20 |
             ForEach-Object { [void]$candidates.Add($_.Directory.FullName) }
     } catch {}
 }
@@ -67,23 +79,23 @@ $unique = @($candidates | Select-Object -Unique | Where-Object { Test-Path -Lite
 $selected = $null
 if ($unique.Count -gt 0) {
     Write-Host ""
-    Write-Host "Found possible Odoo locations:"
+    Write-Host "Found possible Odoo locations across your drives:"
     for ($i = 0; $i -lt $unique.Count; $i++) {
         Write-Host ("  [{0}] {1}" -f ($i + 1), $unique[$i])
     }
-    Write-Host "  [0] Enter path manually"
+    Write-Host "  [0] Enter custom path / Browse external drive"
     Write-Host ""
-    $choice = Read-Host "Select number"
+    $choice = Read-Host "Select number [0-$($unique.Count)]"
     if ($choice -eq "0" -or [string]::IsNullOrWhiteSpace($choice)) {
-        $selected = Read-Host "Enter Odoo root OR custom addons folder"
+        $selected = Read-Host "Enter Odoo root OR custom addons folder path (e.g. E:\Odoo19 or F:\custom_addons)"
     } else {
         $idx = [int]$choice - 1
         if ($idx -lt 0 -or $idx -ge $unique.Count) { Fail "Invalid selection" }
         $selected = $unique[$idx]
     }
 } else {
-    Write-Note "No Odoo folder auto-detected."
-    $selected = Read-Host "Enter Odoo root OR custom addons folder"
+    Write-Note "No Odoo folder auto-detected across connected drives."
+    $selected = Read-Host "Enter Odoo root OR custom addons folder path (e.g. E:\Odoo19 or F:\custom_addons)"
 }
 
 # Normalize user input: ensure it's a string and strip surrounding quotes/spaces

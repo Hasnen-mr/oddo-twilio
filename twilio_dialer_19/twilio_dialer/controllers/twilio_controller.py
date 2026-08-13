@@ -104,8 +104,21 @@ class TwilioController(http.Controller):
                 or ""
             ).lower()
 
+            raw_from = (
+                params.get("From")
+                or params.get("from")
+                or params.get("CallerId")
+                or request.httprequest.args.get("From", "")
+                or ""
+            )
+            from_str = str(raw_from).strip().lower()
+
+            # WebRTC client calls from browser have From starting with 'client:'
+            # or pass explicit destination / phone parameters.
+            is_client_call = from_str.startswith("client:") or bool(params.get("destination")) or bool(params.get("phone"))
+
             # Phone numbers assigned to the TwiML App hit this URL for inbound PSTN calls.
-            if direction.startswith("inbound"):
+            if direction.startswith("inbound") and not is_client_call:
                 return self.incoming_call(**kwargs)
 
             raw_caller_id = (
@@ -121,15 +134,19 @@ class TwilioController(http.Controller):
                 or request.httprequest.args.get("callerId", "")
                 or ""
             )
-            caller_id = raw_caller_id.strip() if isinstance(raw_caller_id, str) else ""
+            caller_id = raw_caller_id.strip() if isinstance(raw_caller_id, str) and not raw_caller_id.startswith("client:") else ""
             if not caller_id or not caller_id.startswith("+"):
                 caller_id = request.env["twilio.service"].get_verified_twilio_phone_number()
 
             to_number = (
                 params.get("To")
                 or params.get("to")
+                or params.get("destination")
+                or params.get("phone")
                 or request.httprequest.args.get("To", "")
                 or request.httprequest.args.get("to", "")
+                or request.httprequest.args.get("destination", "")
+                or request.httprequest.args.get("phone", "")
             )
 
             if not to_number:
@@ -171,12 +188,19 @@ class TwilioController(http.Controller):
             )
 
     @http.route("/twilio_dialer/call_log/create", type="jsonrpc", auth="user")
-    def create_call_log(self, call_sid, to_number, partner_id=False):
-        call_log = request.env["twilio.call.log"].create_outgoing_call(
-            call_sid,
-            to_number,
-            partner_id=partner_id,
-        )
+    def create_call_log(self, call_sid, to_number, partner_id=False, direction="outgoing", from_number=None):
+        if direction == "incoming":
+            call_log = request.env["twilio.call.log"].create_incoming_call(
+                call_sid,
+                from_number=from_number or to_number,
+                to_number=to_number,
+            )
+        else:
+            call_log = request.env["twilio.call.log"].create_outgoing_call(
+                call_sid,
+                to_number,
+                partner_id=partner_id,
+            )
         return {"id": call_log.id}
 
     @http.route("/twilio_dialer/call_log/update", type="jsonrpc", auth="user")
@@ -432,6 +456,7 @@ class TwilioController(http.Controller):
                 dial = Dial(
                     caller_id=caller_id_val,
                     answer_on_bridge=True,
+                    action="/twilio_dialer/twilio_event",
                     record="record-from-answer-dual" if record_call else None,
                 )
                 dial.client(client_identity)
@@ -445,7 +470,7 @@ class TwilioController(http.Controller):
                     '<?xml version="1.0" encoding="UTF-8"?>'
                     '<Response>'
                     '{say}'
-                    '<Dial callerId="{caller_id}" answerOnBridge="true"{record}>'
+                    '<Dial callerId="{caller_id}" answerOnBridge="true" action="/twilio_dialer/twilio_event"{record}>'
                     '<Client>{client}</Client>'
                     '</Dial>'
                     '</Response>'
@@ -486,19 +511,46 @@ class TwilioController(http.Controller):
         """
         try:
             params = kwargs or dict(request.httprequest.form) or dict(request.httprequest.args)
-            call_sid = params.get("CallSid") or params.get("callSid") or params.get("CallSid")
-            call_status = params.get("CallStatus") or params.get("callStatus") or params.get("CallStatus")
+            call_sid = (
+                params.get("CallSid")
+                or params.get("callSid")
+                or params.get("DialCallSid")
+            )
+            call_status = (
+                params.get("DialCallStatus")
+                or params.get("CallStatus")
+                or params.get("callStatus")
+            )
             recording_sid = params.get("RecordingSid") or params.get("recordingSid")
             recording_status = params.get("RecordingStatus") or params.get("recordingStatus")
+            duration_val = (
+                params.get("DialCallDuration")
+                or params.get("Duration")
+                or params.get("duration")
+            )
 
-            _logger.info("Twilio event received: CallSid=%s CallStatus=%s RecordingSid=%s RecordingStatus=%s",
-                         call_sid, call_status, recording_sid, recording_status)
+            _logger.info(
+                "Twilio event received: CallSid=%s CallStatus=%s RecordingSid=%s RecordingStatus=%s Duration=%s",
+                call_sid, call_status, recording_sid, recording_status, duration_val
+            )
 
             if call_sid and call_status:
                 # Normalize Twilio status to model statuses
                 normalized = (call_status or "").lower().replace("-", "_")
                 try:
                     request.env["twilio.call.log"].sudo().update_call_status(call_sid, normalized)
+                    if duration_val:
+                        try:
+                            dur_int = int(duration_val)
+                            if dur_int > 0:
+                                log = request.env["twilio.call.log"].sudo().search([("call_sid", "=", call_sid)], limit=1)
+                                if log:
+                                    log.sudo().write({
+                                        "duration": dur_int,
+                                        "end_time": fields.Datetime.now(),
+                                    })
+                        except (ValueError, TypeError):
+                            pass
                 except Exception:
                     _logger.exception("Failed to update call status for CallSid=%s", call_sid)
 

@@ -85,7 +85,7 @@ if ((${#UNIQUE[@]} > 0)); then
   read -r -p "Select number: " choice
   if [[ "$choice" == "0" || -z "$choice" ]]; then
     read -r -p "Enter Odoo root OR custom addons folder: " manual
-    SELECTED="$manual"
+    SELECTED="$(echo "$manual" | sed -e 's/[ \t]*$//' -e 's/\/*$//')"
   else
     SELECTED="${UNIQUE[$((choice-1))]:-}"
   fi
@@ -164,12 +164,22 @@ ok "Detected/Selected Odoo Version: Odoo $ODOO_VERSION"
 ZIP_FILE=""
 ZIP_CANDIDATES=()
 if [[ "$ODOO_VERSION" == "17" ]]; then
-  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer_17.0.zip" "$REPO_ROOT/twilio_dialer_17.0.zip")
+  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer_17.0.zip")
 elif [[ "$ODOO_VERSION" == "19" ]]; then
-  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer_19.0.zip" "$REPO_ROOT/twilio_dialer_19.0.zip")
+  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer_19.0.zip")
 else
-  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer.zip" "$SCRIPT_DIR/twilio_dialer_18.0.zip" "$REPO_ROOT/twilio_dialer.zip" "$REPO_ROOT/twilio_dialer_18.0.zip")
+  ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer_18.0.zip")
 fi
+
+ZIP_CANDIDATES+=("$SCRIPT_DIR/twilio_dialer.zip")
+
+for f in "$SCRIPT_DIR"/twilio_dialer*.zip; do
+  if [[ -f "$f" ]]; then
+    ZIP_CANDIDATES+=("$f")
+  fi
+done
+
+ZIP_CANDIDATES+=("$REPO_ROOT/twilio_dialer.zip")
 
 for z in "${ZIP_CANDIDATES[@]}"; do
   if [[ -f "$z" ]]; then
@@ -314,8 +324,8 @@ echo "  2. Go to Settings."
 echo "  3. Scroll down and activate Developer Mode."
 echo "  4. Open Apps."
 echo "  5. Search for \"Odoo Twilio Dialer\"."
-echo "  6. Install the module."
-echo "  7. Open Twilio Dialer and follow the setup wizard."
+echo "  7. Click \"Activate\" (or Install) to enable the module."
+echo "  8. Open Twilio Dialer and follow the setup wizard."
 echo
 echo "Diagnostic Info: Installed to $TARGET"
 echo

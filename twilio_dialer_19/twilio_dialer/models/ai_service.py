@@ -42,7 +42,7 @@ class TwilioAIService(models.AbstractModel):
         api_key = (self._icp().get_param(param) or "").strip()
         if not api_key:
             raise UserError(
-                "Please configure the %s API key under Twilio Power Dialer → Configuration → AI Settings."
+                "Please configure the %s API key under Twilio Power Dialer -> Configuration -> AI Settings."
                 % provider.replace("_", " ").title()
             )
         return api_key

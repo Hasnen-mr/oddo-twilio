@@ -88,7 +88,7 @@ if ($unique.Count -gt 0) {
 
 # Normalize user input: ensure it's a string and strip surrounding quotes/spaces
 $selected = [string]$selected
-$selected = $selected.Trim('"').Trim()
+$selected = $selected.Trim('"').Trim().TrimEnd('\').TrimEnd('/')
 
 if ([string]::IsNullOrWhiteSpace($selected) -or -not (Test-Path $selected)) {
     Fail "Invalid path: $selected"
@@ -176,22 +176,26 @@ $zipCandidates = @()
 
 if ($odooVersion -eq "17") {
     $zipCandidates += (Join-Path $ScriptDir "twilio_dialer_17.0.zip")
-    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer_17.0.zip")
-    $zipCandidates += "D:\Odoo\custom_addons\twilio_dialer_17.0.zip"
 } elseif ($odooVersion -eq "19") {
     $zipCandidates += (Join-Path $ScriptDir "twilio_dialer_19.0.zip")
-    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer_19.0.zip")
-    $zipCandidates += "D:\Odoo\custom_addons\twilio_dialer_19.0.zip"
 } else {
-    $zipCandidates += (Join-Path $ScriptDir "twilio_dialer.zip")
     $zipCandidates += (Join-Path $ScriptDir "twilio_dialer_18.0.zip")
-    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer.zip")
-    $zipCandidates += (Join-Path $RepoRoot "twilio_dialer_18.0.zip")
-    $zipCandidates += "D:\Odoo\custom_addons\twilio_dialer.zip"
 }
 
+$zipCandidates += (Join-Path $ScriptDir "twilio_dialer.zip")
+
+$localZips = Get-ChildItem -Path $ScriptDir -Filter "twilio_dialer*.zip" -ErrorAction SilentlyContinue
+foreach ($lz in $localZips) {
+    if ($zipCandidates -notcontains $lz.FullName) {
+        $zipCandidates += $lz.FullName
+    }
+}
+
+$zipCandidates += (Join-Path $RepoRoot "twilio_dialer.zip")
+$zipCandidates += (Join-Path $RepoRoot "twilio_dialer_$($odooVersion).0.zip")
+
 foreach ($zc in $zipCandidates) {
-    if (Test-Path $zc) {
+    if ($zc -and (Test-Path -LiteralPath $zc)) {
         $zipFile = $zc
         break
     }
@@ -339,9 +343,10 @@ Write-Host "  1. Open Odoo."
 Write-Host "  2. Go to Settings."
 Write-Host "  3. Scroll down and activate Developer Mode."
 Write-Host "  4. Open Apps."
-Write-Host "  5. Search for `"Odoo Twilio Dialer`"."
-Write-Host "  6. Install the module."
-Write-Host "  7. Open Twilio Dialer and follow the setup wizard."
+Write-Host "  5. Click `"Update Apps List`" in the top navigation bar."
+Write-Host "  6. Search for `"Odoo Twilio Dialer`"."
+Write-Host "  7. Click `"Activate`" (or Install) to enable the module."
+Write-Host "  8. Open Twilio Dialer and follow the setup wizard."
 Write-Host ""
 Write-Host "Diagnostic Info: Installed to $target" -ForegroundColor Gray
 Write-Host ""

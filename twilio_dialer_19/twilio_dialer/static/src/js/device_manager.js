@@ -402,7 +402,7 @@ class DeviceManager {
             const toNumber = call.parameters?.To || call.parameters?.to || "";
             const callSid = call.parameters?.CallSid || "";
 
-            this._attachCallListeners(call, callSid, fromNumber);
+            this._attachCallListeners(call, callSid, fromNumber, "incoming");
 
             if (!this._destroyed) {
                 this._setStatus(STATUS.INCOMING);
@@ -475,7 +475,7 @@ class DeviceManager {
         }
     }
 
-    _attachCallListeners(call, callSid, phoneNumber) {
+    _attachCallListeners(call, callSid, phoneNumber, direction = "outgoing") {
         if (!call || !call.on) {
             return;
         }
@@ -492,7 +492,7 @@ class DeviceManager {
 
         call.on("accept", () => {
             logState("accept");
-            this._syncCallLog(call, callSid, phoneNumber, "in_progress");
+            this._syncCallLog(call, callSid, phoneNumber, "in_progress", direction);
             if (!this._destroyed) {
                 this._setStatus(STATUS.CONNECTED);
             }
@@ -502,7 +502,7 @@ class DeviceManager {
 
         call.on("ringing", () => {
             logState("ringing");
-            this._syncCallLog(call, callSid, phoneNumber, "ringing");
+            this._syncCallLog(call, callSid, phoneNumber, "ringing", direction);
             console.log(" Ringing");
             console.log(call.parameters);
         });
@@ -513,7 +513,8 @@ class DeviceManager {
                 call,
                 callSid,
                 phoneNumber,
-                this._getCallStatus(call, "completed")
+                this._getCallStatus(call, "completed"),
+                direction
             );
             this._activeConnection = null;
             if (!this._destroyed) {
@@ -525,7 +526,7 @@ class DeviceManager {
 
         call.on("cancel", () => {
             logState("cancel");
-            this._syncCallLog(call, callSid, phoneNumber, "canceled");
+            this._syncCallLog(call, callSid, phoneNumber, "canceled", direction);
             this._activeConnection = null;
             if (!this._destroyed) {
                 this._setStatus(STATUS.READY);
@@ -534,7 +535,7 @@ class DeviceManager {
 
         call.on("reject", () => {
             logState("reject");
-            this._syncCallLog(call, callSid, phoneNumber, "rejected");
+            this._syncCallLog(call, callSid, phoneNumber, "rejected", direction);
             this._activeConnection = null;
             if (!this._destroyed) {
                 this._setStatus(STATUS.READY);
@@ -550,7 +551,7 @@ class DeviceManager {
 
             logState(`error (code: ${error.code}, msg: ${error.message})`);
 
-            this._syncCallLog(call, callSid, phoneNumber, "failed");
+            this._syncCallLog(call, callSid, phoneNumber, "failed", direction);
             this._activeConnection = null;
 
             if (!this._destroyed) {
@@ -575,13 +576,15 @@ class DeviceManager {
         return fallback;
     }
 
-    async _createCallLog(callSid, phoneNumber, partnerId = null, retries = 3) {
+    async _createCallLog(callSid, phoneNumber, partnerId = null, direction = "outgoing", retries = 3) {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
                 await rpc("/twilio_dialer/call_log/create", {
                     call_sid: callSid,
                     to_number: phoneNumber,
+                    from_number: direction === "incoming" ? phoneNumber : null,
                     partner_id: partnerId,
+                    direction: direction,
                 });
                 return;
             } catch (err) {
@@ -592,7 +595,7 @@ class DeviceManager {
         }
     }
 
-    async _syncCallLog(call, fallbackCallSid, phoneNumber, status) {
+    async _syncCallLog(call, fallbackCallSid, phoneNumber, status, direction = "outgoing") {
         const callSid = call.parameters?.CallSid || call.parameters?.callSid || fallbackCallSid || this._activeConnection?.parameters?.CallSid;
         if (!callSid) {
             console.warn("[DeviceManager] Twilio Call SID is not available yet for call log update. Skipping transient sync.");
@@ -600,7 +603,7 @@ class DeviceManager {
         }
 
         try {
-            await this._createCallLog(callSid, phoneNumber, this._activePartnerId);
+            await this._createCallLog(callSid, phoneNumber, this._activePartnerId, direction);
             await this._updateCallLog(callSid, status);
 
             if (this._activeQueueLineId) {

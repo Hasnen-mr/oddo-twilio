@@ -11,6 +11,14 @@ from odoo.addons.phone_validation.tools.phone_validation import phone_format
 from odoo.exceptions import UserError
 from ..services import CallLogService
 
+try:
+    from odoo.modules.registry import Registry
+except ImportError:
+    try:
+        from odoo.orm.registry import Registry
+    except ImportError:
+        Registry = None
+
 _logger = logging.getLogger(__name__)
 
 
@@ -295,14 +303,21 @@ class TwilioCallLog(models.Model):
             }
         )
 
-    def create_incoming_call(self, call_sid, from_number, to_number):
+    def create_incoming_call(self, call_sid, from_number=None, to_number=None):
         """Create or return an existing incoming call log for an inbound Twilio call.
 
         Creates the record before answering so the call is tracked and workers can
         operate using the Call SID.
         """
-        if not call_sid or not from_number or not to_number:
-            raise UserError("Twilio Call SID, from number and to number are required.")
+        if not call_sid:
+            raise UserError("Twilio Call SID is required.")
+
+        from_number = from_number or "Unknown"
+        if not to_number:
+            try:
+                to_number = self.env["twilio.service"].get_twilio_phone_number() or "Twilio"
+            except Exception:
+                to_number = "Twilio"
 
         call_log = self.search([("call_sid", "=", call_sid)], limit=1)
         if call_log:
@@ -312,8 +327,8 @@ class TwilioCallLog(models.Model):
         partner = self._find_partner_by_phone_number(from_number)
         return self.create(
             {
-                "partner_id": partner.id,
-                "contact_id": partner.id,
+                "partner_id": partner.id if partner else False,
+                "contact_id": partner.id if partner else False,
                 "from_number": from_number,
                 "to_number": to_number,
                 "direction": "incoming",
@@ -441,7 +456,8 @@ class TwilioCallLog(models.Model):
             time.sleep(RETRY_INTERVAL if attempt > 0 else 5)
 
             try:
-                with odoo.registry(db_name).cursor() as cr:
+                reg_cls = Registry if Registry is not None else getattr(odoo, "registry")
+                with reg_cls(db_name).cursor() as cr:
                     env = odoo.api.Environment(cr, uid, {})
                     # Row-level PostgreSQL lock to prevent concurrent worker execution
                     cr.execute("SELECT id FROM twilio_call_log WHERE id = %s FOR UPDATE", (call_log_id,))
@@ -486,7 +502,8 @@ class TwilioCallLog(models.Model):
             MAX_RETRIES, call_log_id,
         )
         try:
-            with odoo.registry(db_name).cursor() as cr:
+            reg_cls = Registry if Registry is not None else getattr(odoo, "registry")
+            with reg_cls(db_name).cursor() as cr:
                 env = odoo.api.Environment(cr, uid, {})
                 cr.execute("SELECT id FROM twilio_call_log WHERE id = %s FOR UPDATE", (call_log_id,))
                 log = env["twilio.call.log"].browse(call_log_id)
@@ -617,7 +634,8 @@ class TwilioCallLog(models.Model):
             time.sleep(RETRY_INTERVAL if attempt > 0 else 2)
 
             try:
-                with odoo.registry(db_name).cursor() as cr:
+                reg_cls = Registry if Registry is not None else getattr(odoo, "registry")
+                with reg_cls(db_name).cursor() as cr:
                     env = odoo.api.Environment(cr, uid, {})
                     cr.execute("SELECT id FROM twilio_call_log WHERE id = %s FOR UPDATE", (call_log_id,))
                     log = env["twilio.call.log"].browse(call_log_id)
@@ -678,7 +696,8 @@ class TwilioCallLog(models.Model):
             MAX_RETRIES, call_log_id,
         )
         try:
-            with odoo.registry(db_name).cursor() as cr:
+            reg_cls = Registry if Registry is not None else getattr(odoo, "registry")
+            with reg_cls(db_name).cursor() as cr:
                 env = odoo.api.Environment(cr, uid, {})
                 log = env["twilio.call.log"].browse(call_log_id)
                 if log.exists() and not log.transcript and log.transcript_status != "completed":

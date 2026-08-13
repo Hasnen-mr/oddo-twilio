@@ -127,6 +127,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'external_dependencies': {
         'python': [
             'twilio',
+            'jwt',
         ],
     },
 

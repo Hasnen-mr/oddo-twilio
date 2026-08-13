@@ -135,13 +135,30 @@ if (-not $addonsDir) {
 Write-Ok "Target custom addons folder: $addonsDir"
 
 $odooConf = $null
-foreach ($conf in @(
+$confGuesses = @(
     (Join-Path $selected "odoo.conf"),
+    (Join-Path $selected "odoo19.conf"),
+    (Join-Path $selected "odoo18.conf"),
+    (Join-Path $selected "odoo17.conf"),
     (Join-Path $selected "debian\odoo.conf"),
+    (Join-Path (Split-Path -Parent $selected) "odoo.conf"),
+    (Join-Path (Split-Path -Parent $selected) "odoo19.conf"),
     "$env:USERPROFILE\.odoorc",
-    "C:\Program Files\Odoo\odoo.conf"
-)) {
-    if (Test-Path $conf) { $odooConf = $conf; break }
+    "C:\Program Files\Odoo\odoo.conf",
+    "C:\Program Files (x86)\Odoo\odoo.conf"
+)
+
+foreach ($conf in $confGuesses) {
+    if ($conf -and (Test-Path -LiteralPath $conf)) { $odooConf = $conf; break }
+}
+
+if (-not $odooConf) {
+    try {
+        $foundConfs = Get-ChildItem -LiteralPath $selected -Filter "*.conf" -Recurse -Depth 2 -ErrorAction SilentlyContinue |
+            Where-Object { (Get-Content $_.FullName -Raw -ErrorAction SilentlyContinue) -match "addons_path|\[options\]" } |
+            Select-Object -First 1
+        if ($foundConfs) { $odooConf = $foundConfs.FullName }
+    } catch {}
 }
 
 # --- Version Detection & ZIP Selection ----------------------------------------
@@ -271,40 +288,59 @@ if (Test-Path $nestedManifest) {
 Write-Ok "Module verified at $target"
 
 # --- Step 3: update odoo.conf addons_path (optional) --------------------------
-Write-Info "Step 3/4 - Updating odoo.conf addons_path (optional)..."
+Write-Info "Step 3/4 - Registering custom addons in odoo.conf (addons_path)..."
+
+if (-not $odooConf) {
+    Write-Note "No odoo.conf auto-detected in $selected."
+    $manualConf = Read-Host "Enter full path to your odoo.conf file (or press Enter to skip)"
+    $manualConf = [string]$manualConf
+    $manualConf = $manualConf.Trim('"').Trim()
+    if (-not [string]::IsNullOrWhiteSpace($manualConf) -and (Test-Path $manualConf)) {
+        $odooConf = $manualConf
+    }
+}
+
 if ($odooConf) {
-    Write-Host "Found config: $odooConf"
-    $upd = Read-Host "Add $addonsDir to addons_path in this file? [Y/n]"
+    Write-Host "Found config file: $odooConf"
+    $upd = Read-Host "Add $addonsDir to addons_path in $odooConf? [Y/n]"
     if ($upd -notmatch '^[Nn]$') {
         $text = Get-Content -Raw -Path $odooConf
+        $normAddonsDir = $addonsDir.Replace("/", "\").TrimEnd("\")
+
         if ($text -match '(?m)^\s*addons_path\s*=\s*(.*)$') {
-            if ($text -like "*$addonsDir*") {
-                Write-Ok "addons_path already includes this folder"
+            $existingPathVal = $Matches[1].Trim()
+            $existingParts = @($existingPathVal.Split(",") | ForEach-Object { $_.Trim().Replace("/", "\").TrimEnd("\") } | Where-Object { $_ })
+
+            if ($existingParts -contains $normAddonsDir) {
+                Write-Ok "addons_path in $odooConf already includes $addonsDir"
             } else {
+                $newAddonsPathVal = $existingPathVal + "," + $addonsDir
                 $text = [regex]::Replace(
                     $text,
                     '(?m)^\s*addons_path\s*=\s*(.*)$',
-                    {
-                        param($m)
-                        $parts = @($m.Groups[1].Value.Split(",") | ForEach-Object { $_.Trim() } | Where-Object { $_ })
-                        if ($parts -notcontains $addonsDir) { $parts += $addonsDir }
-                        return "addons_path = " + ($parts -join ",")
-                    },
+                    "addons_path = $newAddonsPathVal",
                     1
                 )
                 Set-Content -Path $odooConf -Value $text -NoNewline
-                Write-Ok "Updated addons_path in $odooConf"
+                Write-Ok "Updated addons_path in $odooConf successfully!"
+                Write-Host "  Registered path: $addonsDir" -ForegroundColor Green
             }
         } else {
-            Add-Content -Path $odooConf -Value "`r`naddons_path = $addonsDir"
-            Write-Ok "Added addons_path to $odooConf"
+            if ($text -match '(?m)^\[options\]') {
+                $text = [regex]::Replace($text, '(?m)^\[options\]', "[options]`r`naddons_path = $addonsDir", 1)
+            } else {
+                $text = "`r`naddons_path = $addonsDir`r`n" + $text
+            }
+            Set-Content -Path $odooConf -Value $text -NoNewline
+            Write-Ok "Added addons_path = $addonsDir to $odooConf"
         }
     } else {
-        Write-Note "Skipped config update. Add this path manually:"
-        Write-Host "    $addonsDir"
+        Write-Note "Skipped config update. Add this path manually to your odoo.conf:"
+        Write-Host "    addons_path = ..., $addonsDir"
     }
 } else {
-    Write-Note "No odoo.conf found. Ensure $addonsDir is included in your addons_path."
+    Write-Note "No odoo.conf file specified. Ensure $addonsDir is added to addons_path in your odoo.conf manually:"
+    Write-Host "    addons_path = ..., $addonsDir"
 }
 
 # --- Step 4: install Python dependency (twilio & PyJWT) -----------------------

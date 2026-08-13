@@ -236,7 +236,7 @@
                 <filter string="Has Summary" name="has_summary" domain="[('has_summary', '=', True)]"/>
                 <filter string="Has Transcript" name="has_transcript" domain="[('has_transcript', '=', True)]"/>
 
-                <group expand="0" string="Group By">
+                <group>
                     <filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
                     <filter string="Outcome" name="group_by_outcome" context="{'group_by': 'outcome'}"/>
                     <filter string="Call Type" name="group_by_type" context="{'group_by': 'call_type'}"/>

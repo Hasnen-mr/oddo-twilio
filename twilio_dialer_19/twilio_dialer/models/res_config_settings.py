@@ -6,6 +6,7 @@ from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.release import version as odoo_release_version
 from twilio.base.exceptions import TwilioRestException
+from .twilio_service import sanitize_secret_message
 from ..services import MyBroadcastAPI, MyBroadcastAPIError, ZantaTechAPI, ZantaTechAPIError
 
 _logger = logging.getLogger(__name__)
@@ -842,17 +843,19 @@ class ResConfigSettings(models.TransientModel):
                     record._submit_module_registration()
                 except UserError as error:
                     _logger.warning("Twilio auto-configuration failed: %s", error)
+                    clean_err = sanitize_secret_message(error, [record.twilio_auth_token, record.twilio_account_sid, record.twilio_api_secret])
                     raise UserError(
                         "Could not set up Twilio automatically:\n%s\n\n"
                         "Check your Account SID and Auth Token, then Save again."
-                        % error
+                        % clean_err
                     ) from error
                 except Exception as error:
                     _logger.exception("Twilio auto-configuration failed")
+                    clean_err = sanitize_secret_message(error, [record.twilio_auth_token, record.twilio_account_sid, record.twilio_api_secret])
                     raise UserError(
                         "Could not set up Twilio automatically:\n%s\n\n"
                         "Check your Account SID and Auth Token, then Save again."
-                        % error
+                        % clean_err
                     ) from error
 
         result = super().set_values()
@@ -1117,10 +1120,18 @@ class ResConfigSettings(models.TransientModel):
                 force_new_api_key=creds_changed or incomplete
             )
         except UserError as error:
+            clean_err = sanitize_secret_message(error, [self.twilio_auth_token, self.twilio_account_sid, self.twilio_api_secret])
             raise UserError(
                 "Could not save Twilio credentials:\n%s\n\n"
                 "Check your Account SID and Auth Token, then try again."
-                % error
+                % clean_err
+            ) from error
+        except Exception as error:
+            clean_err = sanitize_secret_message(error, [self.twilio_auth_token, self.twilio_account_sid, self.twilio_api_secret])
+            raise UserError(
+                "Could not save Twilio credentials:\n%s\n\n"
+                "Check your Account SID and Auth Token, then try again."
+                % clean_err
             ) from error
 
         self.with_context(twilio_skip_auto_generate=True).set_values()
@@ -1185,12 +1196,14 @@ class ResConfigSettings(models.TransientModel):
             settings.with_context(twilio_skip_auto_generate=True).set_values()
             settings._submit_module_registration(odoo_version=odoo_version)
         except UserError as error:
-            return {"success": False, "error": str(error)}
+            clean_err = sanitize_secret_message(error, [auth_token, account_sid])
+            return {"success": False, "error": clean_err}
         except Exception as error:
             _logger.exception("Twilio wizard connect failed")
+            clean_err = sanitize_secret_message(error, [auth_token, account_sid])
             return {
                 "success": False,
-                "error": "Could not connect Twilio: %s" % error,
+                "error": "Could not connect Twilio: %s" % clean_err,
             }
 
         return {

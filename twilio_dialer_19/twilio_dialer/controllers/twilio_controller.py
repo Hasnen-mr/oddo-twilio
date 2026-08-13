@@ -556,7 +556,20 @@ class TwilioController(http.Controller):
 
             if call_sid and recording_sid:
                 try:
-                    log = request.env["twilio.call.log"].sudo().search([("call_sid", "=", call_sid)], limit=1)
+                    dial_call_sid = params.get("DialCallSid") or params.get("dialCallSid") or ""
+                    log = request.env["twilio.call.log"].sudo().search([
+                        "|", ("call_sid", "=", call_sid), ("call_sid", "=", dial_call_sid)
+                    ], limit=1)
+                    if not log:
+                        # Try finding log by parent_call_sid from Twilio
+                        try:
+                            client = request.env["twilio.service"].get_twilio_client()
+                            call_obj = client.calls(call_sid).fetch()
+                            parent_sid = getattr(call_obj, "parent_call_sid", None)
+                            if parent_sid:
+                                log = request.env["twilio.call.log"].sudo().search([("call_sid", "=", parent_sid)], limit=1)
+                        except Exception:
+                            pass
                     if log:
                         request.env.cr.execute("SELECT id FROM twilio_call_log WHERE id = %s FOR UPDATE", (log.id,))
                         log.invalidate_recordset(["recording_status", "recording_url"])

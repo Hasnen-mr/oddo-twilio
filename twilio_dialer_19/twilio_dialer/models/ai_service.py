@@ -6,6 +6,7 @@ import urllib.request
 
 from odoo import models
 from odoo.exceptions import UserError
+from .twilio_service import sanitize_secret_message
 
 import requests
 
@@ -57,10 +58,14 @@ class TwilioAIService(models.AbstractModel):
         except urllib.error.HTTPError as error:
             detail = error.read().decode("utf-8", errors="ignore")
             _logger.error("AI HTTP error %s: %s", error.code, detail)
-            raise UserError("AI provider request failed (%s): %s" % (error.code, detail[:400]))
+            if error.code in (401, 403):
+                raise UserError("AI provider authentication failed: The provided API key is invalid or unauthorized.")
+            clean_detail = sanitize_secret_message(detail[:400], [headers.get("Authorization"), headers.get("x-api-key")])
+            raise UserError("AI provider request failed (%s): %s" % (error.code, clean_detail))
         except Exception as error:
             _logger.error("AI request failed: %s", error)
-            raise UserError("Unable to reach AI provider: %s" % error)
+            clean_err = sanitize_secret_message(error)
+            raise UserError("Unable to reach AI provider: %s" % clean_err)
 
     def generate_text(self, prompt, system_prompt=None, provider=None):
         provider = provider or self.get_provider()

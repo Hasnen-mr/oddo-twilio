@@ -767,6 +767,19 @@ button.o_twilio_dash_open_dialer:hover {
 }
 
 /* Dashboard: main content left + vertical advertise sidebar right */
+.o_form_view.o_twilio_dashboard_shell,
+.o_form_view.o_twilio_dashboard_shell .o_form_sheet_bg,
+.o_form_view.o_twilio_dashboard_shell .o_form_sheet,
+.o_form_view:has(.o_twilio_dash_sidebar),
+.o_form_view:has(.o_twilio_dash_sidebar) .o_form_sheet_bg,
+.o_form_view:has(.o_twilio_dash_sidebar) .o_form_sheet {
+    border: none !important;
+    border-right: none !important;
+    border-left: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+}
+
 .o_form_view.o_twilio_dashboard_shell .o_form_sheet,
 .o_form_view .o_form_sheet:has(> .o_twilio_dash_sidebar),
 .o_form_view .o_form_sheet:has(.o_twilio_dash_sidebar) {
@@ -3598,10 +3611,7 @@ button.o_twilio_dash_open_dialer:hover {
     }
 
     .o_twilio_cfg_readonly,
-    .o_twilio_cfg_readonly .o_field_widget,
-    .o_twilio_cfg_input.o_readonly_modifier,
-    .o_twilio_cfg_input .o_readonly_modifier,
-    .o_twilio_cfg_input span {
+    .o_twilio_cfg_readonly .o_field_widget {
         display: block;
         width: 100%;
         min-height: 40px;
@@ -3617,6 +3627,38 @@ button.o_twilio_dash_open_dialer:hover {
         word-break: break-all;
         pointer-events: none;
         cursor: default;
+    }
+
+    .o_twilio_cfg_input select,
+    .o_twilio_cfg_input .o_select_menu,
+    .o_twilio_cfg_input .o_select_menu_toggler {
+        width: 100% !important;
+        min-height: 40px !important;
+        border-radius: 10px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 8px 12px !important;
+        background: #f8fafc !important;
+        color: #0f172a !important;
+        font-size: 13px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+
+        span,
+        .o_select_menu_toggler_slot {
+            display: inline-block !important;
+            min-height: 0 !important;
+            width: auto !important;
+            padding: 0 !important;
+            border: none !important;
+            background: transparent !important;
+            color: #0f172a !important;
+            pointer-events: auto !important;
+            font-family: inherit !important;
+            font-size: 13px !important;
+        }
     }
 
     .o_twilio_cfg_input input[type="text"],

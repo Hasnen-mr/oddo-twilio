@@ -13,6 +13,36 @@ from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
+def sanitize_secret_message(error, secrets=None):
+    """Sanitize error messages so raw secrets, auth tokens, and API keys are NEVER revealed in UI prompts."""
+    if not error:
+        return "An unknown error occurred."
+    
+    raw_msg = str(error)
+    lowered = raw_msg.lower()
+    
+    # Check for authentication / invalid credential signatures
+    if any(term in lowered for term in (
+        "20003", "authenticate", "invalid auth token", "authentication failed",
+        "401", "403", "unauthorized", "forbidden", "invalid api key",
+        "invalid credentials", "incorrect api key"
+    )):
+        return "Authentication failed: The provided credentials (SID, Auth Token, or API Key) are invalid."
+    
+    msg = raw_msg
+    if secrets:
+        for secret in secrets:
+            if secret and isinstance(secret, str) and len(secret.strip()) >= 2:
+                msg = msg.replace(secret.strip(), "[REDACTED]")
+    
+    msg = re.sub(r'sk-[a-zA-Z0-9_-]{6,}', '[REDACTED]', msg)
+    msg = re.sub(r'sk-ant-[a-zA-Z0-9_-]{6,}', '[REDACTED]', msg)
+    msg = re.sub(r'AC[a-fA-F0-9]{32}', '[REDACTED_ACCOUNT_SID]', msg)
+    msg = re.sub(r'SK[a-fA-F0-9]{32}', '[REDACTED_KEY_SID]', msg)
+    
+    return msg
+
+
 class TwilioService(models.AbstractModel):
     _name = "twilio.service"
     _description = "Twilio Service"
@@ -39,7 +69,8 @@ class TwilioService(models.AbstractModel):
         try:
             return Client(account_sid, auth_token)
         except Exception as e:
-            raise UserError(f"Failed to initialize Twilio client:\n{str(e)}")
+            clean_msg = sanitize_secret_message(e, [auth_token, account_sid])
+            raise UserError(f"Failed to initialize Twilio client:\n{clean_msg}") from e
 
     def fetch_sms_history(self, phone, limit=50):
         """Centralized helper to fetch live SMS history for a phone number."""
@@ -176,14 +207,15 @@ class TwilioService(models.AbstractModel):
                 for number in client.incoming_phone_numbers.stream()
             ]
         except TwilioRestException as e:
-            if e.status in (401, 403):
-                raise UserError("Twilio credentials are invalid.")
-            raise UserError(f"Twilio API error while retrieving phone numbers: {str(e)}")
+            if e.status in (401, 403) or e.code == 20003:
+                raise UserError("Twilio credentials (Account SID or Auth Token) are invalid.") from e
+            clean_msg = sanitize_secret_message(e, [auth_token, account_sid])
+            raise UserError(f"Twilio API error while retrieving phone numbers: {clean_msg}") from e
         except UserError:
             raise
         except Exception as e:
             _logger.error("Failed to retrieve Twilio incoming phone numbers: %s", str(e))
-            raise UserError("Unable to connect to Twilio to retrieve phone numbers.")
+            raise UserError("Unable to connect to Twilio to retrieve phone numbers.") from e
 
         if not phone_numbers:
             raise UserError("No Twilio Incoming Phone Numbers are configured for this account.")
@@ -257,7 +289,8 @@ class TwilioService(models.AbstractModel):
         except UserError:
             raise
         except Exception as e:
-            raise UserError(f"Failed to generate Twilio API Key:\n{str(e)}")
+            clean_msg = sanitize_secret_message(e)
+            raise UserError(f"Failed to generate Twilio API Key:\n{clean_msg}") from e
 
     def create_twiml_application(self, client, voice_url=None, voice_method=None, friendly_name=None):
         request_url = (
@@ -308,11 +341,13 @@ class TwilioService(models.AbstractModel):
                 e.code,
                 e.msg,
             )
-            raise UserError(f"Failed to create TwiML Application:\n{str(e)}")
+            clean_msg = sanitize_secret_message(e)
+            raise UserError(f"Failed to create TwiML Application:\n{clean_msg}") from e
         except UserError:
             raise
         except Exception as e:
-            raise UserError(f"Failed to create TwiML Application:\n{str(e)}")
+            clean_msg = sanitize_secret_message(e)
+            raise UserError(f"Failed to create TwiML Application:\n{clean_msg}") from e
 
     def update_twiml_application(self, client, application_sid, voice_url=None, voice_method=None):
         request_url = (
@@ -353,11 +388,13 @@ class TwilioService(models.AbstractModel):
                 e.code,
                 e.msg,
             )
-            raise UserError(f"Failed to update TwiML Application:\n{str(e)}")
+            clean_msg = sanitize_secret_message(e)
+            raise UserError(f"Failed to update TwiML Application:\n{clean_msg}") from e
         except UserError:
             raise
         except Exception as e:
-            raise UserError(f"Failed to update TwiML Application:\n{str(e)}")
+            clean_msg = sanitize_secret_message(e)
+            raise UserError(f"Failed to update TwiML Application:\n{clean_msg}") from e
 
     def delete_api_key(self, client, api_key_sid):
         if not api_key_sid:
@@ -403,7 +440,8 @@ class TwilioService(models.AbstractModel):
         except UserError:
             raise
         except Exception as e:
-            raise UserError(f"Failed to generate Twilio configuration:\n{str(e)}")
+            clean_msg = sanitize_secret_message(e, [account_sid, auth_token])
+            raise UserError(f"Failed to generate Twilio configuration:\n{clean_msg}") from e
 
     def fetch_recordings_by_call_sid(self, call_sid):
         ICP = self.env["ir.config_parameter"].sudo()
@@ -417,6 +455,30 @@ class TwilioService(models.AbstractModel):
             client = self.get_client(account_sid, auth_token)
             _logger.info("Fetching Twilio recordings for call_sid=%s", call_sid)
             recordings = client.calls(call_sid).recordings.list(limit=1)
+
+            # If not found directly, check parent_call_sid (common for TwiML <Dial> / incoming calls)
+            if not recordings:
+                try:
+                    call_obj = client.calls(call_sid).fetch()
+                    parent_sid = getattr(call_obj, "parent_call_sid", None)
+                    if parent_sid:
+                        _logger.info("Checking recordings on parent_call_sid=%s for call_sid=%s", parent_sid, call_sid)
+                        recordings = client.calls(parent_sid).recordings.list(limit=1)
+                except Exception as err:
+                    _logger.warning("Failed to fetch parent_call_sid for %s: %s", call_sid, err)
+
+            # If still not found, check child call legs created by <Dial>
+            if not recordings:
+                try:
+                    child_calls = client.calls.list(parent_call_sid=call_sid, limit=5)
+                    for child in child_calls:
+                        child_recs = client.calls(child.sid).recordings.list(limit=1)
+                        if child_recs:
+                            recordings = child_recs
+                            break
+                except Exception as err:
+                    _logger.warning("Failed to fetch child call legs for %s: %s", call_sid, err)
+
             _logger.info(
                 "Twilio returned %d recording(s) for call_sid=%s",
                 len(recordings), call_sid,
@@ -603,8 +665,9 @@ class TwilioService(models.AbstractModel):
                     )
                     need_new_api_key = True
                 else:
+                    clean_msg = sanitize_secret_message(err, [account_sid, auth_token, api_secret])
                     raise UserError(
-                        "Unable to verify Twilio API Key:\n%s" % err
+                        "Unable to verify Twilio API Key:\n%s" % clean_msg
                     ) from err
 
         if need_new_api_key:
@@ -633,8 +696,9 @@ class TwilioService(models.AbstractModel):
                     )
                     need_new_app = True
                 else:
+                    clean_msg = sanitize_secret_message(err, [account_sid, auth_token])
                     raise UserError(
-                        "Unable to verify TwiML Application:\n%s" % err
+                        "Unable to verify TwiML Application:\n%s" % clean_msg
                     ) from err
 
         if need_new_app:
@@ -773,9 +837,10 @@ class TwilioService(models.AbstractModel):
                 "Twilio REST API error while assigning Application SID to phone numbers: %s",
                 e,
             )
+            clean_msg = sanitize_secret_message(e, [auth_token, account_sid])
             raise UserError(
-                "Twilio API error while assigning Application to phone numbers:\n%s" % e
-            )
+                "Twilio API error while assigning Application to phone numbers:\n%s" % clean_msg
+            ) from e
         except UserError:
             raise
         except Exception as e:
@@ -783,6 +848,7 @@ class TwilioService(models.AbstractModel):
                 "Unexpected error while assigning Application SID to phone numbers: %s",
                 e,
             )
+            clean_msg = sanitize_secret_message(e, [auth_token, account_sid])
             raise UserError(
-                "Failed to assign TwiML Application to Twilio phone numbers:\n%s" % e
-            )
+                "Failed to assign TwiML Application to Twilio phone numbers:\n%s" % clean_msg
+            ) from e

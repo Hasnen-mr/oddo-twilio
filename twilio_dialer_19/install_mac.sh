@@ -94,7 +94,9 @@ else
   read -r -p "Enter Odoo root OR custom addons folder: " SELECTED
 fi
 
-[[ -n "${SELECTED:-}" && -d "$SELECTED" ]] || fail "Invalid path: ${SELECTED:-}"
+SELECTED="$(echo "${SELECTED:-}" | tr -d '\r' | sed -e 's/[ \t]*$//' -e 's/\/*$//')"
+
+[[ -n "$SELECTED" && -d "$SELECTED" ]] || fail "Invalid path: $SELECTED"
 
 if [[ -d "$SELECTED/custom_addons" ]]; then
   ADDONS_DIR="$SELECTED/custom_addons"

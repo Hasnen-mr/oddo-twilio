@@ -198,9 +198,10 @@
                 <filter string="Running" name="running" domain="[('state', '=', 'running')]"/>
                 <filter string="Paused" name="paused" domain="[('state', '=', 'paused')]"/>
                 <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
-                <separator/>
-<filter string="State" name="group_state" context="{'group_by': 'state'}"/>
+                <group expand="0" string="Group By">
+                    <filter string="State" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
+                </group>
 </search>
         </field>
     </record>

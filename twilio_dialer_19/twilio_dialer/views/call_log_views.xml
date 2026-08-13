@@ -236,14 +236,15 @@
                 <filter string="Has Summary" name="has_summary" domain="[('has_summary', '=', True)]"/>
                 <filter string="Has Transcript" name="has_transcript" domain="[('has_transcript', '=', True)]"/>
 
-                <separator/>
-<filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
+                <group expand="0" string="Group By">
+                    <filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
                     <filter string="Outcome" name="group_by_outcome" context="{'group_by': 'outcome'}"/>
                     <filter string="Call Type" name="group_by_type" context="{'group_by': 'call_type'}"/>
                     <filter string="Contact" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
                     <filter string="Agent" name="group_by_user" context="{'group_by': 'user_id'}"/>
                     <filter string="Direction" name="group_by_direction" context="{'group_by': 'direction'}"/>
                     <filter string="Day" name="group_by_day" context="{'group_by': 'start_time:day'}"/>
+                </group>
 </search>
         </field>
     </record>

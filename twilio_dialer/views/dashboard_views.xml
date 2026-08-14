@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="action_twilio_configuration" model="ir.actions.act_window">
+        <field name="name">Configuration</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'twilio_dialer'}</field>
+    </record>
+
+    <record id="action_twilio_configuration_menu" model="ir.actions.server">
+        <field name="name">Configuration</field>
+        <field name="model_id" ref="base.model_res_config_settings"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_twilio_configuration()</field>
+    </record>
+
+    <record id="view_twilio_dialer_dashboard_form" model="ir.ui.view">
+        <field name="name">twilio.dialer.dashboard.form</field>
+        <field name="model">twilio.dialer.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="Twilio Dialer Dashboard"
+                  class="o_twilio_dashboard_shell"
+                  js_class="twilio_dashboard_form"
+                  create="0" edit="0" delete="0">
+                <sheet>
+                    <field name="connection_configured" invisible="1"/>
+
+                    <div class="o_twilio_dash_header">
+                        <div class="o_twilio_dash_hero">
+                            <div class="oe_title">
+                                <div class="o_twilio_dash_title_row">
+                                    <h1>Twilio Call Auto Dialer</h1>
+                                    <span class="o_twilio_dash_connected_tag"
+                                          invisible="not connection_configured">
+                                        Connected
+                                    </span>
+                                </div>
+                                <p class="text-muted">
+                                    Calls, campaigns, and contacts at a glance.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="o_twilio_dash_main">
+                        <div class="o_twilio_dashboard_kpis">
+                            <div class="o_twilio_dashboard_kpi">
+                                <span class="o_twilio_dashboard_kpi_label">Today</span>
+                                <field name="today_calls" class="o_twilio_dashboard_kpi_value"/>
+                                <span class="o_twilio_dashboard_kpi_hint">calls</span>
+                            </div>
+                            <div class="o_twilio_dashboard_kpi">
+                                <span class="o_twilio_dashboard_kpi_label">Last 7 Days</span>
+                                <field name="seven_day_calls" class="o_twilio_dashboard_kpi_value"/>
+                                <span class="o_twilio_dashboard_kpi_hint">calls</span>
+                            </div>
+                            <div class="o_twilio_dashboard_kpi">
+                                <span class="o_twilio_dashboard_kpi_label">Last 30 Days</span>
+                                <field name="thirty_day_calls" class="o_twilio_dashboard_kpi_value"/>
+                                <span class="o_twilio_dashboard_kpi_hint">calls</span>
+                            </div>
+                            <div class="o_twilio_dashboard_kpi">
+                                <span class="o_twilio_dashboard_kpi_label">Completion Rate</span>
+                                <field name="completion_rate"
+                                       widget="percentage"
+                                       class="o_twilio_dashboard_kpi_value"/>
+                                <span class="o_twilio_dashboard_kpi_hint">last 30 days</span>
+                            </div>
+                            <div class="o_twilio_dashboard_kpi">
+                                <span class="o_twilio_dashboard_kpi_label">Talk Time</span>
+                                <field name="total_duration_display"
+                                       class="o_twilio_dashboard_kpi_value"/>
+                                <span class="o_twilio_dashboard_kpi_hint">last 30 days</span>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_dashboard_grid mt-4">
+                            <div class="o_twilio_dashboard_card">
+                                <div class="o_twilio_dashboard_card_header">
+                                    <div>
+                                        <h3>Call Statistics</h3>
+                                        <p>Last 30 days</p>
+                                    </div>
+                                    <button name="action_open_call_graph"
+                                            type="object"
+                                            string="Open Charts"
+                                            icon="fa-bar-chart"
+                                            class="btn-link"/>
+                                </div>
+                                <div class="o_twilio_dashboard_stats">
+                                    <div>
+                                        <span>Incoming</span>
+                                        <field name="incoming_calls"/>
+                                    </div>
+                                    <div>
+                                        <span>Outgoing</span>
+                                        <field name="outgoing_calls"/>
+                                    </div>
+                                    <div>
+                                        <span>Missed / Failed</span>
+                                        <field name="missed_calls"/>
+                                    </div>
+                                    <div>
+                                        <span>Average Duration</span>
+                                        <field name="average_duration_display"/>
+                                    </div>
+                                </div>
+                                <div class="o_twilio_dashboard_progress mt-3">
+                                    <span>Call completion</span>
+                                    <field name="completion_rate"
+                                           widget="progressbar"
+                                           options="{'max_value': 1}"/>
+                                </div>
+                            </div>
+
+                            <div class="o_twilio_dashboard_card">
+                                <div class="o_twilio_dashboard_card_header">
+                                    <div>
+                                        <h3>Business Activity</h3>
+                                        <p>All-time overview</p>
+                                    </div>
+                                </div>
+                                <div class="o_twilio_dashboard_stats">
+                                    <div>
+                                        <span>Total Calls</span>
+                                        <field name="total_calls"/>
+                                    </div>
+                                    <div>
+                                        <span>Completed</span>
+                                        <field name="completed_calls"/>
+                                    </div>
+                                    <div>
+                                        <span>Campaigns</span>
+                                        <field name="total_campaigns"/>
+                                    </div>
+                                    <div>
+                                        <span>Active Campaigns</span>
+                                        <field name="active_campaigns"/>
+                                    </div>
+                                    <div>
+                                        <span>Callable Contacts</span>
+                                        <field name="callable_contacts"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_dashboard_grid mt-4">
+                            <div class="o_twilio_dashboard_card">
+                                <div class="o_twilio_dashboard_card_header">
+                                    <div>
+                                        <h3>Date-wise Performance</h3>
+                                        <p>Daily call activity for the last 7 days</p>
+                                    </div>
+                                    <button name="action_open_call_graph"
+                                            type="object"
+                                            string="Full Analytics"
+                                            icon="fa-line-chart"
+                                            class="btn-link"/>
+                                </div>
+                                <field name="date_line_ids" nolabel="1">
+                                    <list create="0" edit="0" delete="0">
+                                        <field name="date"/>
+                                        <field name="total_calls" string="Calls"/>
+                                        <field name="completed_calls" string="Completed"/>
+                                        <field name="missed_calls" string="Missed"/>
+                                        <field name="duration_display" string="Talk Time"/>
+                                    </list>
+                                </field>
+                            </div>
+
+                            <div class="o_twilio_dashboard_card">
+                                <div class="o_twilio_dashboard_card_header">
+                                    <div>
+                                        <h3>Agent Performance</h3>
+                                        <p>Agent-wise results for the last 30 days</p>
+                                    </div>
+                                    <button name="action_open_agent_analytics"
+                                            type="object"
+                                            string="Agent Pivot"
+                                            icon="fa-table"
+                                            class="btn-link"/>
+                                </div>
+                                <field name="agent_line_ids" nolabel="1">
+                                    <list create="0" edit="0" delete="0">
+                                        <field name="user_id"
+                                               string="Agent"
+                                               widget="many2one_avatar_user"/>
+                                        <field name="total_calls" string="Calls"/>
+                                        <field name="completed_calls" string="Completed"/>
+                                        <field name="missed_calls" string="Missed"/>
+                                        <field name="completion_rate"
+                                               string="Success"
+                                               widget="percentage"/>
+                                        <field name="duration_display" string="Talk Time"/>
+                                    </list>
+                                </field>
+                            </div>
+                        </div>
+
+                        <separator string="Quick Actions"/>
+                        <div class="d-flex flex-wrap gap-2 mt-3">
+                            <button name="action_open_call_logs" type="object"
+                                    string="View Call Logs" icon="fa-phone"
+                                    class="btn-secondary"/>
+                            <button name="action_open_auto_dialer" type="object"
+                                    string="Open Auto Dialer" icon="fa-list-ol"
+                                    class="btn-primary"/>
+                            <button name="action_open_contacts" type="object"
+                                    string="Call a Contact" icon="fa-address-book"
+                                    class="btn-secondary"/>
+                        </div>
+                    </div>
+
+                    <div class="o_twilio_dash_sidebar">
+                        <button name="action_open_dialer"
+                                type="object"
+                                string="Open Phone"
+                                icon="fa-phone"
+                                class="btn o_twilio_dash_phone_capsule"
+                                title="Open Phone"/>
+                        <div class="o_twilio_dash_ad">
+                            <div class="o_twilio_dash_ad_icon">
+                                <i class="fa fa-clone" title="Duplicate Contacts"/>
+                            </div>
+                            <strong class="o_twilio_dash_ad_title">Smart Duplicate Contact Manager</strong>
+                            <p class="o_twilio_dash_ad_text">
+                                Find, review, and merge duplicate contacts in Odoo with confidence scores,
+                                a field-by-field merge wizard, dashboard KPIs, and scheduled auto-scans.
+                            </p>
+                            <div class="o_twilio_dash_ad_tags">
+                                <span>Exact Match</span>
+                                <span>Fuzzy Matching</span>
+                                <span>Merge Wizard</span>
+                                <span>Dashboard</span>
+                                <span>Auto Scan</span>
+                            </div>
+                            <button name="action_open_duplicate_contact_apps"
+                                    type="object"
+                                    string="View on Apps Store"
+                                    icon="fa-external-link"
+                                    class="btn o_twilio_dash_ad_cta"/>
+                        </div>
+                    </div>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_twilio_dashboard" model="ir.actions.server">
+        <field name="name">Dashboard</field>
+        <field name="model_id" ref="model_twilio_dialer_dashboard"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_dashboard()</field>
+    </record>
+
+</odoo>

@@ -185,10 +185,9 @@ class TwilioCallLog(models.Model):
         "mail.message", string="Contact Chatter Message", copy=False, ondelete="set null"
     )
 
-    _twilio_call_log_call_sid_unique = models.Constraint(
-        "unique(call_sid)",
-        "The Twilio Call SID must be unique.",
-    )
+    _sql_constraints = [
+        ('twilio_call_log_call_sid_unique', 'unique(call_sid)', 'The Twilio Call SID must be unique.')
+    ]
 
     @api.depends("partner_id", "to_number", "from_number", "direction", "start_time")
     def _compute_display_name(self):

@@ -6,14 +6,14 @@
         <field name="name">twilio.sms.template.list</field>
         <field name="model">twilio.sms.template</field>
         <field name="arch" type="xml">
-            <list string="SMS Templates" multi_edit="1">
+            <tree string="SMS Templates" multi_edit="1">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="category_id"/>
                 <field name="body"/>
                 <field name="description" optional="show"/>
                 <field name="active" widget="boolean_toggle"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -106,10 +106,10 @@
         <field name="name">twilio.sms.template.category.list</field>
         <field name="model">twilio.sms.template.category</field>
         <field name="arch" type="xml">
-            <list string="Template Categories" editable="bottom">
+            <tree string="Template Categories" editable="bottom">
                 <field name="name"/>
                 <field name="description"/>
-            </list>
+            </tree>
         </field>
     </record>
 
@@ -124,12 +124,12 @@
         <field name="name">twilio.sms.quick.reply.list</field>
         <field name="model">twilio.sms.quick.reply</field>
         <field name="arch" type="xml">
-            <list string="Quick Replies" editable="bottom">
+            <tree string="Quick Replies" editable="bottom">
                 <field name="sequence" widget="handle"/>
                 <field name="name"/>
                 <field name="body"/>
                 <field name="active" widget="boolean_toggle"/>
-            </list>
+            </tree>
         </field>
     </record>
 

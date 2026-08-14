@@ -4,7 +4,7 @@ import { Component, onMounted, onWillUnmount, useRef } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { _t } from "@web/core/l10n/translation";
-import { setUiField } from "./settings_ui_field";
+import { setUiField } from "@twilio_dialer/js/settings_ui_field";
 
 const SECTIONS = [
     { id: "overview", label: _t("About Module"), icon: "fa-info-circle" },

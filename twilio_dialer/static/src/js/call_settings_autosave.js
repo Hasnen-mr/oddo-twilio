@@ -5,7 +5,7 @@ import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
-import { setUiField } from "./settings_ui_field";
+import { setUiField } from "@twilio_dialer/js/settings_ui_field";
 
 const WATCHED_FIELDS = [
     "twilio_phone_number",

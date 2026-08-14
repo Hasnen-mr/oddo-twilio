@@ -6,7 +6,7 @@
         <field name="name">twilio.sms.log.list</field>
         <field name="model">twilio.sms.log</field>
         <field name="arch" type="xml">
-            <list string="SMS Logs" create="0" edit="0" delete="0"
+            <tree string="SMS Logs" create="0" edit="0" delete="0"
                   decoration-danger="status in ('failed','undelivered')"
                   decoration-warning="status in ('queued','sending')"
                   decoration-success="status in ('delivered','sent','received')">
@@ -22,7 +22,7 @@
                        decoration-danger="status in ('failed','undelivered')"/>
                 <field name="body" string="Message Preview"/>
                 <field name="sid" string="Message SID"/>
-            </list>
+            </tree>
         </field>
     </record>
 

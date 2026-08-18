@@ -134,7 +134,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'data': [
         'security/ir.model.access.csv',
         'views/dialer_actions.xml',
-        'views/res_config_settings_views.xml',
+                'views/res_config_settings_views.xml',
         'views/call_log_views.xml',
         'views/sms_log_views.xml',
         'views/sms_template_views.xml',
@@ -147,6 +147,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
         'views/dashboard_views.xml',
         'views/billing_views.xml',
         'views/menu_views.xml',
+        'views/number_allocation_views.xml',
     ],
 
     'images': [

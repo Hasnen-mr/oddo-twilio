@@ -46,8 +46,8 @@ class TwilioController(http.Controller):
     @http.route("/twilio_dialer/phone_number", type="json", auth="user")
     def get_phone_number(self):
         try:
+            import re
             service = request.env["twilio.service"]
-            phone_number = service.get_twilio_phone_number()
             icp = request.env["ir.config_parameter"].sudo()
             try:
                 phone_numbers = json.loads(
@@ -59,7 +59,6 @@ class TwilioController(http.Controller):
             if not phone_numbers:
                 phone_numbers = service.get_incoming_phone_numbers()
 
-            # Ensure type is set on cached incoming numbers.
             for item in phone_numbers:
                 if isinstance(item, dict) and not item.get("type"):
                     item["type"] = "incoming"
@@ -75,6 +74,29 @@ class TwilioController(http.Controller):
                     continue
                 seen.add(number)
                 phone_numbers.append(caller_id)
+
+            all_db_numbers = request.env["twilio.phone.number"].sudo().search([("phone_number", "!=", "ALL")])
+            for db_num in all_db_numbers:
+                if db_num.phone_number and db_num.phone_number not in seen:
+                    seen.add(db_num.phone_number)
+                    phone_numbers.append({
+                        "phone_number": db_num.phone_number,
+                        "friendly_name": db_num.display_name or db_num.phone_number,
+                        "type": "incoming"
+                    })
+
+            user = request.env.user
+            if user:
+                allowed = user.get_allowed_twilio_numbers()
+                if allowed:
+                    allowed_digits = {re.sub(r"\D", "", n) for n in allowed if n}
+                    filtered = [
+                        item for item in phone_numbers
+                        if isinstance(item, dict) and re.sub(r"\D", "", str(item.get("phone_number") or "")) in allowed_digits
+                    ]
+                    phone_numbers = filtered
+
+            phone_number = phone_numbers[0]["phone_number"] if phone_numbers else False
 
             return {
                 "phone_number": phone_number,

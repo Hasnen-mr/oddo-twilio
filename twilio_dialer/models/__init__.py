@@ -16,3 +16,6 @@ from . import csv_import
 from . import sms_log
 from . import sms_template
 from . import sms_workspace
+from . import twilio_phone_number
+from . import res_users
+from . import twilio_number_allocation

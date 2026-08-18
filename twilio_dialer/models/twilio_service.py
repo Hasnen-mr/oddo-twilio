@@ -185,6 +185,36 @@ class TwilioService(models.AbstractModel):
 
         return phone_number
 
+    
+    def _sync_phone_number_records(self, phone_numbers):
+        """Ensure twilio.phone.number records exist for all synced Twilio numbers."""
+        if not phone_numbers:
+            return
+        PhoneNumber = self.env["twilio.phone.number"].sudo()
+        for item in phone_numbers:
+            if isinstance(item, dict):
+                number_str = item.get("phone_number")
+                friendly = item.get("friendly_name") or number_str
+                sid = item.get("sid") or ""
+            else:
+                number_str = str(item)
+                friendly = number_str
+                sid = ""
+
+            if not number_str:
+                continue
+
+            existing = PhoneNumber.search([("phone_number", "=", number_str)], limit=1)
+            vals = {
+                "phone_number": number_str,
+                "friendly_name": friendly,
+                "sid": sid,
+            }
+            if existing:
+                existing.write(vals)
+            else:
+                PhoneNumber.create(vals)
+
     def get_incoming_phone_numbers(self, env=None):
         env = env or self.env
         ICP = env["ir.config_parameter"].sudo()
@@ -221,6 +251,7 @@ class TwilioService(models.AbstractModel):
             raise UserError("No Twilio Incoming Phone Numbers are configured for this account.")
 
         _logger.info("Found %s Twilio Incoming Phone Numbers.", len(phone_numbers))
+        self._sync_phone_number_records(phone_numbers)
         return phone_numbers
 
     def get_outgoing_caller_ids(self, env=None):

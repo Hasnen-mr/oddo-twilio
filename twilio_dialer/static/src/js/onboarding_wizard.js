@@ -30,11 +30,10 @@ export class TwilioOnboardingWizard extends Component {
             authToken: "",
             email: "",
             phone: "",
-            odooVersion: session.server_version || "",
+            odooVersion: (session && session.server_version) || "",
             error: "",
         });
 
-        // Required setup: block Escape / X dismiss until Open Dialer succeeds.
         this._canClose = false;
 
         onMounted(() => {
@@ -59,14 +58,20 @@ export class TwilioOnboardingWizard extends Component {
                 originalClose();
             }
         };
-        // Prevent Dialog.dismiss() (Escape / header X) from closing early.
-        dialogData.dismiss = async () => {};
+        // Allow header X / Escape key to dismiss wizard cleanly
+        dialogData.dismiss = async () => {
+            this.dismissWizard();
+        };
     }
 
-    _closeWizard() {
+    dismissWizard() {
         this._canClose = true;
         document.body.classList.remove("o_twilio_onboard_open");
         this.props.close();
+    }
+
+    _closeWizard() {
+        this.dismissWizard();
     }
 
     get dialogTitle() {
@@ -96,24 +101,26 @@ export class TwilioOnboardingWizard extends Component {
 
     async _prefillContact() {
         try {
-            const users = await this.orm.searchRead(
-                "res.users",
-                [["id", "=", session.uid]],
-                ["email", "login", "phone"],
-                { limit: 1 }
-            );
-            const user = users[0] || {};
-            if (!this.state.email) {
-                this.state.email = user.email || user.login || "";
-            }
-            if (!this.state.phone) {
-                this.state.phone = user.phone || "";
+            if (session && session.uid) {
+                const users = await this.orm.searchRead(
+                    "res.users",
+                    [["id", "=", session.uid]],
+                    ["email", "login", "phone"],
+                    { limit: 1 }
+                );
+                const user = users[0] || {};
+                if (!this.state.email) {
+                    this.state.email = user.email || user.login || "";
+                }
+                if (!this.state.phone) {
+                    this.state.phone = user.phone || "";
+                }
             }
         } catch (err) {
             console.warn("[TwilioOnboarding] Prefill contact failed:", err);
         }
         if (!this.state.odooVersion) {
-            this.state.odooVersion = session.server_version || "";
+            this.state.odooVersion = (session && session.server_version) || "";
         }
     }
 
@@ -208,13 +215,12 @@ export class TwilioOnboardingWizard extends Component {
 
     async openDialer() {
         if (this.state.tokenReady) {
-            this._closeWizard();
+            this.dismissWizard();
             return;
         }
         await this.registerToken();
         if (this.state.tokenReady) {
-            this._closeWizard();
+            this.dismissWizard();
         }
     }
 }
-

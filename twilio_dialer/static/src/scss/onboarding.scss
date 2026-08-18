@@ -1,16 +1,29 @@
 /* Dashboard onboarding wizard */
 
+@keyframes o_twilio_fade_in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
 body.o_twilio_onboard_open .modal-backdrop {
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     background-color: rgba(15, 23, 42, 0.48) !important;
     opacity: 1 !important;
+    transition: opacity 0.3s ease-in-out;
 }
 
 /* Fixed size so every step shares the same width & height */
 .modal-dialog:has(.o_twilio_onboard_dialog) {
     max-width: 720px;
     width: 720px;
+    animation: o_twilio_fade_in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .o_twilio_onboard_dialog {

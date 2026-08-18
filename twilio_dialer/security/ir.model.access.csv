@@ -24,3 +24,5 @@ access_twilio_sms_template_category_manager,twilio.sms.template.category.manager
 access_twilio_sms_quick_reply_user,twilio.sms.quick.reply.user,model_twilio_sms_quick_reply,base.group_user,1,0,0,0
 access_twilio_sms_quick_reply_manager,twilio.sms.quick.reply.manager,model_twilio_sms_quick_reply,base.group_system,1,1,1,1
 access_twilio_sms_workspace_user,twilio.sms.workspace.user,model_twilio_sms_workspace,base.group_user,1,1,1,1
+access_twilio_phone_number,access_twilio_phone_number,model_twilio_phone_number,base.group_user,1,1,1,1
+access_twilio_number_allocation,access_twilio_number_allocation,model_twilio_number_allocation,base.group_user,1,1,1,1

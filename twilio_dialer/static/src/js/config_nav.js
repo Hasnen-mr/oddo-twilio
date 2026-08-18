@@ -10,6 +10,7 @@ import { setUiField } from "@twilio_dialer/js/settings_ui_field";
 
 const SECTIONS = [
     { id: "call", label: _t("Call Settings"), icon: "fa-phone" },
+    { id: "allocation", label: _t("Number Settings"), icon: "fa-list-ol" },
     { id: "ai", label: _t("AI Settings"), icon: "fa-magic" },
     { id: "account", label: _t("Account Setting"), icon: "fa-key" },
     { id: "billing", label: _t("Billing"), icon: "fa-credit-card" },
@@ -79,6 +80,14 @@ export class TwilioConfigNav extends Component {
     }
 
     async selectSection(section) {
+        if (section.id === "allocation") {
+            const record = this.props.record;
+            if (record && !this._hasRealPendingEdits(record)) {
+                record.dirty = false;
+            }
+            this.action.doAction("twilio_dialer.action_twilio_number_allocation");
+            return;
+        }
         if (this.isActive(section)) {
             return;
         }

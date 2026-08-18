@@ -1,12 +1,12 @@
 /** @odoo-module **/
 
-import { onMounted } from "@odoo/owl";
+import { onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { FormController } from "@web/views/form/form_controller";
 import { formView } from "@web/views/form/form_view";
-import { TwilioOnboardingWizard } from "@twilio_dialer/js/onboarding_wizard";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
+import { TwilioOnboardingWizard } from "./onboarding_wizard";
+import { deviceManager } from "./device_manager";
 
 function scrollTwilioDashboardToTop() {
     const selectors = [
@@ -30,9 +30,14 @@ export class TwilioDashboardFormController extends FormController {
         this.dialog = useService("dialog");
         this.action = useService("action");
         this.dialer = useService("twilio_dialer");
+        this.orm = useService("orm");
         this._onboardingShown = false;
+        this._isWizardOpen = false;
+        this._reopenTimer = null;
+        this._isComponentMounted = true;
 
         onMounted(() => {
+            this._isComponentMounted = true;
             scrollTwilioDashboardToTop();
             requestAnimationFrame(scrollTwilioDashboardToTop);
             setTimeout(scrollTwilioDashboardToTop, 50);
@@ -40,16 +45,50 @@ export class TwilioDashboardFormController extends FormController {
             // Open after the form paints so a wizard error cannot blank the view.
             setTimeout(() => this._maybeOpenOnboarding(), 100);
         });
+
+        onWillUnmount(() => {
+            this._isComponentMounted = false;
+            if (this._reopenTimer) {
+                clearTimeout(this._reopenTimer);
+                this._reopenTimer = null;
+            }
+        });
     }
 
-    _maybeOpenOnboarding() {
-        if (this._onboardingShown) {
-            return;
-        }
+    async _checkSetupIncomplete() {
         const data = this.model?.root?.data;
-        if (!data || data.connection_configured) {
+        if (data && data.connection_configured) {
+            return false;
+        }
+        if (data && data.id) {
+            try {
+                const records = await this.orm.read(
+                    "twilio.dashboard",
+                    [data.id],
+                    ["connection_configured"]
+                );
+                if (records && records.length > 0) {
+                    return !records[0].connection_configured;
+                }
+            } catch (err) {
+                console.warn("[TwilioDashboard] Re-check setup status warning:", err);
+            }
+        }
+        return !data || !data.connection_configured;
+    }
+
+    async _maybeOpenOnboarding() {
+        if (this._isWizardOpen || !this._isComponentMounted) {
             return;
         }
+
+        const isIncomplete = await this._checkSetupIncomplete();
+        if (!isIncomplete) {
+            console.log("[TwilioDashboard] Twilio setup is complete, keeping dashboard unobstructed.");
+            return;
+        }
+
+        this._isWizardOpen = true;
         this._onboardingShown = true;
         let connected = false;
         try {
@@ -72,18 +111,41 @@ export class TwilioDashboardFormController extends FormController {
                 },
                 {
                     onClose: () => {
+                        this._isWizardOpen = false;
                         if (connected) {
                             this.action.doAction("twilio_dialer.action_twilio_dashboard", {
                                 stackPosition: "replaceCurrentAction",
                             });
+                        } else {
+                            // User closed popup without completing setup: schedule 5-second re-check
+                            this._scheduleReopenCheck();
                         }
                     },
                 }
             );
         } catch (err) {
             console.error("[TwilioDashboard] Failed to open onboarding wizard:", err);
-            this._onboardingShown = false;
+            this._isWizardOpen = false;
         }
+    }
+
+    _scheduleReopenCheck() {
+        if (this._reopenTimer) {
+            clearTimeout(this._reopenTimer);
+        }
+        console.log("[TwilioDashboard] Onboarding popup closed without setup completion. Scheduling 5-second re-check...");
+        this._reopenTimer = setTimeout(async () => {
+            if (!this._isComponentMounted || this._isWizardOpen) {
+                return;
+            }
+            const isIncomplete = await this._checkSetupIncomplete();
+            if (isIncomplete) {
+                console.log("[TwilioDashboard] 5s timer: Setup still incomplete, re-opening onboarding popup.");
+                this._maybeOpenOnboarding();
+            } else {
+                console.log("[TwilioDashboard] 5s timer: Setup completed, suppressing popup.");
+            }
+        }, 5000);
     }
 }
 

@@ -17,13 +17,24 @@ class TwilioNumberAllocation(models.Model):
     )
     user_login = fields.Char(related="user_id.login", string="Login / Email", readonly=True)
 
+    @api.model
+    def _default_twilio_number_ids(self):
+        try:
+            all_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
+            if all_opt:
+                return [(6, 0, [all_opt.id])]
+        except Exception:
+            pass
+        return []
+
     twilio_number_ids = fields.Many2many(
         "twilio.phone.number",
         "twilio_number_allocation_rel",
         "allocation_id",
         "number_id",
         string="Assigned Numbers",
-        help="Select assigned Twilio numbers. If 'All numbers' or empty is selected, user has access to all numbers by default.",
+        default=_default_twilio_number_ids,
+        help="Select assigned Twilio numbers. Default is 'All numbers'.",
     )
 
     allocation_status = fields.Char(
@@ -48,7 +59,6 @@ class TwilioNumberAllocation(models.Model):
         res = super().write(vals)
         if "twilio_number_ids" in vals:
             for rec in self:
-                # Trigger instant notification to user's bus channel if bus available
                 try:
                     self.env["bus.bus"]._sendone(
                         rec.user_id.partner_id,
@@ -61,16 +71,34 @@ class TwilioNumberAllocation(models.Model):
 
     @api.model
     def sync_user_allocations(self):
-        """Ensure every non-share active Odoo user has a twilio.number.allocation record."""
+        """Ensure every non-share active Odoo user has a twilio.number.allocation record with default 'All numbers'."""
         if self.env.context.get("no_sync_user_allocations"):
             return
         try:
             ctx_env = self.with_context(no_sync_user_allocations=True).env
+            all_opt = ctx_env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
+            if not all_opt:
+                all_opt = ctx_env["twilio.phone.number"].sudo().create({
+                    "phone_number": "ALL",
+                    "friendly_name": "All numbers",
+                    "sequence": 0,
+                    "sid": "ALL_NUMBERS_OPTION"
+                })
+
             users = ctx_env["res.users"].sudo().search([("share", "=", False), ("active", "=", True)])
-            existing_user_ids = set(ctx_env["twilio.number.allocation"].sudo().search([]).mapped("user_id.id"))
+            existing_allocs = ctx_env["twilio.number.allocation"].sudo().search([])
+            existing_user_ids = set(existing_allocs.mapped("user_id.id"))
+
+            empty_allocs = existing_allocs.filtered(lambda a: not a.twilio_number_ids)
+            if empty_allocs:
+                empty_allocs.sudo().write({"twilio_number_ids": [(6, 0, [all_opt.id])]})
+
             missing_users = [u for u in users if u.id not in existing_user_ids]
             if missing_users:
-                ctx_env["twilio.number.allocation"].sudo().create([{"user_id": u.id} for u in missing_users])
+                ctx_env["twilio.number.allocation"].sudo().create([
+                    {"user_id": u.id, "twilio_number_ids": [(6, 0, [all_opt.id])]}
+                    for u in missing_users
+                ])
         except Exception:
             pass
 

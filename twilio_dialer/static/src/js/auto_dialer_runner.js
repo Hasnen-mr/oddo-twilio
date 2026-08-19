@@ -2,7 +2,7 @@
 
 import { Component, useState, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { rpc } from "@web/core/network/rpc";
+import { rpc } from "@web/core/network/rpc_service";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
 
 /**

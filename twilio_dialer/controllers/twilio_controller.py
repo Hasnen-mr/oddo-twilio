@@ -61,34 +61,30 @@ class TwilioController(http.Controller):
             # Fetch fresh incoming phone numbers live from Twilio API for active account
             phone_numbers = service.get_incoming_phone_numbers() or []
 
-            # Purge any stale DB numbers from old/previous Twilio accounts
-            db_numbers = request.env["twilio.phone.number"].sudo().search([])
-            stale_db = db_numbers.filtered(lambda n: n.account_sid and n.account_sid != account_sid and n.phone_number != "ALL")
-            if stale_db:
-                stale_db.unlink()
-
-            # Ensure fresh numbers are present in twilio.phone.number DB table
-            existing_db_nums = {n.phone_number for n in request.env["twilio.phone.number"].sudo().search([])}
+            valid_numbers = []
             for item in phone_numbers:
-                if isinstance(item, dict):
+                if isinstance(item, dict) and item.get("phone_number"):
                     if not item.get("type"):
                         item["type"] = "incoming"
-                    p_num = item.get("phone_number")
-                    f_name = item.get("friendly_name") or p_num
-                    if p_num and p_num not in existing_db_nums:
-                        request.env["twilio.phone.number"].sudo().create({
-                            "phone_number": p_num,
-                            "friendly_name": f_name,
-                            "display_name": f"{f_name} ({p_num})",
-                            "account_sid": account_sid,
-                        })
-                        existing_db_nums.add(p_num)
+                    valid_numbers.append(item)
 
-            seen = {
-                item.get("phone_number")
-                for item in phone_numbers
-                if isinstance(item, dict) and item.get("phone_number")
-            }
+            phone_numbers = valid_numbers
+
+            # Sync twilio.phone.number DB records safely without raising AttributeError
+            db_numbers = request.env["twilio.phone.number"].sudo().search([])
+            existing_db_nums = {n.phone_number for n in db_numbers}
+            for item in phone_numbers:
+                p_num = item.get("phone_number")
+                f_name = item.get("friendly_name") or p_num
+                if p_num and p_num not in existing_db_nums:
+                    request.env["twilio.phone.number"].sudo().create({
+                        "phone_number": p_num,
+                        "friendly_name": f_name,
+                        "display_name": f"{f_name} ({p_num})",
+                    })
+                    existing_db_nums.add(p_num)
+
+            seen = {item.get("phone_number") for item in phone_numbers if item.get("phone_number")}
 
             for caller_id in service.get_outgoing_caller_ids():
                 number = caller_id.get("phone_number")
@@ -104,6 +100,13 @@ class TwilioController(http.Controller):
                 "phone_numbers": phone_numbers,
             }
         except UserError as e:
+            return {
+                "phone_number": False,
+                "phone_numbers": [],
+                "message": str(e),
+            }
+        except Exception as e:
+            _logger.exception("Error in get_phone_number: %s", str(e))
             return {
                 "phone_number": False,
                 "phone_numbers": [],
@@ -635,3 +638,47 @@ class TwilioController(http.Controller):
         except Exception as e:
             _logger.error("Failed to fetch SMS contacts: %s", str(e))
             return {"success": False, "message": str(e), "contacts": []}
+
+
+    @http.route("/twilio_dialer/call_log/create", type="json", auth="user")
+    def create_call_log(self, call_sid=None, to_number=None, from_number=None, partner_id=None, direction="outgoing", **kwargs):
+        try:
+            if not call_sid or not to_number:
+                return {"success": False, "message": "call_sid and to_number required"}
+
+            existing = request.env["twilio.call.log"].sudo().search([("call_sid", "=", call_sid)], limit=1)
+            if existing:
+                return {"success": True, "id": existing.id}
+
+            icp = request.env["ir.config_parameter"].sudo()
+            from_num = from_number or icp.get_param("twilio_dialer.phone_number") or ""
+
+            log = request.env["twilio.call.log"].sudo().create({
+                "call_sid": call_sid,
+                "to_number": to_number,
+                "from_number": from_num,
+                "partner_id": partner_id or False,
+                "direction": direction or "outgoing",
+                "status": "ringing" if direction == "incoming" else "in_progress",
+            })
+            return {"success": True, "id": log.id}
+        except Exception as e:
+            _logger.error("Failed to create call log via RPC: %s", str(e))
+            return {"success": False, "message": str(e)}
+
+    @http.route("/twilio_dialer/call_log/update", type="json", auth="user")
+    def update_call_log(self, call_sid=None, status=None, **kwargs):
+        try:
+            if not call_sid or not status:
+                return {"success": False, "message": "call_sid and status required"}
+
+            log = request.env["twilio.call.log"].sudo().search([("call_sid", "=", call_sid)], limit=1)
+            if log:
+                vals = {"status": status}
+                if status in ("completed", "canceled", "rejected", "failed", "no_answer"):
+                    vals["end_time"] = fields.Datetime.now()
+                log.write(vals)
+            return {"success": True}
+        except Exception as e:
+            _logger.error("Failed to update call log via RPC: %s", str(e))
+            return {"success": False, "message": str(e)}

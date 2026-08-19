@@ -380,49 +380,41 @@ class ResConfigSettings(models.TransientModel):
     @api.model
     def get_values(self):
         icp = self.env["ir.config_parameter"].sudo()
-        _logger.info(
-            "get_values() START — config_parameter incoming_transcription=%s outgoing_transcription=%s",
-            icp.get_param("twilio_dialer.incoming_transcription"),
-            icp.get_param("twilio_dialer.outgoing_transcription"),
-        )
         values = super().get_values()
-        _logger.info(
-            "get_values() after super() — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
-            values.get("twilio_incoming_transcription"),
-            values.get("twilio_outgoing_transcription"),
-        )
         connected = self._twilio_is_configured() or bool(
             values.get("twilio_api_key_sid") and values.get("twilio_application_sid")
         )
         values["twilio_config_section"] = "call" if connected else "account"
 
-        account_sid = self.env["ir.config_parameter"].sudo().get_param(
-            "twilio_dialer.account_sid"
-        )
+        account_sid = icp.get_param("twilio_dialer.account_sid")
         if not account_sid:
             return values
 
+        # Instant local fallback values
+        values["twilio_incoming_enabled"] = icp.get_param("twilio_dialer.incoming_enabled", "1") in ("True", "true", "1")
+        values["twilio_incoming_record"] = icp.get_param("twilio_dialer.incoming_record") in ("True", "true", "1")
+        values["twilio_incoming_voicemail"] = icp.get_param("twilio_dialer.incoming_voicemail") in ("True", "true", "1")
+        values["twilio_incoming_voicemail_text"] = icp.get_param("twilio_dialer.incoming_voicemail_text", "")
+        values["twilio_incoming_welcome_greeting"] = icp.get_param("twilio_dialer.incoming_welcome_greeting") in ("True", "true", "1")
+        values["twilio_incoming_welcome_greeting_text"] = icp.get_param("twilio_dialer.incoming_welcome_greeting_text", "")
+        values["twilio_incoming_forward"] = icp.get_param("twilio_dialer.incoming_forward") in ("True", "true", "1")
+        values["twilio_incoming_forward_to"] = icp.get_param("twilio_dialer.incoming_forward_to", "")
+        values["twilio_outgoing_record"] = icp.get_param("twilio_dialer.outgoing_record") in ("True", "true", "1")
+        values["twilio_outgoing_smart_copy"] = icp.get_param("twilio_dialer.outgoing_smart_copy") in ("True", "true", "1")
+
+        # Fast background check with 2s timeout
         try:
-            payload = MyBroadcastAPI().get_call_settings(account_sid)
+            from ..services import MyBroadcastAPI
+            api_client = MyBroadcastAPI()
+            api_client._timeout = 2
+            payload = api_client.get_call_settings(account_sid)
             incoming, outgoing, error = self._parse_call_settings(payload)
-            if error:
-                values["twilio_call_settings_error"] = error
-            else:
+            if not error:
                 call_values = self._call_settings_values(incoming, outgoing)
                 values.update(call_values)
-                _logger.info(
-                    "get_values() after API update — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
-                    values.get("twilio_incoming_transcription"),
-                    values.get("twilio_outgoing_transcription"),
-                )
-        except MyBroadcastAPIError as error:
-            _logger.warning("Unable to load MyBroadcast call settings: %s", error)
-            values["twilio_call_settings_error"] = str(error)
-        _logger.info(
-            "get_values() RETURN — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
-            values.get("twilio_incoming_transcription"),
-            values.get("twilio_outgoing_transcription"),
-        )
+        except Exception as error:
+            _logger.debug("Fast load fallback for Call Settings: %s", error)
+
         return values
 
     def action_save_call_settings(self):
@@ -956,6 +948,10 @@ class ResConfigSettings(models.TransientModel):
             if number["phone_number"] == self.twilio_phone_number
         )
         icp.set_param("twilio_dialer.phone_number", self.twilio_phone_number)
+        try:
+            self.env["twilio.service"].configure_incoming_phone_number()
+        except Exception as err:
+            _logger.warning("Auto-configuring all incoming numbers failed: %s", err)
         _logger.info(
             "Selected Twilio Incoming Phone Number: %s (SID: %s, Voice URL: %s)",
             selected_number["phone_number"],
@@ -1166,6 +1162,7 @@ class ResConfigSettings(models.TransientModel):
         email="",
         phone="",
         odoo_version="",
+        allow_incoming=True,
     ):
         """Connect Twilio from the dashboard onboarding wizard.
 
@@ -1192,6 +1189,7 @@ class ResConfigSettings(models.TransientModel):
                 "twilio_auth_token": auth_token,
                 "twilio_contact_email": email,
                 "twilio_contact_phone": phone or False,
+                "twilio_incoming_enabled": bool(allow_incoming),
             }
         )
         try:

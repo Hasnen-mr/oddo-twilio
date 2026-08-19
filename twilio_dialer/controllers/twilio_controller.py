@@ -632,3 +632,65 @@ class TwilioController(http.Controller):
         except Exception as e:
             _logger.error("Failed to fetch SMS contacts: %s", str(e))
             return {"success": False, "message": str(e), "contacts": []}
+
+    @http.route("/twilio_dialer/call_log/create", type="json", auth="user")
+    def create_call_log(self, call_sid=None, phone_number=None, direction="outgoing", status="in_progress", partner_id=None, **kwargs):
+        """Create or update a Twilio call log entry from the WebRTC client."""
+        try:
+            CallLog = request.env["twilio.call.log"].sudo()
+            existing = False
+            if call_sid:
+                existing = CallLog.search([("call_sid", "=", call_sid)], limit=1)
+            
+            if existing:
+                vals = {}
+                if status:
+                    vals["status"] = status
+                if phone_number and not existing.phone_number:
+                    vals["phone_number"] = phone_number
+                if partner_id:
+                    vals["partner_id"] = partner_id
+                if vals:
+                    existing.write(vals)
+                log_id = existing.id
+            else:
+                log = CallLog.create({
+                    "call_sid": call_sid or f"client_{request.env.user.id}_{fields.Datetime.now().timestamp()}",
+                    "phone_number": phone_number or "",
+                    "direction": direction,
+                    "status": status,
+                    "user_id": request.env.user.id,
+                    "partner_id": partner_id or False,
+                })
+                log_id = log.id
+
+            return {"success": True, "call_log_id": log_id}
+        except Exception as e:
+            _logger.error("Failed to create call log: %s", str(e))
+            return {"success": False, "message": str(e)}
+
+    @http.route("/twilio_dialer/call_log/update", type="json", auth="user")
+    def update_call_log(self, call_log_id=None, call_sid=None, duration=0, status=None, **kwargs):
+        """Update duration, status, or recording for a Twilio call log entry."""
+        try:
+            CallLog = request.env["twilio.call.log"].sudo()
+            log = False
+            if call_log_id:
+                log = CallLog.browse(call_log_id).exists()
+            elif call_sid:
+                log = CallLog.search([("call_sid", "=", call_sid)], limit=1)
+
+            if log:
+                vals = {}
+                if duration:
+                    vals["duration"] = duration
+                if status:
+                    vals["status"] = status
+                if vals:
+                    log.write(vals)
+                return {"success": True, "call_log_id": log.id}
+            return {"success": False, "message": "Call log not found."}
+        except Exception as e:
+            _logger.error("Failed to update call log: %s", str(e))
+            return {"success": False, "message": str(e)}
+

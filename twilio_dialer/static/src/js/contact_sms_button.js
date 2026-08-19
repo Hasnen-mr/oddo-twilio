@@ -5,8 +5,8 @@ import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
 import { PhoneField, phoneField, formPhoneField } from "@web/views/fields/phone/phone_field";
-import { TwilioSmsPopup } from "./sms_popup";
-import { TwilioSmsMessagingDialog } from "./sms_messaging_dialog";
+import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 
 export class ContactSmsButton extends Component {
     static template = "twilio_dialer.ContactSmsButton";

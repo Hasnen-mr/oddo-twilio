@@ -3,7 +3,7 @@
 import { Component, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { DialerPopup } from "./dialer_popup";
+import { DialerPopup } from "@twilio_dialer/js/dialer_popup";
 
 export class DialerSystray extends Component {
     static components = { DialerPopup };

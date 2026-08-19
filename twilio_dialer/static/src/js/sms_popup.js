@@ -4,7 +4,7 @@ import { Component, useState, onWillStart, onMounted, onWillUnmount, useRef } fr
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { rpc } from "@web/core/network/rpc";
-import { normalizePhoneNumber } from "./phone_utils";
+import { normalizePhoneNumber } from "@twilio_dialer/js/phone_utils";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days expiry

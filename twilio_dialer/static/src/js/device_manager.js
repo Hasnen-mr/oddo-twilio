@@ -1,3 +1,5 @@
+/** @odoo-module **/
+
 async function rpc(url, params = {}) {
     try {
         const res = await fetch(url, {
@@ -20,7 +22,7 @@ async function rpc(url, params = {}) {
     }
 }
 
-/** @odoo-module **/
+
 
 import { loadJS } from "@web/core/assets";
 

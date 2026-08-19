@@ -694,3 +694,123 @@ class TwilioController(http.Controller):
             _logger.error("Failed to update call log: %s", str(e))
             return {"success": False, "message": str(e)}
 
+    @http.route("/twilio_dialer/auto_dialer/sync_line", type="json", auth="user")
+    def sync_auto_dialer_line(self, dialer_id, **kwargs):
+        dialer = request.env["twilio.auto.dialer"].sudo().browse(dialer_id)
+        if not dialer.exists():
+            return {"success": False, "message": "Queue not found"}
+
+        current_line = dialer.current_line_id
+        if current_line:
+            partner = current_line.partner_id
+            all_lines = dialer.queue_line_ids
+            line_idx = list(all_lines).index(current_line) + 1 if current_line in all_lines else 1
+            return {
+                "success": True,
+                "queue_line_id": current_line.id,
+                "phone": current_line.phone,
+                "partner_id": partner.id if partner else False,
+                "partner_name": partner.name if partner else current_line.phone,
+                "queue_name": dialer.name,
+                "queue_position": "Line %s of %s" % (line_idx, len(all_lines)),
+                "queue_attempts": current_line.attempt_count,
+                "queue_notes": current_line.notes or "",
+                "queue_status": current_line.status,
+                "queue_state": dialer.state,
+            }
+        return {
+            "success": True,
+            "queue_line_id": False,
+            "queue_state": dialer.state,
+        }
+
+    @http.route("/twilio_dialer/auto_dialer/navigate", type="json", auth="user")
+    def navigate_auto_dialer(self, dialer_id, action_name):
+        dialer = request.env["twilio.auto.dialer"].sudo().browse(dialer_id)
+        if not dialer.exists():
+            return {"success": False, "message": "Queue not found"}
+
+        if action_name == "skip":
+            dialer.action_skip_contact()
+        elif action_name == "next":
+            dialer.action_next_contact()
+        elif action_name == "prev":
+            dialer.action_prev_contact()
+        elif action_name == "current":
+            pass
+        else:
+            return {"success": False, "message": "Invalid action"}
+
+        current_line = dialer.current_line_id
+        if current_line:
+            partner = current_line.partner_id
+            all_lines = dialer.queue_line_ids
+            line_idx = list(all_lines).index(current_line) + 1 if current_line in all_lines else 1
+            return {
+                "success": True,
+                "queue_line_id": current_line.id,
+                "phone": current_line.phone,
+                "partner_id": partner.id if partner else False,
+                "partner_name": partner.name if partner else current_line.phone,
+                "queue_name": dialer.name,
+                "queue_position": "Line %s of %s" % (line_idx, len(all_lines)),
+                "queue_attempts": current_line.attempt_count,
+                "queue_notes": current_line.notes or "",
+                "queue_status": current_line.status,
+                "queue_state": dialer.state,
+            }
+        return {"success": True, "queue_line_id": False, "queue_state": dialer.state}
+
+    @http.route("/twilio_dialer/billing", type="json", auth="user")
+    def get_billing(self):
+        try:
+            return {"success": True, "billing": request.env["twilio.billing.service"].get_billing()}
+        except Exception as error:
+            return {"success": False, "message": str(error)}
+
+    @http.route("/twilio_dialer/recording/<int:call_log_id>", type="http", auth="user", methods=["GET"])
+    def get_recording(self, call_log_id, **kwargs):
+        _logger.info("Recording request for call_log_id=%s", call_log_id)
+        call_log = request.env["twilio.call.log"].browse(call_log_id)
+        if not call_log.exists() or not call_log.recording_sid:
+            _logger.warning(
+                "Recording access denied for call_log_id=%s: exists=%s recording_sid=%s",
+                call_log_id, call_log.exists(),
+                call_log.recording_sid if call_log.exists() else "N/A",
+            )
+            raise AccessDenied()
+
+        _logger.info(
+            "Fetching recording audio for call_log_id=%s recording_sid=%s",
+            call_log_id, call_log.recording_sid,
+        )
+        resp, content_type = request.env["twilio.service"].fetch_recording_audio(
+            call_log.recording_sid
+        )
+        if resp is None:
+            _logger.warning(
+                "Recording audio not available for call_log_id=%s recording_sid=%s",
+                call_log_id, call_log.recording_sid,
+            )
+            return request.make_response("Recording not available", status=404)
+
+        _logger.info(
+            "Serving recording for call_log_id=%s content_type=%s",
+            call_log_id, content_type,
+        )
+
+        def generate():
+            try:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    if chunk:
+                        yield chunk
+            finally:
+                resp.close()
+
+        headers = [
+            ("Content-Type", content_type),
+            ("Content-Disposition", 'inline; filename="%s.wav"' % call_log.recording_sid),
+            ("Cache-Control", "private, max-age=3600"),
+        ]
+        return request.make_response(generate(), headers=headers)
+

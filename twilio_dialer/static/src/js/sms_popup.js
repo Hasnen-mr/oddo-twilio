@@ -1,5 +1,6 @@
 /** @odoo-module **/
 
+import { rpc } from "@web/core/network/rpc";
 import { Component, useState, onWillStart, onMounted, onWillUnmount, useRef } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
@@ -19,8 +20,7 @@ export class TwilioSmsPopup extends Component {
     };
 
     setup() {
-        this.rpc = useService("rpc");
-        this.notification = useService("notification");
+                this.notification = useService("notification");
         this.chatBodyRef = useRef("chatBody");
         this.messageInputRef = useRef("messageInput");
 

@@ -1,5 +1,6 @@
 /** @odoo-module **/
 
+import { rpc } from "@web/core/network/rpc";
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -13,8 +14,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     static template = "twilio_dialer.TwilioSmsWorkspaceClientAction";
 
     setup() {
-        this.rpc = useService("rpc");
-        this.action = useService("action");
+                this.action = useService("action");
         this.dialog = useService("dialog");
         this.state = useState({
             loading: true,

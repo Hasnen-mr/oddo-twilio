@@ -2,7 +2,6 @@
 
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
-import { rpc } from "@web/core/network/rpc_service";
 import { useService } from "@web/core/utils/hooks";
 
 const CALL_PACKAGES = Object.freeze([
@@ -37,6 +36,7 @@ export class BillingDashboard extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.notification = useService("notification");
         this.packages = CALL_PACKAGES;
         this.state = useState({ loading: true, error: "", billing: null });

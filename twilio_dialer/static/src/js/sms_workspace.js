@@ -3,7 +3,6 @@
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { rpc } from "@web/core/network/rpc_service";
 import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
 import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 
@@ -14,6 +13,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     static template = "twilio_dialer.TwilioSmsWorkspaceClientAction";
 
     setup() {
+        this.rpc = useService("rpc");
         this.action = useService("action");
         this.dialog = useService("dialog");
         this.state = useState({

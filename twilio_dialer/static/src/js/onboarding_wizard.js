@@ -30,6 +30,7 @@ export class TwilioOnboardingWizard extends Component {
             authToken: "",
             email: "",
             phone: "",
+            allowIncomingCall: true,
             odooVersion: (session && session.server_version) || "",
             error: "",
         });
@@ -155,6 +156,7 @@ export class TwilioOnboardingWizard extends Component {
                     email: this.state.email.trim(),
                     phone: this.state.phone.trim(),
                     odoo_version: this.state.odooVersion.trim(),
+                    allow_incoming: this.state.allowIncomingCall,
                 }
             );
             if (result && result.success) {

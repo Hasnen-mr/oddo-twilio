@@ -4978,3 +4978,37 @@ button.o_twilio_dash_open_dialer:hover {
         color: $o_dialer-gray-900;
     }
 }
+
+
+
+
+/* Quick Debug Banner Light Theme & Timer Progress Bar */
+.o_dialer_debug_banner {
+    background: rgba(254, 242, 242, 0.92) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    color: #991b1b !important;
+    box-shadow: 0 4px 16px rgba(239, 68, 68, 0.12) !important;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 105;
+}
+
+.o_dialer_debug_timer_bar {
+    height: 3px;
+    background: linear-gradient(90deg, #ef4444, #dc2626);
+    width: 100%;
+    animation: o_dialer_debug_timer_shrink 10s linear forwards !important;
+    border-radius: 0 0 8px 8px;
+}
+
+@keyframes o_dialer_debug_timer_shrink {
+    0% {
+        width: 100%;
+    }
+    100% {
+        width: 0%;
+    }
+}

@@ -291,7 +291,10 @@ export class DialerPopup extends Component {
     async _loadConfiguredPhoneNumber() {
         const result = await rpc("/twilio_dialer/phone_number");
         this.state.systemPhoneNumber = result.phone_number || "";
-        const preferredNumber = this.props.fromNumber || result.phone_number;
+        const preferredNumber =
+            this.props.fromNumber ||
+            this.state.selectedCaller?.number ||
+            result.phone_number;
         const numbers = result.phone_numbers || [];
         const callers = [];
         const seen = new Set();

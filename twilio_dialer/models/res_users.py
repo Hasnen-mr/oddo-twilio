@@ -40,18 +40,6 @@ class ResUsers(models.Model):
 
     def get_allowed_twilio_numbers(self):
         """Return list of allowed phone_number strings for this user.
-        If 'ALL' or empty is assigned, returns empty list (meaning ALL numbers allowed in dialpad).
+        Rollback mode: Returns [] (meaning ALL numbers allowed for calling).
         """
-        self.ensure_one()
-        alloc = self.env["twilio.number.allocation"].sudo().search([("user_id", "=", self.id)], limit=1)
-        if alloc and alloc.twilio_number_ids:
-            nums = alloc.twilio_number_ids.mapped("phone_number")
-            if "ALL" in nums or not nums:
-                return []
-            return [n for n in nums if n != "ALL"]
-        if self.twilio_number_ids:
-            nums = self.twilio_number_ids.mapped("phone_number")
-            if "ALL" in nums or not nums:
-                return []
-            return [n for n in nums if n != "ALL"]
         return []

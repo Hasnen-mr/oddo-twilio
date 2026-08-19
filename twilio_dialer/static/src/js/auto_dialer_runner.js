@@ -2,7 +2,6 @@
 
 import { Component, useState, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
 
 /**
@@ -17,6 +16,7 @@ export class AutoDialerRunner extends Component {
     static template = "twilio_dialer.AutoDialerRunner";
 
     setup() {
+        this.rpc = useService("rpc");
         this.orm = useService("orm");
         this.action = useService("action");
         this.dialerSvc = useService("twilio_dialer");

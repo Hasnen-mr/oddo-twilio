@@ -2,7 +2,6 @@
 
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
 
 export class TwilioSmsMessagingDialog extends Component {
@@ -17,6 +16,7 @@ export class TwilioSmsMessagingDialog extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.state = useState({
             loading: true,
             searchQuery: "",

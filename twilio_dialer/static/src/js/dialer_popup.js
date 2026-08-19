@@ -62,11 +62,17 @@ export class DialerPopup extends Component {
             contactsLoading: false,
             dndEnabled: deviceManager.isDoNotDisturb,
             refreshingToken: false,
+            showQuickDebugBanner: false,
+            showQuickDebugModal: false,
+            lastCallDuration: 0,
+            debugChecking: false,
         });
 
         this._callTimer = null;
         this._callStartTime = null;
         this._contactSearchTimer = null;
+        this._debugBannerTimer = null;
+        this._isOutboundCallInProgress = false;
 
         this._applyIncomingPhone(this.props.phone);
         useExternalListener(window, "keydown", this._onKeydown.bind(this));
@@ -219,8 +225,28 @@ export class DialerPopup extends Component {
         this.state.phoneNumber = nationalNumber;
     }
 
-    _onDeviceStatusChange(status) {
+        _onDeviceStatusChange(status) {
         this.state.connectionStatus = status;
+
+        if (status === "connecting" || status === "connected") {
+            if (!this._wasDialing) {
+                this._wasDialing = true;
+                this._callStartedAt = Date.now();
+            }
+        }
+
+        if (status === "disconnected" || status === "error" || status === "ready") {
+            if (this._wasDialing) {
+                const elapsed = Math.floor((Date.now() - (this._callStartedAt || Date.now())) / 1000);
+                const duration = Math.max(1, elapsed);
+                if (duration <= 10) {
+                    this.triggerQuickDebugBanner(duration);
+                } else {
+                    this._wasDialing = false;
+                }
+            }
+        }
+
         if (status === "incoming") {
             this.state.showIncomingKeypad = false;
         }
@@ -779,6 +805,9 @@ export class DialerPopup extends Component {
             return;
         }
         this.state.showCallerDropdown = !this.state.showCallerDropdown;
+        if (this.state.showCallerDropdown) {
+            this._loadConfiguredPhoneNumber();
+        }
         this.state.showCountryDropdown = false;
     }
 
@@ -801,7 +830,7 @@ export class DialerPopup extends Component {
         this.props.onClose();
     }
 
-    onCall() {
+        async onCall() {
         if (!this.canCall) {
             return;
         }
@@ -814,13 +843,25 @@ export class DialerPopup extends Component {
             phoneNumber: this.state.phoneNumber,
             fromNumber: this.state.selectedCaller?.number || "",
         });
-        deviceManager.makeCall(fullNumber, {
-            From: this.state.selectedCaller?.number,
-            from_number: this.state.selectedCaller?.number,
-        }, {
-            partnerId: this.props.partnerId || this.dialerState.partnerId,
-            queueLineId: this.dialerState.queueLineId || null,
-        });
+
+        this._callStartedAt = Date.now();
+        this._wasDialing = true;
+
+        try {
+            const res = await deviceManager.makeCall(fullNumber, {
+                From: this.state.selectedCaller?.number,
+                from_number: this.state.selectedCaller?.number,
+            }, {
+                partnerId: this.props.partnerId || this.dialerState.partnerId,
+                queueLineId: this.dialerState.queueLineId || null,
+            });
+            if (res === false) {
+                this.triggerQuickDebugBanner(1);
+            }
+        } catch (err) {
+            console.error("makeCall threw error:", err);
+            this.triggerQuickDebugBanner(1);
+        }
     }
 
     onRedial() {
@@ -893,5 +934,62 @@ export class DialerPopup extends Component {
         } finally {
             this.state.refreshingToken = false;
         }
+    }
+
+        openQuickDebugModal() {
+        this.state.showQuickDebugBanner = false;
+        this.state.showQuickDebugModal = true;
+        this.state.debugStep = 0;
+
+        clearTimeout(this._debugStepTimer);
+        const advance = (s) => {
+            if (!this.state.showQuickDebugModal) return;
+            this.state.debugStep = s;
+            if (s < 5) {
+                this._debugStepTimer = setTimeout(() => advance(s + 1), 350);
+            }
+        };
+        advance(1);
+    }
+
+    closeQuickDebugModal() {
+        this.state.showQuickDebugModal = false;
+        clearTimeout(this._debugStepTimer);
+    }
+
+    get isUSCanadaCall() {
+        const num = this.state.phoneNumber || this.state.lastDialedNumber || "";
+        const code = this.state.selectedCountry?.code || "";
+        return code === "+1" || num.startsWith("+1") || num.startsWith("1");
+    }
+
+
+    openHelpSupport() {
+        this.closeQuickDebugModal();
+        try {
+            this.action.doAction("twilio_dialer.action_twilio_help");
+        } catch (e) {
+            this.action.doAction("twilio_dialer.action_twilio_contact_us", {
+                additionalContext: { twilio_about_section: "help" },
+            });
+        }
+    }
+
+            triggerQuickDebugBanner(duration = 1) {
+        this._wasDialing = false;
+        this.state.lastCallDuration = duration;
+        console.log("[Twilio JS DialerPopup] Triggering Quick Debug Banner (" + duration + "s)");
+        this.state.showQuickDebugBanner = true;
+        clearTimeout(this._debugBannerTimer);
+        this._debugBannerTimer = setTimeout(() => {
+            this.state.showQuickDebugBanner = false;
+        }, 10000);
+
+        setTimeout(() => {
+            const bodyEl = document.querySelector(".o_dialer_body") || document.querySelector(".o_dialer_popup") || document.querySelector(".o_dialer_tab_panel");
+            if (bodyEl) {
+                bodyEl.scrollTop = bodyEl.scrollHeight;
+            }
+        }, 50);
     }
 }

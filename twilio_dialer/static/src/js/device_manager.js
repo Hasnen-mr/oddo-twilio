@@ -1,29 +1,6 @@
 /** @odoo-module **/
 
-async function rpc(url, params = {}) {
-    try {
-        const res = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                jsonrpc: "2.0",
-                method: "call",
-                params: params,
-                id: Math.floor(Math.random() * 1000000),
-            }),
-        });
-        const data = await res.json();
-        return data.result;
-    } catch (e) {
-        console.error("RPC Error for " + url + ":", e);
-        return null;
-    }
-}
-
-
-
+import { rpc } from "@web/core/network/rpc";
 import { loadJS } from "@web/core/assets";
 
 

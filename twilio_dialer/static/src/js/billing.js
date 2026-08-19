@@ -1,5 +1,6 @@
 /** @odoo-module **/
 
+import { rpc } from "@web/core/network/rpc";
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
@@ -36,8 +37,7 @@ export class BillingDashboard extends Component {
     };
 
     setup() {
-        this.rpc = useService("rpc");
-        this.notification = useService("notification");
+                this.notification = useService("notification");
         this.packages = CALL_PACKAGES;
         this.state = useState({ loading: true, error: "", billing: null });
         onWillStart(() => this.refresh());

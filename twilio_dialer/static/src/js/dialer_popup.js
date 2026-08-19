@@ -1,7 +1,6 @@
 /** @odoo-module **/
 
 import { Component, useExternalListener, useState, onWillStart, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
-import { rpc } from "@web/core/network/rpc_service";
 import { useService } from "@web/core/utils/hooks";
 import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
@@ -26,6 +25,7 @@ export class DialerPopup extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.orm = useService("orm");
         this.action = useService("action");
         const defaultCountry = COUNTRY_CODES.find((country) => country.code === "+91") || COUNTRY_CODES[0];

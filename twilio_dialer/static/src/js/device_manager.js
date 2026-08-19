@@ -1,7 +1,29 @@
+async function rpc(url, params = {}) {
+    try {
+        const res = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "call",
+                params: params,
+                id: Math.floor(Math.random() * 1000000),
+            }),
+        });
+        const data = await res.json();
+        return data.result;
+    } catch (e) {
+        console.error("RPC Error for " + url + ":", e);
+        return null;
+    }
+}
+
 /** @odoo-module **/
 
 import { loadJS } from "@web/core/assets";
-import { rpc } from "@web/core/network/rpc_service";
+
 
 const TWILIO_SDK_PATH = "/twilio_dialer/static/lib/twilio/twilio.min.js";
 

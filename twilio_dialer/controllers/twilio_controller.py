@@ -135,32 +135,43 @@ class TwilioController(http.Controller):
             )
             from_str = str(raw_from).strip().lower()
 
-            # WebRTC client calls from browser have From starting with 'client:'
-            # or pass explicit destination / phone parameters.
             is_client_call = from_str.startswith("client:") or bool(params.get("destination")) or bool(params.get("phone"))
 
-            # Phone numbers assigned to the TwiML App hit this URL for inbound PSTN calls.
             if direction.startswith("inbound") and not is_client_call:
                 return self.incoming_call(**kwargs)
 
             raw_caller_id = (
-                params.get("From")
-                or params.get("from")
-                or params.get("from_number")
-                or params.get("CallerId")
+                params.get("CallerId")
                 or params.get("callerId")
-                or request.httprequest.args.get("From", "")
-                or request.httprequest.args.get("from", "")
-                or request.httprequest.args.get("from_number", "")
+                or params.get("from_number")
+                or params.get("From")
+                or params.get("from")
                 or request.httprequest.args.get("CallerId", "")
-                or request.httprequest.args.get("callerId", "")
+                or request.httprequest.args.get("from_number", "")
+                or request.httprequest.args.get("From", "")
                 or ""
             )
-            caller_id = raw_caller_id.strip() if isinstance(raw_caller_id, str) and not raw_caller_id.startswith("client:") else ""
-            if not caller_id or not caller_id.startswith("+"):
-                caller_id = request.env["twilio.service"].get_verified_twilio_phone_number()
 
-            to_number = (
+            def _sanitize_e164(raw):
+                if not raw or str(raw).startswith("client:"):
+                    return ""
+                s = str(raw).strip()
+                if s in ("ALL", "All numbers"):
+                    return ""
+                matches = re.findall(r"\+[1-9]\d{9,14}", s)
+                if matches:
+                    return matches[-1]
+                digits = re.sub(r"\D", "", s)
+                if digits and len(digits) >= 10:
+                    clean = digits[-11:] if len(digits) >= 11 else digits[-10:]
+                    return "+" + clean if len(clean) == 11 else "+1" + clean
+                return ""
+
+            caller_id = _sanitize_e164(raw_caller_id)
+            if not caller_id:
+                caller_id = request.env["twilio.service"].sudo().get_verified_twilio_phone_number()
+
+            to_raw = (
                 params.get("To")
                 or params.get("to")
                 or params.get("destination")
@@ -171,6 +182,13 @@ class TwilioController(http.Controller):
                 or request.httprequest.args.get("phone", "")
             )
 
+            to_number = _sanitize_e164(to_raw)
+            if not to_number:
+                # Fallback to direct digits extraction if to_raw is standard phone
+                digits_to = re.sub(r"\D", "", str(to_raw or ""))
+                if digits_to:
+                    to_number = "+" + digits_to if not str(to_raw).startswith("+") else "+" + digits_to
+
             if not to_number:
                 raise UserError("Missing destination number for Twilio outbound call.")
 
@@ -178,178 +196,23 @@ class TwilioController(http.Controller):
                 response = VoiceResponse()
                 dial = Dial(caller_id=caller_id)
                 dial.number(to_number)
-                response.append(dial)
-                twiml = str(response)
-            else:
-                twiml = (
-                    '<?xml version="1.0" encoding="UTF-8"?>'
-                    '<Response><Dial callerId="{caller_id}"><Number>{to_number}</Number></Dial></Response>'
-                ).format(
-                    caller_id=escape(caller_id),
-                    to_number=escape(to_number),
+                return request.make_response(
+                    str(response),
+                    headers=[("Content-Type", "text/xml")],
                 )
-            _logger.info("[Twilio TwiML Output] Request params: %s | Generated TwiML: %s", params, twiml)
-            return request.make_response(
-                twiml,
-                headers={"Content-Type": "text/xml; charset=utf-8"},
-            )
+            else:
+                xml = f'<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="{caller_id}"><Number>{to_number}</Number></Dial></Response>'
+                return request.make_response(
+                    xml,
+                    headers=[("Content-Type", "application/xml")],
+                )
         except Exception as e:
-            _logger.error("Twilio call setup failed: %s", str(e))
-            if _TWILIO_TWIML_AVAILABLE:
-                err_resp = VoiceResponse()
-                err_resp.say("The Twilio caller ID is not configured correctly.")
-                twiml = str(err_resp)
-            else:
-                twiml = (
-                    '<?xml version="1.0" encoding="UTF-8"?>'
-                    '<Response><Say>The Twilio caller ID is not configured correctly.</Say></Response>'
-                )
+            _logger.error("Call setup error: %s", str(e))
+            xml_err = '<?xml version="1.0" encoding="UTF-8"?><Response><Say>An error occurred setting up the call.</Say><Hangup/></Response>'
             return request.make_response(
-                twiml,
-                headers={"Content-Type": "text/xml; charset=utf-8"},
+                xml_err,
+                headers=[("Content-Type", "application/xml")],
             )
-
-    @http.route("/twilio_dialer/call_log/create", type="json", auth="user")
-    def create_call_log(self, call_sid, to_number, partner_id=False, direction="outgoing", from_number=None):
-        if direction == "incoming":
-            call_log = request.env["twilio.call.log"].create_incoming_call(
-                call_sid,
-                from_number=from_number or to_number,
-                to_number=to_number,
-            )
-        else:
-            call_log = request.env["twilio.call.log"].create_outgoing_call(
-                call_sid,
-                to_number,
-                partner_id=partner_id,
-            )
-        return {"id": call_log.id}
-
-    @http.route("/twilio_dialer/call_log/update", type="json", auth="user")
-    def update_call_log(self, call_sid, status):
-        request.env["twilio.call.log"].update_call_status(call_sid, status)
-        return {"success": True}
-
-    @http.route("/twilio_dialer/auto_dialer/sync_line", type="json", auth="user")
-    def sync_auto_dialer_line(self, line_id, status, call_log_id=None, notes=None, duration_sec=0):
-        line = request.env["twilio.auto.dialer.line"].sudo().browse(line_id)
-        if not line.exists():
-            return {"success": False, "message": "Line not found"}
-        line.update_status_from_call(status, call_log_id=call_log_id, notes=notes, duration_sec=duration_sec)
-        dialer = line.dialer_id
-        current_line = dialer.current_line_id
-        if current_line:
-            partner = current_line.partner_id
-            all_lines = dialer.queue_line_ids
-            line_idx = list(all_lines).index(current_line) + 1 if current_line in all_lines else 1
-            return {
-                "success": True,
-                "queue_line_id": current_line.id,
-                "phone": current_line.phone,
-                "partner_id": partner.id if partner else False,
-                "partner_name": partner.name if partner else current_line.phone,
-                "queue_name": dialer.name,
-                "queue_position": "Line %s of %s" % (line_idx, len(all_lines)),
-                "queue_attempts": current_line.attempt_count,
-                "queue_notes": current_line.notes or "",
-                "queue_status": current_line.status,
-                "queue_state": dialer.state,
-            }
-        return {
-            "success": True,
-            "queue_line_id": False,
-            "queue_state": dialer.state,
-        }
-
-    @http.route("/twilio_dialer/auto_dialer/navigate", type="json", auth="user")
-    def navigate_auto_dialer(self, dialer_id, action_name):
-        dialer = request.env["twilio.auto.dialer"].sudo().browse(dialer_id)
-        if not dialer.exists():
-            return {"success": False, "message": "Queue not found"}
-
-        if action_name == "skip":
-            dialer.action_skip_contact()
-        elif action_name == "next":
-            dialer.action_next_contact()
-        elif action_name == "prev":
-            dialer.action_prev_contact()
-        elif action_name == "current":
-            pass  # Just return current pointer, no movement
-        else:
-            return {"success": False, "message": "Invalid action"}
-
-        current_line = dialer.current_line_id
-        if current_line:
-            partner = current_line.partner_id
-            all_lines = dialer.queue_line_ids
-            line_idx = list(all_lines).index(current_line) + 1 if current_line in all_lines else 1
-            return {
-                "success": True,
-                "queue_line_id": current_line.id,
-                "phone": current_line.phone,
-                "partner_id": partner.id if partner else False,
-                "partner_name": partner.name if partner else current_line.phone,
-                "queue_name": dialer.name,
-                "queue_position": "Line %s of %s" % (line_idx, len(all_lines)),
-                "queue_attempts": current_line.attempt_count,
-                "queue_notes": current_line.notes or "",
-                "queue_status": current_line.status,
-                "queue_state": dialer.state,
-            }
-        return {"success": True, "queue_line_id": False, "queue_state": dialer.state}
-
-    @http.route("/twilio_dialer/billing", type="json", auth="user")
-    def get_billing(self):
-        try:
-            return {"success": True, "billing": request.env["twilio.billing.service"].get_billing()}
-        except UserError as error:
-            return {"success": False, "message": str(error)}
-
-    @http.route("/twilio_dialer/recording/<int:call_log_id>", type="http", auth="user", methods=["GET"])
-    def get_recording(self, call_log_id, **kwargs):
-        _logger.info("Recording request for call_log_id=%s", call_log_id)
-        call_log = request.env["twilio.call.log"].browse(call_log_id)
-        if not call_log.exists() or not call_log.recording_sid:
-            _logger.warning(
-                "Recording access denied for call_log_id=%s: exists=%s recording_sid=%s",
-                call_log_id, call_log.exists(),
-                call_log.recording_sid if call_log.exists() else "N/A",
-            )
-            raise AccessDenied()
-
-        _logger.info(
-            "Fetching recording audio for call_log_id=%s recording_sid=%s",
-            call_log_id, call_log.recording_sid,
-        )
-        resp, content_type = request.env["twilio.service"].fetch_recording_audio(
-            call_log.recording_sid
-        )
-        if resp is None:
-            _logger.warning(
-                "Recording audio not available for call_log_id=%s recording_sid=%s",
-                call_log_id, call_log.recording_sid,
-            )
-            return request.make_response("Recording not available", status=404)
-
-        _logger.info(
-            "Serving recording for call_log_id=%s content_type=%s",
-            call_log_id, content_type,
-        )
-
-        def generate():
-            try:
-                for chunk in resp.iter_content(chunk_size=8192):
-                    if chunk:
-                        yield chunk
-            finally:
-                resp.close()
-
-        headers = [
-            ("Content-Type", content_type),
-            ("Content-Disposition", 'inline; filename="%s.wav"' % call_log.recording_sid),
-            ("Cache-Control", "private, max-age=3600"),
-        ]
-        return request.make_response(generate(), headers=headers)
 
     @http.route(
         "/twilio_dialer/incoming_call",

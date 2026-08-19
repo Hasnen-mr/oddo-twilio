@@ -95,20 +95,26 @@ export const dialerService = {
 
 registry.category("services").add("twilio_dialer", dialerService);
 
-registry.category("actions").add("twilio_dialer.open_dialer", (env, action) => {
+const openDialerAction = (env, action) => {
     const params = action.params || {};
-    env.services.twilio_dialer.open({
-        phone: params.phone || "",
-        fromNumber: params.from_number || "",
-        partnerId: params.partner_id || null,
-        partnerName: params.partner_name || "",
-        autoDialerId: params.auto_dialer_id || null,
-        queueLineId: params.queue_line_id || null,
-        queueName: params.queue_name || "",
-        queuePosition: params.queue_position || "",
-        queueAttempts: params.queue_attempts || 0,
-        queueNotes: params.queue_notes || "",
-        queueStatus: params.queue_status || "",
-    });
-    return Promise.resolve();
-});
+    const service = env.services.twilio_dialer;
+    if (service) {
+        service.open({
+            phone: params.phone || "",
+            fromNumber: params.from_number || "",
+            partnerId: params.partner_id || null,
+            partnerName: params.partner_name || "",
+            autoDialerId: params.auto_dialer_id || null,
+            queueLineId: params.queue_line_id || null,
+            queueName: params.queue_name || "",
+            queuePosition: params.queue_position || "",
+            queueAttempts: params.queue_attempts || 0,
+            queueNotes: params.queue_notes || "",
+            queueStatus: params.queue_status || "",
+        });
+    }
+};
+
+registry.category("actions").add("twilio_dialer.open_dialer", openDialerAction);
+registry.category("actions").add("open_dialer", openDialerAction);
+registry.category("actions").add("action_twilio_dialer_open", openDialerAction);

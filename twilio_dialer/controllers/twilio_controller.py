@@ -46,35 +46,58 @@ class TwilioController(http.Controller):
     @http.route("/twilio_dialer/phone_number", type="json", auth="user")
     def get_phone_number(self):
         try:
+            import re
             service = request.env["twilio.service"]
-            phone_number = service.get_twilio_phone_number()
             icp = request.env["ir.config_parameter"].sudo()
-            try:
-                phone_numbers = json.loads(
-                    icp.get_param("twilio_dialer.incoming_phone_numbers", "[]")
-                )
-            except (TypeError, json.JSONDecodeError):
-                phone_numbers = []
+            account_sid = icp.get_param("twilio_dialer.account_sid") or ""
+            
+            if not account_sid:
+                return {
+                    "phone_number": False,
+                    "phone_numbers": [],
+                    "message": "No active Twilio account connected.",
+                }
 
-            if not phone_numbers:
-                phone_numbers = service.get_incoming_phone_numbers()
+            # Fetch fresh incoming phone numbers live from Twilio API for active account
+            phone_numbers = service.get_incoming_phone_numbers() or []
 
-            # Ensure type is set on cached incoming numbers.
+            # Purge any stale DB numbers from old/previous Twilio accounts
+            db_numbers = request.env["twilio.phone.number"].sudo().search([])
+            stale_db = db_numbers.filtered(lambda n: n.account_sid and n.account_sid != account_sid and n.phone_number != "ALL")
+            if stale_db:
+                stale_db.unlink()
+
+            # Ensure fresh numbers are present in twilio.phone.number DB table
+            existing_db_nums = {n.phone_number for n in request.env["twilio.phone.number"].sudo().search([])}
             for item in phone_numbers:
-                if isinstance(item, dict) and not item.get("type"):
-                    item["type"] = "incoming"
+                if isinstance(item, dict):
+                    if not item.get("type"):
+                        item["type"] = "incoming"
+                    p_num = item.get("phone_number")
+                    f_name = item.get("friendly_name") or p_num
+                    if p_num and p_num not in existing_db_nums:
+                        request.env["twilio.phone.number"].sudo().create({
+                            "phone_number": p_num,
+                            "friendly_name": f_name,
+                            "display_name": f"{f_name} ({p_num})",
+                            "account_sid": account_sid,
+                        })
+                        existing_db_nums.add(p_num)
 
             seen = {
                 item.get("phone_number")
                 for item in phone_numbers
                 if isinstance(item, dict) and item.get("phone_number")
             }
+
             for caller_id in service.get_outgoing_caller_ids():
                 number = caller_id.get("phone_number")
                 if not number or number in seen:
                     continue
                 seen.add(number)
                 phone_numbers.append(caller_id)
+
+            phone_number = phone_numbers[0]["phone_number"] if phone_numbers else False
 
             return {
                 "phone_number": phone_number,

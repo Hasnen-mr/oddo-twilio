@@ -1043,6 +1043,10 @@ class ResConfigSettings(models.TransientModel):
             except Exception as error:
                 _logger.warning("Twilio disconnect cleanup failed: %s", error)
 
+        # Purge cached numbers and allocations from database
+        self.env["twilio.phone.number"].sudo().search([("phone_number", "!=", "ALL")]).unlink()
+        self.env["twilio.number.allocation"].sudo().search([]).unlink()
+
         for key in (
             "twilio_dialer.account_sid",
             "twilio_dialer.auth_token",

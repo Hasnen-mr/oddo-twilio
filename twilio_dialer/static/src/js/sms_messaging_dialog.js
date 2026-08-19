@@ -2,7 +2,7 @@
 
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { rpc } from "@web/core/network/rpc";
+import { rpc } from "@web/core/network/rpc_service";
 import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
 
 export class TwilioSmsMessagingDialog extends Component {

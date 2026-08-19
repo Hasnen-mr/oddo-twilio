@@ -1,12 +1,12 @@
 /** @odoo-module **/
 
 import { Component, useExternalListener, useState, onWillStart, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
+import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
-import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
-import { AutoDialerRunner } from "@twilio_dialer/js/auto_dialer_runner";
-import { splitPhoneNumber } from "@twilio_dialer/js/phone_utils";
+import { COUNTRY_CODES } from "./country_codes";
+import { deviceManager } from "./device_manager";
+import { AutoDialerRunner } from "./auto_dialer_runner";
+import { splitPhoneNumber } from "./phone_utils";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 const CONTACT_PAGE_SIZE = 30;
@@ -291,7 +291,10 @@ export class DialerPopup extends Component {
     async _loadConfiguredPhoneNumber() {
         const result = await rpc("/twilio_dialer/phone_number");
         this.state.systemPhoneNumber = result.phone_number || "";
-        const preferredNumber = this.props.fromNumber || result.phone_number;
+        const preferredNumber =
+            this.props.fromNumber ||
+            this.state.selectedCaller?.number ||
+            result.phone_number;
         const numbers = result.phone_numbers || [];
         const callers = [];
         const seen = new Set();

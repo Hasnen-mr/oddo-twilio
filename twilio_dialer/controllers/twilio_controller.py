@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from xml.sax.saxutils import escape
 
 from odoo import fields, http
@@ -46,7 +47,6 @@ class TwilioController(http.Controller):
     @http.route("/twilio_dialer/phone_number", type="json", auth="user")
     def get_phone_number(self):
         try:
-            import re
             service = request.env["twilio.service"]
             icp = request.env["ir.config_parameter"].sudo()
             account_sid = icp.get_param("twilio_dialer.account_sid") or ""

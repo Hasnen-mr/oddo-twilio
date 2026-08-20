@@ -80,6 +80,13 @@
                         <i class="fa fa-wrench me-2 text-danger"/>
                         <span>7. Troubleshooting &amp; FAQs</span>
                     </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'about_help' }"
+                            t-on-click="() => this.setCategory('about_help')">
+                        <i class="fa fa-life-ring me-2 text-info"/>
+                        <span>8. Help &amp; Support (About Us)</span>
+                    </button>
                 </div>
 
                 <!-- Content Body -->
@@ -298,6 +305,35 @@
                                     <span class="small text-muted">Runs direct diagnostic checks inside the Softphone.</span>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 8: About Us -> Help & Support -->
+                    <div t-if="state.activeCategory === 'about_help'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-life-ring text-info me-2"/>Help &amp; Support (About Us)</h3>
+                            <p class="text-muted">Submit support tickets, contact technical support, and view detailed app documentation.</p>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-envelope-o me-2 text-primary"/>Submit a Support Request</h5>
+                            <p class="mb-2">Need direct assistance or custom integration help? You can submit an issue ticket directly to our support desk from within Odoo:</p>
+                            <ul class="mb-3">
+                                <li><strong>Email &amp; Phone:</strong> Provide your contact information for fast callback.</li>
+                                <li><strong>Use Case &amp; Logs:</strong> Describe your setup or custom workflow requirements.</li>
+                                <li><strong>Direct Delivery:</strong> Requests are delivered securely to our engineering team.</li>
+                            </ul>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <button type="button" class="btn btn-primary btn-sm px-3" t-on-click="openAboutHelp">
+                                    <i class="fa fa-external-link me-1"/> Open About Us &#8594; Help
+                                </button>
+                                <span class="small text-muted">Opens the Help &amp; Support form in About Us.</span>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_help_card">
+                            <h5><i class="fa fa-info-circle me-2 text-secondary"/>Documentation &amp; Release Notes</h5>
+                            <p class="mb-0">Access version information, terms &amp; conditions, privacy policies, and release notes inside the <strong>About Us</strong> module.</p>
                         </div>
                     </div>
 

@@ -85,7 +85,7 @@
                             t-att-class="{ 'active': state.activeCategory === 'about_help' }"
                             t-on-click="() => this.setCategory('about_help')">
                         <i class="fa fa-life-ring me-2 text-info"/>
-                        <span>8. Help &amp; Support (About Us)</span>
+                        <span>8. Help &amp; Support</span>
                     </button>
                 </div>
 
@@ -308,10 +308,10 @@
                         </div>
                     </div>
 
-                    <!-- Section 8: About Us -> Help & Support -->
+                    <!-- Section 8: Help & Support -->
                     <div t-if="state.activeCategory === 'about_help'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
-                            <h3><i class="fa fa-life-ring text-info me-2"/>Help &amp; Support (About Us)</h3>
+                            <h3><i class="fa fa-life-ring text-info me-2"/>Help &amp; Support</h3>
                             <p class="text-muted">Submit support tickets, contact technical support, and view detailed app documentation.</p>
                         </div>
 

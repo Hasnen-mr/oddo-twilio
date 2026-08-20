@@ -11,6 +11,7 @@ export class TwilioHelpDialog extends Component {
         onOpenDialer: { type: Function, optional: true },
         onOpenTroubleshooter: { type: Function, optional: true },
         onOpenConfig: { type: Function, optional: true },
+        onOpenAboutHelp: { type: Function, optional: true },
     };
 
     setup() {
@@ -42,6 +43,13 @@ export class TwilioHelpDialog extends Component {
     openConfig() {
         if (this.props.onOpenConfig) {
             this.props.onOpenConfig();
+        }
+        this.props.close();
+    }
+
+    openAboutHelp() {
+        if (this.props.onOpenAboutHelp) {
+            this.props.onOpenAboutHelp();
         }
         this.props.close();
     }

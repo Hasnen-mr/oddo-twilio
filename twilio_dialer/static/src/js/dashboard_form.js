@@ -9,19 +9,41 @@ import { TwilioOnboardingWizard } from "@twilio_dialer/js/onboarding_wizard";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
 
 function scrollTwilioDashboardToTop() {
+    const header = document.querySelector(".o_twilio_dash_header");
+    if (header && typeof header.scrollIntoView === "function") {
+        try {
+            header.scrollIntoView({ block: "start", inline: "nearest", behavior: "instant" });
+        } catch (e) {
+            header.scrollIntoView(true);
+        }
+    }
+
     const selectors = [
         ".o_action_manager .o_content",
         ".o_content",
         ".o_form_view",
         ".o_form_renderer",
+        ".o_form_sheet_bg",
+        ".o_action_manager",
+        ".o_web_client",
     ];
     for (const selector of selectors) {
-        const el = document.querySelector(selector);
-        if (el) {
-            el.scrollTop = 0;
-        }
+        const elements = document.querySelectorAll(selector);
+        elements.forEach((el) => {
+            if (el && el.scrollTop !== 0) {
+                el.scrollTop = 0;
+            }
+        });
     }
-    window.scrollTo(0, 0);
+    if (window.scrollY !== 0 || window.pageYOffset !== 0) {
+        window.scrollTo(0, 0);
+    }
+    if (document.documentElement && document.documentElement.scrollTop !== 0) {
+        document.documentElement.scrollTop = 0;
+    }
+    if (document.body && document.body.scrollTop !== 0) {
+        document.body.scrollTop = 0;
+    }
 }
 
 export class TwilioDashboardFormController extends FormController {
@@ -38,10 +60,25 @@ export class TwilioDashboardFormController extends FormController {
 
         onMounted(() => {
             this._isComponentMounted = true;
+            
+            // Blur any lower element that may have received auto-focus from sub-lists
+            if (document.activeElement && document.activeElement !== document.body) {
+                const isInsideDashboard = document.activeElement.closest(".o_twilio_dashboard_shell");
+                if (isInsideDashboard && document.activeElement.tagName !== "INPUT") {
+                    document.activeElement.blur();
+                }
+            }
+
             scrollTwilioDashboardToTop();
             requestAnimationFrame(scrollTwilioDashboardToTop);
-            setTimeout(scrollTwilioDashboardToTop, 50);
-            setTimeout(scrollTwilioDashboardToTop, 200);
+            [20, 50, 100, 200, 400, 700, 1200].forEach((delay) => {
+                setTimeout(() => {
+                    if (this._isComponentMounted) {
+                        scrollTwilioDashboardToTop();
+                    }
+                }, delay);
+            });
+
             // Open after the form paints so a wizard error cannot blank the view.
             setTimeout(() => this._maybeOpenOnboarding(), 100);
         });

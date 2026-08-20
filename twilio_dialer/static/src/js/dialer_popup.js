@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { jsonrpc as rpc } from "@web/core/network/rpc_service";
-import { Component, useExternalListener, useState, onWillStart, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
+import { Component, useExternalListener, useState, onWillStart, onMounted, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
 import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
@@ -101,6 +101,17 @@ export class DialerPopup extends Component {
                 } else if (nextProps.phone && !nextProps.autoDialerId) {
                     this.state.activeTab = "dialpad";
                 }
+            }
+            if (this.dialerState.openTroubleshooter) {
+                this.dialerState.openTroubleshooter = false;
+                setTimeout(() => this.openQuickDebugModal(), 100);
+            }
+        });
+
+        onMounted(() => {
+            if (this.dialerState.openTroubleshooter) {
+                this.dialerState.openTroubleshooter = false;
+                setTimeout(() => this.openQuickDebugModal(), 100);
             }
         });
 

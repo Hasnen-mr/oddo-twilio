@@ -97,6 +97,11 @@ export const dialerService = {
             toggle() {
                 dialerState.isOpen = !dialerState.isOpen;
             },
+            openTroubleshooter() {
+                dialerState.openTroubleshooter = true;
+                dialerState.requestId += 1;
+                dialerState.isOpen = true;
+            },
         };
     },
 };

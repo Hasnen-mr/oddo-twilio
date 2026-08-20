@@ -5012,3 +5012,266 @@ button.o_twilio_dash_open_dialer:hover {
         width: 0%;
     }
 }
+
+// ── Feature 5: Floating Help Bubble & Help Dialog ───────────────────────────
+
+.o_twilio_help_bubble_container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1040;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    user-select: none;
+
+    // Hover-only × Close Badge
+    .o_twilio_help_bubble_close {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: transparent;
+        color: #6c757d;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0;
+        box-shadow: none;
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(0.7);
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 2;
+
+        &:hover {
+            background: transparent;
+            color: #dc3545;
+            transform: scale(1.2);
+        }
+
+        &:active {
+            transform: scale(0.9);
+        }
+    }
+
+    &:hover .o_twilio_help_bubble_close {
+        opacity: 1;
+        pointer-events: auto;
+        transform: scale(1);
+    }
+
+    // Main Floating ? Button
+    .o_twilio_help_bubble_btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #714b67 0%, #4a2842 100%);
+        color: #ffffff;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        box-shadow: 0 6px 20px rgba(113, 75, 103, 0.45);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        padding: 0;
+
+        .o_twilio_help_bubble_label {
+            display: none;
+        }
+
+        i {
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            transform: scale(1.08) translateY(-2px);
+            background: linear-gradient(135deg, #875a7b 0%, #593150 100%);
+            box-shadow: 0 8px 26px rgba(113, 75, 103, 0.6);
+            border-color: rgba(255, 255, 255, 0.5);
+
+            i {
+                transform: rotate(12deg) scale(1.1);
+            }
+        }
+
+        &:active {
+            transform: scale(0.96) translateY(0);
+        }
+    }
+}
+
+// Help Dialog & Panel Styling
+.o_twilio_help_dialog_content {
+    padding: 0 !important;
+
+    .o_twilio_help_wrapper {
+        display: flex;
+        min-height: 520px;
+        max-height: calc(85vh - 160px);
+
+        @media (max-width: 768px) {
+            flex-direction: column;
+            max-height: none;
+        }
+    }
+
+    // Sidebar Navigation
+    .o_twilio_help_sidebar {
+        width: 260px;
+        min-width: 260px;
+        background: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+        padding: 16px 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        overflow-y: auto;
+
+        @media (max-width: 768px) {
+            width: 100%;
+            min-width: 100%;
+            border-right: none;
+            border-bottom: 1px solid #dee2e6;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 8px;
+        }
+
+        .o_twilio_help_tab_btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            text-align: left;
+            padding: 10px 14px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: #495057;
+            font-size: 13.5px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.18s ease;
+            white-space: nowrap;
+
+            i {
+                font-size: 15px;
+                width: 20px;
+                text-align: center;
+            }
+
+            &:hover {
+                background: #e9ecef;
+                color: #212529;
+            }
+
+            &.active {
+                background: #ffffff;
+                color: #714b67;
+                font-weight: 600;
+                border-color: #dee2e6;
+                box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+                i {
+                    color: #714b67 !important;
+                }
+            }
+        }
+    }
+
+    // Content Body Area
+    .o_twilio_help_body {
+        flex: 1;
+        padding: 24px 28px;
+        overflow-y: auto;
+        background: #ffffff;
+
+        @media (max-width: 768px) {
+            padding: 16px;
+        }
+
+        .o_twilio_help_section {
+            animation: o_twilio_help_fade_in 0.2s ease-in-out;
+        }
+
+        .o_twilio_help_section_header {
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e9ecef;
+
+            h3 {
+                font-size: 20px;
+                font-weight: 700;
+                color: #212529;
+                margin-bottom: 4px;
+            }
+
+            p {
+                font-size: 13.5px;
+                margin-bottom: 0;
+            }
+        }
+
+        .o_twilio_help_card {
+            background: #fdfdfd;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+            padding: 16px 20px;
+            transition: all 0.2s ease;
+
+            &:hover {
+                border-color: #ced4da;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+            }
+
+            h5 {
+                font-size: 15px;
+                font-weight: 600;
+                color: #212529;
+                margin-bottom: 10px;
+            }
+
+            p, li {
+                font-size: 13.5px;
+                color: #495057;
+                line-height: 1.55;
+            }
+
+            ol, ul {
+                padding-left: 20px;
+            }
+
+            code {
+                background: #f1f3f5;
+                color: #d63384;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-size: 12.5px;
+            }
+        }
+    }
+}
+
+@keyframes o_twilio_help_fade_in {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+

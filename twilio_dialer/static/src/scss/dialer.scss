@@ -5017,8 +5017,8 @@ button.o_twilio_dash_open_dialer:hover {
 
 .o_twilio_help_bubble_container {
     position: fixed;
-    bottom: 24px;
-    right: 24px;
+    bottom: 20px;
+    right: 20px;
     z-index: 1040;
     display: inline-flex;
     align-items: center;
@@ -5028,22 +5028,22 @@ button.o_twilio_dash_open_dialer:hover {
     // Hover-only × Close Badge
     .o_twilio_help_bubble_close {
         position: absolute;
-        top: -8px;
-        right: -8px;
-        width: 22px;
-        height: 22px;
+        top: -6px;
+        right: -6px;
+        width: 18px;
+        height: 18px;
         border-radius: 50%;
-        background: transparent;
-        color: #6c757d;
-        border: none;
+        background: rgba(0, 0, 0, 0.4);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.3);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: 10px;
         line-height: 1;
         cursor: pointer;
         padding: 0;
-        box-shadow: none;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         opacity: 0;
         pointer-events: none;
         transform: scale(0.7);
@@ -5051,9 +5051,10 @@ button.o_twilio_dash_open_dialer:hover {
         z-index: 2;
 
         &:hover {
-            background: transparent;
-            color: #dc3545;
-            transform: scale(1.2);
+            background: #dc3545;
+            color: #ffffff;
+            border-color: #dc3545;
+            transform: scale(1.15);
         }
 
         &:active {
@@ -5067,47 +5068,67 @@ button.o_twilio_dash_open_dialer:hover {
         transform: scale(1);
     }
 
-    // Main Floating ? Button
+    // Main Floating Calling Help Button
     .o_twilio_help_bubble_btn {
-        width: 48px;
-        height: 48px;
+        width: 38px;
+        height: 38px;
         border-radius: 50%;
         background: linear-gradient(135deg, #714b67 0%, #4a2842 100%);
         color: #ffffff;
-        border: 2px solid rgba(255, 255, 255, 0.25);
-        box-shadow: 0 6px 20px rgba(113, 75, 103, 0.45);
+        border: 1.5px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 14px rgba(113, 75, 103, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 18px;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
-        overflow: hidden;
         padding: 0;
 
-        .o_twilio_help_bubble_label {
-            display: none;
-        }
+        .o_twilio_help_icon_wrapper {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
 
-        i {
-            transition: transform 0.2s ease;
+            i.fa-phone {
+                font-size: 14px;
+                transition: transform 0.2s ease;
+            }
+
+            .o_twilio_help_sub_badge {
+                position: absolute;
+                top: -5px;
+                right: -7px;
+                font-size: 8px;
+                font-weight: 800;
+                line-height: 1;
+                background: #ffffff;
+                color: #714b67;
+                border-radius: 50%;
+                width: 12px;
+                height: 12px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            }
         }
 
         &:hover {
             transform: scale(1.08) translateY(-2px);
             background: linear-gradient(135deg, #875a7b 0%, #593150 100%);
-            box-shadow: 0 8px 26px rgba(113, 75, 103, 0.6);
+            box-shadow: 0 6px 20px rgba(113, 75, 103, 0.55);
             border-color: rgba(255, 255, 255, 0.5);
 
-            i {
+            i.fa-phone {
                 transform: rotate(12deg) scale(1.1);
             }
         }
 
         &:active {
-            transform: scale(0.96) translateY(0);
+            transform: scale(0.95) translateY(0);
         }
     }
 }

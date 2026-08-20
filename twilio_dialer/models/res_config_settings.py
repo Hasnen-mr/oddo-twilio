@@ -889,6 +889,14 @@ class ResConfigSettings(models.TransientModel):
         result = super().create(vals_list)
         return result
 
+    def action_open_credentials_help(self):
+        """Open the Twilio credentials finder guide."""
+        return {
+            "type": "ir.actions.client",
+            "tag": "twilio_dialer.action_credentials_help",
+            "target": "new",
+        }
+
     def _submit_module_registration(self, odoo_version=None):
         """Notify ZantaTech when a Twilio account is connected to the module."""
         self.ensure_one()

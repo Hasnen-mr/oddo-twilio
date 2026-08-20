@@ -5,6 +5,7 @@ import { Dialog } from "@web/core/dialog/dialog";
 import { useService } from "@web/core/utils/hooks";
 import { session } from "@web/session";
 import { _t } from "@web/core/l10n/translation";
+import { TwilioCredentialsHelpDialog } from "@twilio_dialer/js/credentials_help_dialog";
 
 const TOTAL_STEPS = 4;
 
@@ -19,6 +20,7 @@ export class TwilioOnboardingWizard extends Component {
 
     setup() {
         this.orm = useService("orm");
+        this.dialog = useService("dialog");
         this.notification = useService("notification");
         this.state = useState({
             step: 1,
@@ -137,6 +139,10 @@ export class TwilioOnboardingWizard extends Component {
             this.state.step -= 1;
             this.state.error = "";
         }
+    }
+
+    openCredentialsHelp() {
+        this.dialog.add(TwilioCredentialsHelpDialog);
     }
 
     async onConnect() {

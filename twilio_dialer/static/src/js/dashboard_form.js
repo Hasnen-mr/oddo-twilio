@@ -206,6 +206,9 @@ export class TwilioDashboardFormController extends FormController {
                 onOpenConfig: () => {
                     this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
                 },
+                onOpenAboutHelp: () => {
+                    this.action.doAction("twilio_dialer.action_twilio_help");
+                },
             }
         );
     }

@@ -113,7 +113,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '19.0.1.2.95',
+    'version': '19.0.1.2.96',
     'license': 'LGPL-3',
 
     'depends': [
@@ -177,6 +177,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
             'twilio_dialer/static/src/js/sms_workspace.js',
             'twilio_dialer/static/src/js/billing.js',
             'twilio_dialer/static/src/js/onboarding_wizard.js',
+            'twilio_dialer/static/src/js/help_dialog.js',
             'twilio_dialer/static/src/js/dashboard_form.js',
             'twilio_dialer/static/src/js/settings_ui_field.js',
             'twilio_dialer/static/src/js/config_nav.js',

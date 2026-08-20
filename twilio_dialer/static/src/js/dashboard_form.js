@@ -61,11 +61,6 @@ export class TwilioDashboardFormController extends FormController {
         this._reopenTimer = null;
         this._isComponentMounted = true;
 
-        // Help bubble state: resets on every mount/navigation
-        this.helpState = useState({
-            isBubbleHidden: false,
-        });
-
         onMounted(() => {
             this._isComponentMounted = true;
             

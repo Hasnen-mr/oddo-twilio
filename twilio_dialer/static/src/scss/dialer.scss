@@ -5015,6 +5015,24 @@ button.o_twilio_dash_open_dialer:hover {
 
 // ── Feature 5: Floating Help Bubble & Help Dialog ───────────────────────────
 
+// Floating Help Bubble Attention Pulse & Wiggle Animations
+@keyframes twilio-bubble-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(113, 75, 103, 0.55), 0 4px 14px rgba(113, 75, 103, 0.4);
+    }
+    70% {
+        box-shadow: 0 0 0 7px rgba(113, 75, 103, 0), 0 4px 14px rgba(113, 75, 103, 0.4);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(113, 75, 103, 0), 0 4px 14px rgba(113, 75, 103, 0.4);
+    }
+}
+
+@keyframes twilio-svg-float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-1px) rotate(4deg); }
+}
+
 .o_twilio_help_bubble_container {
     position: fixed;
     bottom: 20px;
@@ -5033,9 +5051,9 @@ button.o_twilio_dash_open_dialer:hover {
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: rgba(0, 0, 0, 0.4);
+        background: rgba(0, 0, 0, 0.5);
         color: #ffffff;
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.4);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -5068,15 +5086,14 @@ button.o_twilio_dash_open_dialer:hover {
         transform: scale(1);
     }
 
-    // Main Floating Calling Help Button
+    // Main Floating Calling Help Button with Pulse Animation
     .o_twilio_help_bubble_btn {
         width: 38px;
         height: 38px;
         border-radius: 50%;
         background: linear-gradient(135deg, #714b67 0%, #4a2842 100%);
         color: #ffffff;
-        border: 1.5px solid rgba(255, 255, 255, 0.3);
-        box-shadow: 0 4px 14px rgba(113, 75, 103, 0.4);
+        border: 1.5px solid rgba(255, 255, 255, 0.35);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -5085,51 +5102,44 @@ button.o_twilio_dash_open_dialer:hover {
         transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         position: relative;
         padding: 0;
+        animation: twilio-bubble-pulse 3s infinite ease-in-out;
 
-        .o_twilio_help_icon_wrapper {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-
-            i.fa-phone {
-                font-size: 14px;
-                transition: transform 0.2s ease;
-            }
-
-            .o_twilio_help_sub_badge {
-                position: absolute;
-                top: -5px;
-                right: -7px;
-                font-size: 8px;
-                font-weight: 800;
-                line-height: 1;
-                background: #ffffff;
-                color: #714b67;
-                border-radius: 50%;
-                width: 12px;
-                height: 12px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-            }
+        .o_twilio_help_phone_info_svg {
+            width: 20px;
+            height: 20px;
+            display: block;
+            transition: transform 0.25s ease;
+            animation: twilio-svg-float 4s infinite ease-in-out;
         }
 
         &:hover {
-            transform: scale(1.08) translateY(-2px);
+            transform: scale(1.1) translateY(-2px);
             background: linear-gradient(135deg, #875a7b 0%, #593150 100%);
-            box-shadow: 0 6px 20px rgba(113, 75, 103, 0.55);
-            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 6px 22px rgba(113, 75, 103, 0.65);
+            border-color: rgba(255, 255, 255, 0.6);
+            animation: none;
 
-            i.fa-phone {
-                transform: rotate(12deg) scale(1.1);
+            .o_twilio_help_phone_info_svg {
+                transform: scale(1.1) rotate(8deg);
+                animation: none;
             }
         }
 
         &:active {
-            transform: scale(0.95) translateY(0);
+            transform: scale(0.94) translateY(0);
         }
+    }
+}
+
+// Open Dialer button in Help Dialog modal header
+.o_twilio_open_dialer_header_btn {
+    font-size: 12px !important;
+    letter-spacing: 0.2px;
+    transition: all 0.2s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(113, 75, 103, 0.25) !important;
     }
 }
 

@@ -13,12 +13,15 @@
                             t-on-click.stop="onHideHelpBubble">
                         <i class="fa fa-times"/>
                     </button>
-                    <!-- Main ? floating button -->
+                    <!-- Main floating calling help button -->
                     <button type="button"
                             class="o_twilio_help_bubble_btn"
+                            title="Twilio Dialer Help &amp; Guide"
                             t-on-click.stop="onOpenHelpDialog">
-                        <i class="fa fa-question"/>
-                        <span class="o_twilio_help_bubble_label">Help</span>
+                        <div class="o_twilio_help_icon_wrapper">
+                            <i class="fa fa-phone"/>
+                            <span class="o_twilio_help_sub_badge">?</span>
+                        </div>
                     </button>
                 </div>
             </t>

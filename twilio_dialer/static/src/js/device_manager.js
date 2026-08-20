@@ -586,6 +586,9 @@ class DeviceManager {
                     from_number: direction === "incoming" ? phoneNumber : null,
                     partner_id: partnerId,
                     direction: direction,
+                    res_model: this._activeResModel || null,
+                    res_id: this._activeResId || null,
+                    lead_id: this._activeLeadId || null,
                 });
                 return;
             } catch (err) {
@@ -705,6 +708,9 @@ class DeviceManager {
         this._setStatus(STATUS.CONNECTING);
         this._activePartnerId = callContext.partnerId || null;
         this._activeQueueLineId = callContext.queueLineId || null;
+        this._activeResModel = callContext.resModel || null;
+        this._activeResId = callContext.resId || null;
+        this._activeLeadId = callContext.leadId || (callContext.resModel === "crm.lead" ? callContext.resId : null) || null;
 
         try {
             // Normalize destination phone number to clean E.164 using shared helper

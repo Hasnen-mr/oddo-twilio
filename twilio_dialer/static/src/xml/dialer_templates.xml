@@ -233,6 +233,7 @@
                                         type="tel"
                                         t-att-value="state.phoneNumber"
                                         t-on-input="onInput"
+                                        t-on-keydown="onPhoneInputKeydown"
                                         t-att-disabled="isCallActive or isIncoming or state.dndEnabled"
                                         t-att-readonly="isCallActive or isIncoming or state.dndEnabled"
                                         class="o_dialer_phone_input"

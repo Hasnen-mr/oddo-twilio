@@ -2,7 +2,7 @@ import json
 import logging
 from xml.sax.saxutils import escape
 
-from odoo import http
+from odoo import fields, http
 from odoo.exceptions import UserError, AccessDenied
 from odoo.http import request
 

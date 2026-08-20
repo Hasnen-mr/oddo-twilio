@@ -162,6 +162,33 @@ class TwilioDialerDashboard(models.TransientModel):
         }
 
     @api.model
+    def _get_or_create_dashboard(self):
+        dashboard = self.search([], order="id desc", limit=1)
+        if not dashboard:
+            dashboard = self.create(self._dashboard_values())
+        return dashboard
+
+    def web_read(self, specification):
+        records = self.exists()
+        if not records:
+            dashboard = self._get_or_create_dashboard()
+            res = dashboard.web_read(specification)
+            if res and self.ids:
+                res[0]["id"] = self.ids[0]
+            return res
+        return super().web_read(specification)
+
+    def read(self, fields=None, load='_classic_read'):
+        records = self.exists()
+        if not records:
+            dashboard = self._get_or_create_dashboard()
+            res = dashboard.read(fields=fields, load=load)
+            if res and self.ids:
+                res[0]["id"] = self.ids[0]
+            return res
+        return super().read(fields=fields, load=load)
+
+    @api.model
     def action_open_dashboard(self):
         dashboard = self.create(self._dashboard_values())
         return {

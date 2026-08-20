@@ -202,6 +202,7 @@ class TwilioController(http.Controller):
                 response = VoiceResponse()
                 dial = Dial(caller_id=caller_id)
                 dial.number(to_number)
+                response.append(dial)
                 return request.make_response(
                     str(response),
                     headers=[("Content-Type", "text/xml")],

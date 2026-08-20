@@ -1,11 +1,12 @@
 /** @odoo-module **/
 
-import { onMounted, onWillUnmount } from "@odoo/owl";
+import { onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { FormController } from "@web/views/form/form_controller";
 import { formView } from "@web/views/form/form_view";
 import { TwilioOnboardingWizard } from "@twilio_dialer/js/onboarding_wizard";
+import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
 
 function scrollTwilioDashboardToTop() {
@@ -47,6 +48,8 @@ function scrollTwilioDashboardToTop() {
 }
 
 export class TwilioDashboardFormController extends FormController {
+    static template = "twilio_dialer.TwilioDashboardFormView";
+
     setup() {
         super.setup();
         this.dialog = useService("dialog");
@@ -57,6 +60,11 @@ export class TwilioDashboardFormController extends FormController {
         this._isWizardOpen = false;
         this._reopenTimer = null;
         this._isComponentMounted = true;
+
+        // Help bubble state: resets on every mount/navigation
+        this.helpState = useState({
+            isBubbleHidden: false,
+        });
 
         onMounted(() => {
             this._isComponentMounted = true;
@@ -183,6 +191,31 @@ export class TwilioDashboardFormController extends FormController {
                 console.log("[TwilioDashboard] 5s timer: Setup completed, suppressing popup.");
             }
         }, 5000);
+    }
+
+    onOpenHelpDialog(ev) {
+        if (ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+        }
+        this.dialog.add(
+            TwilioHelpDialog,
+            {
+                onOpenDialer: () => this.dialer.open(),
+                onOpenTroubleshooter: () => this.dialer.openTroubleshooter(),
+                onOpenConfig: () => {
+                    this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
+                },
+            }
+        );
+    }
+
+    onHideHelpBubble(ev) {
+        if (ev) {
+            ev.stopPropagation();
+            ev.preventDefault();
+        }
+        this.helpState.isBubbleHidden = true;
     }
 }
 

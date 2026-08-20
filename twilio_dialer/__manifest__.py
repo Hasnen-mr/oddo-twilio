@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Odoo Twilio Dialer | VoIP Softphone Auto Dialer Call Center | Click to Call Recording",
+    'name': "Odoo Twilio Dialer | Twilio VoIP Calling | Softphone | Auto Dialer | Click-to-Call | Call Recording | Call Center",
 
     'summary': "Twilio VoIP softphone, auto dialer, power dialer, click-to-call, call recording, AI transcription, voicemail & CRM call logs for Odoo sales and call center teams.",
 
@@ -113,7 +113,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '19.0.1.2.94',
+    'version': '19.0.1.2.95',
     'license': 'LGPL-3',
 
     'depends': [

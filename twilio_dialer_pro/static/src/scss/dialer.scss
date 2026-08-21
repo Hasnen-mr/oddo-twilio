@@ -3202,7 +3202,7 @@ button.o_twilio_dash_open_dialer:hover {
 
 // ── Twilio Configuration page (Odoo branding) ────────────
 
-.app_settings_block[data-key="twilio_dialer"] {
+.app_settings_block[data-key="twilio_dialer_pro"] {
     --o-twilio-cfg-primary: #{$o_dialer-primary};
     --o-twilio-cfg-primary-light: #{$o_dialer-primary-light};
     max-width: 1280px;
@@ -3216,6 +3216,16 @@ button.o_twilio_dash_open_dialer:hover {
         // CSS tab panels — keep fields mounted so switching never dirties the form.
         &[data-twilio-section="call"] {
             > .o_settings_container:has(.o_twilio_cfg_panel--account),
+            > .o_settings_container:has(.o_twilio_cfg_panel--allocation),
+            > .o_settings_container:has(.o_twilio_cfg_panel--ai),
+            > .o_settings_container:has(.o_twilio_cfg_panel--billing) {
+                display: none !important;
+            }
+        }
+
+        &[data-twilio-section="allocation"] {
+            > .o_settings_container:has(.o_twilio_cfg_panel--account),
+            > .o_settings_container:has(.o_twilio_cfg_panel--call),
             > .o_settings_container:has(.o_twilio_cfg_panel--ai),
             > .o_settings_container:has(.o_twilio_cfg_panel--billing) {
                 display: none !important;
@@ -3225,6 +3235,7 @@ button.o_twilio_dash_open_dialer:hover {
         &[data-twilio-section="ai"] {
             > .o_settings_container:has(.o_twilio_cfg_panel--account),
             > .o_settings_container:has(.o_twilio_cfg_panel--call),
+            > .o_settings_container:has(.o_twilio_cfg_panel--allocation),
             > .o_settings_container:has(.o_twilio_cfg_panel--billing) {
                 display: none !important;
             }
@@ -3232,6 +3243,7 @@ button.o_twilio_dash_open_dialer:hover {
 
         &[data-twilio-section="account"] {
             > .o_settings_container:has(.o_twilio_cfg_panel--call),
+            > .o_settings_container:has(.o_twilio_cfg_panel--allocation),
             > .o_settings_container:has(.o_twilio_cfg_panel--ai),
             > .o_settings_container:has(.o_twilio_cfg_panel--billing) {
                 display: none !important;
@@ -3241,6 +3253,7 @@ button.o_twilio_dash_open_dialer:hover {
         &[data-twilio-section="billing"] {
             > .o_settings_container:has(.o_twilio_cfg_panel--account),
             > .o_settings_container:has(.o_twilio_cfg_panel--call),
+            > .o_settings_container:has(.o_twilio_cfg_panel--allocation),
             > .o_settings_container:has(.o_twilio_cfg_panel--ai) {
                 display: none !important;
             }
@@ -5575,6 +5588,44 @@ button.o_twilio_dash_open_dialer:hover {
                 }
             }
         }
+    }
+}
+
+// ── Integrated Number Allocation Panel ─────────────────────
+.o_twilio_cfg_panel--allocation {
+    .o_twilio_stat_card {
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+        background: #fafafa;
+        &:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+    }
+
+    .o_twilio_number_dropdown {
+        animation: twilioDropdownFadeIn 0.15s ease-out;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    .o_twilio_numbers_checklist {
+        &::-webkit-scrollbar {
+            width: 6px;
+        }
+        &::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 3px;
+        }
+    }
+}
+
+@keyframes twilioDropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
 

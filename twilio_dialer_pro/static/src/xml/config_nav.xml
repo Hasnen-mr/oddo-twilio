@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="twilio_dialer.TwilioConfigNav">
+    <t t-name="twilio_dialer_pro.TwilioConfigNav">
         <nav class="o_twilio_cfg_nav" t-ref="root" aria-label="Configuration sections">
             <div class="o_twilio_cfg_nav_brand">
                 <i class="fa fa-cog"/>
@@ -33,7 +33,13 @@
         </nav>
     </t>
 
-    <t t-name="twilio_dialer.TwilioBillingPanel">
+    <t t-name="twilio_dialer_pro.TwilioAllocationPanel">
+        <div class="o_twilio_cfg_allocation_panel w-100">
+            <NumberAllocationPanel/>
+        </div>
+    </t>
+
+    <t t-name="twilio_dialer_pro.TwilioBillingPanel">
         <div class="o_twilio_cfg_billing_panel w-100">
             <BillingDashboard/>
         </div>

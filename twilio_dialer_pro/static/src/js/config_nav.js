@@ -5,8 +5,9 @@ import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
-import { BillingDashboard } from "@twilio_dialer/js/billing";
-import { setUiField } from "@twilio_dialer/js/settings_ui_field";
+import { BillingDashboard } from "@twilio_dialer_pro/js/billing";
+import { NumberAllocationPanel } from "@twilio_dialer_pro/js/number_allocation";
+import { setUiField } from "@twilio_dialer_pro/js/settings_ui_field";
 
 const SECTIONS = [
     { id: "account", label: _t("Account Settings"), icon: "fa-key" },
@@ -17,7 +18,7 @@ const SECTIONS = [
 ];
 
 export class TwilioConfigNav extends Component {
-    static template = "twilio_dialer.TwilioConfigNav";
+    static template = "twilio_dialer_pro.TwilioConfigNav";
     static props = { ...standardFieldProps };
 
     setup() {
@@ -80,14 +81,6 @@ export class TwilioConfigNav extends Component {
     }
 
     async selectSection(section) {
-        if (section.id === "allocation") {
-            const record = this.props.record;
-            if (record && !this._hasRealPendingEdits(record)) {
-                record.dirty = false;
-            }
-            this.action.doAction("twilio_dialer.action_twilio_number_allocation");
-            return;
-        }
         if (this.isActive(section)) {
             return;
         }
@@ -194,8 +187,21 @@ export const twilioConfigNav = {
 
 registry.category("fields").add("twilio_config_nav", twilioConfigNav);
 
+export class TwilioAllocationPanel extends Component {
+    static template = "twilio_dialer_pro.TwilioAllocationPanel";
+    static props = { ...standardFieldProps };
+    static components = { NumberAllocationPanel };
+}
+
+export const twilioAllocationPanel = {
+    component: TwilioAllocationPanel,
+    supportedTypes: ["char"],
+};
+
+registry.category("fields").add("twilio_allocation_panel", twilioAllocationPanel);
+
 export class TwilioBillingPanel extends Component {
-    static template = "twilio_dialer.TwilioBillingPanel";
+    static template = "twilio_dialer_pro.TwilioBillingPanel";
     static props = { ...standardFieldProps };
     static components = { BillingDashboard };
 }
@@ -206,3 +212,4 @@ export const twilioBillingPanel = {
 };
 
 registry.category("fields").add("twilio_billing_panel", twilioBillingPanel);
+

@@ -7,7 +7,7 @@ import { session } from "@web/session";
 import { _t } from "@web/core/l10n/translation";
 import { TwilioCredentialsHelpDialog } from "@twilio_dialer/js/credentials_help_dialog";
 
-const TOTAL_STEPS = 4;
+const TOTAL_STEPS = 5;
 
 export class TwilioOnboardingWizard extends Component {
     static template = "twilio_dialer.OnboardingWizard";
@@ -26,6 +26,18 @@ export class TwilioOnboardingWizard extends Component {
             step: 1,
             connecting: false,
             connected: false,
+
+            // Email verification states
+            otp: "",
+            sendingOtp: false,
+            otpSent: false,
+            verifyingOtp: false,
+            emailVerified: false,
+            otpError: "",
+            otpSuccessMessage: "",
+            isEditingEmail: false,
+            newEmail: "",
+
             registeringToken: false,
             tokenReady: false,
             accountSid: "",
@@ -39,13 +51,43 @@ export class TwilioOnboardingWizard extends Component {
 
         this._canClose = false;
 
+        this._onKeyDown = (ev) => {
+            if (ev.key === "Enter") {
+                if (ev.target && ev.target.tagName === "TEXTAREA") {
+                    return;
+                }
+                ev.preventDefault();
+                ev.stopPropagation();
+
+                if (this.state.step < 3) {
+                    this.nextStep();
+                } else if (this.state.step === 3) {
+                    if (this.canConnect) {
+                        this.onConnect();
+                    }
+                } else if (this.state.step === 4) {
+                    if (this.state.otp.trim() && !this.state.verifyingOtp) {
+                        this.verifyOtp();
+                    }
+                } else if (this.state.step === 5) {
+                    if (this.state.tokenReady) {
+                        this.openDialer();
+                    } else if (!this.state.registeringToken) {
+                        this.registerToken();
+                    }
+                }
+            }
+        };
+
         onMounted(() => {
             document.body.classList.add("o_twilio_onboard_open");
             this._lockDismiss();
             this._prefillContact();
+            window.addEventListener("keydown", this._onKeyDown, true);
         });
         onWillUnmount(() => {
             document.body.classList.remove("o_twilio_onboard_open");
+            window.removeEventListener("keydown", this._onKeyDown, true);
         });
     }
 
@@ -87,6 +129,9 @@ export class TwilioOnboardingWizard extends Component {
 
     get canGoNext() {
         if (this.state.step === 3 && !this.state.connected) {
+            return false;
+        }
+        if (this.state.step === 4 && !this.state.emailVerified) {
             return false;
         }
         return this.state.step < TOTAL_STEPS;
@@ -135,7 +180,7 @@ export class TwilioOnboardingWizard extends Component {
     }
 
     prevStep() {
-        if (this.state.step > 1 && !this.state.connecting) {
+        if (this.state.step > 1 && !this.state.connecting && !this.state.verifyingOtp) {
             this.state.step -= 1;
             this.state.error = "";
         }
@@ -143,6 +188,70 @@ export class TwilioOnboardingWizard extends Component {
 
     openCredentialsHelp() {
         this.dialog.add(TwilioCredentialsHelpDialog);
+    }
+
+    onCheckCredentials() {
+        this.state.step = 3;
+    }
+
+    onResendOtp() {
+        this.sendOtp(true);
+    }
+
+    startEditingEmail() {
+        this.state.newEmail = this.state.email;
+        this.state.isEditingEmail = true;
+        this.state.otpError = "";
+    }
+
+    cancelEditingEmail() {
+        this.state.isEditingEmail = false;
+        this.state.newEmail = "";
+    }
+
+    async saveAndResendNewEmail() {
+        const trimmed = (this.state.newEmail || "").trim();
+        if (!trimmed || !trimmed.includes("@") || !trimmed.includes(".")) {
+            this.state.otpError = _t("Please enter a valid email address.");
+            return;
+        }
+        this.state.email = trimmed;
+        this.state.isEditingEmail = false;
+        this.state.otp = "";
+        this.state.otpError = "";
+        try {
+            await this.orm.call(
+                "res.config.settings",
+                "twilio_update_contact_email",
+                [],
+                { email: trimmed }
+            );
+        } catch (e) {
+            console.warn("Failed to persist updated email:", e);
+        }
+        await this.sendOtp(true);
+    }
+
+    async onToggleIncomingCall(ev) {
+        const val = ev.target.checked;
+        this.state.allowIncomingCall = val;
+        try {
+            await this.orm.call(
+                "res.config.settings",
+                "twilio_update_incoming_setting",
+                [],
+                { allow_incoming: val }
+            );
+        } catch (e) {
+            console.warn("Failed to sync incoming call setting:", e);
+        }
+    }
+
+    onOtpKeydown(ev) {
+        if (ev.key === "Enter") {
+            ev.preventDefault();
+            this.verifyOtp();
+        }
     }
 
     async onConnect() {
@@ -169,13 +278,11 @@ export class TwilioOnboardingWizard extends Component {
                 this.state.connected = true;
                 this.state.step = 4;
                 this.notification.add(
-                    _t("Twilio connected successfully."),
+                    _t("Twilio credentials verified and phone numbers fetched."),
                     { type: "success" }
                 );
-                if (this.props.onConnected) {
-                    await this.props.onConnected(result);
-                }
-                await this.registerToken();
+                // Trigger sending OTP verification email
+                await this.sendOtp();
             } else {
                 this.state.error = (result && result.error) || _t("Connection failed. Check your credentials.");
             }
@@ -188,6 +295,105 @@ export class TwilioOnboardingWizard extends Component {
             this.notification.add(message, { type: "danger" });
         } finally {
             this.state.connecting = false;
+        }
+    }
+
+    async sendOtp(isResend = false) {
+        if (this.state.sendingOtp) {
+            return;
+        }
+        const email = this.state.email.trim();
+        const accountSid = this.state.accountSid.trim();
+        if (!email || !accountSid) {
+            this.state.otpError = _t("Email and Account SID are required for verification.");
+            return;
+        }
+        this.state.sendingOtp = true;
+        this.state.otpError = "";
+        this.state.otpSuccessMessage = "";
+        try {
+            const result = await this.orm.call(
+                "res.config.settings",
+                "twilio_send_registration_otp",
+                [],
+                {
+                    email: email,
+                    account_sid: accountSid,
+                }
+            );
+            if (result && result.success) {
+                this.state.otpSent = true;
+                this.state.otpSuccessMessage = isResend
+                    ? _t("Verification code resent! Please check your email inbox.")
+                    : _t("Verification code sent! Please check your email inbox.");
+            } else {
+                let err = (result && result.error) || _t("Could not send verification email. Please try again.");
+                if (err.toLowerCase().includes("limit reached")) {
+                    err = _t("Daily email limit reached (5 per email per day). You can use a code already sent to your inbox (active for 10 minutes), or try again tomorrow.");
+                }
+                this.state.otpError = err;
+            }
+        } catch (err) {
+            let msg =
+                (err && err.data && err.data.message) ||
+                (err && err.message) ||
+                _t("Could not send verification email. Please check your network.");
+            if (msg.toLowerCase().includes("limit reached")) {
+                msg = _t("Daily email limit reached (5 per email per day). You can use a code already sent to your inbox (active for 10 minutes), or try again tomorrow.");
+            }
+            this.state.otpError = msg;
+        } finally {
+            this.state.sendingOtp = false;
+        }
+    }
+
+    async verifyOtp() {
+        if (this.state.verifyingOtp) {
+            return;
+        }
+        const email = this.state.email.trim();
+        const accountSid = this.state.accountSid.trim();
+        const otp = this.state.otp.trim();
+        if (!otp) {
+            this.state.otpError = _t("Please enter the 6-digit verification code sent to your email.");
+            return;
+        }
+        this.state.verifyingOtp = true;
+        this.state.otpError = "";
+        try {
+            const result = await this.orm.call(
+                "res.config.settings",
+                "twilio_verify_registration_otp",
+                [],
+                {
+                    email: email,
+                    account_sid: accountSid,
+                    otp: otp,
+                    allow_incoming: this.state.allowIncomingCall,
+                }
+            );
+            if (result && result.success && result.verified) {
+                this.state.emailVerified = true;
+                this.state.otpError = "";
+                this.notification.add(
+                    _t("Email verified successfully."),
+                    { type: "success" }
+                );
+                this.state.step = 5;
+                if (this.props.onConnected) {
+                    await this.props.onConnected({ success: true });
+                }
+                await this.registerToken();
+            } else {
+                this.state.otpError = (result && result.error) || _t("Invalid or expired verification code. Please try again.");
+            }
+        } catch (err) {
+            this.state.otpError =
+                (err && err.data && err.data.message) ||
+                (err && err.message) ||
+                _t("Verification request failed. Please check the code and try again.");
+        } finally {
+            this.state.verifyingOtp = false;
         }
     }
 
@@ -208,7 +414,7 @@ export class TwilioOnboardingWizard extends Component {
             } else {
                 this.state.tokenReady = false;
                 this.state.error = _t(
-                    "Credentials were saved, but softphone token registration failed or timed out. Check your network connection or click Retry Registration."
+                    "Credentials and email were verified, but softphone token registration failed or timed out. Check your network connection or click Retry Registration."
                 );
             }
         } catch (err) {

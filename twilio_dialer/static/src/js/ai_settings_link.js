@@ -36,4 +36,4 @@ export const twilioAiSettingsLink = {
     }),
 };
 
-registry.category("fields").add("twilio_ai_settings_link", twilioAiSettingsLink, { force: true }, { force: true });$1
+registry.category("fields").add("twilio_ai_settings_link", twilioAiSettingsLink, { force: true });

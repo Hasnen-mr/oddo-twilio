@@ -46,11 +46,4 @@
         </field>
     </record>
 
-    <!-- Menu Item -->
-    <menuitem id="menu_twilio_number_allocation"
-              name="Number Allocation"
-              parent="menu_twilio_dialer_root"
-              action="action_twilio_number_allocation"
-              sequence="32"/>
-
 </odoo>

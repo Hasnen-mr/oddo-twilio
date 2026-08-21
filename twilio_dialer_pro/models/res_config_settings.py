@@ -36,13 +36,14 @@ class ResConfigSettings(models.TransientModel):
     # Left-sidebar section on Configuration page (client-only, not persisted)
     twilio_config_section = fields.Selection(
         selection=[
+            ("account", "Account Settings"),
             ("call", "Call Settings"),
+            ("allocation", "Number Allocation"),
             ("ai", "AI Settings"),
-            ("account", "Account Setting"),
             ("billing", "Billing"),
         ],
         string="Configuration Section",
-        default="call",
+        default="account",
     )
     twilio_billing_panel = fields.Char(
         string="Billing Panel",
@@ -366,12 +367,11 @@ class ResConfigSettings(models.TransientModel):
 
     @api.model
     def action_open_twilio_configuration(self):
-        """Open Configuration; default to Call Settings when Twilio is connected."""
+        """Open Configuration; default to Account Settings."""
         action = self.env.ref("twilio_dialer.action_twilio_configuration").sudo().read()[0]
-        connected = self._twilio_is_configured()
         section = self.env.context.get("default_twilio_config_section")
-        if section not in ("call", "ai", "account", "billing"):
-            section = "call" if connected else "account"
+        if section not in ("account", "call", "allocation", "ai", "billing"):
+            section = "account"
         action["context"] = {
             "module": "twilio_dialer",
             "default_twilio_config_section": section,
@@ -382,10 +382,7 @@ class ResConfigSettings(models.TransientModel):
     def get_values(self):
         icp = self.env["ir.config_parameter"].sudo()
         values = super().get_values()
-        connected = self._twilio_is_configured() or bool(
-            values.get("twilio_api_key_sid") and values.get("twilio_application_sid")
-        )
-        values["twilio_config_section"] = "call" if connected else "account"
+        values["twilio_config_section"] = self.env.context.get("default_twilio_config_section") or "account"
 
         account_sid = icp.get_param("twilio_dialer.account_sid")
         if not account_sid:

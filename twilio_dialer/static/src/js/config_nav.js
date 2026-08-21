@@ -9,10 +9,10 @@ import { BillingDashboard } from "@twilio_dialer/js/billing";
 import { setUiField } from "@twilio_dialer/js/settings_ui_field";
 
 const SECTIONS = [
+    { id: "account", label: _t("Account Settings"), icon: "fa-key" },
     { id: "call", label: _t("Call Settings"), icon: "fa-phone" },
-    { id: "allocation", label: _t("Number Settings"), icon: "fa-list-ol" },
+    { id: "allocation", label: _t("Number Allocation"), icon: "fa-list-ol" },
     { id: "ai", label: _t("AI Settings"), icon: "fa-magic" },
-    { id: "account", label: _t("Account Setting"), icon: "fa-key" },
     { id: "billing", label: _t("Billing"), icon: "fa-credit-card" },
 ];
 
@@ -64,7 +64,7 @@ export class TwilioConfigNav extends Component {
         if (!this.isConnected) {
             return "account";
         }
-        return this.props.record.data.twilio_config_section || "call";
+        return this.props.record.data.twilio_config_section || "account";
     }
 
     get isConnected() {
@@ -137,15 +137,15 @@ export class TwilioConfigNav extends Component {
         if (!appBlock) {
             return;
         }
-        appBlock.setAttribute("data-twilio-section", sectionId || "call");
+        appBlock.setAttribute("data-twilio-section", sectionId || "account");
     }
 
     _applyDefaultSection() {
         if (this._syncingSection) {
             return;
         }
-        const target = this.isConnected ? "call" : "account";
         const current = this.props.record.data.twilio_config_section;
+        const target = current || "account";
         this._syncingSection = true;
         try {
             if (current !== target) {

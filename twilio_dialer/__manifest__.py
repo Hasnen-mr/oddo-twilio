@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Odoo Twilio Dialer | VoIP Softphone Auto Dialer Call Center | Click to Call Recording",
+    'name': "Odoo Dialer | Twilio Calling | Twilio Dialer | Twilio Softphone | Twilio Auto Dialer | Odoo Calling | Odoo VoIP | Twilio VoIP",
 
     'summary': "Twilio VoIP softphone, auto dialer, power dialer, click-to-call, call recording, AI transcription, voicemail & CRM call logs for Odoo sales and call center teams.",
 

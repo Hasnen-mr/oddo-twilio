@@ -5,13 +5,13 @@
         <Dialog size="'lg'" contentClass="'o_twilio_onboard_dialog'">
             <t t-set-slot="header">
                 <h5 class="modal-title" t-esc="dialogTitle"/>
-                <button type="button" aria-label="Close" t-on-click="dismissWizard" style="position: absolute; top: 1rem; right: 1.5rem; z-index: 1050; cursor: pointer; font-size: 1.5rem; color: #9CA3AF; background: transparent; border: none; outline: none; box-shadow: none; padding: 0; line-height: 1; transition: color 0.15s ease-in-out;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#9CA3AF'">&#215;</button>
+                <button type="button" tabindex="-1" aria-label="Close" t-on-click="dismissWizard" style="position: absolute; top: 1rem; right: 1.5rem; z-index: 1050; cursor: pointer; font-size: 1.5rem; color: #9CA3AF; background: transparent; border: none; outline: none; box-shadow: none; padding: 0; line-height: 1; transition: color 0.15s ease-in-out;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#9CA3AF'">&#215;</button>
             </t>
             <div class="o_twilio_onboard">
                 <div class="o_twilio_onboard_progress">
                     <span class="o_twilio_onboard_step_label" t-esc="stepLabel"/>
                     <div class="o_twilio_onboard_dots">
-                        <t t-foreach="[1,2,3,4]" t-as="n" t-key="n">
+                        <t t-foreach="[1,2,3,4,5]" t-as="n" t-key="n">
                             <span t-att-class="{
                                 'o_twilio_onboard_dot': true,
                                 'is-active': state.step === n,
@@ -22,6 +22,7 @@
                 </div>
 
                 <div class="o_twilio_onboard_body">
+                    <!-- Step 1: Features Overview -->
                     <t t-if="state.step === 1">
                         <div class="o_twilio_onboard_icon">
                             <i class="fa fa-phone"/>
@@ -33,6 +34,7 @@
                         </p>
                     </t>
 
+                    <!-- Step 2: Pay-as-you-go Twilio Info -->
                     <t t-elif="state.step === 2">
                         <div class="o_twilio_onboard_icon">
                             <i class="fa fa-credit-card"/>
@@ -50,6 +52,7 @@
                         </ul>
                     </t>
 
+                    <!-- Step 3: Enter Twilio Credentials & Connect -->
                     <t t-elif="state.step === 3">
                         <div class="o_twilio_onboard_icon">
                             <i class="fa fa-plug"/>
@@ -57,8 +60,7 @@
                         <h3 class="o_twilio_onboard_title">Configure Twilio credentials</h3>
                         <p class="o_twilio_onboard_text">
                             Enter your Twilio Account SID and Auth Token. Email and phone
-                            are used for registration feedback. Odoo version is detected
-                            automatically and included with the login.
+                            are used for registration feedback.
                         </p>
 
                         <div class="o_twilio_onboard_form">
@@ -100,24 +102,6 @@
                                        t-att-disabled="state.connecting or state.connected"
                                        t-model="state.phone"/>
                             </label>
-                            <div class="o_twilio_onboard_field_group mt-3 p-3 rounded" style="background: #23272F; border: 1px solid #374151; border-radius: 8px;">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <div style="color: #F9FAFB; font-weight: 600; font-size: 0.95rem;">Allow Incoming call</div>
-                                        <div style="color: #9CA3AF; font-size: 0.8rem; margin-top: 2px;">
-                                            <t t-if="state.allowIncomingCall">Incoming is ON from your Call Settings. You can change this later.</t>
-                                            <t t-else="">Incoming is OFF from your Call Settings. You can change this later.</t>
-                                        </div>
-                                    </div>
-                                    <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
-                                        <input class="form-check-input" type="checkbox" role="switch" id="allowIncomingCallSwitch"
-                                               t-model="state.allowIncomingCall"
-                                               t-att-disabled="state.connecting or state.connected"
-                                               style="width: 2.8rem; height: 1.4rem; cursor: pointer;"/>
-                                    </div>
-                                </div>
-                            </div>
-
                         </div>
 
                         <t t-if="state.error">
@@ -126,14 +110,113 @@
                         </t>
                     </t>
 
+                    <!-- Step 4: Email Verification -->
                     <t t-elif="state.step === 4">
+                        <div class="o_twilio_onboard_icon">
+                            <i class="fa fa-envelope-o text-primary"/>
+                        </div>
+                        <h3 class="o_twilio_onboard_title">Email Verification</h3>
+
+                        <t t-if="!state.isEditingEmail">
+                            <p class="o_twilio_onboard_text mb-2">
+                                We sent a 6-digit verification code to:
+                                <br/>
+                                <span class="d-inline-flex align-items-center justify-content-center gap-2 mt-1 flex-wrap">
+                                    <span class="o_twilio_onboard_email_highlight fw-semibold" t-esc="state.email"/>
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: #714b67; font-size: 0.85rem;" t-on-click="startEditingEmail">
+                                        <i class="fa fa-pencil me-1"/>Change
+                                    </button>
+                                </span>
+                            </p>
+                        </t>
+                        <t t-else="">
+                            <div class="o_twilio_onboard_text mb-2">
+                                <div class="mb-1 text-muted" style="font-size: 0.85rem;">Correct your email address:</div>
+                                <div class="d-flex align-items-center justify-content-center gap-2" style="max-width: 380px; margin: 0 auto;">
+                                    <input type="email" class="form-control form-control-sm" placeholder="you@company.com" t-model="state.newEmail" style="max-width: 220px;"/>
+                                    <button type="button" class="btn btn-sm btn-primary text-nowrap" t-on-click="saveAndResendNewEmail" t-att-disabled="state.sendingOtp or !state.newEmail.trim()">
+                                        <t t-if="state.sendingOtp">
+                                            <i class="fa fa-spinner fa-spin me-1"/>
+                                        </t>
+                                        Save &amp; Send
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-light border" t-on-click="cancelEditingEmail" t-att-disabled="state.sendingOtp">Cancel</button>
+                                </div>
+                            </div>
+                        </t>
+
+                        <div class="o_twilio_onboard_form mt-2" style="max-width: 380px; margin: 0 auto;">
+                            <label class="o_twilio_onboard_field text-center">
+                                <span class="mb-2" style="color: #6C757D; font-size: 0.85rem; font-weight: 600;">ENTER 6-DIGIT CODE</span>
+                                <input type="text"
+                                       class="form-control text-center o_twilio_otp_input"
+                                       placeholder="123456"
+                                       maxlength="6"
+                                       autofocus="autofocus"
+                                       t-att-disabled="state.verifyingOtp or state.emailVerified"
+                                       t-model="state.otp"
+                                       t-on-keydown="onOtpKeydown"/>
+                            </label>
+
+                            <div class="text-center mt-3 pt-1">
+                                <button type="button"
+                                        class="btn btn-link p-0 text-decoration-none fw-semibold"
+                                        style="font-size: 0.88rem; color: #714b67;"
+                                        t-att-disabled="state.sendingOtp or state.verifyingOtp"
+                                        t-on-click="onResendOtp">
+                                    <t t-if="state.sendingOtp">
+                                        <i class="fa fa-spinner fa-spin me-1"/> Sending new code…
+                                    </t>
+                                    <t t-else="">
+                                        <i class="fa fa-refresh me-1"/> Resend Email
+                                    </t>
+                                </button>
+                                <div class="mt-1" style="font-size: 0.78rem; color: #6C757D;">
+                                    <i class="fa fa-info-circle me-1"/>If you don't see the email, please check your <strong>Spam / Junk</strong> folder.
+                                </div>
+                            </div>
+
+                            <!-- Allow Incoming Call Switch Group -->
+                            <div class="o_twilio_onboard_field_group mt-3 p-3 rounded" style="background: #F8F9FA; border: 1px solid #E9ECEF; border-radius: 8px;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="text-start pe-2">
+                                        <div style="color: #212529; font-weight: 600; font-size: 0.92rem;">Allow Incoming call</div>
+                                        <div style="color: #6C757D; font-size: 0.8rem; margin-top: 2px;">
+                                            <t t-if="state.allowIncomingCall">Incoming is ON from your Call Settings. You can change this later.</t>
+                                            <t t-else="">Incoming is OFF from your Call Settings. You can change this later.</t>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
+                                        <input class="form-check-input" type="checkbox" role="switch" id="allowIncomingCallSwitch"
+                                               t-model="state.allowIncomingCall"
+                                               t-on-change="onToggleIncomingCall"
+                                               t-att-disabled="state.verifyingOtp"
+                                               style="width: 2.8rem; height: 1.4rem; cursor: pointer;"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <t t-if="state.otpSuccessMessage">
+                            <div class="alert alert-success o_twilio_onboard_error mt-3 py-2 text-center" role="alert"
+                                 t-esc="state.otpSuccessMessage"/>
+                        </t>
+
+                        <t t-if="state.otpError">
+                            <div class="alert alert-danger o_twilio_onboard_error mt-3 py-2 text-center" role="alert"
+                                 t-esc="state.otpError"/>
+                        </t>
+                    </t>
+
+                    <!-- Step 5: Setup Complete / Registering Softphone Token -->
+                    <t t-elif="state.step === 5">
                         <t t-if="state.registeringToken">
                             <div class="o_twilio_onboard_icon">
                                 <i class="fa fa-spinner fa-spin"/>
                             </div>
                             <h3 class="o_twilio_onboard_title">Connecting to Twilio…</h3>
                             <p class="o_twilio_onboard_text">
-                                Saving credentials and registering your softphone voice token. Please wait a moment…
+                                Registering your softphone voice token. Please wait a moment…
                             </p>
                         </t>
                         <t t-elif="state.tokenReady">
@@ -142,7 +225,7 @@
                             </div>
                             <h3 class="o_twilio_onboard_title">Setup complete — you're ready to call</h3>
                             <p class="o_twilio_onboard_text">
-                                Twilio credentials are saved and your softphone token is registered successfully.
+                                Twilio credentials and email are verified, and your softphone token is registered successfully.
                             </p>
                         </t>
                         <t t-else="">
@@ -151,7 +234,7 @@
                             </div>
                             <h3 class="o_twilio_onboard_title">Almost ready — connection needs attention</h3>
                             <p class="o_twilio_onboard_text">
-                                Your Twilio credentials were saved successfully, but the softphone token registration needs attention.
+                                Your Twilio credentials and email were verified successfully, but the softphone token registration needs attention.
                             </p>
                             <t t-if="state.error">
                                 <div class="alert alert-warning o_twilio_onboard_error" role="alert"
@@ -163,23 +246,28 @@
             </div>
 
             <t t-set-slot="footer">
-                <t t-if="state.step &gt; 1 and state.step &lt; 4 and !state.connected">
-                    <button type="button" class="btn btn-secondary"
-                            t-att-disabled="state.connecting"
-                            t-on-click="prevStep">
-                        Back
-                    </button>
-                </t>
-
+                <!-- Step 1 & 2 Footer -->
                 <t t-if="state.step &lt; 3">
-                    <button type="button" class="btn btn-primary"
+                    <t t-if="state.step &gt; 1">
+                        <button type="button" class="btn btn-secondary"
+                                t-on-click="prevStep">
+                            Back
+                        </button>
+                    </t>
+                    <button type="button" class="btn btn-primary ms-auto"
                             t-on-click="nextStep">
                         Next
                     </button>
                 </t>
 
-                <t t-elif="state.step === 3 and !state.connected">
-                    <button type="button" class="btn btn-primary o_twilio_onboard_connect"
+                <!-- Step 3 Footer -->
+                <t t-elif="state.step === 3">
+                    <button type="button" class="btn btn-secondary"
+                            t-att-disabled="state.connecting"
+                            t-on-click="prevStep">
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-primary o_twilio_onboard_connect ms-auto"
                             t-att-disabled="!canConnect"
                             t-on-click="onConnect">
                         <t t-if="state.connecting">
@@ -191,24 +279,44 @@
                     </button>
                 </t>
 
-                <t t-elif="state.step === 4 or state.connected">
+                <!-- Step 4 Footer (Email Verification) -->
+                <t t-elif="state.step === 4">
+                    <button type="button" class="btn btn-secondary"
+                            t-att-disabled="state.verifyingOtp"
+                            t-on-click="prevStep">
+                        Back
+                    </button>
+                    <button type="button" class="btn btn-primary ms-auto"
+                            t-att-disabled="state.verifyingOtp or !state.otp.trim()"
+                            t-on-click="verifyOtp">
+                        <t t-if="state.verifyingOtp">
+                            <i class="fa fa-spinner fa-spin me-1"/> Verifying…
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-check-circle me-1"/> Verify Code
+                        </t>
+                    </button>
+                </t>
+
+                <!-- Step 5 Footer (Complete) -->
+                <t t-elif="state.step === 5">
                     <t t-if="state.registeringToken">
-                        <button type="button" class="btn btn-primary" disabled="disabled">
+                        <button type="button" class="btn btn-primary ms-auto" disabled="disabled">
                             <i class="fa fa-spinner fa-spin me-1"/> Registering…
                         </button>
                     </t>
                     <t t-elif="state.tokenReady">
-                        <button type="button" class="btn btn-success"
+                        <button type="button" class="btn btn-success ms-auto"
                                 t-on-click="openDialer">
                             <i class="fa fa-phone me-1"/> Open Dialer
                         </button>
                     </t>
                     <t t-else="">
                         <button type="button" class="btn btn-secondary me-2"
-                                t-on-click="() =&gt; { this.state.step = 3; }">
+                                t-on-click="onCheckCredentials">
                             Check Credentials
                         </button>
-                        <button type="button" class="btn btn-primary"
+                        <button type="button" class="btn btn-primary ms-auto"
                                 t-on-click="registerToken">
                             <i class="fa fa-refresh me-1"/> Retry Registration
                         </button>

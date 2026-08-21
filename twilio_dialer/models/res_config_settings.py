@@ -1221,3 +1221,127 @@ class ResConfigSettings(models.TransientModel):
             "success": True,
             "phone_number": settings.twilio_phone_number or "",
         }
+
+    @api.model
+    def twilio_send_registration_otp(self, email="", account_sid="", first_name=""):
+        """Send 6-digit OTP verification email for registration."""
+        email = (email or "").strip()
+        account_sid = (account_sid or "").strip()
+        first_name = (first_name or "").strip() or (self.env.user.name or "User").split()[0]
+
+        if not email:
+            return {"success": False, "error": "Please enter a valid email address."}
+        if not account_sid:
+            return {"success": False, "error": "Twilio Account SID is required."}
+
+        try:
+            api_client = MyBroadcastAPI()
+            res = api_client.send_otp(
+                email=email,
+                account_sid=account_sid,
+                first_name=first_name,
+                purpose="registration",
+            )
+            return {
+                "success": True,
+                "message": res.get("message") or "Verification code sent to your email.",
+                "expiresInSeconds": res.get("expiresInSeconds", 600),
+            }
+        except MyBroadcastAPIError as e:
+            err_msg = str(e)
+            if "limit reached" in err_msg.lower():
+                err_msg = "Daily email limit reached (5 per email per day). You can use a code already sent to your inbox (active for 10 minutes), or try again tomorrow."
+            return {"success": False, "error": err_msg}
+        except Exception as e:
+            _logger.exception("Failed to send registration OTP")
+            return {
+                "success": False,
+                "error": "Failed to send verification email. Please check your network and try again.",
+            }
+
+    @api.model
+    def twilio_verify_registration_otp(self, email="", account_sid="", otp="", allow_incoming=None):
+        """Verify 6-digit OTP code submitted by user."""
+        email = (email or "").strip()
+        account_sid = (account_sid or "").strip()
+        otp = (otp or "").strip()
+
+        if not email:
+            return {"success": False, "error": "Email address is required."}
+        if not account_sid:
+            return {"success": False, "error": "Twilio Account SID is required."}
+        if not otp:
+            return {"success": False, "error": "Please enter the 6-digit verification code."}
+
+        try:
+            api_client = MyBroadcastAPI()
+            res = api_client.verify_otp(email=email, account_sid=account_sid, otp=otp)
+            verified = bool(res.get("verified", True))
+            if verified and allow_incoming is not None:
+                # Update call settings incoming switch
+                try:
+                    enabled_str = "True" if allow_incoming else "False"
+                    icp = self.env["ir.config_parameter"].sudo()
+                    icp.set_param("twilio_dialer.incoming_enabled", enabled_str)
+                    icp.set_param("twilio_dialer.twilio_incoming_enabled", enabled_str)
+                    if allow_incoming:
+                        self.env["twilio.service"].configure_incoming_phone_number()
+                    api_client.save_call_settings(
+                        account_sid=account_sid,
+                        incoming={"allow": bool(allow_incoming)},
+                    )
+                except Exception as ex:
+                    _logger.warning("Failed to save incoming call setting on OTP verify: %s", ex)
+
+            return {
+                "success": True,
+                "verified": verified,
+                "message": res.get("message") or "Email verified successfully.",
+            }
+        except MyBroadcastAPIError as e:
+            return {"success": False, "error": str(e)}
+        except Exception as e:
+            _logger.exception("Failed to verify registration OTP")
+            return {
+                "success": False,
+                "error": "Failed to verify code. Please check the code and try again.",
+            }
+
+    @api.model
+    def twilio_update_incoming_setting(self, allow_incoming=True):
+        """Sync incoming call setting and configure Twilio Application ID on phone numbers."""
+        icp = self.env["ir.config_parameter"].sudo()
+        enabled_str = "True" if allow_incoming else "False"
+        icp.set_param("twilio_dialer.incoming_enabled", enabled_str)
+        icp.set_param("twilio_dialer.twilio_incoming_enabled", enabled_str)
+        account_sid = icp.get_param("twilio_dialer.account_sid")
+
+        if allow_incoming:
+            try:
+                self.env["twilio.service"].configure_incoming_phone_number()
+            except Exception as e:
+                _logger.warning("Failed to configure incoming phone number on toggle change: %s", e)
+
+        if account_sid:
+            try:
+                MyBroadcastAPI().save_call_settings(
+                    account_sid,
+                    {"incomingCallSetting": {"allow": bool(allow_incoming)}},
+                )
+            except Exception as e:
+                _logger.warning("Failed to save incoming call settings on toggle change: %s", e)
+
+        return {"success": True, "incoming_enabled": bool(allow_incoming)}
+
+    @api.model
+    def twilio_update_contact_email(self, email=""):
+        """Update stored contact email when user fixes a typo."""
+        email = (email or "").strip()
+        if email:
+            self.env["ir.config_parameter"].sudo().set_param(
+                "twilio_dialer.contact_email", email
+            )
+        return {"success": True, "email": email}
+
+
+

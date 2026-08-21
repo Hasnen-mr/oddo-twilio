@@ -211,4 +211,4 @@ export const twilioBillingPanel = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_billing_panel", twilioBillingPanel, { force: true }, { force: true });$1
+registry.category("fields").add("twilio_billing_panel", twilioBillingPanel, { force: true });

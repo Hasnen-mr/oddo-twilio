@@ -73,4 +73,4 @@ export const twilioAboutNav = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_about_nav", twilioAboutNav, { force: true }, { force: true });$1
+registry.category("fields").add("twilio_about_nav", twilioAboutNav, { force: true });

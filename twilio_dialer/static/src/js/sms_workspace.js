@@ -155,4 +155,4 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     }
 }
 
-registry.category("actions").add("twilio_sms_workspace_action", TwilioSmsWorkspaceClientAction, { force: true }, { force: true });$1
+registry.category("actions").add("twilio_sms_workspace_action", TwilioSmsWorkspaceClientAction, { force: true });

@@ -45,6 +45,10 @@ class ResConfigSettings(models.TransientModel):
         string="Configuration Section",
         default="account",
     )
+    twilio_allocation_panel = fields.Char(
+        string="Allocation Panel",
+        default="1",
+    )
     twilio_billing_panel = fields.Char(
         string="Billing Panel",
         default="1",
@@ -373,7 +377,7 @@ class ResConfigSettings(models.TransientModel):
         if section not in ("account", "call", "allocation", "ai", "billing"):
             section = "account"
         action["context"] = {
-            "module": "twilio_dialer",
+            "module": "twilio_dialer_pro",
             "default_twilio_config_section": section,
         }
         return action
@@ -1080,7 +1084,7 @@ class ResConfigSettings(models.TransientModel):
                 "type": "success",
                 "sticky": False,
                 "next": self.env["res.config.settings"].with_context(
-                    module="twilio_dialer",
+                    module="twilio_dialer_pro",
                     default_twilio_config_section="account",
                 ).action_open_twilio_configuration(),
             },

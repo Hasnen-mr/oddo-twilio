@@ -33,6 +33,12 @@
         </nav>
     </t>
 
+    <t t-name="twilio_dialer.TwilioAllocationPanel">
+        <div class="o_twilio_cfg_allocation_panel w-100">
+            <NumberAllocationPanel/>
+        </div>
+    </t>
+
     <t t-name="twilio_dialer.TwilioBillingPanel">
         <div class="o_twilio_cfg_billing_panel w-100">
             <BillingDashboard/>

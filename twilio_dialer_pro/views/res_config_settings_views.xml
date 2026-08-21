@@ -9,7 +9,7 @@
 
             <xpath expr="//form" position="inside">
 
-                <app string="Twilio Call Auto Dialer" name="twilio_dialer">
+                <app string="Twilio Call Auto Dialer" name="twilio_dialer_pro">
                     <field name="twilio_is_connected" invisible="1"/>
                     <field name="twilio_api_key_sid" invisible="1"/>
                     <field name="twilio_application_sid" invisible="1"/>
@@ -267,6 +267,14 @@
                                 </div>
                             </div>
                         </div>
+                        </div>
+                    </block>
+
+                    <!-- Number Allocation Settings -->
+                    <block name="twilio_number_allocation_settings"
+                           invisible="not twilio_is_connected">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--allocation w-100">
+                            <field name="twilio_allocation_panel" widget="twilio_allocation_panel" nolabel="1" class="w-100 o_twilio_cfg_allocation_field"/>
                         </div>
                     </block>
 

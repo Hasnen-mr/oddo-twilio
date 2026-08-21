@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- Global Floating Help Bubble for Twilio Calling System screens -->
+    <t t-name="twilio_dialer.TwilioHelpBubble">
+        <t t-if="state.isVisible">
+            <div class="o_twilio_help_bubble_container" title="Twilio Dialer Help &amp; User Guide">
+                <!-- Hover × close button -->
+                <button type="button"
+                        class="o_twilio_help_bubble_close"
+                        title="Hide help bubble for this screen"
+                        t-on-click.stop="onHideHelpBubble">
+                    <i class="fa fa-times"/>
+                </button>
+                <!-- Main floating calling help button with recreated Phone Info vector icon -->
+                <button type="button"
+                        class="o_twilio_help_bubble_btn"
+                        title="Twilio Dialer Help &amp; User Guide"
+                        t-on-click.stop="onOpenHelpDialog">
+                    <svg class="o_twilio_help_phone_info_svg" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Handset receiver -->
+                        <path d="M 4 13.8 C 3.1 12.8 2.6 11.5 2.6 10.2 C 2.6 8.8 3.2 7.7 4.1 6.8 C 4.6 6.3 5.3 6 6 6 C 6.6 6 7.2 6.3 7.6 6.8 L 9 8.6 C 9.4 9.1 9.4 9.8 9 10.3 L 8.1 11.2 C 8.9 12.8 10.2 14.1 11.8 14.9 L 12.7 14 C 13.2 13.6 13.9 13.6 14.4 14 L 16.2 15.4 C 16.7 15.8 17 16.4 17 17 C 17 17.7 16.7 18.4 16.2 18.9 C 15.3 19.8 14.2 20.4 12.8 20.4 C 11.5 20.4 10.2 19.9 9.2 18.9 C 7.2 17.4 5.6 15.7 4 13.8 Z" fill="#ffffff"/>
+                        <!-- Speech callout bubble -->
+                        <circle cx="16" cy="7.5" r="5.5" fill="#ffffff"/>
+                        <path d="M 12.2 10.8 L 10.2 13 L 13.8 11.8 Z" fill="#ffffff"/>
+                        <!-- Info 'i' inside bubble -->
+                        <circle cx="16" cy="4.8" r="0.9" fill="#714b67"/>
+                        <line x1="16" y1="7.2" x2="16" y2="10.5" stroke="#714b67" stroke-width="1.6" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+        </t>
+    </t>
+
+    <!-- Inherited Twilio Dashboard Form View -->
+    <t t-name="twilio_dialer.TwilioDashboardFormView" t-inherit="web.FormView" owl="1">
+    </t>
+
+    <!-- Help Dialog / Panel -->
+    <t t-name="twilio_dialer.TwilioHelpDialog">
+        <Dialog size="'xl'" contentClass="'o_twilio_help_dialog_content'">
+            <!-- Header with Title and Open Dialer button positioned top-right beside the close button -->
+            <t t-set-slot="header">
+                <div class="d-flex align-items-center justify-content-between w-100 pe-2">
+                    <h5 class="modal-title text-truncate m-0 d-flex align-items-center">
+                        <i class="fa fa-book text-primary me-2"/>Twilio Calling System — Help &amp; User Guide
+                    </h5>
+                    <div class="d-flex align-items-center gap-2 ms-auto me-3">
+                        <button type="button"
+                                class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm o_twilio_open_dialer_header_btn"
+                                t-on-click="openDialer">
+                            <i class="fa fa-phone"/> Open Dialer
+                        </button>
+                    </div>
+                </div>
+            </t>
+
+            <div class="o_twilio_help_wrapper">
+                <!-- Navigation Tabs Sidebar -->
+                <div class="o_twilio_help_sidebar">
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'make_call' }"
+                            t-on-click="() => this.setCategory('make_call')">
+                        <i class="fa fa-phone me-2 text-primary"/>
+                        <span>1. How to Make a Call</span>
+                    </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'caller_id' }"
+                            t-on-click="() => this.setCategory('caller_id')">
+                        <i class="fa fa-id-card-o me-2 text-info"/>
+                        <span>2. Select a Caller ID</span>
+                    </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'call_logs' }"
+                            t-on-click="() => this.setCategory('call_logs')">
+                        <i class="fa fa-history me-2 text-success"/>
+                        <span>3. Call Logs &amp; Activity Sync</span>
+                    </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'auto_dialer' }"
+                            t-on-click="() => this.setCategory('auto_dialer')">
+                        <i class="fa fa-bolt me-2 text-warning"/>
+                        <span>4. Auto Dialer Campaigns</span>
+                    </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'config' }"
+                            t-on-click="() => this.setCategory('config')">
+                        <i class="fa fa-cogs me-2 text-secondary"/>
+                        <span>5. Twilio Configuration</span>
+                    </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'number_allocation' }"
+                            t-on-click="() => this.setCategory('number_allocation')">
+                        <i class="fa fa-users me-2 text-dark"/>
+                        <span>6. Number Allocation</span>
+                    </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'troubleshooting' }"
+                            t-on-click="() => this.setCategory('troubleshooting')">
+                        <i class="fa fa-wrench me-2 text-danger"/>
+                        <span>7. Troubleshooting &amp; FAQs</span>
+                    </button>
+                    <button type="button"
+                            class="o_twilio_help_tab_btn"
+                            t-att-class="{ 'active': state.activeCategory === 'about_help' }"
+                            t-on-click="() => this.setCategory('about_help')">
+                        <i class="fa fa-life-ring me-2 text-info"/>
+                        <span>8. Help &amp; Support</span>
+                    </button>
+                </div>
+
+                <!-- Content Body -->
+                <div class="o_twilio_help_body">
+                    
+                    <!-- Section 1: How to Make a Call -->
+                    <div t-if="state.activeCategory === 'make_call'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-phone text-primary me-2"/>How to Make a Call</h3>
+                            <p class="text-muted">Placing outbound calls via browser VoIP softphone or 1-click dialing.</p>
+                        </div>
+                        
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-keyboard-o me-2 text-primary"/>Option A: Using the Softphone Keypad</h5>
+                            <ol class="mb-2">
+                                <li>Click the <strong>Phone icon</strong> in the top navigation systray to open the Twilio softphone.</li>
+                                <li>Type the phone number directly using your <strong>laptop keyboard or numpad</strong> (digits <code>0-9</code>, <code>+</code>, <code>*</code>, <code>#</code>).</li>
+                                <li>Press <kbd class="px-2 py-1 bg-dark text-white rounded">Enter</kbd> to initiate the call, or press <kbd class="px-2 py-1 bg-dark text-white rounded">Esc</kbd> to close the dialer popup.</li>
+                            </ol>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-mouse-pointer me-2 text-success"/>Option B: Click-to-Call from Records</h5>
+                            <p class="mb-2">Click the green phone icon next to any phone number across Odoo:</p>
+                            <ul class="mb-2">
+                                <li><strong>Contacts:</strong> Customer profile phone / mobile fields.</li>
+                                <li><strong>CRM Leads:</strong> Lead &amp; Opportunity view phone fields.</li>
+                                <li><strong>Calendar Meetings:</strong> Meeting attendee phone fields.</li>
+                            </ul>
+                            <span class="badge bg-light text-dark border"><i class="fa fa-info-circle text-primary me-1"/> Clicking any phone icon automatically opens the dialer with the number prefilled and ready to call.</span>
+                        </div>
+
+                        <div class="o_twilio_help_card">
+                            <h5><i class="fa fa-headphones me-2 text-info"/>In-Call Controls</h5>
+                            <p class="mb-1">While on an active call, you can:</p>
+                            <div class="d-flex flex-wrap gap-2 mt-2">
+                                <span class="badge bg-secondary p-2"><i class="fa fa-microphone-slash me-1"/> Mute / Unmute</span>
+                                <span class="badge bg-secondary p-2"><i class="fa fa-th me-1"/> DTMF Keypad (for IVR menus)</span>
+                                <span class="badge bg-secondary p-2"><i class="fa fa-circle text-danger me-1"/> Call Recording indicator</span>
+                                <span class="badge bg-danger p-2"><i class="fa fa-phone me-1"/> Hang Up (Red Button)</span>
+                                <span class="badge bg-secondary p-2"><i class="fa fa-times me-1"/> Close Dialer (<kbd class="bg-dark text-white">Esc</kbd>)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: How to Select a Caller ID -->
+                    <div t-if="state.activeCategory === 'caller_id'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-id-card-o text-info me-2"/>Caller ID Selection</h3>
+                            <p class="text-muted">Choosing which Twilio phone number is presented to recipients.</p>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-list-ul me-2 text-info"/>Selecting Outbound Caller ID</h5>
+                            <ol class="mb-2">
+                                <li>Open the Softphone dialer popup.</li>
+                                <li>At the top of the dialer, click the <strong>Caller ID</strong> dropdown selector.</li>
+                                <li>Choose between your <strong>Allocated Number</strong>, company default number, or any verified caller ID.</li>
+                                <li>Your selection is automatically remembered for future calls.</li>
+                            </ol>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-globe me-2 text-primary"/>E.164 International Format</h5>
+                            <p class="mb-2">All numbers should include the appropriate country code in international format (e.g. <code>+1 555 123 4567</code> for US, <code>+44 20 ...</code> for UK).</p>
+                            <div class="alert alert-info py-2 mb-0">
+                                <i class="fa fa-lightbulb-o me-1"/> <strong>Tip:</strong> The dialer features an automatic Country Code selector that formats and validates local and international numbers automatically.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Call Logs & Multi-Entity Chatter Sync -->
+                    <div t-if="state.activeCategory === 'call_logs'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-history text-success me-2"/>Call Logs &amp; Multi-Entity Sync</h3>
+                            <p class="text-muted">Automatic call tracking, recordings, transcripts, and chatter activity syncing.</p>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-refresh me-2 text-success"/>Real-Time Chatter Activity Sync</h5>
+                            <p class="mb-2">Whenever a call is placed or received, the system automatically logs a rich activity card into the Chatter of all related records:</p>
+                            <ul class="mb-2">
+                                <li><strong>Contacts (<code>res.partner</code>):</strong> Direct contact history.</li>
+                                <li><strong>CRM Leads (<code>crm.lead</code>):</strong> Associated sales opportunity chatter.</li>
+                                <li><strong>Calendar Meetings (<code>calendar.event</code>):</strong> Scheduled event chatter.</li>
+                            </ul>
+                            <div class="alert alert-success py-2 mb-0">
+                                <i class="fa fa-check-circle me-1"/> <strong>No Duplicate Spam:</strong> Status transitions (In Progress &#8594; Completed &#8594; Recording Ready &#8594; AI Summary) update the <em>existing</em> message in place in real-time.
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_help_card">
+                            <h5><i class="fa fa-play-circle me-2 text-primary"/>Call Recordings &amp; AI Summaries</h5>
+                            <p class="mb-2">Navigate to <strong>Twilio &#8594; Call Logs</strong> to review:</p>
+                            <ul class="mb-0">
+                                <li>Call duration, direction (Inbound/Outbound), status (Answered, Busy, No Answer).</li>
+                                <li>In-browser audio playback of call recordings.</li>
+                                <li>AI-generated call summary and key takeaways (if AI service is configured).</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Auto Dialer Campaigns -->
+                    <div t-if="state.activeCategory === 'auto_dialer'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-bolt text-warning me-2"/>Auto Dialer Campaigns</h3>
+                            <p class="text-muted">High-volume outbound calling with automated queues and disposition tracking.</p>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-upload me-2 text-warning"/>Step 1: Create a Campaign</h5>
+                            <ol class="mb-2">
+                                <li>Go to <strong>Twilio &#8594; Auto Dialer Campaigns</strong>.</li>
+                                <li>Click <strong>New</strong> and enter a Campaign Name.</li>
+                                <li>Import your contact list via CSV or select existing Odoo Contacts / CRM Leads.</li>
+                            </ol>
+                        </div>
+
+                        <div class="o_twilio_help_card">
+                            <h5><i class="fa fa-play me-2 text-success"/>Step 2: Run the Campaign</h5>
+                            <ol class="mb-2">
+                                <li>Click the green circular <strong>Start Campaign</strong> button.</li>
+                                <li>The Auto Dialer initiates the call to the first queue contact.</li>
+                                <li>Log call notes, select a call disposition (e.g. Interested, Callback, Not Interested), and click <strong>Next Call</strong>.</li>
+                                <li>You can <strong>Pause</strong>, <strong>Resume</strong>, or <strong>Skip</strong> contacts at any time.</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Twilio Configuration -->
+                    <div t-if="state.activeCategory === 'config'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-cogs text-secondary me-2"/>Twilio Configuration</h3>
+                            <p class="text-muted">Connecting your Twilio account credentials and telephony webhooks.</p>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-key me-2 text-secondary"/>Required Credentials</h5>
+                            <p class="mb-2">In <strong>Twilio &#8594; Configuration</strong>, supply the following credentials from your <a href="https://console.twilio.com" target="_blank">Twilio Console</a>:</p>
+                            <ul class="mb-2">
+                                <li><strong>Account SID:</strong> Starts with <code>AC...</code></li>
+                                <li><strong>Auth Token:</strong> Your secret 32-character Twilio Auth Token.</li>
+                                <li><strong>TwiML App SID:</strong> Starts with <code>AP...</code> (auto-created by the system).</li>
+                            </ul>
+                            <div class="d-flex gap-2">
+                                <button type="button" class="btn btn-outline-primary btn-sm" t-on-click="openConfig">
+                                    <i class="fa fa-cog me-1"/> Open Twilio Configuration
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_help_card">
+                            <h5><i class="fa fa-link me-2 text-info"/>Inbound Voice Webhook</h5>
+                            <p class="mb-1">To receive incoming calls, configure your Twilio Phone Number Voice webhook in the Twilio Console to HTTP POST:</p>
+                            <code>https://&lt;your-odoo-domain&gt;/twilio/voice</code>
+                        </div>
+                    </div>
+
+                    <!-- Section 6: Number Allocation -->
+                    <div t-if="state.activeCategory === 'number_allocation'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-users text-dark me-2"/>Number Allocation</h3>
+                            <p class="text-muted">Assigning dedicated Twilio phone numbers to internal agents and sales reps.</p>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-user-plus me-2 text-primary"/>Dedicated Agent Numbers</h5>
+                            <p class="mb-2">Assign specific Twilio numbers to individual users so that:</p>
+                            <ul class="mb-2">
+                                <li>Outbound calls automatically present the user's assigned direct number as Caller ID.</li>
+                                <li>Inbound calls to that number ring directly in that specific user's softphone.</li>
+                                <li>Number Allocation is managed in <strong>Twilio &#8594; Number Allocation</strong>.</li>
+                            </ul>
+                        </div>
+
+                        <div class="o_twilio_help_card">
+                            <h5><i class="fa fa-shield me-2 text-success"/>Strict Access &amp; Fallback</h5>
+                            <p class="mb-0">If a user does not have a dedicated number allocated, they will automatically use the company's shared default caller ID.</p>
+                        </div>
+                    </div>
+
+                    <!-- Section 7: Troubleshooting & FAQs -->
+                    <div t-if="state.activeCategory === 'troubleshooting'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-wrench text-danger me-2"/>Troubleshooting &amp; FAQs</h3>
+                            <p class="text-muted">Quick solutions for common telephony and browser audio questions.</p>
+                        </div>
+
+                        <div class="accordion" id="twilioHelpAccordion">
+                            <div class="o_twilio_help_card mb-2">
+                                <h6 class="text-dark fw-bold mb-1"><i class="fa fa-microphone me-2 text-danger"/>Microphone not working / "Permission Denied"</h6>
+                                <p class="small text-muted mb-0">Check the lock icon in your browser URL bar &#8594; ensure <strong>Microphone</strong> is set to <em>Allow</em>. Refresh the page after granting permission.</p>
+                            </div>
+
+                            <div class="o_twilio_help_card mb-2">
+                                <h6 class="text-dark fw-bold mb-1"><i class="fa fa-clock-o me-2 text-warning"/>Token Expired / Re-registration</h6>
+                                <p class="small text-muted mb-0">Access tokens auto-refresh. If connection drops, click the <strong>Refresh Token</strong> button in the dialer header or reload your browser.</p>
+                            </div>
+
+                            <div class="o_twilio_help_card mb-2">
+                                <h6 class="text-dark fw-bold mb-1"><i class="fa fa-volume-up me-2 text-info"/>No Audio on Inbound / Outbound Calls</h6>
+                                <p class="small text-muted mb-0">Ensure WebRTC traffic is not blocked by local VPN/firewall (UDP ports 10,000–20,000 and TCP 443 required for Twilio Voice).</p>
+                            </div>
+
+                            <div class="o_twilio_help_card mb-2">
+                                <h6 class="text-dark fw-bold mb-1"><i class="fa fa-refresh me-2 text-success"/>Cache &amp; Asset Updates</h6>
+                                <p class="small text-muted mb-0">After module upgrades, perform a hard browser refresh (<kbd>Ctrl + F5</kbd> on Windows, <kbd>Cmd + Shift + R</kbd> on Mac) to ensure the latest scripts and views load cleanly.</p>
+                            </div>
+
+                            <div class="o_twilio_help_card">
+                                <h6 class="text-dark fw-bold mb-1"><i class="fa fa-stethoscope me-2 text-danger"/>Still Need Help? — Run Built-in Debug Troubleshooter</h6>
+                                <p class="small text-muted mb-2">If you experience call drops, connection issues, or one-way audio, launch our interactive 5-step automated troubleshooter to diagnose credentials, tokens, and audio permissions:</p>
+                                <div class="d-flex flex-wrap gap-2 align-items-center">
+                                    <button type="button" class="btn btn-sm btn-danger px-3 py-1 text-white" t-on-click="openTroubleshooter">
+                                        <i class="fa fa-play-circle me-1"/> Launch Debug Troubleshooter
+                                    </button>
+                                    <span class="small text-muted">Runs direct diagnostic checks inside the Softphone.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 8: Help & Support -->
+                    <div t-if="state.activeCategory === 'about_help'" class="o_twilio_help_section">
+                        <div class="o_twilio_help_section_header">
+                            <h3><i class="fa fa-life-ring text-info me-2"/>Help &amp; Support</h3>
+                            <p class="text-muted">Submit support tickets, contact technical support, and view detailed app documentation.</p>
+                        </div>
+
+                        <div class="o_twilio_help_card mb-3">
+                            <h5><i class="fa fa-envelope-o me-2 text-primary"/>Submit a Support Request</h5>
+                            <p class="mb-2">Need direct assistance or custom integration help? You can submit an issue ticket directly to our support desk from within Odoo:</p>
+                            <ul class="mb-3">
+                                <li><strong>Email &amp; Phone:</strong> Provide your contact information for fast callback.</li>
+                                <li><strong>Use Case &amp; Logs:</strong> Describe your setup or custom workflow requirements.</li>
+                                <li><strong>Direct Delivery:</strong> Requests are delivered securely to our engineering team.</li>
+                            </ul>
+                            <div class="d-flex flex-wrap gap-2 align-items-center">
+                                <button type="button" class="btn btn-primary btn-sm px-3" t-on-click="openAboutHelp">
+                                    <i class="fa fa-external-link me-1"/> Open About Us &#8594; Help
+                                </button>
+                                <span class="small text-muted">Opens the Help &amp; Support form in About Us.</span>
+                            </div>
+                        </div>
+
+                        <div class="o_twilio_help_card">
+                            <h5><i class="fa fa-info-circle me-2 text-secondary"/>Documentation &amp; Release Notes</h5>
+                            <p class="mb-0">Access version information, terms &amp; conditions, privacy policies, and release notes inside the <strong>About Us</strong> module.</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <t t-set-slot="footer">
+                <div class="d-flex justify-content-between align-items-center w-100 py-1">
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="openConfig">
+                            <i class="fa fa-cog me-1"/> Settings
+                        </button>
+                    </div>
+                    <button type="button" class="btn btn-secondary px-4" t-on-click="props.close">
+                        Close
+                    </button>
+                </div>
+            </t>
+        </Dialog>
+    </t>
+
+</templates>

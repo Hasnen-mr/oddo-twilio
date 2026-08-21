@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="twilio_dialer.TwilioAiSettingsLink">
+        <button type="button"
+                class="btn btn-link o_twilio_cfg_ai_link"
+                t-on-click="openAiSettings">
+            <t t-esc="label"/>
+            <i class="fa fa-arrow-right"/>
+        </button>
+    </t>
+</templates>

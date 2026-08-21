@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <!-- ── Shared: red circular call button used in both Contacts and Call Log ── -->
+
+    <t t-name="twilio_dialer.ContactCallButton">
+        <button type="button"
+                class="o_twilio_contact_call_button"
+                t-att-disabled="!phone"
+                t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
+                t-on-click.stop="openDialer">
+            <i class="fa fa-phone" aria-label="Call"/>
+        </button>
+    </t>
+
+    <!-- ── Inline injection into PhoneField (Contacts page, enable_dialer_call option) ── -->
+
+    <t t-inherit="web.FormPhoneField" t-inherit-mode="extension">
+        <xpath expr="//div[hasclass('o_phone_content')]" position="inside">
+            <t t-if="props.enableDialerCall">
+                <ContactCallButton record="props.record" name="props.name"/>
+                <ContactSmsButton record="props.record" name="props.name"/>
+            </t>
+        </xpath>
+    </t>
+
+    <!-- ── Standalone field widget: twilio_call_button ── -->
+    <!--
+        Renders the phone number as plain text with the red call button beside it.
+        Usage:  <field name="to_number" widget="twilio_call_button" readonly="1"/>
+    -->
+
+    <t t-name="twilio_dialer.TwilioCallButtonField">
+        <div class="o_twilio_call_btn_field d-flex align-items-center w-100 justify-content-between">
+            <span class="o_twilio_call_btn_number text-truncate me-auto" t-esc="phone"/>
+            <div class="d-flex align-items-center flex-shrink-0 ms-auto">
+                <button type="button"
+                        class="o_twilio_contact_call_button"
+                        t-att-disabled="!phone"
+                        t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
+                        t-on-click.stop="openDialer">
+                    <i class="fa fa-phone" aria-label="Call"/>
+                </button>
+                <button type="button"
+                        class="o_twilio_contact_sms_button"
+                        t-att-disabled="!phone"
+                        t-att-title="phone ? 'Send SMS via Twilio' : 'No phone number available.'"
+                        t-on-click.stop="openSms">
+                    <i class="fa fa-comment" aria-label="SMS"/>
+                </button>
+            </div>
+        </div>
+    </t>
+
+</templates>

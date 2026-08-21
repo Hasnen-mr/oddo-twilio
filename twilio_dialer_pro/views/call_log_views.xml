@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="seq_twilio_call_log" model="ir.sequence">
+        <field name="name">Twilio Call Log</field>
+        <field name="code">twilio.call.log</field>
+        <field name="prefix">CALL/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="view_twilio_call_log_list" model="ir.ui.view">
+        <field name="name">twilio.call.log.list</field>
+        <field name="model">twilio.call.log</field>
+        <field name="arch" type="xml">
+            <tree string="Call Logs"
+                  decoration-warning="status in ('busy','no_answer','ringing')"
+                  decoration-danger="status in ('failed','canceled')"
+                  decoration-info="follow_up_needed"
+                  multi_edit="1">
+                <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"
+                            display="always"/>
+                </header>
+                <field name="name" optional="show"/>
+                <field name="start_time" string="When"/>
+                <field name="partner_id"/>
+                <field name="direction"/>
+                <field name="call_type" optional="show"/>
+                <field name="from_number" optional="hide"/>
+                <field name="to_number" widget="twilio_call_button"/>
+                <field name="status" widget="badge"
+                          decoration-success="status == 'completed'"
+                          decoration-warning="status in ('busy','no_answer','ringing','in_progress')"
+                          decoration-danger="status in ('failed','canceled')"/>
+                <field name="outcome" optional="show"/>
+                <field name="duration_display" string="Duration"/>
+                <field name="duration" column_invisible="1"/>
+                <field name="user_id" widget="many2one_avatar_user" optional="show"/>
+                <field name="follow_up_needed" widget="boolean_toggle" optional="show"/>
+                <field name="has_recording" optional="hide"/>
+                <field name="has_summary" optional="hide"/>
+                <field name="summary" optional="hide"/>
+                <button name="action_redial" type="object" string="Redial" icon="fa-phone"/>
+                <button name="action_mark_follow_up" type="object" string="Follow-up" icon="fa-calendar"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_twilio_call_log_kanban" model="ir.ui.view">
+        <field name="name">twilio.call.log.kanban</field>
+        <field name="model">twilio.call.log</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="status" class="o_kanban_mobile" sample="1">
+                <field name="display_name"/>
+                <field name="partner_id"/>
+                <field name="to_number"/>
+                <field name="from_number"/>
+                <field name="direction"/>
+                <field name="status"/>
+                <field name="outcome"/>
+                <field name="duration_display"/>
+                <field name="user_id"/>
+                <field name="start_time"/>
+                <field name="follow_up_needed"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between mb-1">
+                            <strong><field name="display_name"/></strong>
+                            <span class="badge text-bg-secondary"><field name="direction"/></span>
+                        </div>
+                        <div class="text-muted mb-1">
+                            <field name="start_time"/> · <field name="duration_display"/>
+                        </div>
+                        <div t-if="record.outcome.raw_value" class="mb-1">
+                            Outcome: <field name="outcome"/>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                            <span t-if="record.follow_up_needed.raw_value" class="badge text-bg-warning">Follow-up</span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <record id="view_twilio_call_log_form" model="ir.ui.view">
+        <field name="name">twilio.call.log.form</field>
+        <field name="model">twilio.call.log</field>
+        <field name="arch" type="xml">
+            <form string="Call Log">
+                <header>
+                    <button name="%(action_twilio_open_phone)d"
+                            type="action"
+                            string="Open Phone"
+                            icon="fa-phone"
+                            class="btn-primary"/>
+                    <button name="action_redial" type="object" string="Redial" class="btn-primary" icon="fa-phone"/>
+                    <button name="action_mark_follow_up" type="object" string="Schedule Follow-up" class="btn-secondary" icon="fa-calendar"/>
+                    <button name="action_create_transcript" type="object" string="Create Transcript" class="btn-secondary"/>
+                    <button name="action_create_summary" type="object" string="Create Summary" class="btn-secondary"/>
+                    <button name="action_post_summary_to_contact" type="object" string="Post to Contact" class="btn-secondary"/>
+                    <button name="action_sync_to_entities" type="object" string="Sync to Activities" class="btn-secondary" icon="fa-refresh"/>
+                    <button name="action_open_recording" type="object" string="Open Recording" class="btn-link"
+                            invisible="not recording_sid"/>
+                    <field name="status" widget="statusbar"
+                            statusbar_visible="initiated,ringing,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_partner" type="object" class="oe_stat_button" icon="fa-user"
+                                invisible="not partner_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Contact</span>
+                            </div>
+                        </button>
+                        <button class="oe_stat_button" icon="fa-clock-o" disabled="1">
+                            <div class="o_stat_info">
+                                <span class="o_stat_value"><field name="duration_display"/></span>
+                                <span class="o_stat_text">Duration</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                        <h2><field name="display_name" readonly="1"/></h2>
+                        <div class="o_twilio_call_log_phone_row">
+                            <field name="to_number"
+                                   widget="twilio_call_button"
+                                   readonly="1"
+                                   nolabel="1"/>
+                        </div>
+                    </div>
+
+                    <group>
+                        <group string="Call">
+                            <field name="partner_id"/>
+                            <field name="lead_id" invisible="not lead_id"/>
+                            <field name="res_model" invisible="1"/>
+                            <field name="res_id" invisible="1"/>
+                            <field name="direction"/>
+                            <field name="call_type"/>
+                            <field name="from_number"/>
+                            <field name="to_number" widget="twilio_call_button"/>
+                            <field name="outcome"/>
+                        </group>
+
+                        <group string="Timing &amp; Agent">
+                            <field name="user_id" widget="many2one_avatar_user"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                            <field name="start_time"/>
+                            <field name="end_time"/>
+                            <field name="duration"/>
+                            <field name="duration_display"/>
+                            <field name="call_sid"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Notes &amp; Follow-up" name="notes">
+                            <group>
+                                <field name="notes" placeholder="What was discussed on this call?"/>
+                                <field name="next_action" placeholder="What should happen next?"/>
+                            </group>
+                            <group string="Follow-up">
+                                <group>
+                                    <field name="follow_up_needed"/>
+                                    <field name="follow_up_date" invisible="not follow_up_needed"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Recording" name="recording">
+                            <group>
+                                <field name="recording_sid"/>
+                                <field name="playback_url" widget="url"
+                                       invisible="not recording_sid"/>
+                                <field name="recording_status" widget="badge"
+                                       decoration-success="recording_status == 'completed'"
+                                       decoration-warning="recording_status in ('pending','recording')"
+                                       decoration-danger="recording_status == 'failed'"
+                                       decoration-muted="recording_status == 'absent'"/>
+                                <field name="recording_duration"
+                                       invisible="recording_status != 'completed'"/>
+                                <field name="has_recording" invisible="1"/>
+                            </group>
+                        </page>
+                        <page string="AI Transcript &amp; Summary" name="ai">
+                            <group>
+                                <field name="ai_provider"/>
+                                <field name="transcript" placeholder="Generated transcript will appear here"/>
+                                <field name="summary" placeholder="Generated summary will appear here"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_twilio_call_log_search" model="ir.ui.view">
+        <field name="name">twilio.call.log.search</field>
+        <field name="model">twilio.call.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Call Logs">
+                <field name="name"/>
+                <field name="partner_id" string="Contact"/>
+                <field name="from_number"/>
+                <field name="to_number" string="Phone Number"
+                          filter_domain="['|', ('to_number', 'ilike', self), ('from_number', 'ilike', self)]"/>
+                <field name="status"/>
+                <field name="outcome"/>
+                <field name="call_type"/>
+                <field name="call_sid"/>
+                <field name="user_id"/>
+                <field name="summary"/>
+                <field name="notes"/>
+
+                <filter string="My Calls" name="my_calls" domain="[('user_id', '=', uid)]"/>
+                <filter string="Today" name="today"
+                        domain="[('start_time', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Outgoing" name="outgoing" domain="[('direction', '=', 'outgoing')]"/>
+                <filter string="Incoming" name="incoming" domain="[('direction', '=', 'incoming')]"/>
+                <separator/>
+                <filter string="Completed" name="completed" domain="[('status', '=', 'completed')]"/>
+                <filter string="Missed / Failed" name="missed" domain="[('is_missed', '=', True)]"/>
+                <filter string="In Progress" name="in_progress"
+                        domain="[('status', 'in', ('initiated','ringing','in_progress'))]"/>
+                <separator/>
+                <filter string="Follow-up Needed" name="follow_up" domain="[('follow_up_needed', '=', True)]"/>
+                <filter string="Has Recording" name="has_recording" domain="[('has_recording', '=', True)]"/>
+                <filter string="Has Summary" name="has_summary" domain="[('has_summary', '=', True)]"/>
+                <filter string="Has Transcript" name="has_transcript" domain="[('has_transcript', '=', True)]"/>
+
+                <group>
+                    <filter string="Status" name="group_by_status" context="{'group_by': 'status'}"/>
+                    <filter string="Outcome" name="group_by_outcome" context="{'group_by': 'outcome'}"/>
+                    <filter string="Call Type" name="group_by_type" context="{'group_by': 'call_type'}"/>
+                    <filter string="Contact" name="group_by_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Agent" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Direction" name="group_by_direction" context="{'group_by': 'direction'}"/>
+                    <filter string="Day" name="group_by_day" context="{'group_by': 'start_time:day'}"/>
+                </group>
+</search>
+        </field>
+    </record>
+
+    <record id="view_twilio_call_log_graph" model="ir.ui.view">
+        <field name="name">twilio.call.log.graph</field>
+        <field name="model">twilio.call.log</field>
+        <field name="arch" type="xml">
+            <graph string="Call Analytics" type="bar" sample="1">
+                <field name="start_time" interval="day"/>
+                <field name="call_count" type="measure"/>
+                <field name="duration" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <record id="view_twilio_call_log_pivot" model="ir.ui.view">
+        <field name="name">twilio.call.log.pivot</field>
+        <field name="model">twilio.call.log</field>
+        <field name="arch" type="xml">
+            <pivot string="Call Pivot" sample="1">
+                <field name="user_id" type="row"/>
+                <field name="status" type="col"/>
+                <field name="call_count" type="measure"/>
+                <field name="duration" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <record id="action_twilio_call_log" model="ir.actions.act_window">
+        <field name="name">Call Logs</field>
+        <field name="res_model">twilio.call.log</field>
+        <field name="view_mode">list,kanban,graph,pivot,form</field>
+        <field name="search_view_id" ref="view_twilio_call_log_search"/>
+        <field name="context">{'search_default_my_calls': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No call logs yet
+            </p>
+            <p>
+                Calls made from the Twilio Power Dialer appear here with status, duration,
+                outcomes, recordings, and AI summaries.
+            </p>
+        </field>
+    </record>
+
+</odoo>

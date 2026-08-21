@@ -185,7 +185,7 @@ export const twilioConfigNav = {
     supportedTypes: ["selection", "char"],
 };
 
-registry.category("fields").add("twilio_config_nav", twilioConfigNav);
+registry.category("fields").add("twilio_config_nav", twilioConfigNav, { force: true });
 
 export class TwilioAllocationPanel extends Component {
     static template = "twilio_dialer.TwilioAllocationPanel";
@@ -198,7 +198,7 @@ export const twilioAllocationPanel = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_allocation_panel", twilioAllocationPanel);
+registry.category("fields").add("twilio_allocation_panel", twilioAllocationPanel, { force: true });
 
 export class TwilioBillingPanel extends Component {
     static template = "twilio_dialer.TwilioBillingPanel";
@@ -211,5 +211,4 @@ export const twilioBillingPanel = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_billing_panel", twilioBillingPanel);
-
+registry.category("fields").add("twilio_billing_panel", twilioBillingPanel, { force: true }, { force: true });$1

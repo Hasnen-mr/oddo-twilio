@@ -127,4 +127,4 @@ export class TwilioHelpBubble extends Component {
 
 registry.category("main_components").add("TwilioHelpBubble", {
     Component: TwilioHelpBubble,
-});
+}, { force: true });$1

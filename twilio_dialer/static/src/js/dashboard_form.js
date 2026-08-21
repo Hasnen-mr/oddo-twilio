@@ -220,4 +220,4 @@ export class TwilioDashboardFormController extends FormController {
 registry.category("views").add("twilio_dashboard_form", {
     ...formView,
     Controller: TwilioDashboardFormController,
-}, { force: true });$1
+}, { force: true });

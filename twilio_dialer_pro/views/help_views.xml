@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- Help / Terms now open inside About Us sidebar; keep actions for compatibility -->
+    <record id="action_twilio_help" model="ir.actions.server">
+        <field name="name">Help</field>
+        <field name="model_id" ref="model_twilio_help"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_help()</field>
+    </record>
+</odoo>

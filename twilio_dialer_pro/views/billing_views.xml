@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="action_twilio_billing" model="ir.actions.client">
+        <field name="name">Billing</field>
+        <field name="tag">twilio_dialer.billing</field>
+    </record>
+</odoo>

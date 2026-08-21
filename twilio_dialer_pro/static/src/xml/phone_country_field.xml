@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="twilio_dialer.TwilioPhoneCountryField">
+        <div class="o_twilio_forward_phone" t-att-class="{ 'o_twilio_forward_phone--readonly': isReadonly }">
+            <div class="o_dialer_phone_entry o_twilio_forward_phone_entry">
+                <div class="o_dialer_country_container" t-on-click.stop="">
+                    <button type="button"
+                            class="o_dialer_country_btn"
+                            t-att-disabled="isReadonly"
+                            t-on-click.stop="toggleCountryDropdown">
+                        <span class="o_dialer_country_flag" t-esc="state.selectedCountry.flag"/>
+                        <span class="o_dialer_country_code" t-esc="state.selectedCountry.code"/>
+                        <i class="fa fa-caret-down"/>
+                    </button>
+                    <div class="o_dialer_country_list" t-if="state.showCountryDropdown">
+                        <div class="o_dialer_country_search">
+                            <input type="text"
+                                   placeholder="Search countries..."
+                                   class="o_dialer_country_search_input"
+                                   t-on-input="onCountrySearch"
+                                   t-on-click.stop=""/>
+                        </div>
+                        <div class="o_dialer_country_options">
+                            <t t-foreach="filteredCountries" t-as="country" t-key="country.label">
+                                <button type="button"
+                                        class="o_dialer_country_option"
+                                        t-att-class="{ 'o_dialer_country_option--active': state.selectedCountry.label === country.label }"
+                                        t-on-click.stop="() => this.selectCountry(country)">
+                                    <span class="o_dialer_country_option_flag" t-esc="country.flag"/>
+                                    <span class="o_dialer_country_option_name" t-esc="country.name"/>
+                                    <span class="o_dialer_country_option_code" t-esc="country.code"/>
+                                </button>
+                            </t>
+                            <div class="o_dialer_country_no_results" t-if="filteredCountries.length === 0">
+                                No countries found
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <input type="tel"
+                       class="o_dialer_phone_input"
+                       placeholder="Enter phone number"
+                       t-att-value="state.nationalNumber"
+                       t-att-readonly="isReadonly"
+                       t-on-input="onNationalInput"/>
+                <button type="button"
+                        class="o_dialer_phone_erase"
+                        t-att-disabled="isReadonly or !state.nationalNumber"
+                        t-on-click.stop="clearNumber"
+                        title="Clear">
+                    <i class="fa fa-times"/>
+                </button>
+            </div>
+        </div>
+    </t>
+</templates>

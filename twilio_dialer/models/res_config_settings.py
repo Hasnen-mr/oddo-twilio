@@ -45,6 +45,10 @@ class ResConfigSettings(models.TransientModel):
         string="Configuration Section",
         default="account",
     )
+    twilio_allocation_panel = fields.Char(
+        string="Allocation Panel",
+        default="1",
+    )
     twilio_billing_panel = fields.Char(
         string="Billing Panel",
         default="1",

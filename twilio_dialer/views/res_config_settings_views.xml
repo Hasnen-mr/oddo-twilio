@@ -270,6 +270,14 @@
                         </div>
                     </block>
 
+                    <!-- Number Allocation Settings -->
+                    <block name="twilio_number_allocation_settings"
+                           invisible="not twilio_is_connected">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--allocation w-100">
+                            <field name="twilio_allocation_panel" widget="twilio_allocation_panel" nolabel="1" class="w-100 o_twilio_cfg_allocation_field"/>
+                        </div>
+                    </block>
+
                     <!-- AI Settings -->
                     <block name="twilio_ai_settings"
                            invisible="not twilio_is_connected">

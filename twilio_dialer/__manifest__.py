@@ -176,6 +176,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
             'twilio_dialer/static/src/js/sms_messaging_dialog.js',
             'twilio_dialer/static/src/js/sms_workspace.js',
             'twilio_dialer/static/src/js/billing.js',
+            'twilio_dialer/static/src/js/number_allocation.js',
             'twilio_dialer/static/src/js/onboarding_wizard.js',
             'twilio_dialer/static/src/js/credentials_help_dialog.js',
             'twilio_dialer/static/src/js/help_dialog.js',

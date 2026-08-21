@@ -119,3 +119,73 @@ class TwilioNumberAllocation(models.Model):
         if not self.env.context.get("no_sync_user_allocations"):
             self.sync_user_allocations()
         return super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
+
+    @api.model
+    def get_allocation_data(self):
+        """Return all phone numbers and user allocation records for the UI."""
+        self.sync_user_allocations()
+        self.env["twilio.phone.number"].sudo()._auto_sync_cached_numbers()
+
+        numbers = self.env["twilio.phone.number"].sudo().search([("active", "=", True)], order="sequence asc, phone_number asc")
+        allocations = self.sudo().search([], order="user_id asc")
+
+        num_data = [
+            {
+                "id": n.id,
+                "phone_number": n.phone_number,
+                "friendly_name": n.friendly_name or n.phone_number,
+                "display_name": n.display_name or n.phone_number,
+                "is_all": n.phone_number == "ALL",
+            }
+            for n in numbers
+        ]
+
+        alloc_data = [
+            {
+                "id": a.id,
+                "user_id": a.user_id.id,
+                "user_name": a.user_id.name or "Unknown User",
+                "user_login": a.user_login or "",
+                "number_ids": a.twilio_number_ids.ids,
+                "status": a.allocation_status or "All Numbers",
+            }
+            for a in allocations
+        ]
+
+        return {
+            "success": True,
+            "numbers": num_data,
+            "allocations": alloc_data,
+        }
+
+    @api.model
+    def update_allocation(self, allocation_id, number_ids):
+        """Update assigned phone numbers for a specific user allocation."""
+        alloc = self.sudo().browse(allocation_id)
+        if not alloc.exists():
+            return {"success": False, "message": "Record not found"}
+
+        if not number_ids:
+            all_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
+            number_ids = [all_opt.id] if all_opt else []
+
+        alloc.write({"twilio_number_ids": [(6, 0, number_ids)]})
+        return {
+            "success": True,
+            "status": alloc.allocation_status,
+            "number_ids": alloc.twilio_number_ids.ids,
+        }
+
+    @api.model
+    def reset_all_to_default(self):
+        """Reset all users to 'All Numbers'."""
+        all_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
+        if not all_opt:
+            all_opt = self.env["twilio.phone.number"].sudo().create({
+                "phone_number": "ALL",
+                "friendly_name": "All numbers",
+                "sequence": 0,
+                "sid": "ALL_NUMBERS_OPTION"
+            })
+        self.sudo().search([]).write({"twilio_number_ids": [(6, 0, [all_opt.id])]})
+        return self.get_allocation_data()

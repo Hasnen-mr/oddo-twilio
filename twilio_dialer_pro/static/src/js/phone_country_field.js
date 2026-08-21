@@ -109,4 +109,4 @@ export const twilioPhoneCountryField = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_phone_country", twilioPhoneCountryField);
+registry.category("fields").add("twilio_phone_country", twilioPhoneCountryField, { force: true }, { force: true });$1

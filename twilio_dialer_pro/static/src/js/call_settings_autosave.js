@@ -282,4 +282,4 @@ export const callSettingsAutosave = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_call_settings_autosave", callSettingsAutosave);
+registry.category("fields").add("twilio_call_settings_autosave", callSettingsAutosave, { force: true }, { force: true });$1

@@ -83,4 +83,4 @@ export class BillingDashboard extends Component {
     }
 }
 
-registry.category("actions").add("twilio_dialer.billing", BillingDashboard);
+registry.category("actions").add("twilio_dialer.billing", BillingDashboard, { force: true }, { force: true });$1

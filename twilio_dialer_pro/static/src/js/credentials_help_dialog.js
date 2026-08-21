@@ -25,4 +25,4 @@ export class TwilioCredentialsHelpDialog extends Component {
 // Client action to invoke from Python (e.g., Configuration page)
 registry.category("actions").add("twilio_dialer.action_credentials_help", (env) => {
     env.services.dialog.add(TwilioCredentialsHelpDialog);
-});
+}, { force: true });$1

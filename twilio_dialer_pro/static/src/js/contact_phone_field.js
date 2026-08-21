@@ -168,4 +168,4 @@ registry.category("fields").add("twilio_call_button", {
     component: TwilioCallButtonField,
     displayName: _t("Twilio Call Button"),
     supportedTypes: ["char"],
-});
+}, { force: true });$1

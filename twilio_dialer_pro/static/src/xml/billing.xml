@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="twilio_dialer.BillingDashboard">
+        <div class="o_twilio_billing">
+            <t t-if="state.loading"><div class="o_twilio_billing_skeleton"/></t>
+            <t t-elif="state.error">
+                <div class="alert alert-warning m-0"><t t-esc="state.error"/></div>
+                <button class="btn btn-primary mt-2" t-on-click="refresh">Refresh</button>
+            </t>
+            <t t-else="">
+                <div class="o_billing_screen">
+                    <t t-call="twilio_dialer.BillingKpis"/>
+                    <t t-call="twilio_dialer.BillingPackages"/>
+                </div>
+            </t>
+        </div>
+    </t>
+
+    <t t-name="twilio_dialer.BillingKpis">
+        <section class="o_billing_kpis" t-att-class="'o_billing_kpis--' + usageState">
+            <article class="o_billing_kpi o_billing_kpi--remain">
+                <div class="o_billing_kpi_top">
+                    <span class="o_billing_kpi_icon"><i class="fa fa-wallet"/></span>
+                    <span class="o_billing_kpi_pulse" t-att-class="'o_billing_kpi_pulse--' + usageState"/>
+                </div>
+                <span class="o_billing_kpi_label">Credits Remaining</span>
+                <b class="o_billing_kpi_value" t-esc="state.billing.remaining"/>
+                <small>Available for calls</small>
+                <div class="o_billing_kpi_meter">
+                    <span t-att-style="'width: ' + Math.max(100 - Math.round(progress), 0) + '%'"/>
+                </div>
+            </article>
+
+            <article class="o_billing_kpi o_billing_kpi--total">
+                <div class="o_billing_kpi_top">
+                    <span class="o_billing_kpi_icon"><i class="fa fa-coins"/></span>
+                </div>
+                <span class="o_billing_kpi_label">Total Credits</span>
+                <b class="o_billing_kpi_value" t-esc="state.billing.limit"/>
+                <small>Current allowance</small>
+            </article>
+
+            <article class="o_billing_kpi o_billing_kpi--calls">
+                <div class="o_billing_kpi_top">
+                    <span class="o_billing_kpi_icon"><i class="fa fa-phone"/></span>
+                </div>
+                <span class="o_billing_kpi_label">Calls Used</span>
+                <b class="o_billing_kpi_value" t-esc="state.billing.usage"/>
+                <div class="o_billing_kpi_chips">
+                    <span class="o_billing_kpi_chip o_billing_kpi_chip--in">
+                        <i class="fa fa-arrow-down"/>
+                        <t t-esc="state.billing.incoming"/> in
+                    </span>
+                    <span class="o_billing_kpi_chip o_billing_kpi_chip--out">
+                        <i class="fa fa-arrow-up"/>
+                        <t t-esc="state.billing.outgoing"/> out
+                    </span>
+                </div>
+            </article>
+
+            <article class="o_billing_kpi o_billing_kpi--usage">
+                <div class="o_billing_kpi_ring">
+                    <svg viewBox="0 0 36 36" aria-hidden="true">
+                        <path class="o_billing_kpi_ring_bg"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        <path class="o_billing_kpi_ring_fg"
+                              t-att-stroke-dasharray="Math.round(progress) + ', 100'"
+                              d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                    </svg>
+                    <strong><t t-esc="Math.round(progress)"/>%</strong>
+                </div>
+                <div class="o_billing_kpi_usage_copy">
+                    <span class="o_billing_kpi_label">Usage</span>
+                    <small t-esc="usageState === 'over-limit' ? 'Over your allowance' : usageState === 'warning' ? 'Almost at limit' : 'Of current allowance'"/>
+                </div>
+            </article>
+        </section>
+    </t>
+
+    <t t-name="twilio_dialer.BillingPackages">
+        <section class="o_billing_packages">
+            <header class="o_billing_packages_header">
+                <div class="o_billing_packages_heading">
+                    <span class="o_billing_eyebrow">Plans</span>
+                    <h2>Buy Call Credits</h2>
+                    <p>Top up your softphone balance. Pay securely with PayPal — credits apply to your Twilio account after purchase.</p>
+                </div>
+            </header>
+            <div class="o_billing_package_grid">
+                <t t-foreach="packages" t-as="pkg" t-key="pkg.id">
+                    <article class="o_billing_package"
+                             t-att-class="pkg.featured ? 'o_billing_package--featured' : ''">
+                        <t t-if="pkg.featured">
+                            <span class="o_billing_package_tag">Most Popular</span>
+                        </t>
+                        <div class="o_billing_package_top">
+                            <span class="o_billing_package_label" t-esc="pkg.label"/>
+                            <div class="o_billing_package_price_row">
+                                <b class="o_billing_package_price" t-esc="pkg.price"/>
+                                <span class="o_billing_package_period">one-time</span>
+                            </div>
+                            <span class="o_billing_package_calls">
+                                <i class="fa fa-phone"/>
+                                <t t-esc="pkg.calls"/> calls
+                            </span>
+                        </div>
+                        <ul class="o_billing_package_features">
+                            <li><i class="fa fa-check"/> Softphone &amp; Auto Dialer</li>
+                            <li><i class="fa fa-check"/> Incoming &amp; outgoing calls</li>
+                            <li><i class="fa fa-check"/> Instant credit top-up</li>
+                            <li t-if="pkg.featured"><i class="fa fa-check"/> Best value per call</li>
+                        </ul>
+                        <button class="btn o_billing_btn o_billing_btn--primary"
+                                t-att-class="pkg.featured ? 'o_billing_btn--featured' : ''"
+                                t-on-click="() => openUrl(pkg.url)">
+                            Buy <t t-esc="pkg.label"/>
+                        </button>
+                    </article>
+                </t>
+            </div>
+            <p class="o_billing_packages_note">
+                <i class="fa fa-lock"/> Secure checkout via PayPal. Credits are non-transferable.
+            </p>
+        </section>
+    </t>
+</templates>

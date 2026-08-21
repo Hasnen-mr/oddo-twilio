@@ -1,0 +1,268 @@
+/* Dashboard onboarding wizard */
+
+@keyframes o_twilio_fade_in {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+body.o_twilio_onboard_open .modal-backdrop {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background-color: rgba(15, 23, 42, 0.48) !important;
+    opacity: 1 !important;
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Fixed size so every step shares the same width & height */
+.modal-dialog:has(.o_twilio_onboard_dialog) {
+    max-width: 720px;
+    width: 720px;
+    animation: o_twilio_fade_in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.o_twilio_onboard_dialog {
+    width: 100%;
+    min-height: 560px;
+    display: flex;
+    flex-direction: column;
+
+    .modal-body {
+        flex: 1 1 auto;
+        display: flex;
+        flex-direction: column;
+        min-height: 420px;
+    }
+
+    .modal-header {
+        border-bottom: 1px solid #eef1f4;
+
+        /* Required wizard — no dismiss control */
+        .btn-close {
+            display: none !important;
+        }
+    }
+
+    .modal-footer {
+        border-top: 1px solid #eef1f4;
+        gap: 0.5rem;
+        min-height: 64px;
+    }
+}
+
+.o_twilio_onboard {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0.5rem 0.75rem;
+    width: 100%;
+    min-height: 420px;
+    box-sizing: border-box;
+}
+
+.o_twilio_onboard_progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    flex-shrink: 0;
+}
+
+.o_twilio_onboard_step_label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #6c757d;
+}
+
+.o_twilio_onboard_dots {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.o_twilio_onboard_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #dee2e6;
+    transition: background 0.2s ease, transform 0.2s ease;
+
+    &.is-active {
+        background: #714b67;
+        transform: scale(1.2);
+    }
+
+    &.is-done {
+        background: #a989a0;
+    }
+}
+
+.o_twilio_onboard_body {
+    text-align: center;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    min-height: 340px;
+}
+
+.o_twilio_onboard_icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.15rem;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3edf2;
+    color: #714b67;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+
+    &--success {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+}
+
+.o_twilio_onboard_title {
+    margin: 0 0 0.75rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+.o_twilio_onboard_text {
+    margin: 0 auto 1rem;
+    max-width: 520px;
+    width: 100%;
+    color: #495057;
+    line-height: 1.55;
+    font-size: 0.98rem;
+}
+
+.o_twilio_onboard_list {
+    text-align: left;
+    max-width: 480px;
+    width: 100%;
+    margin: 0 auto;
+    padding-left: 1.2rem;
+    color: #495057;
+
+    li {
+        margin-bottom: 0.35rem;
+        line-height: 1.4;
+    }
+}
+
+.o_twilio_onboard_form {
+    text-align: left;
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 0.35rem;
+    width: 100%;
+    max-width: 520px;
+}
+
+.o_twilio_onboard_field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    margin: 0;
+
+    span {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+    }
+
+    input[readonly] {
+        background: #f8f9fa;
+        color: #495057;
+    }
+}
+
+.o_twilio_onboard_error {
+    margin-top: 0.85rem;
+    text-align: left;
+    font-size: 0.875rem;
+    width: 100%;
+    max-width: 520px;
+}
+
+.o_twilio_onboard_email_highlight {
+    display: inline-block;
+    background: #eef2ff;
+    color: #4338ca !important;
+    padding: 3px 12px;
+    border-radius: 6px;
+    margin-top: 4px;
+    border: 1px solid #c7d2fe;
+    font-size: 0.95rem;
+}
+
+.o_twilio_otp_input {
+    letter-spacing: 8px !important;
+    font-size: 1.5rem !important;
+    font-weight: 700 !important;
+    text-align: center !important;
+    height: 52px !important;
+    border-radius: 8px !important;
+    background: #ffffff !important;
+    color: #1f2937 !important;
+    border: 1.5px solid #ced4da !important;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease !important;
+
+    &:focus {
+        border-color: #714b67 !important;
+        box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.15) !important;
+        outline: none;
+    }
+}
+
+.o_twilio_onboard_connect {
+    min-width: 120px;
+}
+
+.o_twilio_onboard_loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 10px;
+    background: #f3edf2;
+    color: #714b67;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+@media (max-width: 768px) {
+    .modal-dialog:has(.o_twilio_onboard_dialog) {
+        width: calc(100% - 1.5rem);
+        max-width: calc(100% - 1.5rem);
+        margin: 0.75rem auto;
+    }
+
+    .o_twilio_onboard_dialog {
+        min-height: 480px;
+    }
+
+    .o_twilio_onboard,
+    .o_twilio_onboard_body {
+        min-height: 300px;
+    }
+}

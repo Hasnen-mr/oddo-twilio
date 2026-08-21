@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Root Menu -->
+    <menuitem id="menu_twilio_dialer_root"
+              name="Twilio Calling System"
+              groups="base.group_user"
+              sequence="35"
+              web_icon="twilio_dialer,static/description/icon.png"/>
+
+    <!-- Dashboard -->
+    <menuitem id="menu_twilio_dialer_dashboard"
+              name="Dashboard"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_dashboard"
+              sequence="5"/>
+
+    <!-- Call Logs -->
+    <menuitem id="menu_twilio_dialer_call_logs"
+              name="Call Logs"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_call_log"
+              sequence="10"/>
+
+    <!-- Dedicated SMS Workspace (opens dashboard directly — matching Auto Dialer / Dashboard / Call Logs) -->
+    <menuitem id="menu_twilio_sms_parent"
+              name="SMS"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_sms_workspace"
+              sequence="15"/>
+
+    <!-- Auto Dialer (opens page directly — no submenu) -->
+    <menuitem id="menu_twilio_auto_dialer_parent"
+              name="Auto Dialer"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_auto_dialer"
+              sequence="20"/>
+
+    <!-- Contacts -->
+    <menuitem id="menu_twilio_contacts"
+              name="Contacts"
+              parent="menu_twilio_dialer_root"
+              action="contacts.action_contacts"
+              sequence="25"/>
+
+    <!-- Configuration -->
+    <menuitem id="menu_twilio_dialer_configuration"
+              name="Configuration"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_configuration_menu"
+              groups="base.group_system"
+              sequence="30"/>
+
+    <!-- About Us (Overview / Help / Terms live in the left sidebar) -->
+    <menuitem id="menu_twilio_contact_us"
+              name="About Us"
+              parent="menu_twilio_dialer_root"
+              action="action_twilio_contact_us"
+              sequence="40"/>
+
+</odoo>

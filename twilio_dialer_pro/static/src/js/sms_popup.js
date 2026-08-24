@@ -1,10 +1,10 @@
 /** @odoo-module **/
 
-import { rpc } from "@web/core/network/rpc";
-import { Component, useState, onWillStart, onMounted, onWillUnmount, useRef } from "@odoo/owl";
-import { _t } from "@web/core/l10n/translation";
-import { useService } from "@web/core/utils/hooks";
+import { Component, onMounted, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { normalizePhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
+import { _t } from "@web/core/l10n/translation";
+import { rpc } from "@web/core/network/rpc";
+import { useService } from "@web/core/utils/hooks";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days expiry

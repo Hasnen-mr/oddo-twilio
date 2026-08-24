@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, reactive, useState } from "@odoo/owl";
+import { TwilioHelpDialog } from "@twilio_dialer_pro/js/help_dialog";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { TwilioHelpDialog } from "@twilio_dialer_pro/js/help_dialog";
 
 export class TwilioHelpBubble extends Component {
     static template = "twilio_dialer.TwilioHelpBubble";

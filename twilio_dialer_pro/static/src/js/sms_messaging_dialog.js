@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
-import { rpc } from "@web/core/network/rpc";
-import { Component, useState, onWillStart } from "@odoo/owl";
-import { useService } from "@web/core/utils/hooks";
+import { Component, onWillStart, useState } from "@odoo/owl";
 import { TwilioSmsPopup } from "@twilio_dialer_pro/js/sms_popup";
+import { rpc } from "@web/core/network/rpc";
+import { useService } from "@web/core/utils/hooks";
 
 export class TwilioSmsMessagingDialog extends Component {
     static template = "twilio_dialer.TwilioSmsMessagingDialog";

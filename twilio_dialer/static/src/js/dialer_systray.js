@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
 import { Component, useState } from "@odoo/owl";
+import { DialerPopup } from "@twilio_dialer/js/dialer_popup";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { DialerPopup } from "@twilio_dialer/js/dialer_popup";
 
 export class DialerSystray extends Component {
     static components = { DialerPopup };

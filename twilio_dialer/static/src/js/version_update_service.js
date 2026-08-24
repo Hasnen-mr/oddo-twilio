@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
-import { registry } from "@web/core/registry";
 import { VersionUpdateDialog } from "@twilio_dialer/js/version_update_dialog";
+import { registry } from "@web/core/registry";
 
 const CHECK_DELAY_MS = 2500;
 

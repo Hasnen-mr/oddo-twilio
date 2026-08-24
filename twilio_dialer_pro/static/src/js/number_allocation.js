@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, useState, useRef } from "@odoo/owl";
+import { Component, onWillStart, useRef, useState } from "@odoo/owl";
+import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { _t } from "@web/core/l10n/translation";
 
 export class NumberAllocationPanel extends Component {
     static template = "twilio_dialer_pro.NumberAllocationPanel";

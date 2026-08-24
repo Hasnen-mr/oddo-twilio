@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
 import { reactive } from "@odoo/owl";
-import { registry } from "@web/core/registry";
-import { normalizePhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
 import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
+import { normalizePhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
+import { registry } from "@web/core/registry";
 
 const dialerState = reactive({
     isOpen: false,

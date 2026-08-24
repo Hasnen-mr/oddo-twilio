@@ -1,12 +1,12 @@
 /** @odoo-module **/
 
 import { Component, onMounted, onWillUnmount, useEffect, useRef } from "@odoo/owl";
-import { registry } from "@web/core/registry";
-import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { useService } from "@web/core/utils/hooks";
-import { _t } from "@web/core/l10n/translation";
 import { BillingDashboard } from "@twilio_dialer/js/billing";
 import { setUiField } from "@twilio_dialer/js/settings_ui_field";
+import { _t } from "@web/core/l10n/translation";
+import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 const SECTIONS = [
     { id: "call", label: _t("Call Settings"), icon: "fa-phone" },

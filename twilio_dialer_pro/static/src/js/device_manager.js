@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
-import { rpc } from "@web/core/network/rpc";
 import { loadJS } from "@web/core/assets";
+import { rpc } from "@web/core/network/rpc";
 
 const TWILIO_SDK_PATH = "/twilio_dialer/static/lib/twilio/twilio.min.js";
 

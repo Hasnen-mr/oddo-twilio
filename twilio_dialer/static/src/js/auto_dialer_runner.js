@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
-import { rpc } from "@web/core/network/rpc";
-import { Component, useState, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
-import { useService } from "@web/core/utils/hooks";
+import { Component, onWillStart, onWillUnmount, useEffect, useState } from "@odoo/owl";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
+import { rpc } from "@web/core/network/rpc";
+import { useService } from "@web/core/utils/hooks";
 
 /**
  * AutoDialerRunner — Phase 2A Queue Runner

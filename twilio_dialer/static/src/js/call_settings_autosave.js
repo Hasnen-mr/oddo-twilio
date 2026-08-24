@@ -1,11 +1,11 @@
 /** @odoo-module **/
 
 import { Component, onWillUnmount, useEffect } from "@odoo/owl";
-import { registry } from "@web/core/registry";
-import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { useService } from "@web/core/utils/hooks";
-import { _t } from "@web/core/l10n/translation";
 import { setUiField } from "@twilio_dialer/js/settings_ui_field";
+import { _t } from "@web/core/l10n/translation";
+import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 const WATCHED_FIELDS = [
     "twilio_phone_number",

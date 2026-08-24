@@ -1,10 +1,10 @@
 /** @odoo-module **/
 
-import { Component, useExternalListener, useEffect, useState } from "@odoo/owl";
-import { registry } from "@web/core/registry";
-import { standardFieldProps } from "@web/views/fields/standard_field_props";
+import { Component, useEffect, useExternalListener, useState } from "@odoo/owl";
 import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
 import { buildE164, splitPhoneNumber } from "@twilio_dialer/js/phone_utils";
+import { registry } from "@web/core/registry";
+import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 export class TwilioPhoneCountryField extends Component {
     static template = "twilio_dialer.TwilioPhoneCountryField";

@@ -372,7 +372,7 @@ class ResConfigSettings(models.TransientModel):
     @api.model
     def action_open_twilio_configuration(self):
         """Open Configuration; default to Account Settings."""
-        action = self.env.ref("twilio_dialer.action_twilio_configuration").sudo().read()[0]
+        action = self.env.ref("twilio_dialer_pro.action_twilio_configuration").sudo().read()[0]
         section = self.env.context.get("default_twilio_config_section")
         if section not in ("account", "call", "allocation", "ai", "billing"):
             section = "account"
@@ -881,7 +881,7 @@ class ResConfigSettings(models.TransientModel):
         """Open the Twilio credentials finder guide."""
         return {
             "type": "ir.actions.client",
-            "tag": "twilio_dialer.action_credentials_help",
+            "tag": "twilio_dialer_pro.action_credentials_help",
             "target": "new",
         }
 

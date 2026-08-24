@@ -208,16 +208,16 @@ class TwilioDialerDashboard(models.TransientModel):
         """Open softphone when connected; otherwise send user to Configuration."""
         self.ensure_one()
         if self.connection_configured:
-            return self.env.ref("twilio_dialer.action_twilio_open_phone").read()[0]
+            return self.env.ref("twilio_dialer_pro.action_twilio_open_phone").read()[0]
         return self.action_open_configuration()
 
     def action_open_call_logs(self):
-        return self.env.ref("twilio_dialer.action_twilio_call_log").read()[0]
+        return self.env.ref("twilio_dialer_pro.action_twilio_call_log").read()[0]
 
     def action_open_call_graph(self):
         action = self.action_open_call_logs()
-        graph = self.env.ref("twilio_dialer.view_twilio_call_log_graph")
-        pivot = self.env.ref("twilio_dialer.view_twilio_call_log_pivot")
+        graph = self.env.ref("twilio_dialer_pro.view_twilio_call_log_graph")
+        pivot = self.env.ref("twilio_dialer_pro.view_twilio_call_log_pivot")
         action.update({
             "name": "Call Analytics by Date",
             "views": [(graph.id, "graph"), (pivot.id, "pivot"), (False, "list")],
@@ -227,8 +227,8 @@ class TwilioDialerDashboard(models.TransientModel):
 
     def action_open_agent_analytics(self):
         action = self.action_open_call_logs()
-        pivot = self.env.ref("twilio_dialer.view_twilio_call_log_pivot")
-        graph = self.env.ref("twilio_dialer.view_twilio_call_log_graph")
+        pivot = self.env.ref("twilio_dialer_pro.view_twilio_call_log_pivot")
+        graph = self.env.ref("twilio_dialer_pro.view_twilio_call_log_graph")
         action.update({
             "name": "Agent Call Analytics",
             "views": [(pivot.id, "pivot"), (graph.id, "graph"), (False, "list")],
@@ -237,7 +237,7 @@ class TwilioDialerDashboard(models.TransientModel):
         return action
 
     def action_open_auto_dialer(self):
-        return self.env.ref("twilio_dialer.action_twilio_auto_dialer").read()[0]
+        return self.env.ref("twilio_dialer_pro.action_twilio_auto_dialer").read()[0]
 
     def action_open_contacts(self):
         return self.env.ref("contacts.action_contacts").read()[0]

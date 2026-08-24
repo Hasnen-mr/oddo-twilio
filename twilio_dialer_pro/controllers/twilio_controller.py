@@ -13,10 +13,74 @@ try:
 except ImportError:
     _TWILIO_TWIML_AVAILABLE = False
 
+try:
+    from twilio.request_validator import RequestValidator
+    _TWILIO_VALIDATOR_AVAILABLE = True
+except ImportError:
+    _TWILIO_VALIDATOR_AVAILABLE = False
+
 _logger = logging.getLogger(__name__)
 
 
 class TwilioController(http.Controller):
+    def _validate_twilio_request(self):
+        """Cryptographically validates incoming webhook requests using X-Twilio-Signature and Auth Token."""
+        if not _TWILIO_VALIDATOR_AVAILABLE:
+            _logger.error("Twilio RequestValidator module is not available.")
+            return False
+
+        try:
+            auth_token = (
+                request.env["ir.config_parameter"]
+                .sudo()
+                .get_param("twilio_dialer.auth_token")
+                or ""
+            ).strip()
+            if not auth_token:
+                _logger.error("Twilio Webhook validation failed: Auth Token not configured.")
+                return False
+
+            signature = request.httprequest.headers.get("X-Twilio-Signature", "").strip()
+            if not signature:
+                _logger.warning("Twilio Webhook rejected: Missing X-Twilio-Signature header.")
+                return False
+
+            validator = RequestValidator(auth_token)
+
+            # Collect parameters (Form for POST, Args for GET)
+            if request.httprequest.method == "POST":
+                params = dict(request.httprequest.form)
+            else:
+                params = dict(request.httprequest.args)
+
+            # Candidate 1: Standard reconstruction from headers (respecting reverse proxies)
+            proto = request.httprequest.headers.get("X-Forwarded-Proto", request.httprequest.scheme or "https")
+            host = request.httprequest.headers.get("X-Forwarded-Host", request.httprequest.host)
+            path = request.httprequest.full_path or request.httprequest.path
+            candidate_url1 = f"{proto}://{host}{path}"
+
+            if validator.validate(candidate_url1, params, signature):
+                return True
+
+            # Candidate 2: Using configured web.base.url
+            base_url = (request.env["ir.config_parameter"].sudo().get_param("web.base.url") or "").rstrip("/")
+            if base_url:
+                candidate_url2 = f"{base_url}{path}"
+                if validator.validate(candidate_url2, params, signature):
+                    return True
+
+            # Candidate 3: Direct request URL
+            direct_url = request.httprequest.url
+            if direct_url and direct_url not in (candidate_url1, candidate_url2 if base_url else None):
+                if validator.validate(direct_url, params, signature):
+                    return True
+
+            _logger.warning("Twilio Webhook rejected: Invalid X-Twilio-Signature.")
+            return False
+        except Exception as e:
+            _logger.error(f"Error during Twilio signature validation: {e}")
+            return False
+
 
     @http.route("/twilio_dialer/token", type="http", auth="user", methods=["GET"])
     def get_token(self, **kwargs):
@@ -121,6 +185,8 @@ class TwilioController(http.Controller):
         csrf=False,
     )
     def call_setup(self, **kwargs):
+        if not self._validate_twilio_request():
+            return Response("Forbidden: Invalid Twilio Signature", status=403, content_type="text/plain")
         try:
             params = kwargs or dict(request.httprequest.form) or dict(request.httprequest.args)
             direction = (
@@ -234,6 +300,8 @@ class TwilioController(http.Controller):
         Behavior is driven by the external MyBroadcast call settings when available
         and falls back to ir.config_parameter values for AI/transcription flags.
         """
+        if not self._validate_twilio_request():
+            return Response("Forbidden: Invalid Twilio Signature", status=403, content_type="text/plain")
         try:
             # Normalize parameters from Twilio
             params = kwargs or dict(request.httprequest.form) or dict(request.httprequest.args)
@@ -401,6 +469,8 @@ class TwilioController(http.Controller):
         and updates the corresponding twilio.call.log record. It reuses the existing
         update_call_status and recording sync logic.
         """
+        if not self._validate_twilio_request():
+            return Response("Forbidden: Invalid Twilio Signature", status=403, content_type="text/plain")
         try:
             params = kwargs or dict(request.httprequest.form) or dict(request.httprequest.args)
             call_sid = (

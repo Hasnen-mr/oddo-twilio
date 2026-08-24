@@ -96,7 +96,7 @@ export class TwilioConfigNav extends Component {
         if (record && !this._hasRealPendingEdits(record)) {
             record.dirty = false;
         }
-        this.action.doAction("twilio_dialer.action_twilio_dashboard");
+        this.action.doAction("twilio_dialer_pro.action_twilio_dashboard");
     }
 
     /**

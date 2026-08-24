@@ -10,7 +10,7 @@ import * as phoneFieldModule from "@web/views/fields/phone/phone_field";
 const PhoneField = phoneFieldModule.PhoneField;
 const phoneField = phoneFieldModule.phoneField;
 const formPhoneField = phoneFieldModule.formPhoneField;
-import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer_pro/js/sms_messaging_dialog";
 
 // ── Shared call-button component ─────────────────────────────────────────────
 //

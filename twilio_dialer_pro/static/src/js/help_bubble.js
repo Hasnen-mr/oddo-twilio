@@ -3,7 +3,7 @@
 import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
+import { TwilioHelpDialog } from "@twilio_dialer_pro/js/help_dialog";
 
 export class TwilioHelpBubble extends Component {
     static template = "twilio_dialer.TwilioHelpBubble";
@@ -107,10 +107,10 @@ export class TwilioHelpBubble extends Component {
             onOpenDialer: () => this.dialer.open(),
             onOpenTroubleshooter: () => this.dialer.openTroubleshooter(),
             onOpenConfig: () => {
-                this.actionService.doAction("twilio_dialer.action_twilio_configuration_menu");
+                this.actionService.doAction("twilio_dialer_pro.action_twilio_configuration_menu");
             },
             onOpenAboutHelp: () => {
-                this.actionService.doAction("twilio_dialer.action_twilio_help");
+                this.actionService.doAction("twilio_dialer_pro.action_twilio_help");
             },
         });
     }

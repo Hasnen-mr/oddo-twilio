@@ -19,7 +19,7 @@
                             <div>
                                 <h1>What this module does</h1>
                                 <p>
-                                    Twilio Call Auto Dialer brings browser calling, Auto Dialer campaigns,
+                                    Twilio Call Auto Dialer Pro brings browser calling, Auto Dialer campaigns,
                                     contact click-to-call, local call logs, and optional AI summaries into Odoo.
                                 </p>
                             </div>
@@ -187,7 +187,7 @@
                             <div>
                                 <h1>Terms &amp; Privacy</h1>
                                 <p>
-                                    How Twilio Call Auto Dialer works with your Twilio account, how data is handled,
+                                    How Twilio Call Auto Dialer Pro works with your Twilio account, how data is handled,
                                     and our fair usage policy.
                                 </p>
                             </div>
@@ -196,7 +196,7 @@
                         <div class="o_twilio_terms_block">
                             <h3>1. Your Twilio Account</h3>
                             <p>
-                                Twilio Call Auto Dialer connects exclusively to
+                                Twilio Call Auto Dialer Pro connects exclusively to
                                 <strong>your own Twilio account</strong>. You must provide your
                                 Twilio Account SID, Auth Token, and phone number. All voice calls
                                 are executed through Twilio under your account and billed by Twilio.

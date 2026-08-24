@@ -7,8 +7,8 @@
         <button type="button"
                 class="o_dialer_toggle_btn"
                 t-att-class="{ 'o_dialer_toggle_btn--open': state.isOpen }"
-                title="Twilio Call Auto Dialer"
-                aria-label="Twilio Call Auto Dialer"
+                title="Twilio Call Auto Dialer Pro"
+                aria-label="Twilio Call Auto Dialer Pro"
                 t-on-click="togglePanel">
             <span class="o_dialer_toggle_visual" aria-hidden="true">
                 <span class="o_dialer_toggle_ring o_dialer_toggle_ring--outer"/>
@@ -37,7 +37,7 @@
             <div class="o_dialer_header">
                 <div class="o_dialer_header_left">
                     <i class="fa fa-phone-o o_dialer_header_icon"/>
-                    <span class="o_dialer_title">Twilio Call Auto Dialer</span>
+                    <span class="o_dialer_title">Twilio Call Auto Dialer Pro</span>
                     <span class="o_dialer_status_badge" t-att-class="'o_dialer_status_badge--' + statusClass">
                         <span class="o_dialer_status_dot"/>
                         <t t-esc="statusLabel"/>
@@ -505,7 +505,7 @@
                     <div class="o_dialer_tab_panel o_dialer_about">
                         <div class="o_dialer_tab_hero">
                             <i class="fa fa-info-circle o_dialer_tab_hero_icon"/>
-                            <h3 class="o_dialer_tab_title">About Twilio Call Auto Dialer</h3>
+                            <h3 class="o_dialer_tab_title">About Twilio Call Auto Dialer Pro</h3>
                             <p class="o_dialer_tab_copy">
                                 Powered by Solutions Master &amp; MyBroadcast.
                             </p>

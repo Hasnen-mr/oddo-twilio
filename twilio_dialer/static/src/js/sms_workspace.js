@@ -14,6 +14,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     static template = "twilio_dialer.TwilioSmsWorkspaceClientAction";
 
     setup() {
+        this.rpc = useService("rpc");
                 this.action = useService("action");
         this.dialog = useService("dialog");
         this.state = useState({
@@ -37,7 +38,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
         this.state.loading = true;
         try {
             // Load record counts
-            const res = await rpc("/twilio_dialer/sms/workspace_counts");
+            const res = await this.rpc("/twilio_dialer/sms/workspace_counts");
             if (res && res.success) {
                 this.state.counts = res.counts;
             }
@@ -83,7 +84,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
             this.state.drafts = foundDrafts;
 
             // Load recent SMS logs for the embedded workspace table
-            const logsRes = await rpc("/twilio_dialer/sms/get_recent_logs", { limit: 50 });
+            const logsRes = await this.rpc("/twilio_dialer/sms/get_recent_logs", { limit: 50 });
             if (logsRes && logsRes.success) {
                 this.state.recentLogs = logsRes.logs || [];
             }

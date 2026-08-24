@@ -5,12 +5,12 @@ import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
-import { setUiField } from "@twilio_dialer/js/settings_ui_field";
+import { setUiField } from "@twilio_dialer_pro/js/settings_ui_field";
 import {
     getCachedCallSettings,
     setCachedCallSettings,
     fetchCallSettingsWithCache,
-} from "@twilio_dialer/js/call_settings_cache";
+} from "@twilio_dialer_pro/js/call_settings_cache";
 
 const WATCHED_FIELDS = [
     "twilio_phone_number",
@@ -68,6 +68,7 @@ export class CallSettingsAutosave extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
+        this.rpc = useService("rpc");
         this.notification = useService("notification");
         this.orm = useService("orm");
         this._ready = false;

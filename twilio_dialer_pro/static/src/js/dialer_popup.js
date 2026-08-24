@@ -3,10 +3,10 @@
 import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { Component, useExternalListener, useState, onWillStart, onMounted, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
-import { AutoDialerRunner } from "@twilio_dialer/js/auto_dialer_runner";
-import { splitPhoneNumber } from "@twilio_dialer/js/phone_utils";
+import { COUNTRY_CODES } from "@twilio_dialer_pro/js/country_codes";
+import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
+import { AutoDialerRunner } from "@twilio_dialer_pro/js/auto_dialer_runner";
+import { splitPhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 const CONTACT_PAGE_SIZE = 30;
@@ -26,6 +26,7 @@ export class DialerPopup extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
                 this.orm = useService("orm");
         this.action = useService("action");
         const defaultCountry = COUNTRY_CODES.find((country) => country.code === "+91") || COUNTRY_CODES[0];
@@ -132,7 +133,7 @@ export class DialerPopup extends Component {
             return;
         }
         try {
-            const result = await rpc("/twilio_dialer/auto_dialer/navigate", {
+            const result = await this.rpc("/twilio_dialer/auto_dialer/navigate", {
                 dialer_id: dialerId,
                 action_name: actionName,
             });
@@ -369,7 +370,7 @@ export class DialerPopup extends Component {
     }
 
     async _loadConfiguredPhoneNumber() {
-        const result = await rpc("/twilio_dialer/phone_number");
+        const result = await this.rpc("/twilio_dialer/phone_number");
         this.state.systemPhoneNumber = result.phone_number || "";
         const preferredNumber =
             this.props.fromNumber ||
@@ -517,7 +518,7 @@ export class DialerPopup extends Component {
     }
 
     openAutoCallingSetup() {
-        this.action.doAction("twilio_dialer.action_twilio_auto_dialer_menu");
+        this.action.doAction("twilio_dialer_pro.action_twilio_auto_dialer_menu");
         if (this.props.onClose) {
             this.props.onClose();
         }
@@ -529,7 +530,7 @@ export class DialerPopup extends Component {
         if (dialer?.state) {
             dialer.state.isOpen = true;
         }
-        this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
+        this.action.doAction("twilio_dialer_pro.action_twilio_configuration_menu");
     }
 
     openContacts() {
@@ -1023,9 +1024,9 @@ export class DialerPopup extends Component {
     openHelpSupport() {
         this.closeQuickDebugModal();
         try {
-            this.action.doAction("twilio_dialer.action_twilio_help");
+            this.action.doAction("twilio_dialer_pro.action_twilio_help");
         } catch (e) {
-            this.action.doAction("twilio_dialer.action_twilio_contact_us", {
+            this.action.doAction("twilio_dialer_pro.action_twilio_contact_us", {
                 additionalContext: { twilio_about_section: "help" },
             });
         }

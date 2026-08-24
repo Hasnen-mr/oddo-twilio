@@ -16,6 +16,7 @@ export class ContactSmsButton extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.dialog = useService("dialog");
         this.notification = useService("notification");
     }

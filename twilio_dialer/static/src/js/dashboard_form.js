@@ -51,6 +51,7 @@ export class TwilioDashboardFormController extends FormController {
     static template = "twilio_dialer.TwilioDashboardFormView";
 
     setup() {
+        this.rpc = useService("rpc");
         super.setup();
         this.dialog = useService("dialog");
         this.action = useService("action");

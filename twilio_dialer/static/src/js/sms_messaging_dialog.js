@@ -17,6 +17,7 @@ export class TwilioSmsMessagingDialog extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
                 this.state = useState({
             loading: true,
             searchQuery: "",
@@ -35,7 +36,7 @@ export class TwilioSmsMessagingDialog extends Component {
     async loadContacts() {
         this.state.loading = true;
         try {
-            const res = await rpc("/twilio_dialer/sms/get_contacts");
+            const res = await this.rpc("/twilio_dialer/sms/get_contacts");
             if (res && res.success) {
                 this.state.contacts = res.contacts || [];
                 // If initial selection exists, select it; else pick first contact if available

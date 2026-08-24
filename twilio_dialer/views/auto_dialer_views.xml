@@ -210,7 +210,7 @@
     <record id="action_twilio_auto_dialer" model="ir.actions.act_window">
         <field name="name">Dialing Queues</field>
         <field name="res_model">twilio.auto.dialer</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="search_view_id" ref="view_twilio_auto_dialer_search"/>
         <field name="context">{
             'search_default_my_queues': 1,

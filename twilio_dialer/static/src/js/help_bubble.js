@@ -9,6 +9,7 @@ export class TwilioHelpBubble extends Component {
     static template = "twilio_dialer.TwilioHelpBubble";
 
     setup() {
+        this.rpc = useService("rpc");
         this.dialog = useService("dialog");
         this.actionService = useService("action");
         this.menuService = useService("menu");

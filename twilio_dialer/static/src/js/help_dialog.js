@@ -15,6 +15,7 @@ export class TwilioHelpDialog extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.state = useState({
             activeCategory: "make_call",
         });

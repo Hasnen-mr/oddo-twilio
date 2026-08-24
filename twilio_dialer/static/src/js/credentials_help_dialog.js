@@ -12,6 +12,7 @@ export class TwilioCredentialsHelpDialog extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.state = useState({
             activeTab: "classic", // 'classic' or 'new'
         });

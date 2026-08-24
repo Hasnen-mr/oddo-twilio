@@ -22,6 +22,7 @@ export class TwilioConfigNav extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
+        this.rpc = useService("rpc");
         this.action = useService("action");
         this.rootRef = useRef("root");
         this._syncingSection = false;

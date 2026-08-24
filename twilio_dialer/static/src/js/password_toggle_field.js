@@ -10,6 +10,7 @@ export class PasswordToggleField extends CharField {
     static template = "twilio_dialer.PasswordToggleField";
 
     setup() {
+        this.rpc = useService("rpc");
         super.setup();
         this.revealState = useState({ visible: false });
     }

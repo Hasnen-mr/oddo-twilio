@@ -26,6 +26,7 @@ export class DialerPopup extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
                 this.orm = useService("orm");
         this.action = useService("action");
         const defaultCountry = COUNTRY_CODES.find((country) => country.code === "+91") || COUNTRY_CODES[0];
@@ -132,7 +133,7 @@ export class DialerPopup extends Component {
             return;
         }
         try {
-            const result = await rpc("/twilio_dialer/auto_dialer/navigate", {
+            const result = await this.rpc("/twilio_dialer/auto_dialer/navigate", {
                 dialer_id: dialerId,
                 action_name: actionName,
             });
@@ -369,7 +370,7 @@ export class DialerPopup extends Component {
     }
 
     async _loadConfiguredPhoneNumber() {
-        const result = await rpc("/twilio_dialer/phone_number");
+        const result = await this.rpc("/twilio_dialer/phone_number");
         this.state.systemPhoneNumber = result.phone_number || "";
         const preferredNumber =
             this.props.fromNumber ||

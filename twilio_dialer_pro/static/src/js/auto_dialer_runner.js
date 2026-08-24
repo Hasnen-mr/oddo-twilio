@@ -3,7 +3,7 @@
 import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { Component, useState, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
+import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
 
 /**
  * AutoDialerRunner — Phase 2A Queue Runner
@@ -17,6 +17,7 @@ export class AutoDialerRunner extends Component {
     static template = "twilio_dialer.AutoDialerRunner";
 
     setup() {
+        this.rpc = useService("rpc");
                 this.orm = useService("orm");
         this.action = useService("action");
         this.dialerSvc = useService("twilio_dialer");
@@ -184,7 +185,7 @@ export class AutoDialerRunner extends Component {
     async _syncLineWithRetry(lineId, status, durationSec = 0, retries = 3) {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
-                const res = await rpc("/twilio_dialer/auto_dialer/sync_line", {
+                const res = await this.rpc("/twilio_dialer/auto_dialer/sync_line", {
                     line_id: lineId,
                     status: status,
                     duration_sec: durationSec,
@@ -388,7 +389,7 @@ export class AutoDialerRunner extends Component {
 
     async _fetchAndApplyCurrentLine(dialerId) {
         try {
-            const result = await rpc("/twilio_dialer/auto_dialer/navigate", {
+            const result = await this.rpc("/twilio_dialer/auto_dialer/navigate", {
                 dialer_id: dialerId,
                 action_name: "current",
             });
@@ -443,7 +444,7 @@ export class AutoDialerRunner extends Component {
         this._isStopped = false;
         this.state.actionPending = true;
         try {
-            await rpc("/web/dataset/call_kw", {
+            await this.rpc("/web/dataset/call_kw", {
                 model: "twilio.auto.dialer",
                 method: "action_start",
                 args: [[this.state.activeQueue.id]],
@@ -530,7 +531,7 @@ export class AutoDialerRunner extends Component {
         if (!this.state.activeQueue || this.state.actionPending) return;
         this.state.actionPending = true;
         try {
-            const result = await rpc("/twilio_dialer/auto_dialer/navigate", {
+            const result = await this.rpc("/twilio_dialer/auto_dialer/navigate", {
                 dialer_id: this.state.activeQueue.id,
                 action_name: actionName,
             });
@@ -718,7 +719,7 @@ export class AutoDialerRunner extends Component {
         if (this.dialerSvc?.state) {
             this.dialerSvc.state.isOpen = true;
         }
-        this.action.doAction("twilio_dialer.action_twilio_auto_dialer");
+        this.action.doAction("twilio_dialer_pro.action_twilio_auto_dialer");
     }
 
     get successRate() {

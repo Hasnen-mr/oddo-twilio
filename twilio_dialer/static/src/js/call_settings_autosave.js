@@ -68,6 +68,7 @@ export class CallSettingsAutosave extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
+        this.rpc = useService("rpc");
         this.notification = useService("notification");
         this.orm = useService("orm");
         this._ready = false;

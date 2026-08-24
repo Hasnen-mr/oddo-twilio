@@ -11,6 +11,7 @@ export class TwilioPhoneCountryField extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
+        this.rpc = useService("rpc");
         const parsed = splitPhoneNumber(this.props.record.data[this.props.name]);
         this.state = useState({
             selectedCountry: parsed.country,

@@ -17,6 +17,7 @@ export class TwilioAboutNav extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
+        this.rpc = useService("rpc");
         this.rootRef = useRef("root");
         onMounted(() => this._applyShellLayout());
         onWillUnmount(() => this._clearShellLayout());

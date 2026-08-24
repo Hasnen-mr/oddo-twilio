@@ -12,6 +12,7 @@ export class TwilioCredentialsHelpDialog extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.state = useState({
             activeTab: "classic", // 'classic' or 'new'
         });
@@ -23,6 +24,6 @@ export class TwilioCredentialsHelpDialog extends Component {
 }
 
 // Client action to invoke from Python (e.g., Configuration page)
-registry.category("actions").add("twilio_dialer.action_credentials_help", (env) => {
+registry.category("actions").add("twilio_dialer_pro.action_credentials_help", (env) => {
     env.services.dialog.add(TwilioCredentialsHelpDialog);
 }, { force: true });

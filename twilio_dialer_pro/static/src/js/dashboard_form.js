@@ -5,9 +5,9 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { FormController } from "@web/views/form/form_controller";
 import { formView } from "@web/views/form/form_view";
-import { TwilioOnboardingWizard } from "@twilio_dialer/js/onboarding_wizard";
-import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
+import { TwilioOnboardingWizard } from "@twilio_dialer_pro/js/onboarding_wizard";
+import { TwilioHelpDialog } from "@twilio_dialer_pro/js/help_dialog";
+import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
 
 function scrollTwilioDashboardToTop() {
     const header = document.querySelector(".o_twilio_dash_header");
@@ -51,6 +51,7 @@ export class TwilioDashboardFormController extends FormController {
     static template = "twilio_dialer.TwilioDashboardFormView";
 
     setup() {
+        this.rpc = useService("rpc");
         super.setup();
         this.dialog = useService("dialog");
         this.action = useService("action");
@@ -153,7 +154,7 @@ export class TwilioDashboardFormController extends FormController {
                     onClose: () => {
                         this._isWizardOpen = false;
                         if (connected) {
-                            this.action.doAction("twilio_dialer.action_twilio_dashboard", {
+                            this.action.doAction("twilio_dialer_pro.action_twilio_dashboard", {
                                 stackPosition: "replaceCurrentAction",
                             });
                         } else {
@@ -199,10 +200,10 @@ export class TwilioDashboardFormController extends FormController {
                 onOpenDialer: () => this.dialer.open(),
                 onOpenTroubleshooter: () => this.dialer.openTroubleshooter(),
                 onOpenConfig: () => {
-                    this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
+                    this.action.doAction("twilio_dialer_pro.action_twilio_configuration_menu");
                 },
                 onOpenAboutHelp: () => {
-                    this.action.doAction("twilio_dialer.action_twilio_help");
+                    this.action.doAction("twilio_dialer_pro.action_twilio_help");
                 },
             }
         );

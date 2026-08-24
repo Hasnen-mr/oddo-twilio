@@ -4,7 +4,7 @@ import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { Component, useState, onWillStart, onMounted, onWillUnmount, useRef } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
-import { normalizePhoneNumber } from "@twilio_dialer/js/phone_utils";
+import { normalizePhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days expiry
@@ -20,6 +20,7 @@ export class TwilioSmsPopup extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
                 this.notification = useService("notification");
         this.chatBodyRef = useRef("chatBody");
         this.messageInputRef = useRef("messageInput");
@@ -181,7 +182,7 @@ export class TwilioSmsPopup extends Component {
 
     async loadTemplates() {
         try {
-            const res = await rpc("/twilio_dialer/sms/get_templates", {
+            const res = await this.rpc("/twilio_dialer/sms/get_templates", {
                 partner_id: this.props.partnerId || false,
             });
             if (res && res.success) {
@@ -194,7 +195,7 @@ export class TwilioSmsPopup extends Component {
 
     async loadQuickReplies() {
         try {
-            const res = await rpc("/twilio_dialer/sms/get_quick_replies");
+            const res = await this.rpc("/twilio_dialer/sms/get_quick_replies");
             if (res && res.success) {
                 this.state.quickReplies = res.quick_replies || [];
             }
@@ -218,7 +219,7 @@ export class TwilioSmsPopup extends Component {
             const chatEl = this.chatBodyRef.el;
             const oldScrollHeight = chatEl ? chatEl.scrollHeight : 0;
 
-            const result = await rpc("/twilio_dialer/sms/get_history", {
+            const result = await this.rpc("/twilio_dialer/sms/get_history", {
                 phone: this.normalizedPhone || this.props.phone,
                 partner_id: this.props.partnerId || false,
                 limit: limit,
@@ -343,7 +344,7 @@ export class TwilioSmsPopup extends Component {
         this.state.sending = true;
 
         try {
-            const result = await rpc("/twilio_dialer/sms/send", {
+            const result = await this.rpc("/twilio_dialer/sms/send", {
                 recipient: this.normalizedPhone || this.props.phone,
                 body: body,
                 partner_id: this.props.partnerId || false,

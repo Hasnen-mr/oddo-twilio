@@ -4,8 +4,8 @@ import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
-import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
+import { TwilioSmsPopup } from "@twilio_dialer_pro/js/sms_popup";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer_pro/js/sms_messaging_dialog";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -14,6 +14,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     static template = "twilio_dialer.TwilioSmsWorkspaceClientAction";
 
     setup() {
+        this.rpc = useService("rpc");
                 this.action = useService("action");
         this.dialog = useService("dialog");
         this.state = useState({
@@ -37,7 +38,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
         this.state.loading = true;
         try {
             // Load record counts
-            const res = await rpc("/twilio_dialer/sms/workspace_counts");
+            const res = await this.rpc("/twilio_dialer/sms/workspace_counts");
             if (res && res.success) {
                 this.state.counts = res.counts;
             }
@@ -83,7 +84,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
             this.state.drafts = foundDrafts;
 
             // Load recent SMS logs for the embedded workspace table
-            const logsRes = await rpc("/twilio_dialer/sms/get_recent_logs", { limit: 50 });
+            const logsRes = await this.rpc("/twilio_dialer/sms/get_recent_logs", { limit: 50 });
             if (logsRes && logsRes.success) {
                 this.state.recentLogs = logsRes.logs || [];
             }
@@ -113,13 +114,13 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     }
 
     openSmsTemplates() {
-        this.action.doAction("twilio_dialer.action_twilio_sms_template", {
+        this.action.doAction("twilio_dialer_pro.action_twilio_sms_template", {
             clearBreadcrumbs: false,
         });
     }
 
     openQuickReplies() {
-        this.action.doAction("twilio_dialer.action_twilio_sms_quick_reply", {
+        this.action.doAction("twilio_dialer_pro.action_twilio_sms_quick_reply", {
             clearBreadcrumbs: false,
         });
     }

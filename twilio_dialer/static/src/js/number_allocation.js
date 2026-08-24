@@ -12,6 +12,7 @@ export class NumberAllocationPanel extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.state = useState({

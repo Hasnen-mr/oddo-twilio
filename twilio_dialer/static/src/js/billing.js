@@ -37,6 +37,7 @@ export class BillingDashboard extends Component {
     };
 
     setup() {
+        this.rpc = useService("rpc");
                 this.notification = useService("notification");
         this.packages = CALL_PACKAGES;
         this.state = useState({ loading: true, error: "", billing: null });
@@ -47,7 +48,7 @@ export class BillingDashboard extends Component {
         this.state.loading = true;
         this.state.error = "";
         try {
-            const result = await rpc("/twilio_dialer/billing");
+            const result = await this.rpc("/twilio_dialer/billing");
             if (!result.success) {
                 this.state.error = result.message || "Unable to load billing information.";
                 return;

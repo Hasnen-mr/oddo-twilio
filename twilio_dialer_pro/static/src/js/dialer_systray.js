@@ -3,13 +3,14 @@
 import { Component, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { DialerPopup } from "@twilio_dialer/js/dialer_popup";
+import { DialerPopup } from "@twilio_dialer_pro/js/dialer_popup";
 
 export class DialerSystray extends Component {
     static components = { DialerPopup };
     static template = "twilio_dialer.DialerSystray";
 
     setup() {
+        this.rpc = useService("rpc");
         this.dialer = useService("twilio_dialer");
         this.state = useState(this.dialer.state);
     }

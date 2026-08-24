@@ -3,7 +3,6 @@
 import { rpc } from "@web/core/network/rpc";
 import { loadJS } from "@web/core/assets";
 
-
 const TWILIO_SDK_PATH = "/twilio_dialer/static/lib/twilio/twilio.min.js";
 
 const STATUS = Object.freeze({

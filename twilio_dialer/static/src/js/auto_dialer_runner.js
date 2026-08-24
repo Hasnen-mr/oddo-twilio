@@ -17,7 +17,8 @@ export class AutoDialerRunner extends Component {
     static template = "twilio_dialer.AutoDialerRunner";
 
     setup() {
-                this.orm = useService("orm");
+
+        this.orm = useService("orm");
         this.action = useService("action");
         this.dialerSvc = useService("twilio_dialer");
 

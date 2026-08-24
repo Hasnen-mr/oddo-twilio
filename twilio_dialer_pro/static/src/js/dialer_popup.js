@@ -3,10 +3,10 @@
 import { rpc } from "@web/core/network/rpc";
 import { Component, useExternalListener, useState, onWillStart, onMounted, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
-import { AutoDialerRunner } from "@twilio_dialer/js/auto_dialer_runner";
-import { splitPhoneNumber } from "@twilio_dialer/js/phone_utils";
+import { COUNTRY_CODES } from "@twilio_dialer_pro/js/country_codes";
+import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
+import { AutoDialerRunner } from "@twilio_dialer_pro/js/auto_dialer_runner";
+import { splitPhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 const CONTACT_PAGE_SIZE = 30;
@@ -517,7 +517,7 @@ export class DialerPopup extends Component {
     }
 
     openAutoCallingSetup() {
-        this.action.doAction("twilio_dialer.action_twilio_auto_dialer_menu");
+        this.action.doAction("twilio_dialer_pro.action_twilio_auto_dialer_menu");
         if (this.props.onClose) {
             this.props.onClose();
         }
@@ -529,7 +529,7 @@ export class DialerPopup extends Component {
         if (dialer?.state) {
             dialer.state.isOpen = true;
         }
-        this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
+        this.action.doAction("twilio_dialer_pro.action_twilio_configuration_menu");
     }
 
     openContacts() {
@@ -1019,13 +1019,12 @@ export class DialerPopup extends Component {
         return code === "+1" || num.startsWith("+1") || num.startsWith("1");
     }
 
-
     openHelpSupport() {
         this.closeQuickDebugModal();
         try {
-            this.action.doAction("twilio_dialer.action_twilio_help");
+            this.action.doAction("twilio_dialer_pro.action_twilio_help");
         } catch (e) {
-            this.action.doAction("twilio_dialer.action_twilio_contact_us", {
+            this.action.doAction("twilio_dialer_pro.action_twilio_contact_us", {
                 additionalContext: { twilio_about_section: "help" },
             });
         }

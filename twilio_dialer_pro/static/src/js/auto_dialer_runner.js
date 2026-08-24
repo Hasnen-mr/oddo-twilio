@@ -3,7 +3,7 @@
 import { rpc } from "@web/core/network/rpc";
 import { Component, useState, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
 import { useService } from "@web/core/utils/hooks";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
+import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
 
 /**
  * AutoDialerRunner — Phase 2A Queue Runner
@@ -718,7 +718,7 @@ export class AutoDialerRunner extends Component {
         if (this.dialerSvc?.state) {
             this.dialerSvc.state.isOpen = true;
         }
-        this.action.doAction("twilio_dialer.action_twilio_auto_dialer");
+        this.action.doAction("twilio_dialer_pro.action_twilio_auto_dialer");
     }
 
     get successRate() {

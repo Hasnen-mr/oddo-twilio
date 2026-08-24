@@ -1,9 +1,8 @@
 import json
 import logging
-import re
 from xml.sax.saxutils import escape
 
-from odoo import fields, http
+from odoo import http
 from odoo.exceptions import UserError, AccessDenied
 from odoo.http import request
 
@@ -47,6 +46,7 @@ class TwilioController(http.Controller):
     @http.route("/twilio_dialer/phone_number", type="json", auth="user")
     def get_phone_number(self):
         try:
+            import re
             service = request.env["twilio.service"]
             icp = request.env["ir.config_parameter"].sudo()
             account_sid = icp.get_param("twilio_dialer.account_sid") or ""
@@ -202,7 +202,6 @@ class TwilioController(http.Controller):
                 response = VoiceResponse()
                 dial = Dial(caller_id=caller_id)
                 dial.number(to_number)
-                response.append(dial)
                 return request.make_response(
                     str(response),
                     headers=[("Content-Type", "text/xml")],
@@ -642,7 +641,7 @@ class TwilioController(http.Controller):
 
 
     @http.route("/twilio_dialer/call_log/create", type="json", auth="user")
-    def create_call_log(self, call_sid=None, to_number=None, from_number=None, partner_id=None, direction="outgoing", res_model=None, res_id=None, lead_id=None, **kwargs):
+    def create_call_log(self, call_sid=None, to_number=None, from_number=None, partner_id=None, direction="outgoing", **kwargs):
         try:
             if not call_sid or not to_number:
                 return {"success": False, "message": "call_sid and to_number required"}
@@ -654,26 +653,11 @@ class TwilioController(http.Controller):
             icp = request.env["ir.config_parameter"].sudo()
             from_num = from_number or icp.get_param("twilio_dialer.phone_number") or ""
 
-            target_lead_id = lead_id or False
-            if not target_lead_id and res_model == "crm.lead" and res_id:
-                target_lead_id = res_id
-
-            target_partner_id = partner_id or False
-            if not target_partner_id and res_model == "res.partner" and res_id:
-                target_partner_id = res_id
-            elif not target_partner_id and target_lead_id and "crm.lead" in request.env:
-                lead = request.env["crm.lead"].sudo().browse(target_lead_id)
-                if lead.exists() and lead.partner_id:
-                    target_partner_id = lead.partner_id.id
-
             log = request.env["twilio.call.log"].sudo().create({
                 "call_sid": call_sid,
                 "to_number": to_number,
                 "from_number": from_num,
-                "partner_id": target_partner_id,
-                "lead_id": target_lead_id,
-                "res_model": res_model or False,
-                "res_id": res_id or False,
+                "partner_id": partner_id or False,
                 "direction": direction or "outgoing",
                 "status": "ringing" if direction == "incoming" else "in_progress",
             })
@@ -690,9 +674,11 @@ class TwilioController(http.Controller):
 
             log = request.env["twilio.call.log"].sudo().search([("call_sid", "=", call_sid)], limit=1)
             if log:
-                log.update_call_status(call_sid, status)
+                vals = {"status": status}
+                if status in ("completed", "canceled", "rejected", "failed", "no_answer"):
+                    vals["end_time"] = fields.Datetime.now()
+                log.write(vals)
             return {"success": True}
         except Exception as e:
             _logger.error("Failed to update call log via RPC: %s", str(e))
             return {"success": False, "message": str(e)}
-

@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import json
 import logging
 import re
 import threading
@@ -185,24 +184,6 @@ class TwilioCallLog(models.Model):
     contact_message_id = fields.Many2one(
         "mail.message", string="Contact Chatter Message", copy=False, ondelete="set null"
     )
-    lead_id = fields.Many2one(
-        "crm.lead",
-        string="Lead / Opportunity",
-        index=True,
-        ondelete="set null",
-        tracking=True,
-    )
-    res_model = fields.Char(string="Related Model", index=True)
-    res_id = fields.Integer(string="Related Record ID", index=True)
-    lead_message_id = fields.Many2one(
-        "mail.message", string="Lead Chatter Message", copy=False, ondelete="set null"
-    )
-    entity_message_id = fields.Many2one(
-        "mail.message", string="Entity Chatter Message", copy=False, ondelete="set null"
-    )
-    entity_chatter_sync_data = fields.Text(
-        string="Entity Chatter Sync Data", copy=False, help="JSON mapping of model:id to mail.message id"
-    )
 
     _sql_constraints = [
         ('twilio_call_log_call_sid_unique', 'unique(call_sid)', 'The Twilio Call SID must be unique.')
@@ -254,33 +235,7 @@ class TwilioCallLog(models.Model):
         for vals in vals_list:
             if not vals.get("name"):
                 vals["name"] = self.env["ir.sequence"].next_by_code("twilio.call.log") or "/"
-        records = super().create(vals_list)
-        for record in records:
-            record._link_partner_from_to_number()
-            if not self.env.context.get("skip_chatter_sync"):
-                record.with_context(skip_chatter_sync=True)._sync_chatter_activity()
-        return records
-
-    def write(self, vals):
-        res = super().write(vals)
-        trigger_fields = {
-            "status",
-            "outcome",
-            "duration",
-            "recording_sid",
-            "recording_url",
-            "transcript",
-            "summary",
-            "notes",
-            "partner_id",
-            "lead_id",
-            "res_model",
-            "res_id",
-        }
-        if any(f in vals for f in trigger_fields):
-            if not self.env.context.get("skip_chatter_sync"):
-                self.with_context(skip_chatter_sync=True)._sync_chatter_activity()
-        return res
+        return super().create(vals_list)
 
     def _normalize_phone_number(self, phone_number, partner=False):
         if not phone_number:
@@ -317,41 +272,13 @@ class TwilioCallLog(models.Model):
         return self.env["res.partner"]
 
     def _link_partner_from_to_number(self):
-        for call_log in self:
+        for call_log in self.filtered(lambda log: not log.partner_id):
             number = call_log.to_number if call_log.direction == "outgoing" else call_log.from_number
-            if not call_log.partner_id:
-                partner = call_log.contact_id or call_log._find_partner_by_phone_number(number)
-                if partner:
-                    call_log.partner_id = partner
-                    if not call_log.contact_id:
-                        call_log.contact_id = partner
-
-            # Associate CRM Lead if available and not yet set
-            if not call_log.lead_id and "crm.lead" in self.env:
-                partner = call_log.partner_id or call_log.contact_id
-                lead = False
-                if partner:
-                    lead = self.env["crm.lead"].sudo().search(
-                        [("partner_id", "=", partner.id), ("active", "=", True)],
-                        order="id desc",
-                        limit=1,
-                    )
-                if not lead and number:
-                    digits = re.sub(r"\D", "", number)
-                    if digits:
-                        clean_tail = digits[-10:] if len(digits) >= 10 else digits
-                        lead = self.env["crm.lead"].sudo().search(
-                            [
-                                "|",
-                                ("phone", "ilike", clean_tail),
-                                ("mobile", "ilike", clean_tail),
-                                ("active", "=", True),
-                            ],
-                            order="id desc",
-                            limit=1,
-                        )
-                if lead:
-                    call_log.lead_id = lead
+            partner = call_log.contact_id or call_log._find_partner_by_phone_number(number)
+            if partner:
+                call_log.partner_id = partner
+                if not call_log.contact_id:
+                    call_log.contact_id = partner
 
     def create_outgoing_call(self, call_sid, to_number, partner_id=False):
         if not call_sid or not to_number:
@@ -366,8 +293,8 @@ class TwilioCallLog(models.Model):
         partner = self.env["res.partner"].browse(partner_id).exists() or self._find_partner_by_phone_number(to_number)
         return self.create(
             {
-                "partner_id": partner.id if partner else False,
-                "contact_id": partner.id if partner else False,
+                "partner_id": partner.id,
+                "contact_id": partner.id,
                 "from_number": from_number,
                 "to_number": to_number,
                 "direction": "outgoing",
@@ -417,14 +344,15 @@ class TwilioCallLog(models.Model):
             raise UserError("Twilio call log was not found.")
 
         terminal_statuses = {"completed", "busy", "no_answer", "failed", "canceled", "rejected", "missed"}
+        if call_log.contact_activity_posted and status in terminal_statuses:
+            return call_log
 
         call_log._link_partner_from_to_number()
         values = {"status": status}
         if status in terminal_statuses and not call_log.end_time:
             end_time = fields.Datetime.now()
             values["end_time"] = end_time
-            if call_log.start_time:
-                values["duration"] = max(0, int((end_time - call_log.start_time).total_seconds()))
+            values["duration"] = int((end_time - call_log.start_time).total_seconds())
         if status == "completed" and not call_log.outcome:
             values["outcome"] = "connected"
         elif status in {"busy", "no_answer", "failed", "canceled"} and not call_log.outcome:
@@ -433,104 +361,20 @@ class TwilioCallLog(models.Model):
         call_log.write(values)
 
         if status in terminal_statuses:
+            call_log._post_contact_activity_if_needed()
             call_log._sync_recording_from_twilio()
 
         if status == "completed":
             call_log._maybe_auto_generate_ai()
         return call_log
 
-    def _get_related_records(self):
-        """Find all related entity recordsets where chatter activity should be synced.
-        Returns a list of tuples: (model_name, record_id, recordset)
-        """
-        self.ensure_one()
-        records = []
-        seen = set()
-
-        # 1. Contact (res.partner)
-        contact = self.partner_id or self.contact_id
-        if contact and hasattr(contact, "message_post"):
-            key = ("res.partner", contact.id)
-            if key not in seen:
-                seen.add(key)
-                records.append(("res.partner", contact.id, contact))
-
-        # 2. Linked CRM Lead (crm.lead)
-        lead = self.lead_id
-        if not lead and contact and "crm.lead" in self.env:
-            lead = self.env["crm.lead"].sudo().search(
-                [("partner_id", "=", contact.id), ("active", "=", True)],
-                order="id desc",
-                limit=1,
-            )
-            if lead:
-                self.sudo().write({"lead_id": lead.id})
-
-        if lead and hasattr(lead, "message_post"):
-            key = ("crm.lead", lead.id)
-            if key not in seen:
-                seen.add(key)
-                records.append(("crm.lead", lead.id, lead))
-
-        # 3. Explicit Origin Entity (res_model, res_id) - e.g. Sale Order, Helpdesk Ticket, Project Task, Account Move
-        if self.res_model and self.res_id and self.res_model in self.env:
-            try:
-                origin_record = self.env[self.res_model].sudo().browse(self.res_id)
-                if origin_record.exists() and hasattr(origin_record, "message_post"):
-                    key = (self.res_model, origin_record.id)
-                    if key not in seen:
-                        seen.add(key)
-                        records.append((self.res_model, origin_record.id, origin_record))
-            except Exception:
-                _logger.warning("Could not load origin record %s,%s", self.res_model, self.res_id)
-
-        # 4. Extensible Hooks for Ticketing Systems (e.g. Helpdesk Ticket if installed)
-        for ticket_model in ["helpdesk.ticket", "helpdesk.support", "customer.ticket"]:
-            if ticket_model in self.env and contact:
-                try:
-                    tickets = self.env[ticket_model].sudo().search(
-                        [("partner_id", "=", contact.id)],
-                        order="id desc",
-                        limit=1,
-                    )
-                    for ticket in tickets:
-                        if hasattr(ticket, "message_post"):
-                            key = (ticket_model, ticket.id)
-                            if key not in seen:
-                                seen.add(key)
-                                records.append((ticket_model, ticket.id, ticket))
-                except Exception:
-                    pass
-
-        # 5. Calendar Events (calendar.event) associated with this contact
-        if "calendar.event" in self.env and contact:
-            try:
-                domain = [("partner_ids", "in", [contact.id])]
-                if lead and "res_id" in self.env["calendar.event"]._fields:
-                    domain = ["|", ("partner_ids", "in", [contact.id]), "&", ("res_model", "=", "crm.lead"), ("res_id", "=", lead.id)]
-                events = self.env["calendar.event"].sudo().search(
-                    domain,
-                    order="start desc, id desc",
-                    limit=2,
-                )
-                for event in events:
-                    if hasattr(event, "message_post"):
-                        key = ("calendar.event", event.id)
-                        if key not in seen:
-                            seen.add(key)
-                            records.append(("calendar.event", event.id, event))
-            except Exception:
-                pass
-
-        return records
-
     def _sync_chatter_activity(self):
-        """Post or update the consolidated chatter activity card on Call Log and all linked entities."""
+        """Post or update the single consolidated chatter activity card on both Call Log and Contact chatter."""
         service = CallLogService()
         for log in self:
             body = service.format_call_activity(log)
 
-            # 1. Single Chatter Message on Call Log itself
+            # 1. Single Chatter Message on Call Log
             try:
                 if log.chatter_message_id and log.chatter_message_id.exists():
                     log.chatter_message_id.sudo().write({"body": body})
@@ -543,63 +387,29 @@ class TwilioCallLog(models.Model):
             except Exception:
                 _logger.exception("Failed to sync chatter activity on call_log=%s", log.id)
 
-            # 2. Sync to all related entities (Contact, CRM Lead, Ticket, Sale Order, etc.)
-            sync_map = {}
-            if log.entity_chatter_sync_data:
+            # 2. Single Chatter Message on Contact (if linked)
+            contact = log.partner_id or log.contact_id
+            if contact:
                 try:
-                    sync_map = json.loads(log.entity_chatter_sync_data)
-                except Exception:
-                    sync_map = {}
-
-            if log.contact_message_id and log.partner_id:
-                sync_map[f"res.partner:{log.partner_id.id}"] = log.contact_message_id.id
-            if log.lead_message_id and log.lead_id:
-                sync_map[f"crm.lead:{log.lead_id.id}"] = log.lead_message_id.id
-
-            updated_map = False
-            related_records = log._get_related_records()
-            for model_name, rec_id, record in related_records:
-                key = f"{model_name}:{rec_id}"
-                msg_id = sync_map.get(key)
-                msg_rec = self.env["mail.message"].sudo().browse(msg_id) if msg_id else None
-
-                try:
-                    if msg_rec and msg_rec.exists():
-                        msg_rec.write({"body": body})
+                    if log.contact_message_id and log.contact_message_id.exists():
+                        log.contact_message_id.sudo().write({"body": body})
                     else:
-                        new_msg = record.message_post(
+                        msg = contact.message_post(
                             body=body,
                             subtype_xmlid="mail.mt_note",
                         )
-                        sync_map[key] = new_msg.id
-                        updated_map = True
-                        if model_name == "res.partner":
-                            log.sudo().write({
-                                "contact_message_id": new_msg.id,
-                                "contact_activity_posted": True,
-                            })
-                        elif model_name == "crm.lead":
-                            log.sudo().write({"lead_message_id": new_msg.id})
+                        log.sudo().write({
+                            "contact_message_id": msg.id,
+                            "contact_activity_posted": True,
+                        })
                 except Exception:
-                    _logger.exception("Failed to sync chatter activity to %s for call_log=%s", key, log.id)
-
-            if updated_map:
-                log.sudo().write({
-                    "entity_chatter_sync_data": json.dumps(sync_map),
-                    "contact_activity_posted": True,
-                })
+                    _logger.exception("Failed to sync chatter activity on contact for call_log=%s", log.id)
 
     def _post_contact_activity_if_needed(self):
         return self._sync_chatter_activity()
 
     def _post_recording_to_chatter(self):
         return self._sync_chatter_activity()
-
-    def action_sync_to_entities(self):
-        """Action button to trigger manual sync of call activity to contact and related entities."""
-        self._link_partner_from_to_number()
-        self._sync_chatter_activity()
-        return True
 
     @staticmethod
     def _build_recording_url(account_sid, recording_sid):

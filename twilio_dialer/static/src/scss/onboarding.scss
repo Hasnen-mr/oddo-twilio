@@ -201,37 +201,6 @@ body.o_twilio_onboard_open .modal-backdrop {
     max-width: 520px;
 }
 
-.o_twilio_onboard_email_highlight {
-    display: inline-block;
-    background: #eef2ff;
-    color: #4338ca !important;
-    padding: 3px 12px;
-    border-radius: 6px;
-    margin-top: 4px;
-    border: 1px solid #c7d2fe;
-    font-size: 0.95rem;
-}
-
-.o_twilio_otp_input {
-    letter-spacing: 8px !important;
-    font-size: 1.5rem !important;
-    font-weight: 700 !important;
-    text-align: center !important;
-    height: 52px !important;
-    border-radius: 8px !important;
-    background: #ffffff !important;
-    color: #1f2937 !important;
-    border: 1.5px solid #ced4da !important;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    transition: all 0.2s ease !important;
-
-    &:focus {
-        border-color: #714b67 !important;
-        box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.15) !important;
-        outline: none;
-    }
-}
-
 .o_twilio_onboard_connect {
     min-width: 120px;
 }

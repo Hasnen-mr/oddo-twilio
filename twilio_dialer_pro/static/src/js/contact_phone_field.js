@@ -7,10 +7,11 @@ import { patch } from "@web/core/utils/patch";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import * as phoneFieldModule from "@web/views/fields/phone/phone_field";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer_pro/js/sms_messaging_dialog";
+
 const PhoneField = phoneFieldModule.PhoneField;
 const phoneField = phoneFieldModule.phoneField;
 const formPhoneField = phoneFieldModule.formPhoneField;
-import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 
 // ── Shared call-button component ─────────────────────────────────────────────
 //
@@ -95,7 +96,6 @@ if (phoneField) {
 if (formPhoneField) {
     patch(formPhoneField, patchDescription());
 }
-
 
 // ── Standalone usage: "twilio_call_button" field widget ──────────────────────
 //

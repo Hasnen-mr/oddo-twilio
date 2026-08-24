@@ -7,10 +7,11 @@ import { patch } from "@web/core/utils/patch";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import * as phoneFieldModule from "@web/views/fields/phone/phone_field";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
+
 const PhoneField = phoneFieldModule.PhoneField;
 const phoneField = phoneFieldModule.phoneField;
 const formPhoneField = phoneFieldModule.formPhoneField;
-import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 
 // ── Shared call-button component ─────────────────────────────────────────────
 //
@@ -44,21 +45,12 @@ export class ContactCallButton extends Component {
             });
             return;
         }
-        const record = this.props.record;
-        const resModel = record.resModel || null;
-        const resId = record.resId || null;
-        const partnerId = record.data?.partner_id?.[0] || (resModel === "res.partner" ? resId : null);
-        const partnerName = record.data?.partner_id?.[1]
-            || (resModel === "res.partner" ? (record.data?.display_name || record.data?.name) : "")
-            || record.data?.name
-            || "";
-
         this.dialer.open({
             phone: this.phone,
-            partnerId: partnerId,
-            partnerName: partnerName,
-            resModel: resModel,
-            resId: resId,
+            partnerId: this.props.record.data.partner_id?.[0] || this.props.record.resId || null,
+            partnerName: this.props.record.data.partner_id?.[1]
+                || this.props.record.data.name
+                || "",
         });
     }
 }
@@ -96,7 +88,6 @@ if (formPhoneField) {
     patch(formPhoneField, patchDescription());
 }
 
-
 // ── Standalone usage: "twilio_call_button" field widget ──────────────────────
 //
 // Usage in an Odoo form view:
@@ -128,21 +119,10 @@ class TwilioCallButtonField extends Component {
             });
             return;
         }
-        const record = this.props.record;
-        const resModel = record.resModel || null;
-        const resId = record.resId || null;
-        const partnerId = record.data?.partner_id?.[0] || (resModel === "res.partner" ? resId : null);
-        const partnerName = record.data?.partner_id?.[1]
-            || (resModel === "res.partner" ? (record.data?.display_name || record.data?.name) : "")
-            || record.data?.name
-            || "";
-
         this.dialer.open({
             phone: this.phone,
-            partnerId: partnerId,
-            partnerName: partnerName,
-            resModel: resModel,
-            resId: resId,
+            partnerId: this.props.record.data.partner_id?.[0] || null,
+            partnerName: this.props.record.data.partner_id?.[1] || "",
         });
     }
 
@@ -168,4 +148,4 @@ registry.category("fields").add("twilio_call_button", {
     component: TwilioCallButtonField,
     displayName: _t("Twilio Call Button"),
     supportedTypes: ["char"],
-}, { force: true });
+});

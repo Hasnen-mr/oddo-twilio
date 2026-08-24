@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import logging
-import re
 from odoo import models, fields, api
 from odoo.exceptions import UserError
 from twilio.rest import Client

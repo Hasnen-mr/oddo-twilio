@@ -23,31 +23,3 @@ class TwilioSmsWorkspace(models.TransientModel):
             rec.quick_replies_count = self.env["twilio.sms.quick.reply"].search_count([("active", "=", True)])
             rec.categories_count = self.env["twilio.sms.template.category"].search_count([])
             rec.logs_count = self.env["twilio.sms.log"].search_count([])
-
-    @api.model
-    def _get_or_create_record(self):
-        rec = self.search([], order="id desc", limit=1)
-        if not rec:
-            rec = self.create({"name": "SMS Workspace"})
-        return rec
-
-    def web_read(self, specification):
-        records = self.exists()
-        if not records:
-            rec = self._get_or_create_record()
-            res = rec.web_read(specification)
-            if res and self.ids:
-                res[0]["id"] = self.ids[0]
-            return res
-        return super().web_read(specification)
-
-    def read(self, fields=None, load='_classic_read'):
-        records = self.exists()
-        if not records:
-            rec = self._get_or_create_record()
-            res = rec.read(fields=fields, load=load)
-            if res and self.ids:
-                res[0]["id"] = self.ids[0]
-            return res
-        return super().read(fields=fields, load=load)
-

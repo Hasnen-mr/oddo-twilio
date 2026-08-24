@@ -60,19 +60,13 @@
                                 </div>
 
                                 <div class="o_twilio_cfg_field">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label for="twilio_account_sid" class="o_twilio_cfg_label mb-0">Account SID</label>
-                                        <button name="action_open_credentials_help" type="object" string="How to find?" class="btn btn-link p-0 o_twilio_find_cred_btn"/>
-                                    </div>
+                                    <label for="twilio_account_sid" class="o_twilio_cfg_label">Account SID</label>
                                     <field name="twilio_account_sid"
                                             class="o_twilio_cfg_input"
                                             placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"/>
                                 </div>
                                 <div class="o_twilio_cfg_field">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label for="twilio_auth_token" class="o_twilio_cfg_label mb-0">Auth Token</label>
-                                        <button name="action_open_credentials_help" type="object" string="How to find?" class="btn btn-link p-0 o_twilio_find_cred_btn"/>
-                                    </div>
+                                    <label for="twilio_auth_token" class="o_twilio_cfg_label">Auth Token</label>
                                     <field name="twilio_auth_token"
                                             widget="password_toggle"
                                             class="o_twilio_cfg_input"
@@ -267,14 +261,6 @@
                                 </div>
                             </div>
                         </div>
-                        </div>
-                    </block>
-
-                    <!-- Number Allocation Settings -->
-                    <block name="twilio_number_allocation_settings"
-                           invisible="not twilio_is_connected">
-                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--allocation w-100">
-                            <field name="twilio_allocation_panel" widget="twilio_allocation_panel" nolabel="1" class="w-100 o_twilio_cfg_allocation_field"/>
                         </div>
                     </block>
 

@@ -4,7 +4,7 @@ import { Component } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { _t } from "@web/core/l10n/translation";
-import { setUiField } from "@twilio_dialer/js/settings_ui_field";
+import { setUiField } from "@twilio_dialer_pro/js/settings_ui_field";
 
 /**
  * Inline link that switches Configuration sidebar to AI Settings

@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
+import { COUNTRY_CODES } from "@twilio_dialer_pro/js/country_codes";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 const FALLBACK_COUNTRY_CODE = "+91";

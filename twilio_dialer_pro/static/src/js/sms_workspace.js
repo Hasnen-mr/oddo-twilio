@@ -4,8 +4,8 @@ import { rpc } from "@web/core/network/rpc";
 import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
-import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
+import { TwilioSmsPopup } from "@twilio_dialer_pro/js/sms_popup";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer_pro/js/sms_messaging_dialog";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
@@ -113,13 +113,13 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     }
 
     openSmsTemplates() {
-        this.action.doAction("twilio_dialer.action_twilio_sms_template", {
+        this.action.doAction("twilio_dialer_pro.action_twilio_sms_template", {
             clearBreadcrumbs: false,
         });
     }
 
     openQuickReplies() {
-        this.action.doAction("twilio_dialer.action_twilio_sms_quick_reply", {
+        this.action.doAction("twilio_dialer_pro.action_twilio_sms_quick_reply", {
             clearBreadcrumbs: false,
         });
     }

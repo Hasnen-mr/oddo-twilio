@@ -55,33 +55,6 @@ class TwilioContactUs(models.TransientModel):
         return values
 
     @api.model
-    def _get_or_create_record(self):
-        rec = self.search([], order="id desc", limit=1)
-        if not rec:
-            rec = self.create({"about_section": self.env.context.get("twilio_about_section") or "overview"})
-        return rec
-
-    def web_read(self, specification):
-        records = self.exists()
-        if not records:
-            rec = self._get_or_create_record()
-            res = rec.web_read(specification)
-            if res and self.ids:
-                res[0]["id"] = self.ids[0]
-            return res
-        return super().web_read(specification)
-
-    def read(self, fields=None, load='_classic_read'):
-        records = self.exists()
-        if not records:
-            rec = self._get_or_create_record()
-            res = rec.read(fields=fields, load=load)
-            if res and self.ids:
-                res[0]["id"] = self.ids[0]
-            return res
-        return super().read(fields=fields, load=load)
-
-    @api.model
     def action_open_contact_us(self, section=None):
         """Open the About Us page with optional sidebar section."""
         section = section or self.env.context.get("twilio_about_section") or "overview"

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
-import re
 import urllib.error
 import urllib.request
 

@@ -57,4 +57,4 @@ export const twilioVersionUpdateService = {
 
 registry
     .category("services")
-    .add("twilio_version_update", twilioVersionUpdateService, { force: true });
+    .add("twilio_version_update", twilioVersionUpdateService);

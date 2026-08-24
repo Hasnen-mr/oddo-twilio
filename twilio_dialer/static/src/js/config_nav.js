@@ -6,14 +6,13 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 import { BillingDashboard } from "@twilio_dialer/js/billing";
-import { NumberAllocationPanel } from "@twilio_dialer/js/number_allocation";
 import { setUiField } from "@twilio_dialer/js/settings_ui_field";
 
 const SECTIONS = [
-    { id: "account", label: _t("Account Settings"), icon: "fa-key" },
     { id: "call", label: _t("Call Settings"), icon: "fa-phone" },
-    { id: "allocation", label: _t("Number Allocation"), icon: "fa-list-ol" },
+    { id: "allocation", label: _t("Number Settings"), icon: "fa-list-ol" },
     { id: "ai", label: _t("AI Settings"), icon: "fa-magic" },
+    { id: "account", label: _t("Account Setting"), icon: "fa-key" },
     { id: "billing", label: _t("Billing"), icon: "fa-credit-card" },
 ];
 
@@ -65,7 +64,7 @@ export class TwilioConfigNav extends Component {
         if (!this.isConnected) {
             return "account";
         }
-        return this.props.record.data.twilio_config_section || "account";
+        return this.props.record.data.twilio_config_section || "call";
     }
 
     get isConnected() {
@@ -81,6 +80,14 @@ export class TwilioConfigNav extends Component {
     }
 
     async selectSection(section) {
+        if (section.id === "allocation") {
+            const record = this.props.record;
+            if (record && !this._hasRealPendingEdits(record)) {
+                record.dirty = false;
+            }
+            this.action.doAction("twilio_dialer.action_twilio_number_allocation");
+            return;
+        }
         if (this.isActive(section)) {
             return;
         }
@@ -130,15 +137,15 @@ export class TwilioConfigNav extends Component {
         if (!appBlock) {
             return;
         }
-        appBlock.setAttribute("data-twilio-section", sectionId || "account");
+        appBlock.setAttribute("data-twilio-section", sectionId || "call");
     }
 
     _applyDefaultSection() {
         if (this._syncingSection) {
             return;
         }
+        const target = this.isConnected ? "call" : "account";
         const current = this.props.record.data.twilio_config_section;
-        const target = current || "account";
         this._syncingSection = true;
         try {
             if (current !== target) {
@@ -185,20 +192,7 @@ export const twilioConfigNav = {
     supportedTypes: ["selection", "char"],
 };
 
-registry.category("fields").add("twilio_config_nav", twilioConfigNav, { force: true });
-
-export class TwilioAllocationPanel extends Component {
-    static template = "twilio_dialer.TwilioAllocationPanel";
-    static props = { ...standardFieldProps };
-    static components = { NumberAllocationPanel };
-}
-
-export const twilioAllocationPanel = {
-    component: TwilioAllocationPanel,
-    supportedTypes: ["char"],
-};
-
-registry.category("fields").add("twilio_allocation_panel", twilioAllocationPanel, { force: true });
+registry.category("fields").add("twilio_config_nav", twilioConfigNav);
 
 export class TwilioBillingPanel extends Component {
     static template = "twilio_dialer.TwilioBillingPanel";
@@ -211,4 +205,4 @@ export const twilioBillingPanel = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_billing_panel", twilioBillingPanel, { force: true });
+registry.category("fields").add("twilio_billing_panel", twilioBillingPanel);

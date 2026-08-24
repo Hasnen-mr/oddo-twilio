@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { Component, onWillStart, useState } from "@odoo/owl";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 

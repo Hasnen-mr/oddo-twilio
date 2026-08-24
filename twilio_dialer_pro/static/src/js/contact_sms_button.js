@@ -1,12 +1,12 @@
 /** @odoo-module **/
 
 import { Component, useState } from "@odoo/owl";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer_pro/js/sms_messaging_dialog";
+import { TwilioSmsPopup } from "@twilio_dialer_pro/js/sms_popup";
 import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { patch } from "@web/core/utils/patch";
-import { PhoneField, phoneField, formPhoneField } from "@web/views/fields/phone/phone_field";
-import { TwilioSmsPopup } from "@twilio_dialer_pro/js/sms_popup";
-import { TwilioSmsMessagingDialog } from "@twilio_dialer_pro/js/sms_messaging_dialog";
+import { PhoneField, formPhoneField, phoneField } from "@web/views/fields/phone/phone_field";
 
 export class ContactSmsButton extends Component {
     static template = "twilio_dialer.ContactSmsButton";

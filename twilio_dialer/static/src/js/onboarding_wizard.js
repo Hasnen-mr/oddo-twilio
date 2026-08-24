@@ -1,12 +1,12 @@
 /** @odoo-module **/
 
-import { Component, useState, onMounted, onWillUnmount } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
+import { getCachedCallSettings, setCachedCallSettings } from "@twilio_dialer/js/call_settings_cache";
+import { TwilioCredentialsHelpDialog } from "@twilio_dialer/js/credentials_help_dialog";
 import { Dialog } from "@web/core/dialog/dialog";
+import { _t } from "@web/core/l10n/translation";
 import { useService } from "@web/core/utils/hooks";
 import { session } from "@web/session";
-import { _t } from "@web/core/l10n/translation";
-import { TwilioCredentialsHelpDialog } from "@twilio_dialer/js/credentials_help_dialog";
-import { setCachedCallSettings, getCachedCallSettings } from "@twilio_dialer/js/call_settings_cache";
 
 const TOTAL_STEPS = 5;
 

@@ -2,6 +2,7 @@
 
 import { Component, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
+import { useService } from "@web/core/utils/hooks";
 
 export class TwilioHelpDialog extends Component {
     static template = "twilio_dialer.TwilioHelpDialog";

@@ -1,11 +1,11 @@
 /** @odoo-module **/
 
+import { Component, onWillStart, useState } from "@odoo/owl";
+import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
+import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
 import { jsonrpc as rpc } from "@web/core/network/rpc_service";
-import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
-import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
-import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days

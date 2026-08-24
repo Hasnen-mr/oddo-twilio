@@ -1,10 +1,11 @@
 /** @odoo-module **/
 
 import { Component, onMounted, onWillUnmount, useRef } from "@odoo/owl";
-import { registry } from "@web/core/registry";
-import { standardFieldProps } from "@web/views/fields/standard_field_props";
-import { _t } from "@web/core/l10n/translation";
 import { setUiField } from "@twilio_dialer_pro/js/settings_ui_field";
+import { _t } from "@web/core/l10n/translation";
+import { registry } from "@web/core/registry";
+import { useService } from "@web/core/utils/hooks";
+import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 const SECTIONS = [
     { id: "overview", label: _t("About Module"), icon: "fa-info-circle" },

@@ -1,12 +1,12 @@
 /** @odoo-module **/
 
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
-import { Component, useExternalListener, useState, onWillStart, onMounted, onWillUnmount, onWillUpdateProps } from "@odoo/owl";
-import { useService } from "@web/core/utils/hooks";
+import { Component, onMounted, onWillStart, onWillUnmount, onWillUpdateProps, useExternalListener, useState } from "@odoo/owl";
+import { AutoDialerRunner } from "@twilio_dialer/js/auto_dialer_runner";
 import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
 import { deviceManager } from "@twilio_dialer/js/device_manager";
-import { AutoDialerRunner } from "@twilio_dialer/js/auto_dialer_runner";
 import { splitPhoneNumber } from "@twilio_dialer/js/phone_utils";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
+import { useService } from "@web/core/utils/hooks";
 
 const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 const CONTACT_PAGE_SIZE = 30;
@@ -1019,7 +1019,6 @@ export class DialerPopup extends Component {
         const code = this.state.selectedCountry?.code || "";
         return code === "+1" || num.startsWith("+1") || num.startsWith("1");
     }
-
 
     openHelpSupport() {
         this.closeQuickDebugModal();

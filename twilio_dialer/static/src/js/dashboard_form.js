@@ -1,13 +1,13 @@
 /** @odoo-module **/
 
 import { onMounted, onWillUnmount, useState } from "@odoo/owl";
+import { deviceManager } from "@twilio_dialer/js/device_manager";
+import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
+import { TwilioOnboardingWizard } from "@twilio_dialer/js/onboarding_wizard";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { FormController } from "@web/views/form/form_controller";
 import { formView } from "@web/views/form/form_view";
-import { TwilioOnboardingWizard } from "@twilio_dialer/js/onboarding_wizard";
-import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
-import { deviceManager } from "@twilio_dialer/js/device_manager";
 
 function scrollTwilioDashboardToTop() {
     const header = document.querySelector(".o_twilio_dash_header");

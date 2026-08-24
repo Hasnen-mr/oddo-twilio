@@ -1,8 +1,7 @@
 /** @odoo-module **/
 
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { loadJS } from "@web/core/assets";
-
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 
 const TWILIO_SDK_PATH = "/twilio_dialer/static/lib/twilio/twilio.min.js";
 

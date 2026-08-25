@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="mcp_claude.AIChatWindow">
+        <div t-attf-class="o_mcp_ai_chat_window shadow-lg border rounded-4 d-flex flex-column bg-white #{state.isExpanded ? 'o_expanded' : ''}">
+            <!-- Header (Always 100% Mounted & Interactive) -->
+            <div class="o_mcp_ai_chat_header d-flex align-items-center justify-content-between p-3 border-bottom text-dark rounded-top-4" title="Claude AI Copilot">
+                <div class="d-flex align-items-center gap-2">
+                    <svg class="claude-icon-svg" width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L14.4 8.3L21 9.3L16.2 14L17.3 20.5L12 17.4L6.7 20.5L7.8 14L3 9.3L9.6 8.3L12 2Z" fill="#D97757"/>
+                    </svg>
+                    <div>
+                        <div class="fw-bold fs-6 d-flex align-items-center gap-2 text-dark">
+                            <span>Claude AI Copilot</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm text-secondary p-1 border-0" t-on-click="onNewChat" title="Start New Conversation">
+                        <i class="fa fa-refresh fs-6"/>
+                    </button>
+                    <button class="btn btn-sm text-secondary p-1 border-0" t-on-click="toggleExpand" t-att-title="state.isExpanded ? 'Compact Window' : 'Expand Window'">
+                        <i t-attf-class="fa #{state.isExpanded ? 'fa-compress' : 'fa-expand'} fs-6"/>
+                    </button>
+                    <button class="btn btn-sm text-secondary p-1 border-0 ms-1" t-on-click="props.onClose" title="Close Claude Chat">
+                        <i class="fa fa-times fs-5"/>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Message Container with Position Relative for Inset Overlay -->
+            <div class="o_mcp_ai_chat_body flex-grow-1 p-3 overflow-auto d-flex flex-column gap-3 position-relative" t-ref="chatBody" t-on-scroll="onScroll">
+                <!-- Semi-Transparent Skeleton Overlay for Context Switch -->
+                <div t-attf-class="o_mcp_skeleton_overlay #{state.isSwitchingThread ? 'o_mcp_active' : ''}">
+                    <AIChatSkeleton isOverlay="true"/>
+                </div>
+
+                <t t-if="state.initialLoading">
+                    <AIChatSkeleton isOverlay="false"/>
+                </t>
+                <t t-else="">
+                    <t t-if="state.history.length === 0">
+                        <div class="text-center text-muted my-auto px-3 py-4">
+                            <div class="d-inline-flex p-3 rounded-circle bg-warning-subtle text-warning mb-3">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2L14.4 8.3L21 9.3L16.2 14L17.3 20.5L12 17.4L6.7 20.5L7.8 14L3 9.3L9.6 8.3L12 2Z" fill="#D97757"/>
+                                </svg>
+                            </div>
+                            <div class="fw-bold fs-5 text-dark mb-1">Claude AI Copilot</div>
+                            <small class="text-muted d-block mb-4">Execute ERP actions, query contacts, search CRM, or place calls securely across Odoo.</small>
+
+                            <div class="d-flex flex-wrap justify-content-center gap-2">
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap" t-on-click="() => this.sendQuickAction('Search contacts named Deepak')">
+                                    <i class="fa fa-search me-1 text-primary"/> Search Contacts
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap" t-on-click="() => this.sendQuickAction('Show me 5 latest sales orders')">
+                                    <i class="fa fa-shopping-cart me-1 text-success"/> Latest Sales
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1 text-nowrap" t-on-click="() => this.sendQuickAction('What tools are available?')">
+                                    <i class="fa fa-wrench me-1 text-warning"/> List Tools
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="state.history" t-as="msg" t-key="msg.id">
+                            <div t-attf-class="d-flex flex-column max-w-85 #{msg.role === 'user' ? 'align-self-end text-end' : 'align-self-start text-start'} mb-2">
+                                <t t-if="msg.role === 'tool' || msg.block_type === 'tool_execution'">
+                                    <div class="p-2 px-3 bg-light text-muted border rounded-3 small font-monospace my-1 d-flex align-items-center justify-content-between">
+                                        <span><i class="fa fa-check text-success me-1"/> <t t-esc="msg.content"/></span>
+                                        <span class="badge bg-secondary-subtle text-secondary extra-small">Tool Executed</span>
+                                    </div>
+                                </t>
+                                <t t-elif="msg.role === 'assistant' &amp;&amp; msg.content &amp;&amp; (msg.content.includes('Approval request') || msg.content.includes('pending user approval'))">
+                                    <div class="p-3 bg-warning-subtle text-dark border border-warning rounded-4 shadow-sm my-1 text-start w-100">
+                                        <div class="fw-bold mb-1"><i class="fa fa-exclamation-triangle me-1 text-warning"/> Action Approval Required</div>
+                                        <div class="small mb-2 text-break" style="white-space: pre-wrap;" t-esc="msg.content"/>
+                                        <div class="d-flex align-items-center justify-content-between pt-2 border-top border-warning-subtle flex-wrap gap-2">
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm btn-warning text-dark fw-bold rounded-pill px-3" t-on-click="() => this.sendQuickAction('Approve')">
+                                                    <i class="fa fa-phone me-1"/> Approve Call
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" t-on-click="() => this.sendQuickAction('Cancel')">
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                            <span class="badge bg-warning text-dark"><i class="fa fa-clock-o me-1"/> Pending User Approval</span>
+                                        </div>
+                                    </div>
+                                </t>
+                                <t t-else="">
+                                    <div t-attf-class="p-3 rounded-4 #{msg.role === 'user' ? 'bg-primary text-white' : (msg.block_type === 'error' ? 'bg-danger-subtle text-danger border border-danger' : 'bg-light text-dark border')}">
+                                        <t t-if="msg.role === 'user'">
+                                            <div class="text-break" style="white-space: pre-wrap;" t-esc="msg.content"/>
+                                        </t>
+                                        <t t-else="">
+                                            <div class="text-break" t-out="this.renderFormattedContent(msg.content)"/>
+                                        </t>
+                                    </div>
+                                </t>
+                            </div>
+                        </t>
+                    </t>
+                </t>
+            </div>
+
+            <!-- Footer Input Container -->
+            <div class="o_mcp_ai_chat_footer p-3 border-top bg-light rounded-bottom-4">
+                <div class="input-group">
+                    <textarea class="form-control rounded-3 border-secondary-subtle" 
+                              rows="1" 
+                              placeholder="Ask Claude AI Copilot..." 
+                              t-model="state.promptText" 
+                              t-on-keydown="onKeyDown" 
+                              t-att-disabled="state.sending"/>
+                    <button class="btn btn-primary rounded-3 px-3" 
+                            t-on-click="onSendMessage" 
+                            t-att-disabled="state.sending || !state.promptText.trim()">
+                        <t t-if="state.sending">
+                            <i class="fa fa-spinner fa-spin"/>
+                        </t>
+                        <t t-else="">
+                            <i class="fa fa-paper-plane"/>
+                        </t>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </t>
+
+</templates>

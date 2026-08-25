@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mcp_metrics_list" model="ir.ui.view">
+        <field name="name">mcp.metrics.list</field>
+        <field name="model">mcp.metrics</field>
+        <field name="arch" type="xml">
+            <list string="Live Server Metrics">
+                <field name="timestamp"/>
+                <field name="active_sessions"/>
+                <field name="total_requests_24h"/>
+                <field name="error_count_24h"/>
+                <field name="avg_latency_ms"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mcp_metrics_form" model="ir.ui.view">
+        <field name="name">mcp.metrics.form</field>
+        <field name="model">mcp.metrics</field>
+        <field name="arch" type="xml">
+            <form string="Server Performance Snapshot">
+                <sheet>
+                    <group>
+                        <group string="Traffic Snapshot">
+                            <field name="timestamp" readonly="1"/>
+                            <field name="active_sessions" readonly="1"/>
+                            <field name="total_requests_24h" readonly="1"/>
+                        </group>
+                        <group string="Health &amp; Latency">
+                            <field name="error_count_24h" readonly="1"/>
+                            <field name="avg_latency_ms" readonly="1"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_mcp_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard</field>
+        <field name="res_model">mcp.metrics</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                MCP Server Dashboard
+            </p>
+            <p>
+                Live monitoring of connected clients, latency, throughput, and error rates.
+            </p>
+        </field>
+    </record>
+
+    <!-- Res Config Settings Action -->
+    <record id="action_mcp_res_config_settings" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+    </record>
+</odoo>

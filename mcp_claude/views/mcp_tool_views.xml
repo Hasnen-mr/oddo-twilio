@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mcp_tool_list" model="ir.ui.view">
+        <field name="name">mcp.tool.list</field>
+        <field name="model">mcp.tool</field>
+        <field name="arch" type="xml">
+            <list string="MCP Tools" decoration-info="risk_level == 'low'" decoration-warning="risk_level == 'medium'" decoration-danger="risk_level == 'high'">
+                <field name="name"/>
+                <field name="version"/>
+                <field name="category"/>
+                <field name="risk_level"/>
+                <field name="requires_approval"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mcp_tool_form" model="ir.ui.view">
+        <field name="name">mcp.tool.form</field>
+        <field name="model">mcp.tool</field>
+        <field name="arch" type="xml">
+            <form string="MCP Tool">
+                <sheet>
+                    <widget name="web_ribbon" title="Inactive" bg_color="text-bg-warning" invisible="active"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Tool Technical Name..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Tool Details">
+                            <field name="version"/>
+                            <field name="category"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Security &amp; Approval">
+                            <field name="risk_level"/>
+                            <field name="requires_approval"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Description">
+                            <field name="description" placeholder="Tool functional description for AI clients..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mcp_tool_search" model="ir.ui.view">
+        <field name="name">mcp.tool.search</field>
+        <field name="model">mcp.tool</field>
+        <field name="arch" type="xml">
+            <search string="Search MCP Tools">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="risk_level"/>
+                <filter string="Requires Approval" name="requires_approval" domain="[('requires_approval', '=', True)]"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                    <filter string="Risk Level" name="group_risk" context="{'group_by': 'risk_level'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_mcp_tool" model="ir.actions.act_window">
+        <field name="name">MCP Tools</field>
+        <field name="res_model">mcp.tool</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_mcp_tool_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Manage MCP Registered Tools!
+            </p>
+            <p>
+                Configure public tool definitions, risk levels, and human approval constraints.
+            </p>
+        </field>
+    </record>
+</odoo>

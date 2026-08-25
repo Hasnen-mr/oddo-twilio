@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mcp_audit_log_list" model="ir.ui.view">
+        <field name="name">mcp.audit.log.list</field>
+        <field name="model">mcp.audit.log</field>
+        <field name="arch" type="xml">
+            <list string="Audit Logs" decoration-success="status == 'success'" decoration-danger="status == 'error'">
+                <field name="timestamp"/>
+                <field name="user_id"/>
+                <field name="tool_name"/>
+                <field name="model_name"/>
+                <field name="execution_time_ms"/>
+                <field name="status"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mcp_audit_log_form" model="ir.ui.view">
+        <field name="name">mcp.audit.log.form</field>
+        <field name="model">mcp.audit.log</field>
+        <field name="arch" type="xml">
+            <form string="MCP Audit Log Entry">
+                <sheet>
+                    <group>
+                        <group string="Request Execution">
+                            <field name="timestamp" readonly="1"/>
+                            <field name="user_id" readonly="1"/>
+                            <field name="tool_name" readonly="1"/>
+                            <field name="model_name" readonly="1"/>
+                        </group>
+                        <group string="Performance &amp; Status">
+                            <field name="execution_time_ms" readonly="1"/>
+                            <field name="status" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Payload Details">
+                            <group>
+                                <field name="request_payload" readonly="1"/>
+                                <field name="response_summary" readonly="1"/>
+                                <field name="error_message" readonly="1" invisible="not error_message"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mcp_audit_log_search" model="ir.ui.view">
+        <field name="name">mcp.audit.log.search</field>
+        <field name="model">mcp.audit.log</field>
+        <field name="arch" type="xml">
+            <search string="Search Audit Logs">
+                <field name="tool_name"/>
+                <field name="model_name"/>
+                <field name="user_id"/>
+                <filter string="Success" name="success" domain="[('status', '=', 'success')]"/>
+                <filter string="Error" name="error" domain="[('status', '=', 'error')]"/>
+                <group>
+                    <filter string="Tool Name" name="group_tool" context="{'group_by': 'tool_name'}"/>
+                    <filter string="Model Name" name="group_model" context="{'group_by': 'model_name'}"/>
+                    <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Status" name="group_status" context="{'group_by': 'status'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_mcp_audit_log" model="ir.actions.act_window">
+        <field name="name">Audit Logs</field>
+        <field name="res_model">mcp.audit.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_mcp_audit_log_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Audit Log Entries Yet!
+            </p>
+            <p>
+                Every MCP request, tool execution, and security event is audited here.
+            </p>
+        </field>
+    </record>
+</odoo>

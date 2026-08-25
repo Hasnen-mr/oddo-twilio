@@ -1,5 +1,6 @@
-import { AIChatWindow } from "@mcp_claude/js/components/ai_chat_window";
 /** @odoo-module **/
+
+import { AIChatWindow } from "@mcp_claude/js/components/ai_chat_window";
 
 import { Component, markup, onMounted, onWillStart, onWillUnmount, useRef, useState } from "@odoo/owl";
 import { registry } from "@web/core/registry";

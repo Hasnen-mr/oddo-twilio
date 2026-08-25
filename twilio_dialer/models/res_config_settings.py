@@ -1275,8 +1275,8 @@ class ResConfigSettings(models.TransientModel):
                     if allow_incoming:
                         self.env["twilio.service"].configure_incoming_phone_number()
                     api_client.save_call_settings(
-                        account_sid=account_sid,
-                        incoming={"allow": bool(allow_incoming)},
+                        account_sid,
+                        {"incomingCallSetting": {"allow": bool(allow_incoming)}},
                     )
                 except Exception as ex:
                     _logger.warning("Failed to save incoming call setting on OTP verify: %s", ex)

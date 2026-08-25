@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- List View for Analytics Dashboard -->
+    <record id="view_mcp_analytics_dashboard_list" model="ir.ui.view">
+        <field name="name">mcp.analytics.dashboard.list</field>
+        <field name="model">mcp.analytics.dashboard</field>
+        <field name="arch" type="xml">
+            <list string="AI Analytics Dashboards" decoration-info="is_favorite == True">
+                <field name="sequence" widget="handle"/>
+                <field name="name" string="Dashboard Title"/>
+                <field name="category" widget="badge"/>
+                <field name="widget_count" string="Widgets"/>
+                <field name="is_favorite" widget="boolean_favorite" nolabel="1"/>
+                <field name="user_id" widget="many2one_avatar_user"/>
+                <field name="create_date" string="Created"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View for Analytics Dashboard -->
+    <record id="view_mcp_analytics_dashboard_form" model="ir.ui.view">
+        <field name="name">mcp.analytics.dashboard.form</field>
+        <field name="model">mcp.analytics.dashboard</field>
+        <field name="arch" type="xml">
+            <form string="AI Analytics Dashboard">
+                <header>
+                    <button name="action_duplicate" string="Duplicate Dashboard" type="object" class="btn-primary"/>
+                    <button name="toggle_favorite" string="Toggle Favorite" type="object" class="btn-secondary"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" class="oe_edit_only"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Sales &amp; Revenue Analytics"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="category"/>
+                            <field name="is_favorite" widget="boolean_toggle"/>
+                            <field name="user_id"/>
+                        </group>
+                        <group>
+                            <field name="widget_count"/>
+                            <field name="active"/>
+                            <field name="create_date" readonly="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Widgets &amp; Charts" name="widgets">
+                            <field name="widget_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name"/>
+                                    <field name="widget_type"/>
+                                    <field name="model_name"/>
+                                    <field name="groupby_field"/>
+                                    <field name="measure_field"/>
+                                    <field name="aggregation_type"/>
+                                    <field name="kpi_value_format"/>
+                                    <field name="color_theme" widget="color"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Description &amp; Insights" name="description">
+                            <field name="description" placeholder="AI Analysis Summary and recommendations..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_mcp_analytics_dashboard_search" model="ir.ui.view">
+        <field name="name">mcp.analytics.dashboard.search</field>
+        <field name="model">mcp.analytics.dashboard</field>
+        <field name="arch" type="xml">
+            <search string="Search Dashboards">
+                <field name="name"/>
+                <field name="category"/>
+                <field name="description"/>
+                <filter string="Favorites" name="filter_favorites" domain="[('is_favorite', '=', True)]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                    <filter string="Created By" name="group_user" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_mcp_analytics_dashboard" model="ir.actions.act_window">
+        <field name="name">AI Analytics Dashboards</field>
+        <field name="res_model">mcp.analytics.dashboard</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Analytics Dashboards created yet.
+            </p>
+            <p>
+                Ask Claude AI to generate a BI Dashboard or click create to build your own native analytics view.
+            </p>
+        </field>
+    </record>
+</odoo>

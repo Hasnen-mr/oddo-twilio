@@ -1,0 +1,666 @@
+/* MCP Claude Main SCSS Theme & Centralized Design Tokens System */
+
+/* ==================================================
+   CENTRALIZED SCSS DESIGN TOKENS & LIGHT PALETTE
+   ================================================== */
+$light-bg:          #FAF9F6;
+$surface:           #FFFFFF;
+$border:            #E5E7EB;
+$border-strong:     #D1D5DB;
+
+$subnav-bg:         #FFFFFF;
+$subnav-border:     #E5E7EB;
+$subnav-inactive:   #F9FAFB;
+
+$main-text:         #1F2937;
+$secondary-text:    #4B5563;
+$muted-text:        #9CA3AF;
+
+$mcp-primary:       #714B67;
+$mcp-primary-hover: #583950;
+$mcp-primary-light: #F5EFF4;
+
+$claude-accent:     #D97757;
+
+:root {
+    --mcp-primary: #714B67;
+    --mcp-primary-dark: #583950;
+    --mcp-secondary: #00A09D;
+    --mcp-bg-light: #FAF9F6;
+    --mcp-border-color: #E5E7EB;
+    --mcp-text-main: #1F2937;
+    --mcp-text-muted: #4B5563;
+
+    /* Claude Dedicated Workspace Theme */
+    --claude-bg: #FAF9F6;
+    --claude-surface: #F3F4F6;
+    --claude-surface-hover: #E5E7EB;
+    --claude-card-bg: #FFFFFF;
+    --claude-text: #1F2937;
+    --claude-text-muted: #4B5563;
+    --claude-border: #E5E7EB;
+    --claude-accent: #D97757;
+    --claude-accent-hover: #C26344;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Odoo Web Client Parent Containers Override - Removes Odoo's 16px Padding & Right Scrollbar */
+.o_action_manager:has(.mcp-saas-container),
+.o_content:has(.mcp-saas-container),
+.o_scroll_view:has(.mcp-saas-container),
+.o_web_client:has(.mcp-saas-container) .o_action_manager {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    height: calc(100vh - 46px) !important;
+    width: 100% !important;
+    max-width: 100% !important;
+}
+
+/* Full Viewport App Shell - Edge-to-Edge Light Background */
+.mcp-saas-container {
+    background-color: $light-bg;
+    width: 100%;
+    max-width: 100%;
+    height: calc(100vh - 46px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: $main-text;
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+/* Fixed Top Header - Edge-to-Edge Light */
+.mcp-header {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 20px;
+    background: $surface;
+    border-bottom: 1px solid $border;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
+    margin: 0;
+    width: 100%;
+    max-width: 100%;
+    color: $main-text;
+}
+
+.mcp-brand-logo {
+    display: flex;
+    align-items: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: $main-text;
+}
+
+.mcp-badge-version {
+    font-size: 11px;
+    background: #F3F4F6;
+    color: $secondary-text;
+    border: 1px solid $border;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 8px;
+}
+
+.mcp-quick-search-trigger {
+    background: #F3F4F6;
+    border: 1px solid $border;
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 13px;
+    color: $secondary-text;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mcp-quick-search-trigger:hover {
+    background: #E5E7EB;
+    color: $main-text;
+}
+
+.max-w-75 {
+    max-width: 75% !important;
+}
+
+.max-w-85 {
+    max-width: 85% !important;
+}
+
+/* Messages Scroll Area */
+.claude-messages-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 160px !important;
+    scroll-behavior: smooth;
+}
+
+/* Content Hub & Tab Panes */
+.mcp-content-hub {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
+.mcp-tab-pane {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.mcp-tab-pane-scrollable {
+    overflow-y: auto;
+    overflow-x: hidden !important;
+    padding: 16px 20px 90px 20px !important;
+}
+
+/* ==================================================
+   CONFIGURATION LIGHT NAVIGATION HEADER & SUB-NAV TABS
+   ================================================== */
+.mcp-config-subnav-container {
+    background-color: #E8DFD2 !important; /* Slightly deeper warm beige in the same shade line */
+    border: 1px solid #C8B59B !important;
+    border-radius: 16px !important;
+    padding: 8px 16px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+    color: $main-text !important;
+}
+
+.mcp-subnav-btn {
+    background: #FFFFFF !important;
+    color: $main-text !important;
+    border: 1px solid #DDD5C9 !important;
+    border-radius: 20px !important;
+    padding: 6px 16px !important;
+    font-weight: 500 !important;
+    font-size: 13px !important;
+    transition: all 0.2s ease !important;
+
+    i {
+        color: $secondary-text !important;
+    }
+
+    &:hover {
+        background: #E8DFD2 !important;
+        border-color: #C8B59B !important;
+        color: $main-text !important;
+
+        i {
+            color: $main-text !important;
+        }
+    }
+
+    &.active {
+        background: $mcp-primary !important;
+        border-color: $mcp-primary !important;
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+        box-shadow: 0 2px 8px rgba(113, 75, 103, 0.25) !important;
+
+        i {
+            color: #FFFFFF !important;
+        }
+    }
+}
+
+.mcp-subnav-section-badge {
+    background-color: #FFFFFF !important;
+    color: $secondary-text !important;
+    border: 1px solid #DDD5C9 !important;
+    padding: 4px 10px !important;
+    border-radius: 12px !important;
+}
+
+/* ==================================================
+   FLOATING BOTTOM NAVIGATION DOCK
+   ================================================== */
+.mcp-bottom-nav {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1050;
+}
+
+.mcp-nav-pills {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    border: 1px solid $border;
+    border-radius: 35px;
+    padding: 5px 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.mcp-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 7px 16px;
+    border-radius: 25px;
+    font-size: 13px;
+    font-weight: 600;
+    color: $secondary-text;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &:hover {
+        background: #F3F4F6;
+        color: $main-text;
+    }
+
+    &.active {
+        background: $mcp-primary !important;
+        color: #FFFFFF !important;
+        border-color: $mcp-primary !important;
+        box-shadow: 0 3px 10px rgba(113, 75, 103, 0.25) !important;
+
+        i {
+            color: #FFFFFF !important;
+        }
+    }
+
+    &.active-claude {
+        background: #FFF7F5 !important;
+        color: $claude-accent !important;
+        border-color: $claude-accent !important;
+        box-shadow: 0 2px 8px rgba(217, 119, 87, 0.2) !important;
+    }
+}
+
+/* ==================================================
+   BUTTONS & ACTIONS HIERARCHY
+   ================================================== */
+.btn-mcp-primary {
+    background-color: $mcp-primary !important;
+    border-color: $mcp-primary !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 2px 6px rgba(113, 75, 103, 0.2) !important;
+    transition: all 0.2s ease !important;
+
+    &:hover, &:focus {
+        background-color: $mcp-primary-hover !important;
+        border-color: $mcp-primary-hover !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 4px 12px rgba(113, 75, 103, 0.35) !important;
+    }
+}
+
+.btn-mcp-secondary {
+    background-color: $surface !important;
+    border-color: $border !important;
+    color: $main-text !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
+    transition: all 0.2s ease !important;
+
+    &:hover, &:focus {
+        background-color: #F9FAFB !important;
+        border-color: $mcp-primary !important;
+        color: $mcp-primary !important;
+    }
+}
+
+/* ==================================================
+   CARDS, TABLES, INPUTS & TOGGLES
+   ================================================== */
+.mcp-card {
+    background-color: $surface;
+    border: 1px solid $border;
+    border-radius: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.2s ease;
+}
+
+.mcp-card-selected, .mcp-selected-card {
+    background-color: $mcp-primary-light !important;
+    border-color: $mcp-primary !important;
+}
+
+/* Table Design System */
+.table {
+    thead.bg-light, tr.bg-light {
+        background-color: #F9FAFB !important;
+        color: $main-text !important;
+
+        th {
+            color: $main-text !important;
+            border-bottom: 1px solid $border !important;
+            font-weight: 600;
+        }
+    }
+
+    tbody tr {
+        border-bottom: 1px solid $border;
+
+        &:hover {
+            background-color: #FAF9F6 !important;
+        }
+    }
+}
+
+/* Unified Custom Switch / Toggle */
+.mcp-saas-container .form-switch {
+    padding-left: 2.5em !important;
+    min-height: 1.5em !important;
+}
+
+.mcp-saas-container .form-switch .form-check-input {
+    width: 2.2em !important;
+    height: 1.15em !important;
+    margin-left: -2.5em !important;
+    cursor: pointer !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    border-color: $border !important;
+}
+
+.form-check-input:checked {
+    background-color: $mcp-primary !important;
+    border-color: $mcp-primary !important;
+}
+
+.form-check-input:focus {
+    border-color: $mcp-primary !important;
+    box-shadow: 0 0 0 0.25rem rgba(113, 75, 103, 0.2) !important;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: $mcp-primary !important;
+    box-shadow: 0 0 0 0.25rem rgba(113, 75, 103, 0.15) !important;
+}
+
+.mcp-app-toggle-group {
+    display: flex !important;
+    align-items: center !important;
+    gap: 1.5rem !important;
+    margin-left: 1.5rem !important;
+    flex-wrap: wrap !important;
+}
+
+/* Sleek Auto-Hiding Scrollbars */
+.claude-threads-list,
+.claude-messages-container,
+.mcp-tab-pane-scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+
+.claude-threads-list:hover,
+.claude-messages-container:hover,
+.mcp-tab-pane-scrollable:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+}
+
+.claude-threads-list::-webkit-scrollbar,
+.claude-messages-container::-webkit-scrollbar,
+.mcp-tab-pane-scrollable::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.claude-threads-list::-webkit-scrollbar-thumb,
+.claude-messages-container::-webkit-scrollbar-thumb,
+.mcp-tab-pane-scrollable::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+}
+
+.claude-threads-list:hover::-webkit-scrollbar-thumb,
+.claude-messages-container:hover::-webkit-scrollbar-thumb,
+.mcp-tab-pane-scrollable:hover::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+}
+
+/* ==================================================
+   MODAL WINDOWS & WIZARD DIALOGS STYLING
+   ================================================== */
+.mcp-modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(15, 23, 42, 0.65) !important;
+    backdrop-filter: blur(6px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+    padding: 20px !important;
+}
+
+.mcp-modal-dialog {
+    background: #FFFFFF !important;
+    color: $main-text !important;
+    border: 1px solid $border !important;
+    border-radius: 20px !important;
+    width: 100% !important;
+    max-width: 620px !important;
+    max-height: 90vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25) !important;
+
+    &.modal-xl {
+        max-width: 1100px !important;
+    }
+
+    &.modal-lg {
+        max-width: 850px !important;
+    }
+
+    h3, h4, h5, h6 {
+        color: $main-text !important;
+    }
+}
+
+/* ========================================================= */
+/* TWILIO-STYLE ONBOARDING WIZARD & HERO STEPPER STYLING     */
+/* ========================================================= */
+.mcp-hero-setup-card {
+    background: linear-gradient(135deg, #ffffff 0%, #fcfbf9 100%);
+    border: 1px solid #e2e8f0;
+    transition: box-shadow 0.2s ease;
+}
+
+.mcp-wizard-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+
+    .mcp-wizard-dot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: pointer;
+        user-select: none;
+
+        .dot-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            background: #f1f5f9;
+            color: #64748b;
+            border: 2px solid #cbd5e1;
+            transition: all 0.2s ease;
+        }
+
+        .dot-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        &.active {
+            .dot-num {
+                background: #D97757;
+                color: #ffffff;
+                border-color: #D97757;
+                box-shadow: 0 0 0 3px rgba(217, 119, 87, 0.2);
+            }
+            .dot-label {
+                color: #D97757;
+                font-weight: 700;
+            }
+        }
+
+        &.completed {
+            .dot-num {
+                background: #10b981;
+                color: #ffffff;
+                border-color: #10b981;
+            }
+            .dot-label {
+                color: #10b981;
+            }
+        }
+    }
+
+    .mcp-wizard-line {
+        flex: 1;
+        height: 2px;
+        background: #e2e8f0;
+        margin: 0 8px;
+        margin-bottom: 16px;
+    }
+}
+
+
+/* Sharp Contrast & Readable Typography for Setup Wizard */
+.mcp-hero-setup-card {
+    p, span, div, h3, h4, h5, h6 {
+        color: #1e293b;
+    }
+    .text-muted, .text-secondary {
+        color: #475569 !important;
+    }
+}
+
+.mcp-wizard-stepper {
+    .mcp-wizard-dot {
+        .dot-label {
+            color: #475569 !important;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        &.active .dot-label {
+            color: #D97757 !important;
+            font-weight: 700;
+        }
+        &.completed .dot-label {
+            color: #059669 !important;
+            font-weight: 700;
+        }
+    }
+}
+
+.modal-content {
+    color: #1e293b;
+    p, li, span {
+        color: #334155;
+    }
+}
+
+
+/* Professional High-Contrast Vertical Selectable Rows */
+.mcp-select-option-row {
+    border: 1.5px solid #e2e8f0;
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    &:hover {
+        border-color: #cbd5e1;
+        background-color: #f8fafc;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+
+    .row-icon-box {
+        width: 42px;
+        height: 42px;
+        min-width: 42px;
+        border-radius: 10px;
+        background-color: #f1f5f9;
+        color: #475569;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        transition: all 0.2s ease;
+    }
+
+    .row-radio-circle {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        background-color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    /* ACTIVE / SELECTED STATE - High Contrast & Unmistakable */
+    &.is-selected {
+        border: 2px solid #D97757 !important;
+        background-color: #fff9f6 !important;
+        box-shadow: 0 4px 14px rgba(217, 119, 87, 0.16) !important;
+
+        .row-icon-box {
+            background-color: #feebe4 !important;
+            color: #D97757 !important;
+        }
+
+        .row-title {
+            color: #9c3f25 !important;
+            font-weight: 700 !important;
+        }
+
+        .row-radio-circle {
+            border-color: #D97757 !important;
+            background-color: #D97757 !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(217, 119, 87, 0.35);
+        }
+    }
+}

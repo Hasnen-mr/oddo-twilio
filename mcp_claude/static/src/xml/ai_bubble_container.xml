@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="mcp_claude.AIBubbleContainer">
+        <t t-if="!state.isHiddenOnClaude &amp;&amp; !state.isBubbleDismissed &amp;&amp; !state.isBubbleDisabled">
+            <div class="o_mcp_ai_bubble_wrapper">
+                <t t-if="state.isOpen">
+                    <AIChatWindow onClose.bind="closeWindow"/>
+                </t>
+                <AIBubbleTrigger isOpen="state.isOpen" onClick.bind="toggleWindow" onDismiss.bind="dismissBubble"/>
+            </div>
+        </t>
+    </t>
+
+    <t t-name="mcp_claude.AIBubbleTrigger">
+        <div class="o_mcp_ai_bubble_trigger_container position-relative">
+            <!-- Hover-only Cross (X) Close Button matching Twilio Dialer Bubble -->
+            <button t-if="!props.isOpen"
+                    type="button"
+                    class="o_mcp_ai_bubble_close"
+                    title="Hide Claude bubble for this session"
+                    t-on-click.stop="props.onDismiss">
+                <i class="fa fa-times"/>
+            </button>
+            <button class="o_mcp_ai_bubble_trigger" t-on-click="props.onClick" title="Claude AI" type="button">
+                <t t-if="props.isOpen">
+                    <i class="fa fa-times" style="color: #D97757; font-size: 20px;"/>
+                </t>
+                <t t-else="">
+                    <svg class="claude-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L14.4 8.3L21 9.3L16.2 14L17.3 20.5L12 17.4L6.7 20.5L7.8 14L3 9.3L9.6 8.3L12 2Z" fill="#D97757"/>
+                    </svg>
+                </t>
+            </button>
+        </div>
+    
+        <!-- Global Email Verification Modal (Nag across Home Screen & all pages) -->
+        <t t-if="state.showGlobalVerifyModal &amp;&amp; !state.isEmailVerified">
+            <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(15, 23, 42, 0.65); z-index: 1060;" role="dialog">
+                <div class="modal-dialog modal-dialog-centered" style="max-width: 440px;">
+                    <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                        
+                        <!-- Modal Header with Cross Button -->
+                        <div class="modal-header border-0 pb-0 pt-3.5 px-4 d-flex align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="p-1.5 rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: #fff9f6; color: #D97757;">
+                                    <i class="fa fa-envelope-o"/>
+                                </div>
+                                <h6 class="modal-title fw-bold text-dark mb-0" style="font-size: 15px;">Email Verification Required</h6>
+                            </div>
+                            <button type="button" class="btn-close" aria-label="Close" t-on-click="closeGlobalVerifyModal" style="cursor: pointer;"/>
+                        </div>
+
+                        <!-- Modal Body -->
+                        <div class="modal-body p-4 text-center">
+                            <p class="text-muted small mb-3" style="font-size: 13px;">
+                                Please verify your email to complete Claude MCP registration and unlock all features.
+                            </p>
+
+                            <div class="p-3 bg-light rounded-3 border mb-3 text-start">
+                                <label class="form-label small fw-bold text-dark mb-1">Email Address</label>
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <input type="email" class="form-control form-control-sm" placeholder="you@company.com" t-model="state.globalUserEmail"/>
+                                    <button type="button" class="btn btn-sm btn-primary text-white text-nowrap fw-bold" t-on-click="() => this.sendGlobalOtp(true)" t-att-disabled="state.globalSendingOtp">
+                                        <t t-if="state.globalSendingOtp"><i class="fa fa-spinner fa-spin me-1"/></t>
+                                        <t t-else="">Send Code</t>
+                                    </button>
+                                </div>
+
+                                <label class="form-label small fw-bold text-dark mb-1 text-center w-100" style="font-size: 11px; letter-spacing: 0.05em;">ENTER 6-DIGIT CODE</label>
+                                <input type="text"
+                                       class="form-control text-center font-monospace fw-bold fs-4 mb-2"
+                                       placeholder="123456"
+                                       maxlength="6"
+                                       style="letter-spacing: 0.25em;"
+                                       t-model="state.globalOtp"
+                                       t-on-keydown="onGlobalOtpKeydown"/>
+
+                                <button type="button" 
+                                        class="btn btn-primary w-100 fw-bold text-white py-2 shadow-sm"
+                                        t-on-click="verifyGlobalOtp"
+                                        t-att-disabled="state.globalVerifyingOtp || !state.globalOtp.trim()">
+                                    <t t-if="state.globalVerifyingOtp">
+                                        <i class="fa fa-spinner fa-spin me-1"/> Verifying...
+                                    </t>
+                                    <t t-else="">
+                                        <i class="fa fa-check-circle me-1"/> Verify Code
+                                    </t>
+                                </button>
+                            </div>
+
+                            <t t-if="state.globalOtpSuccess">
+                                <div class="alert alert-success py-2 px-3 small text-center mb-2" role="alert" t-esc="state.globalOtpSuccess"/>
+                            </t>
+                            <t t-if="state.globalOtpError">
+                                <div class="alert alert-danger py-2 px-3 small text-center mb-2" role="alert" t-esc="state.globalOtpError"/>
+                            </t>
+
+                            <div class="text-muted small" style="font-size: 11px;">
+                                <i class="fa fa-info-circle me-1"/>Closing this window will prompt you again in 10 seconds.
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </t>
+
+    </t>
+</templates>

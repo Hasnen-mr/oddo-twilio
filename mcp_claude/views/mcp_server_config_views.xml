@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mcp_server_config_list" model="ir.ui.view">
+        <field name="name">mcp.server.config.list</field>
+        <field name="model">mcp.server.config</field>
+        <field name="arch" type="xml">
+            <list string="Server Configurations">
+                <field name="name"/>
+                <field name="ai_provider"/>
+                <field name="profile"/>
+                <field name="claude_api_key" password="1" optional="hide"/>
+                <field name="openai_api_key" password="1" optional="hide"/>
+                <field name="openai_model" optional="hide"/>
+                <field name="enable_tools"/>
+                <field name="enable_resources"/>
+                <field name="enable_oauth"/>
+                <field name="enable_api_keys"/>
+                <field name="enable_twilio_dialer" optional="hide"/>
+                <field name="rate_limit_rpm"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mcp_server_config_form" model="ir.ui.view">
+        <field name="name">mcp.server.config.form</field>
+        <field name="model">mcp.server.config</field>
+        <field name="arch" type="xml">
+            <form string="MCP Server Configuration">
+                <header>
+                    <button name="action_test_claude_connection" string="Test Claude Connection" type="object" class="oe_highlight" icon="fa-flask" invisible="ai_provider != 'claude'"/>
+                    <button name="action_test_openai_connection" string="Test OpenAI Connection" type="object" class="oe_highlight" icon="fa-bolt" invisible="ai_provider != 'openai'"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Configuration Name..."/>
+                        </h1>
+                    </div>
+
+                    <group string="AI Provider Selection">
+                        <field name="ai_provider" widget="radio" options="{'horizontal': true}"/>
+                    </group>
+
+                    <group string="Anthropic Claude API Configuration" invisible="ai_provider != 'claude'">
+                        <field name="claude_api_key" password="1" placeholder="sk-ant-api03-..."/>
+                    </group>
+
+                    <group string="OpenAI API Configuration" invisible="ai_provider != 'openai'">
+                        <field name="openai_api_key" password="1" placeholder="sk-proj-..."/>
+                        <field name="openai_model"/>
+                    </group>
+
+                    <div class="text-muted mb-3">
+                        <i class="fa fa-info-circle me-1"/>
+                        Selected provider handles LLM completions, reasoning, and dynamic MCP tool execution. Keys are stored server-side and are never sent to the browser or conversation logs.
+                    </div>
+
+                    <group string="THIRD-PARTY INTEGRATIONS">
+                        <field name="enable_twilio_dialer"/>
+                        <field name="twilio_caller_number" placeholder="+15551234567" invisible="not enable_twilio_dialer"/>
+                        <button name="action_test_twilio_connection" string="Test Twilio Connection" type="object" class="oe_highlight" icon="fa-phone" invisible="not enable_twilio_dialer"/>
+                    </group>
+
+                    <group>
+                        <group string="General Settings">
+                            <field name="profile"/>
+                            <field name="rate_limit_rpm"/>
+                            <field name="default_token_ttl"/>
+                        </group>
+                        <group string="Enabled Features">
+                            <field name="enable_tools"/>
+                            <field name="enable_resources"/>
+                            <field name="enable_prompts"/>
+                            <field name="enable_oauth"/>
+                            <field name="enable_api_keys"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mcp_server_config_search" model="ir.ui.view">
+        <field name="name">mcp.server.config.search</field>
+        <field name="model">mcp.server.config</field>
+        <field name="arch" type="xml">
+            <search string="Search Server Configurations">
+                <field name="name"/>
+                <field name="profile"/>
+                <filter string="OAuth Enabled" name="enable_oauth" domain="[('enable_oauth', '=', True)]"/>
+                <filter string="API Keys Enabled" name="enable_api_keys" domain="[('enable_api_keys', '=', True)]"/>
+                <group>
+                    <filter string="Profile" name="group_profile" context="{'group_by': 'profile'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_mcp_server_config" model="ir.actions.act_window">
+        <field name="name">Server Configurations</field>
+        <field name="res_model">mcp.server.config</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_id" ref="view_mcp_server_config_list"/>
+        <field name="search_view_id" ref="view_mcp_server_config_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new MCP Server Configuration!
+            </p>
+            <p>
+                Configure server endpoints, rate limits, authentication modes, and execution profiles for MCP Claude.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_mcp_server_config_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_mcp_server_config_list"/>
+        <field name="act_window_id" ref="action_mcp_server_config"/>
+    </record>
+
+    <record id="action_mcp_server_config_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_mcp_server_config_form"/>
+        <field name="act_window_id" ref="action_mcp_server_config"/>
+    </record>
+</odoo>

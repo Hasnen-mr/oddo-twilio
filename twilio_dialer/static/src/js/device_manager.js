@@ -353,6 +353,7 @@ class DeviceManager {
             codecPreferences: ["opus", "pcmu"],
             fakeLocalDTMF: true,
             enableRingingState: true,
+            disableAudioContextSounds: true,
         });
 
         this.device.on("error", (error) => {

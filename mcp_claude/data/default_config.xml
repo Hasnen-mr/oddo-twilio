@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Default Server Configuration Profile -->
+        <record id="mcp_server_config_default" model="mcp.server.config">
+            <field name="name">Default MCP Configuration</field>
+            <field name="profile">development</field>
+            <field name="rate_limit_rpm">120</field>
+            <field name="default_token_ttl">3600</field>
+            <field name="enable_tools">1</field>
+            <field name="enable_resources">1</field>
+            <field name="enable_prompts">0</field>
+            <field name="enable_oauth">1</field>
+            <field name="enable_api_keys">1</field>
+        </record>
+
+        <!-- Default Dev Master API Key -->
+        <record id="mcp_api_key_default" model="mcp.api.key">
+            <field name="name">Default Developer Master Key</field>
+            <field name="key_prefix">mcp_live_default</field>
+            <field name="key_hash">sha256_default_master_key_hash</field>
+            <field name="user_id" ref="base.user_admin"/>
+            <field name="active">1</field>
+        </record>
+
+        <!-- Default Registered Read-Only MCP Built-in Tools -->
+        <record id="mcp_tool_ping" model="mcp.tool">
+            <field name="name">odoo_ping</field>
+            <field name="display_name">Ping Odoo Server</field>
+            <field name="description">Ping Odoo MCP Server to verify connection status</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">1</field>
+            <field name="category">technical</field>
+        </record>
+        <record id="mcp_tool_search_partners" model="mcp.tool">
+            <field name="name">odoo_search_partners</field>
+            <field name="display_name">Search Partners</field>
+            <field name="description">Search Odoo Contacts &amp; Customers (res.partner). Filter by name, email, phone, or company.</field>
+            <field name="model_name">res.partner</field>
+            <field name="operation">search</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">2</field>
+            <field name="category">contacts</field>
+        </record>
+        <record id="mcp_tool_search_leads" model="mcp.tool">
+            <field name="name">odoo_search_leads</field>
+            <field name="display_name">Search CRM Leads</field>
+            <field name="description">Search Odoo CRM Leads &amp; Opportunities (crm.lead). Filter by name, partner, stage, or salesperson.</field>
+            <field name="model_name">crm.lead</field>
+            <field name="operation">search</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">3</field>
+            <field name="category">crm</field>
+        </record>
+        <record id="mcp_tool_search_orders" model="mcp.tool">
+            <field name="name">odoo_search_orders</field>
+            <field name="display_name">Search Sales Orders</field>
+            <field name="description">Search Odoo Sales Orders (sale.order). Filter by customer, state, or date range.</field>
+            <field name="model_name">sale.order</field>
+            <field name="operation">search</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">4</field>
+            <field name="category">sales</field>
+        </record>
+        <record id="mcp_tool_search_invoices" model="mcp.tool">
+            <field name="name">odoo_search_invoices</field>
+            <field name="display_name">Search Invoices</field>
+            <field name="description">Search Odoo Customer Invoices (account.move). Filter by customer, state, payment state, or date range.</field>
+            <field name="model_name">account.move</field>
+            <field name="operation">search</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">5</field>
+            <field name="category">accounting</field>
+        </record>
+        <record id="mcp_tool_search_products" model="mcp.tool">
+            <field name="name">odoo_search_products</field>
+            <field name="display_name">Search Products</field>
+            <field name="description">Search Odoo Products (product.product). Filter by name, internal reference, barcode, or category.</field>
+            <field name="model_name">product.product</field>
+            <field name="operation">search</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">6</field>
+            <field name="category">inventory</field>
+        </record>
+        <record id="mcp_tool_read_record" model="mcp.tool">
+            <field name="name">odoo_read_record</field>
+            <field name="display_name">Read Record</field>
+            <field name="description">Generic Read Tool to fetch specific field values for a target record by ID.</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">7</field>
+            <field name="category">technical</field>
+        </record>
+        <record id="mcp_tool_aggregate" model="mcp.tool">
+            <field name="name">odoo_aggregate</field>
+            <field name="display_name">Aggregate Data</field>
+            <field name="description">Compute aggregation (count, sum, average, min, max) on Odoo models using ORM read_group().</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">8</field>
+            <field name="category">technical</field>
+        </record>
+        <record id="mcp_tool_explain_record" model="mcp.tool">
+            <field name="name">odoo_explain_record</field>
+            <field name="display_name">Explain Model Fields</field>
+            <field name="description">Explain the field structure, labels, types, and relations of any Odoo model for AI inspection.</field>
+            <field name="is_builtin">1</field>
+            <field name="active">1</field>
+            <field name="sequence">9</field>
+            <field name="category">technical</field>
+        </record>
+    </data>
+</odoo>

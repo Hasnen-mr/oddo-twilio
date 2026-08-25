@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_mcp_api_key_list" model="ir.ui.view">
+        <field name="name">mcp.api.key.list</field>
+        <field name="model">mcp.api.key</field>
+        <field name="arch" type="xml">
+            <list string="API Keys" decoration-success="active == True" decoration-muted="active == False">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="key_prefix"/>
+                <field name="expires_at"/>
+                <field name="last_used_at"/>
+                <field name="active"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_mcp_api_key_form" model="ir.ui.view">
+        <field name="name">mcp.api.key.form</field>
+        <field name="model">mcp.api.key</field>
+        <field name="arch" type="xml">
+            <form string="API Key">
+                <header>
+                    <button name="action_revoke" string="Revoke Key" type="object" class="btn-danger" invisible="not active"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Revoked" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Key Label (e.g. Cursor IDE Dev Key)..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Key Credentials">
+                            <field name="user_id"/>
+                            <field name="key_prefix"/>
+                            <field name="active"/>
+                        </group>
+                        <group string="Expiration &amp; Usage">
+                            <field name="expires_at"/>
+                            <field name="last_used_at"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_mcp_api_key_search" model="ir.ui.view">
+        <field name="name">mcp.api.key.search</field>
+        <field name="model">mcp.api.key</field>
+        <field name="arch" type="xml">
+            <search string="Search API Keys">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="key_prefix"/>
+                <filter string="Active" name="active" domain="[('active', '=', True)]"/>
+                <filter string="Revoked" name="revoked" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="User" name="group_user" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_mcp_api_key" model="ir.actions.act_window">
+        <field name="name">API Keys</field>
+        <field name="res_model">mcp.api.key</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_mcp_api_key_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Generate an API Key for AI Clients!
+            </p>
+            <p>
+                API Keys provide secure machine-to-machine connection to Odoo via MCP.
+            </p>
+        </field>
+    </record>
+</odoo>

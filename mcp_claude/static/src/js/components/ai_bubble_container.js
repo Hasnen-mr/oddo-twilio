@@ -53,7 +53,14 @@ export class AIBubbleContainer extends Component {
             this.startPeriodicPrompt();
         });
 
+        this._onToggleWindow = () => {
+            this.state.isOpen = !this.state.isOpen;
+            this.state.isBubbleDismissed = false;
+        };
+        window.addEventListener("toggle_mcp_ai_window", this._onToggleWindow);
+
         onWillUnmount(() => {
+            window.removeEventListener("toggle_mcp_ai_window", this._onToggleWindow);
             if (this._nagInterval) {
                 clearInterval(this._nagInterval);
             }

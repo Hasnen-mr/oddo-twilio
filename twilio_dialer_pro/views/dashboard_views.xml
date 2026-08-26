@@ -5,7 +5,7 @@
         <field name="name">Configuration</field>
         <field name="res_model">res.config.settings</field>
         <field name="view_mode">form</field>
-        <field name="context">{'module': 'twilio_dialer'}</field>
+        <field name="context">{'module': 'twilio_dialer_pro'}</field>
     </record>
 
     <record id="action_twilio_configuration_menu" model="ir.actions.server">

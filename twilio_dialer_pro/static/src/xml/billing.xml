@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="twilio_dialer.BillingDashboard">
+    <t t-name="twilio_dialer_pro.BillingDashboard">
         <div class="o_twilio_billing">
             <t t-if="state.loading"><div class="o_twilio_billing_skeleton"/></t>
             <t t-elif="state.error">
@@ -9,14 +9,14 @@
             </t>
             <t t-else="">
                 <div class="o_billing_screen">
-                    <t t-call="twilio_dialer.BillingKpis"/>
-                    <t t-call="twilio_dialer.BillingPackages"/>
+                    <t t-call="twilio_dialer_pro.BillingKpis"/>
+                    <t t-call="twilio_dialer_pro.BillingPackages"/>
                 </div>
             </t>
         </div>
     </t>
 
-    <t t-name="twilio_dialer.BillingKpis">
+    <t t-name="twilio_dialer_pro.BillingKpis">
         <section class="o_billing_kpis" t-att-class="'o_billing_kpis--' + usageState">
             <article class="o_billing_kpi o_billing_kpi--remain">
                 <div class="o_billing_kpi_top">
@@ -77,7 +77,7 @@
         </section>
     </t>
 
-    <t t-name="twilio_dialer.BillingPackages">
+    <t t-name="twilio_dialer_pro.BillingPackages">
         <section class="o_billing_packages">
             <header class="o_billing_packages_header">
                 <div class="o_billing_packages_heading">

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="twilio_dialer.VersionUpdateDialog">
+    <t t-name="twilio_dialer_pro.VersionUpdateDialog">
         <Dialog size="'md'" contentClass="'o_twilio_version_dialog'"
                title="dialogTitle">
             <div class="o_twilio_version_body">

@@ -1,6 +1,6 @@
 /** @odoo-module **/
 
-import { Component, onMounted, onWillStart, onWillUnmount, onWillUpdateProps, useExternalListener, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillUnmount, onWillUpdateProps, useExternalListener, useState } from "@odoo/owl";
 import { AutoDialerRunner } from "@twilio_dialer_pro/js/auto_dialer_runner";
 import { COUNTRY_CODES } from "@twilio_dialer_pro/js/country_codes";
 import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
@@ -26,7 +26,8 @@ export class DialerPopup extends Component {
     };
 
     setup() {
-                this.orm = useService("orm");
+
+        this.orm = useService("orm");
         this.action = useService("action");
         const defaultCountry = COUNTRY_CODES.find((country) => country.code === "+91") || COUNTRY_CODES[0];
         const lastDial = this._loadLastDial();
@@ -101,17 +102,6 @@ export class DialerPopup extends Component {
                 } else if (nextProps.phone && !nextProps.autoDialerId) {
                     this.state.activeTab = "dialpad";
                 }
-            }
-            if (this.dialerState.openTroubleshooter) {
-                this.dialerState.openTroubleshooter = false;
-                setTimeout(() => this.openQuickDebugModal(), 100);
-            }
-        });
-
-        onMounted(() => {
-            if (this.dialerState.openTroubleshooter) {
-                this.dialerState.openTroubleshooter = false;
-                setTimeout(() => this.openQuickDebugModal(), 100);
             }
         });
 
@@ -199,40 +189,6 @@ export class DialerPopup extends Component {
         if (event.key === "Escape") {
             event.preventDefault();
             this.closePopup();
-            return;
-        }
-
-        const target = event.target;
-        const isPhoneInput = target && target.classList && target.classList.contains("o_dialer_phone_input");
-        const isOtherInput = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable) && !isPhoneInput;
-
-        if (isOtherInput) {
-            return;
-        }
-
-        if (event.key === "Enter" || event.code === "NumpadEnter") {
-            if (this.state.connectionStatus === "incoming" || this.isIncoming) {
-                event.preventDefault();
-                this.onAcceptCall();
-                return;
-            }
-            if (this.state.activeTab === "dialpad" && this.canCall) {
-                event.preventDefault();
-                this.onCall();
-                return;
-            }
-        }
-
-        // Support laptop numpad direct dialing when dialpad tab is active
-        if (this.state.activeTab === "dialpad" && !isPhoneInput) {
-            const validDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#", "+"];
-            if (validDigits.includes(event.key)) {
-                event.preventDefault();
-                this.appendDigit(event.key);
-            } else if (event.key === "Backspace") {
-                event.preventDefault();
-                this.backspace();
-            }
         }
     }
 
@@ -907,8 +863,6 @@ export class DialerPopup extends Component {
                 from_number: this.state.selectedCaller?.number,
             }, {
                 partnerId: this.props.partnerId || this.dialerState.partnerId,
-                resModel: this.dialerState.resModel || null,
-                resId: this.dialerState.resId || null,
                 queueLineId: this.dialerState.queueLineId || null,
             });
             if (res === false) {

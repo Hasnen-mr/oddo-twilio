@@ -3,7 +3,7 @@
 
 
 
-    <t t-name="twilio_dialer.DialerSystray">
+    <t t-name="twilio_dialer_pro.DialerSystray">
         <button type="button"
                 class="o_dialer_toggle_btn"
                 t-att-class="{ 'o_dialer_toggle_btn--open': state.isOpen }"
@@ -30,7 +30,7 @@
         </div>
     </t>
 
-    <t t-name="twilio_dialer.DialerPopup">
+    <t t-name="twilio_dialer_pro.DialerPopup">
         <div class="o_dialer_popup" t-on-click="closeAllDropdowns">
 
             <!-- Header -->
@@ -745,7 +745,7 @@
 
     <!-- AutoDialerRunner Template -->
 
-    <t t-name="twilio_dialer.AutoDialerRunner">
+    <t t-name="twilio_dialer_pro.AutoDialerRunner">
         <div class="o_dialer_qrunner">
 
             <!-- Queue Selector -->

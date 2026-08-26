@@ -162,33 +162,6 @@ class TwilioDialerDashboard(models.TransientModel):
         }
 
     @api.model
-    def _get_or_create_dashboard(self):
-        dashboard = self.search([], order="id desc", limit=1)
-        if not dashboard:
-            dashboard = self.create(self._dashboard_values())
-        return dashboard
-
-    def web_read(self, specification):
-        records = self.exists()
-        if not records:
-            dashboard = self._get_or_create_dashboard()
-            res = dashboard.web_read(specification)
-            if res and self.ids:
-                res[0]["id"] = self.ids[0]
-            return res
-        return super().web_read(specification)
-
-    def read(self, fields=None, load='_classic_read'):
-        records = self.exists()
-        if not records:
-            dashboard = self._get_or_create_dashboard()
-            res = dashboard.read(fields=fields, load=load)
-            if res and self.ids:
-                res[0]["id"] = self.ids[0]
-            return res
-        return super().read(fields=fields, load=load)
-
-    @api.model
     def action_open_dashboard(self):
         dashboard = self.create(self._dashboard_values())
         return {
@@ -208,11 +181,11 @@ class TwilioDialerDashboard(models.TransientModel):
         """Open softphone when connected; otherwise send user to Configuration."""
         self.ensure_one()
         if self.connection_configured:
-            return self.env.ref("twilio_dialer.action_twilio_open_phone").read()[0]
+            return self.env.ref("twilio_dialer_pro.action_twilio_open_phone").read()[0]
         return self.action_open_configuration()
 
     def action_open_call_logs(self):
-        return self.env.ref("twilio_dialer.action_twilio_call_log").read()[0]
+        return self.env.ref("twilio_dialer_pro.action_twilio_call_log").read()[0]
 
     def action_open_call_graph(self):
         action = self.action_open_call_logs()
@@ -237,7 +210,7 @@ class TwilioDialerDashboard(models.TransientModel):
         return action
 
     def action_open_auto_dialer(self):
-        return self.env.ref("twilio_dialer.action_twilio_auto_dialer").read()[0]
+        return self.env.ref("twilio_dialer_pro.action_twilio_auto_dialer").read()[0]
 
     def action_open_contacts(self):
         return self.env.ref("contacts.action_contacts").read()[0]

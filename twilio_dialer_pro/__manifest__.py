@@ -113,7 +113,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '19.0.1.2.98',
+    'version': '19.0.26.08',
     'license': 'LGPL-3',
 
     'depends': [
@@ -176,16 +176,11 @@ Bitly: https://bit.ly/odoo-twilio-dialer
             'twilio_dialer_pro/static/src/js/sms_messaging_dialog.js',
             'twilio_dialer_pro/static/src/js/sms_workspace.js',
             'twilio_dialer_pro/static/src/js/billing.js',
-            'twilio_dialer_pro/static/src/js/number_allocation.js',
             'twilio_dialer_pro/static/src/js/onboarding_wizard.js',
-            'twilio_dialer_pro/static/src/js/credentials_help_dialog.js',
-            'twilio_dialer_pro/static/src/js/help_dialog.js',
-            'twilio_dialer_pro/static/src/js/help_bubble.js',
             'twilio_dialer_pro/static/src/js/dashboard_form.js',
             'twilio_dialer_pro/static/src/js/settings_ui_field.js',
             'twilio_dialer_pro/static/src/js/config_nav.js',
             'twilio_dialer_pro/static/src/js/about_nav.js',
-            'twilio_dialer_pro/static/src/js/call_settings_cache.js',
             'twilio_dialer_pro/static/src/js/call_settings_autosave.js',
             'twilio_dialer_pro/static/src/js/ai_settings_link.js',
             'twilio_dialer_pro/static/src/js/password_toggle_field.js',

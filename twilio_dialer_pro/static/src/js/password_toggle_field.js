@@ -52,4 +52,4 @@ export const passwordToggleField = {
     },
 };
 
-registry.category("fields").add("password_toggle", passwordToggleField, { force: true });
+registry.category("fields").add("password_toggle", passwordToggleField);

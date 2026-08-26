@@ -20,7 +20,8 @@ export class TwilioSmsPopup extends Component {
     };
 
     setup() {
-                this.notification = useService("notification");
+
+        this.notification = useService("notification");
         this.chatBodyRef = useRef("chatBody");
         this.messageInputRef = useRef("messageInput");
 

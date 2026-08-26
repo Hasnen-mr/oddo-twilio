@@ -3,7 +3,7 @@
 
     <!-- ── Shared: red circular call button used in both Contacts and Call Log ── -->
 
-    <t t-name="twilio_dialer.ContactCallButton">
+    <t t-name="twilio_dialer_pro.ContactCallButton">
         <button type="button"
                 class="o_twilio_contact_call_button"
                 t-att-disabled="!phone"
@@ -30,7 +30,7 @@
         Usage:  <field name="to_number" widget="twilio_call_button" readonly="1"/>
     -->
 
-    <t t-name="twilio_dialer.TwilioCallButtonField">
+    <t t-name="twilio_dialer_pro.TwilioCallButtonField">
         <div class="o_twilio_call_btn_field d-flex align-items-center w-100 justify-content-between">
             <span class="o_twilio_call_btn_number text-truncate me-auto" t-esc="phone"/>
             <div class="d-flex align-items-center flex-shrink-0 ms-auto">

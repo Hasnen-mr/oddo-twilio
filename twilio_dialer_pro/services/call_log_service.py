@@ -48,7 +48,7 @@ class CallLogService:
         is_transcript_enabled = icp.get_param("twilio_dialer.ai_enable_transcript") in ("True", "true", "1")
         is_summary_enabled = icp.get_param("twilio_dialer.ai_enable_summary") in ("True", "true", "1")
 
-        config_url = "/web#action=twilio_dialer.action_twilio_configuration"
+        config_url = "/web#action=twilio_dialer_pro.action_twilio_configuration"
 
         # 1. Recording display
         if call_log.playback_url:

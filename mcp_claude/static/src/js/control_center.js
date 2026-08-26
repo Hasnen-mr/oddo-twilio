@@ -74,7 +74,9 @@ export class MCPControlCenter extends Component {
             // Email OTP Verification state
             userEmail: "",
             userName: "",
+            webAiProvider: "claude",
             webClaudeApiKey: "",
+            webOpenAiApiKey: "",
             isTestingWebKey: false,
             webKeyVerified: false,
             showWebKey: false,
@@ -2659,10 +2661,21 @@ export class MCPControlCenter extends Component {
         this.state.showWebKey = !this.state.showWebKey;
     }
 
-    async saveAndVerifyWebClaudeApiKey() {
-        const key = (this.state.webClaudeApiKey || "").trim();
+    setWebAiProvider(provider) {
+        this.state.webAiProvider = provider;
+        this.state.webKeyError = "";
+        this.state.webKeySuccess = "";
+        this.state.webKeyVerified = false;
+    }
+
+    async saveAndVerifyWebApiKeys() {
+        const provider = this.state.webAiProvider || "claude";
+        const key = provider === "claude" ? (this.state.webClaudeApiKey || "").trim() : (this.state.webOpenAiApiKey || "").trim();
+
         if (!key) {
-            this.state.webKeyError = "Please enter your Anthropic API Key (e.g. sk-ant-api03-...).";
+            this.state.webKeyError = provider === "claude" 
+                ? "Please enter your Anthropic Claude API Key (e.g. sk-ant-api03-...)." 
+                : "Please enter your OpenAI ChatGPT API Key (e.g. sk-proj-... or sk-...).";
             return;
         }
 
@@ -2671,20 +2684,27 @@ export class MCPControlCenter extends Component {
         this.state.webKeySuccess = "";
 
         try {
-            // 1. Save API key and active provider
-            const saveRes = await this.orm.call("mcp.server.config", "save_config_data", [{
-                claude_api_key: key,
-                ai_provider: "claude",
-            }]);
+            // 1. Save config with selected provider & respective key
+            const savePayload = {
+                ai_provider: provider,
+            };
+            if (provider === "claude") {
+                savePayload.claude_api_key = key;
+            } else {
+                savePayload.openai_api_key = key;
+            }
 
-            // 2. Test Connection
-            const testRes = await this.orm.call("mcp.server.config", "test_provider_connection", ["claude"]);
+            await this.orm.call("mcp.server.config", "save_config_data", [savePayload]);
+
+            // 2. Test Connection for selected provider
+            const testRes = await this.orm.call("mcp.server.config", "test_provider_connection", [provider]);
             if (testRes && testRes.success) {
                 this.state.webKeyVerified = true;
-                this.state.webKeySuccess = "Claude API Key connected successfully! Connection verified.";
-                this.notification.add("Claude API Key connected successfully!", { type: "success" });
+                const providerName = provider === "claude" ? "Claude (Anthropic)" : "ChatGPT (OpenAI)";
+                this.state.webKeySuccess = `${providerName} API Key connected successfully! Connection verified.`;
+                this.notification.add(`${providerName} connected successfully!`, { type: "success" });
             } else {
-                this.state.webKeyError = (testRes && testRes.message) || "Failed to verify Claude API key. Please check the key.";
+                this.state.webKeyError = (testRes && (testRes.message || testRes.error)) || `Failed to verify ${provider.toUpperCase()} API key. Please check the key.`;
             }
         } catch (e) {
             this.state.webKeyError = (e && e.data && e.data.message) || e.message || "Failed to save or test API key.";

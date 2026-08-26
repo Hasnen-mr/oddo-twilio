@@ -418,6 +418,20 @@ export class MCPControlCenter extends Component {
     setTabHome() {
         this.setTab("home");
     }
+    switchTab(tab) {
+        if (tab === 'claude') {
+            this.setTabClaude();
+        } else if (tab === 'dashboard' || tab === 'dashboards') {
+            this.setTabDashboards();
+        } else if (tab === 'configurations' || tab === 'configuration') {
+            this.setTabConfigurations();
+        } else if (tab === 'tools') {
+            this.setTabTools();
+        } else {
+            this.state.activeTab = tab;
+        }
+    }
+
     setTabClaude() {
         this.setTab("claude");
         this.loadClaudeConversations();
@@ -824,6 +838,12 @@ export class MCPControlCenter extends Component {
         } catch (e) {
             console.warn("Failed to load messages for conversation #" + convId, e);
         }
+    }
+
+    async closeActiveConversation() {
+        this.state.claudeActiveConvId = null;
+        this.state.claudeMessages = [];
+        this.state.claudePromptText = "";
     }
 
     async createNewClaudeChat() {
@@ -2700,6 +2720,7 @@ export class MCPControlCenter extends Component {
             const testRes = await this.orm.call("mcp.server.config", "test_provider_connection", [provider]);
             if (testRes && testRes.success) {
                 this.state.webKeyVerified = true;
+                await this.loadServerConfig();
                 const providerName = provider === "claude" ? "Claude (Anthropic)" : "ChatGPT (OpenAI)";
                 this.state.webKeySuccess = `${providerName} API Key connected successfully! Connection verified.`;
                 this.notification.add(`${providerName} connected successfully!`, { type: "success" });

@@ -74,6 +74,12 @@ export class MCPControlCenter extends Component {
             // Email OTP Verification state
             userEmail: "",
             userName: "",
+            webClaudeApiKey: "",
+            isTestingWebKey: false,
+            webKeyVerified: false,
+            showWebKey: false,
+            webKeyError: "",
+            webKeySuccess: "",
             otp: "",
             sendingOtp: false,
             otpSent: false,
@@ -1162,6 +1168,19 @@ export class MCPControlCenter extends Component {
     }
 
     nextWizardStep() {
+        if (this.state.wizardStep === 1 && this.state.wizardClient === 'web') {
+            this.state.wizardStep = 2;
+            return;
+        }
+        if (this.state.wizardStep === 2 && this.state.wizardClient === 'web') {
+            if (!this.state.webKeyVerified) {
+                this.notification.add("Please verify and save your Claude API Key before proceeding.", { type: "warning" });
+                return;
+            }
+            // Skip CLI/Restart steps and go straight to Email Verification (Step 6)
+            this.state.wizardStep = 6;
+            return;
+        }
         if (this.state.modalStep === 1 && !this.state.toolForm.model_name) {
             this.notification.add("Please select a target Odoo model before proceeding.", { type: "warning" });
             return;
@@ -2604,6 +2623,45 @@ export class MCPControlCenter extends Component {
     }
 
     
+    
+    toggleShowWebKey() {
+        this.state.showWebKey = !this.state.showWebKey;
+    }
+
+    async saveAndVerifyWebClaudeApiKey() {
+        const key = (this.state.webClaudeApiKey || "").trim();
+        if (!key) {
+            this.state.webKeyError = "Please enter your Anthropic API Key (e.g. sk-ant-api03-...).";
+            return;
+        }
+
+        this.state.isTestingWebKey = true;
+        this.state.webKeyError = "";
+        this.state.webKeySuccess = "";
+
+        try {
+            // 1. Save API key and active provider
+            const saveRes = await this.orm.call("mcp.server.config", "save_config_data", [{
+                claude_api_key: key,
+                ai_provider: "claude",
+            }]);
+
+            // 2. Test Connection
+            const testRes = await this.orm.call("mcp.server.config", "test_provider_connection", ["claude"]);
+            if (testRes && testRes.success) {
+                this.state.webKeyVerified = true;
+                this.state.webKeySuccess = "Claude API Key connected successfully! Connection verified.";
+                this.notification.add("Claude API Key connected successfully!", { type: "success" });
+            } else {
+                this.state.webKeyError = (testRes && testRes.message) || "Failed to verify Claude API key. Please check the key.";
+            }
+        } catch (e) {
+            this.state.webKeyError = (e && e.data && e.data.message) || e.message || "Failed to save or test API key.";
+        } finally {
+            this.state.isTestingWebKey = false;
+        }
+    }
+
     async sendRegistrationData(isResend = false) {
         if (this.state.sendingOtp) return;
         const email = (this.state.userEmail || "").trim();

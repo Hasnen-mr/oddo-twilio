@@ -81,7 +81,7 @@
                                         <button type="button" 
                                                 class="btn btn-primary w-100 fw-bold text-white py-2 shadow-sm"
                                                 t-on-click="saveAndVerifyWebApiKeys"
-                                                t-att-disabled="state.isTestingWebKey || (state.webAiProvider === 'claude' ? !state.webClaudeApiKey.trim() : !state.webOpenAiApiKey.trim())">
+                                                t-att-disabled="state.isTestingWebKey || (state.webAiProvider === 'claude' ? !state.webClaudeApiKey : !state.webOpenAiApiKey)">
                                             <t t-if="state.isTestingWebKey">
                                                 <i class="fa fa-spinner fa-spin me-1"/> Verifying &amp; Saving API Key...
                                             </t>
@@ -208,7 +208,7 @@
                                                 <button type="button" 
                                                         class="btn btn-primary text-white fw-bold text-nowrap px-3 py-2 shadow-sm d-inline-flex align-items-center gap-1.5" 
                                                         t-on-click="goToEmailVerificationStep"
-                                                        t-att-disabled="!state.userEmail || !state.userEmail.trim()">
+                                                        t-att-disabled="!state.userEmail || !state.userEmail">
                                                     <span>Send Code</span>
                                                     <i class="fa fa-arrow-right"/>
                                                 </button>
@@ -281,7 +281,7 @@
                                             <button type="button" 
                                                     class="btn btn-primary w-100 fw-bold text-white py-2 shadow-sm"
                                                     t-on-click="() => this.sendRegistrationData(false)"
-                                                    t-att-disabled="state.sendingOtp || !state.userEmail.trim() || !state.userPhone.trim()">
+                                                    t-att-disabled="state.sendingOtp || !state.userEmail || !state.userPhone">
                                                 <t t-if="state.sendingOtp">
                                                     <i class="fa fa-spinner fa-spin me-1"/> Sending Verification Code...
                                                 </t>
@@ -326,7 +326,7 @@
                                             <button type="button" 
                                                     class="btn btn-primary w-100 fw-bold text-white py-2 mb-2 shadow-sm"
                                                     t-on-click="verifyOtp"
-                                                    t-att-disabled="state.verifyingOtp || !state.otp.trim()">
+                                                    t-att-disabled="state.verifyingOtp || !state.otp">
                                                 <t t-if="state.verifyingOtp">
                                                     <i class="fa fa-spinner fa-spin me-1"/> Verifying Code...
                                                 </t>

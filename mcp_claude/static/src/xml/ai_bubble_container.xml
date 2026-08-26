@@ -64,7 +64,7 @@
                                     <button type="button" 
                                             class="btn btn-primary w-100 fw-bold text-white py-2 shadow-sm"
                                             t-on-click="() => this.sendGlobalRegistrationData(false)"
-                                            t-att-disabled="state.globalSendingOtp || !state.globalUserEmail.trim() || !state.globalUserPhone.trim()">
+                                            t-att-disabled="state.globalSendingOtp || !state.globalUserEmail || !state.globalUserPhone">
                                         <t t-if="state.globalSendingOtp">
                                             <i class="fa fa-spinner fa-spin me-1"/> Sending Verification Code...
                                         </t>
@@ -98,7 +98,7 @@
                                     <button type="button" 
                                             class="btn btn-primary w-100 fw-bold text-white py-2 shadow-sm mb-2"
                                             t-on-click="verifyGlobalOtp"
-                                            t-att-disabled="state.globalVerifyingOtp || !state.globalOtp.trim()">
+                                            t-att-disabled="state.globalVerifyingOtp || !state.globalOtp">
                                         <t t-if="state.globalVerifyingOtp">
                                             <i class="fa fa-spinner fa-spin me-1"/> Verifying Code...
                                         </t>

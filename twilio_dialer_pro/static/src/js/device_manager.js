@@ -1,3 +1,5 @@
+/** @odoo-module **/
+
 // Safe browser autoplay rejection handler
 if (typeof window !== "undefined" && window.HTMLAudioElement && !window._odooAudioPlayPatched) {
     window._odooAudioPlayPatched = true;
@@ -23,7 +25,7 @@ if (typeof window !== "undefined" && window.HTMLAudioElement && !window._odooAud
     };
 }
 
-/** @odoo-module **/
+
 
 import { loadJS } from "@web/core/assets";
 import { rpc } from "@web/core/network/rpc";

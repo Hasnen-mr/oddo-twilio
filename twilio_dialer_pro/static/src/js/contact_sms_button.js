@@ -9,7 +9,7 @@ import { patch } from "@web/core/utils/patch";
 import { PhoneField, formPhoneField, phoneField } from "@web/views/fields/phone/phone_field";
 
 export class ContactSmsButton extends Component {
-    static template = "twilio_dialer.ContactSmsButton";
+    static template = "twilio_dialer_pro.ContactSmsButton";
     static props = {
         record: { type: Object },
         name: { type: String },

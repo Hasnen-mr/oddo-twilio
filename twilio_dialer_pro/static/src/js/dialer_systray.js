@@ -7,7 +7,7 @@ import { useService } from "@web/core/utils/hooks";
 
 export class DialerSystray extends Component {
     static components = { DialerPopup };
-    static template = "twilio_dialer.DialerSystray";
+    static template = "twilio_dialer_pro.DialerSystray";
 
     setup() {
         this.dialer = useService("twilio_dialer");
@@ -26,7 +26,7 @@ export class DialerSystray extends Component {
 registry
     .category("systray")
     .add(
-        "twilio_dialer.dialer_systray",
+        "twilio_dialer_pro.dialer_systray",
         { Component: DialerSystray },
         { sequence: 30, force: true }
     );

@@ -4,7 +4,7 @@ import { Component, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 
 export class TwilioHelpDialog extends Component {
-    static template = "twilio_dialer.TwilioHelpDialog";
+    static template = "twilio_dialer_pro.TwilioHelpDialog";
     static components = { Dialog };
     static props = {
         close: Function,

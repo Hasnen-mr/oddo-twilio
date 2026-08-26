@@ -1,3 +1,28 @@
+// Safe browser autoplay rejection handler
+if (typeof window !== "undefined" && window.HTMLAudioElement && !window._odooAudioPlayPatched) {
+    window._odooAudioPlayPatched = true;
+    const origPlay = HTMLAudioElement.prototype.play;
+    HTMLAudioElement.prototype.play = function() {
+        try {
+            const res = origPlay.apply(this, arguments);
+            if (res && typeof res.catch === "function") {
+                return res.catch((err) => {
+                    if (err && (err.name === "NotAllowedError" || String(err).includes("interact with the document"))) {
+                        return;
+                    }
+                    console.warn("[Twilio Audio] Autoplay suppressed:", err);
+                });
+            }
+            return res;
+        } catch (e) {
+            if (e && (e.name === "NotAllowedError" || String(e).includes("interact with the document"))) {
+                return Promise.resolve();
+            }
+            return Promise.reject(e);
+        }
+    };
+}
+
 /** @odoo-module **/
 
 import { loadJS } from "@web/core/assets";
@@ -333,6 +358,12 @@ class DeviceManager {
             fakeLocalDTMF: true,
             enableRingingState: true,
             disableAudioContextSounds: true,
+            sounds: {
+                incoming: false,
+                outgoing: false,
+                disconnect: false,
+                dtmf: false,
+            },
         });
 
         this.device.on("error", (error) => {

@@ -11,7 +11,7 @@ const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 export class TwilioSmsWorkspaceClientAction extends Component {
-    static template = "twilio_dialer.TwilioSmsWorkspaceClientAction";
+    static template = "twilio_dialer_pro.TwilioSmsWorkspaceClientAction";
 
     setup() {
                 this.action = useService("action");

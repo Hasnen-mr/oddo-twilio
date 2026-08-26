@@ -14,7 +14,7 @@ VERSION_INFO_PATHS = (
     # Primary: publisher cloud
     "https://extension.mybroadcast.online/odoo/twilio_dialer/version.json",
     # Fallback: GitHub branch (updated on every release push)
-    "https://raw.githubusercontent.com/Hasnen-mr/oddo-twilio/18.0/twilio_dialer/static/description/version_info.json",
+    "https://raw.githubusercontent.com/Hasnen-mr/oddo-twilio/18.0/twilio_dialer_pro/static/description/version_info.json",
 )
 FETCH_TIMEOUT = 8
 

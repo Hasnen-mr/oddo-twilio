@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <!-- Shared Contact SMS Button (used beside call button) -->
-    <t t-name="twilio_dialer.ContactSmsButton">
+    <t t-name="twilio_dialer_pro.ContactSmsButton">
         <button type="button"
                 class="o_twilio_contact_sms_button"
                 t-att-disabled="!phone"
@@ -13,7 +13,7 @@
     </t>
 
     <!-- SMS Popup Modal -->
-    <t t-name="twilio_dialer.TwilioSmsPopup">
+    <t t-name="twilio_dialer_pro.TwilioSmsPopup">
         <div class="o_twilio_sms_modal_backdrop" t-on-click.self="onCancel">
             <div class="o_twilio_sms_modal">
 

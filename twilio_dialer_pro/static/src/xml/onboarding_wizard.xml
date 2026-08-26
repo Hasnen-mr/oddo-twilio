@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="twilio_dialer.OnboardingWizard">
+    <t t-name="twilio_dialer_pro.OnboardingWizard">
         <Dialog size="'lg'" contentClass="'o_twilio_onboard_dialog'">
             <t t-set-slot="header">
                 <h5 class="modal-title" t-esc="dialogTitle"/>

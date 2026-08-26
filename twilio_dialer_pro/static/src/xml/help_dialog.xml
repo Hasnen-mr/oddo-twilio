@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <!-- Global Floating Help Bubble for Twilio Calling System screens -->
-    <t t-name="twilio_dialer.TwilioHelpBubble">
+    <t t-name="twilio_dialer_pro.TwilioHelpBubble">
         <t t-if="state.isVisible">
             <div class="o_twilio_help_bubble_container" title="Twilio Dialer Help &amp; User Guide">
                 <!-- Hover × close button -->
@@ -33,11 +33,11 @@
     </t>
 
     <!-- Inherited Twilio Dashboard Form View -->
-    <t t-name="twilio_dialer.TwilioDashboardFormView" t-inherit="web.FormView" owl="1">
+    <t t-name="twilio_dialer_pro.TwilioDashboardFormView" t-inherit="web.FormView" owl="1">
     </t>
 
     <!-- Help Dialog / Panel -->
-    <t t-name="twilio_dialer.TwilioHelpDialog">
+    <t t-name="twilio_dialer_pro.TwilioHelpDialog">
         <Dialog size="'xl'" contentClass="'o_twilio_help_dialog_content'">
             <!-- Header with Title and Open Dialer button positioned top-right beside the close button -->
             <t t-set-slot="header">

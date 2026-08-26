@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="twilio_dialer.TwilioAboutNav">
+    <t t-name="twilio_dialer_pro.TwilioAboutNav">
         <nav class="o_twilio_cfg_nav o_twilio_about_nav" t-ref="root" aria-label="About sections">
             <div class="o_twilio_cfg_nav_brand">
                 <i class="fa fa-info-circle"/>

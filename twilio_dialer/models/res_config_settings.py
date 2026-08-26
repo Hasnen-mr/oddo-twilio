@@ -885,6 +885,74 @@ class ResConfigSettings(models.TransientModel):
             "target": "new",
         }
 
+    def _get_formatted_odoo_base_version(self, odoo_version=None):
+        """Format Odoo version dynamically as:
+        Normal (Community): 17.0.DD.MM (e.g. 17.0.26.08)
+        Pro (Enterprise): 17.0.DD.MM-pro (e.g. 17.0.26.08-pro)
+        """
+        raw_version = (odoo_version or "").strip() or odoo_release_version or "17.0"
+
+        # Detect Enterprise / Pro
+        is_enterprise = False
+        if "+e" in raw_version.lower() or "-pro" in raw_version.lower() or "-e" in raw_version.lower():
+            is_enterprise = True
+        else:
+            try:
+                import odoo.release as odoo_release
+                if hasattr(odoo_release, "version_info") and len(odoo_release.version_info) > 5 and odoo_release.version_info[5] == "e":
+                    is_enterprise = True
+            except Exception:
+                pass
+            if not is_enterprise:
+                try:
+                    if self.env["ir.module.module"].sudo().search([("name", "=", "web_enterprise"), ("state", "=", "installed")], limit=1):
+                        is_enterprise = True
+                except Exception:
+                    pass
+
+        # Extract major series (e.g. 17.0)
+        series_match = re.search(r"(\d+\.\d+)", raw_version)
+        series = series_match.group(1) if series_match else "17.0"
+
+        # Extract date (DD and MM)
+        # Matches YYYYMMDD (e.g. 20260826 -> MM=08, DD=26)
+        date_match = re.search(r"\b\d{4}(\d{2})(\d{2})\b", raw_version)
+        if date_match:
+            mm = date_match.group(1)
+            dd = date_match.group(2)
+        else:
+            # Matches DD.MM or MM.DD or DDMM
+            dots_match = re.search(r"\b(\d{2})\.(\d{2})\b", raw_version)
+            if dots_match:
+                dd, mm = dots_match.group(1), dots_match.group(2)
+            else:
+                from datetime import date
+                dd = date.today().strftime("%d")
+                mm = date.today().strftime("%m")
+
+        if is_enterprise:
+            return f"{series}.{dd}.{mm}-pro"
+        return f"{series}.{dd}.{mm}"
+
+    def _get_twilio_dialer_installed_version(self):
+        """Get Twilio Dialer module version string."""
+        try:
+            mod = self.env["ir.module.module"].sudo().search([("name", "=", "twilio_dialer")], limit=1)
+            if mod:
+                v = (mod.latest_version or mod.installed_version or "").strip()
+                if v:
+                    return v
+        except Exception:
+            pass
+        try:
+            import odoo.modules.manifest as manifest_util
+            mf = manifest_util.get_manifest("twilio_dialer")
+            if mf and mf.get("version"):
+                return str(mf.get("version")).strip()
+        except Exception:
+            pass
+        return "17.0.26.08"
+
     def _submit_module_registration(self, odoo_version=None):
         """Notify ZantaTech when a Twilio account is connected to the module."""
         self.ensure_one()
@@ -903,10 +971,12 @@ class ResConfigSettings(models.TransientModel):
             or icp.get_param("twilio_dialer.contact_phone")
             or ""
         )
-        version = (odoo_version or "").strip() or odoo_release_version
+
+        formatted_odoo_version = self._get_formatted_odoo_base_version(odoo_version)
         title = "Odoo Module login"
-        if version:
-            title = "%s %s" % (title, version)
+        if formatted_odoo_version:
+            title = "%s %s" % (title, formatted_odoo_version)
+
         payload = {
             "accountSid": account_sid,
             "email": email,
@@ -914,6 +984,7 @@ class ResConfigSettings(models.TransientModel):
             "message": "New Registration",
             "title": title,
         }
+
         try:
             ZantaTechAPI().submit_feedback(payload)
         except ZantaTechAPIError as error:

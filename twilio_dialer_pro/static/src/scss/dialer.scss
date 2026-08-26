@@ -3202,7 +3202,7 @@ button.o_twilio_dash_open_dialer:hover {
 
 // ── Twilio Configuration page (Odoo branding) ────────────
 
-.app_settings_block[data-key="twilio_dialer_pro"] {
+.app_settings_block[data-key="twilio_dialer"] {
     --o-twilio-cfg-primary: #{$o_dialer-primary};
     --o-twilio-cfg-primary-light: #{$o_dialer-primary-light};
     max-width: 1280px;

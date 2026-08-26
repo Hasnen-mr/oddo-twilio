@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
-    <t t-name="twilio_dialer.TwilioPhoneCountryField">
+    <t t-name="twilio_dialer_pro.TwilioPhoneCountryField">
         <div class="o_twilio_forward_phone" t-att-class="{ 'o_twilio_forward_phone--readonly': isReadonly }">
             <div class="o_dialer_phone_entry o_twilio_forward_phone_entry">
                 <div class="o_dialer_country_container" t-on-click.stop="">

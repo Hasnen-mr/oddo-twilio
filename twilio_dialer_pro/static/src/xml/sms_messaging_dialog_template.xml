@@ -2,7 +2,7 @@
 <templates xml:space="preserve">
 
     <!-- WhatsApp / Telegram Style Full-Screen 2-Panel Messaging Dialog -->
-    <t t-name="twilio_dialer.TwilioSmsMessagingDialog">
+    <t t-name="twilio_dialer_pro.TwilioSmsMessagingDialog">
         <div class="o_twilio_messaging_dialog_backdrop">
             <div class="o_twilio_messaging_dialog">
 

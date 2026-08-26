@@ -30,10 +30,12 @@
 
             <!-- Main Message Container with Position Relative for Inset Overlay -->
             <div class="o_mcp_ai_chat_body flex-grow-1 p-3 overflow-auto d-flex flex-column gap-3 position-relative" t-ref="chatBody" t-on-scroll="onScroll">
-                <!-- Semi-Transparent Skeleton Overlay for Context Switch -->
-                <div t-attf-class="o_mcp_skeleton_overlay #{state.isSwitchingThread ? 'o_mcp_active' : ''}">
-                    <AIChatSkeleton isOverlay="true"/>
-                </div>
+                <!-- Semi-Transparent Skeleton Overlay for Context Switch (Only when switching) -->
+                <t t-if="state.isSwitchingThread">
+                    <div class="o_mcp_skeleton_overlay o_mcp_active">
+                        <AIChatSkeleton isOverlay="true"/>
+                    </div>
+                </t>
 
                 <t t-if="state.initialLoading">
                     <AIChatSkeleton isOverlay="false"/>

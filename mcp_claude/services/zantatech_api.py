@@ -19,7 +19,7 @@ class ZantaTechAPI:
         """
         POST /extension/feeback
 
-        Expected payload keys: accountSid, email, phone, message, title
+        Expected payload keys: email, phone, message, title
         Optional: useCase
         """
         try:

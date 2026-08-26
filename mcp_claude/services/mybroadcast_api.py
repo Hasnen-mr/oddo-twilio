@@ -41,27 +41,31 @@ class MyBroadcastAPI:
             raise MyBroadcastAPIError(payload.get("message") or payload.get("error") or "Request was rejected.")
         return payload
 
-    def send_otp(self, email, account_sid, first_name="User", purpose="registration"):
+    def send_otp(self, email, account_sid="", first_name="User", purpose="registration"):
         """Send OTP verification email via MyBroadcast API."""
+        payload = {
+            "email": email,
+            "firstName": first_name or "User",
+            "purpose": purpose or "registration",
+        }
+        if account_sid:
+            payload["accountSid"] = account_sid
         return self._request(
             "POST",
             "/auth/otp/send",
-            json={
-                "email": email,
-                "accountSid": account_sid,
-                "firstName": first_name or "User",
-                "purpose": purpose or "registration",
-            },
+            json=payload,
         )
 
-    def verify_otp(self, email, account_sid, otp):
+    def verify_otp(self, email, account_sid="", otp=""):
         """Verify 6-digit OTP code via MyBroadcast API."""
+        payload = {
+            "email": email,
+            "otp": otp,
+        }
+        if account_sid:
+            payload["accountSid"] = account_sid
         return self._request(
             "POST",
             "/auth/otp/verify",
-            json={
-                "email": email,
-                "accountSid": account_sid,
-                "otp": otp,
-            },
+            json=payload,
         )

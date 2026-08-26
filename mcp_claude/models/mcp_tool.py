@@ -851,6 +851,30 @@ class MCPTool(models.Model):
         if not re.match(regex, email):
             return {"success": False, "error": "Please enter a valid email address."}
 
+        # Block example, dummy, and disposable email addresses
+        email_lower = email.lower()
+        domain = email_lower.split("@")[-1] if "@" in email_lower else ""
+        user_part = email_lower.split("@")[0] if "@" in email_lower else ""
+
+        dummy_domains = [
+            "example.com", "example.org", "example.net", "test.com", "sample.com",
+            "invalid.com", "mailinator.com", "tempmail.com", "10minutemail.com",
+            "guerrillamail.com", "yopmail.com", "trashmail.com", "throwawaymail.com",
+            "yourcompany.example.com"
+        ]
+
+        if domain in dummy_domains or any(d in domain for d in ["example.", ".example", "yourcompany."]):
+            return {
+                "success": False,
+                "error": "Please enter a real work or personal email address (example and test domains are not supported)."
+            }
+
+        if any(k in user_part for k in ["example", "dummy", "fake", "tempmail", "testmail"]) and any(gen in domain for gen in ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"]):
+            return {
+                "success": False,
+                "error": "Please enter a real work or personal email address (example and dummy email addresses are not supported)."
+            }
+
         icp = self.env["ir.config_parameter"].sudo()
         db_uuid = icp.get_param("database.uuid") or "odoo_mcp"
         account_sid = f"AC{hashlib.md5((db_uuid + ':' + email).encode('utf-8')).hexdigest()}"

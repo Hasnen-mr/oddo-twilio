@@ -5,7 +5,7 @@ import { Dialog } from "@web/core/dialog/dialog";
 import { registry } from "@web/core/registry";
 
 export class TwilioCredentialsHelpDialog extends Component {
-    static template = "twilio_dialer.CredentialsHelpDialog";
+    static template = "twilio_dialer_pro.CredentialsHelpDialog";
     static components = { Dialog };
     static props = {
         close: Function,

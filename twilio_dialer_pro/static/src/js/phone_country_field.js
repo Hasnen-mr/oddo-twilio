@@ -7,7 +7,7 @@ import { registry } from "@web/core/registry";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 export class TwilioPhoneCountryField extends Component {
-    static template = "twilio_dialer.TwilioPhoneCountryField";
+    static template = "twilio_dialer_pro.TwilioPhoneCountryField";
     static props = { ...standardFieldProps };
 
     setup() {

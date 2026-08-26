@@ -11,7 +11,7 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
  * without marking the settings form dirty.
  */
 export class TwilioAiSettingsLink extends Component {
-    static template = "twilio_dialer.TwilioAiSettingsLink";
+    static template = "twilio_dialer_pro.TwilioAiSettingsLink";
     static props = {
         ...standardFieldProps,
         linkLabel: { type: String, optional: true },

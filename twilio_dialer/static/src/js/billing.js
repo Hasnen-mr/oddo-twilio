@@ -8,7 +8,7 @@ import { useService } from "@web/core/utils/hooks";
 const CALL_PACKAGES = Object.freeze([
     {
         id: "starter",
-        price: "$10",
+        price: "0",
         calls: "Unlimited",
         label: "Starter",
         url: "https://www.paypal.com/ncp/payment/9CCGLBAKUAR46",
@@ -37,8 +37,7 @@ export class BillingDashboard extends Component {
     };
 
     setup() {
-
-        this.notification = useService("notification");
+                this.notification = useService("notification");
         this.packages = CALL_PACKAGES;
         this.state = useState({ loading: true, error: "", billing: null });
         onWillStart(() => this.refresh());
@@ -84,4 +83,5 @@ export class BillingDashboard extends Component {
     }
 }
 
-registry.category("actions").add("twilio_dialer.billing", BillingDashboard);
+registry.category("actions").add("twilio_dialer.billing", BillingDashboard, { force: true });
+registry.category("actions").add("twilio_dialer_pro.billing", BillingDashboard, { force: true });

@@ -14,7 +14,7 @@ import { useService } from "@web/core/utils/hooks";
  * and syncs call status back via /auto_dialer/sync_line.
  */
 export class AutoDialerRunner extends Component {
-    static template = "twilio_dialer.AutoDialerRunner";
+    static template = "twilio_dialer_pro.AutoDialerRunner";
 
     setup() {
 

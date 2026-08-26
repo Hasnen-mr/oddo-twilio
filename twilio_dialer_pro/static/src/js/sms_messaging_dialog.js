@@ -6,7 +6,7 @@ import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";
 
 export class TwilioSmsMessagingDialog extends Component {
-    static template = "twilio_dialer.TwilioSmsMessagingDialog";
+    static template = "twilio_dialer_pro.TwilioSmsMessagingDialog";
     static components = { TwilioSmsPopup };
     static props = {
         close: { type: Function, optional: true },

@@ -9,7 +9,7 @@ import { session } from "@web/session";
 const TOTAL_STEPS = 4;
 
 export class TwilioOnboardingWizard extends Component {
-    static template = "twilio_dialer.OnboardingWizard";
+    static template = "twilio_dialer_pro.OnboardingWizard";
     static components = { Dialog };
     static props = {
         close: Function,

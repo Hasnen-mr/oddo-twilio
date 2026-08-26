@@ -1,28 +1,32 @@
+// Safe browser autoplay rejection handler
+if (typeof window !== "undefined" && window.HTMLAudioElement && !window._odooAudioPlayPatched) {
+    window._odooAudioPlayPatched = true;
+    const origPlay = HTMLAudioElement.prototype.play;
+    HTMLAudioElement.prototype.play = function() {
+        try {
+            const res = origPlay.apply(this, arguments);
+            if (res && typeof res.catch === "function") {
+                return res.catch((err) => {
+                    if (err && (err.name === "NotAllowedError" || String(err).includes("interact with the document"))) {
+                        return;
+                    }
+                    console.warn("[Twilio Audio] Autoplay suppressed:", err);
+                });
+            }
+            return res;
+        } catch (e) {
+            if (e && (e.name === "NotAllowedError" || String(e).includes("interact with the document"))) {
+                return Promise.resolve();
+            }
+            return Promise.reject(e);
+        }
+    };
+}
+
 /** @odoo-module **/
 
 import { loadJS } from "@web/core/assets";
-
-async function rpc(url, params = {}) {
-    try {
-        const res = await fetch(url, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                jsonrpc: "2.0",
-                method: "call",
-                params: params,
-                id: Math.floor(Math.random() * 1000000),
-            }),
-        });
-        const data = await res.json();
-        return data.result;
-    } catch (e) {
-        console.error("RPC Error for " + url + ":", e);
-        return null;
-    }
-}
+import { rpc } from "@web/core/network/rpc";
 
 const TWILIO_SDK_PATH = "/twilio_dialer/static/lib/twilio/twilio.min.js";
 
@@ -354,6 +358,12 @@ class DeviceManager {
             fakeLocalDTMF: true,
             enableRingingState: true,
             disableAudioContextSounds: true,
+            sounds: {
+                incoming: false,
+                outgoing: false,
+                disconnect: false,
+                dtmf: false,
+            },
         });
 
         this.device.on("error", (error) => {
@@ -607,6 +617,9 @@ class DeviceManager {
                     from_number: direction === "incoming" ? phoneNumber : null,
                     partner_id: partnerId,
                     direction: direction,
+                    res_model: this._activeResModel || null,
+                    res_id: this._activeResId || null,
+                    lead_id: this._activeLeadId || null,
                 });
                 return;
             } catch (err) {
@@ -726,6 +739,9 @@ class DeviceManager {
         this._setStatus(STATUS.CONNECTING);
         this._activePartnerId = callContext.partnerId || null;
         this._activeQueueLineId = callContext.queueLineId || null;
+        this._activeResModel = callContext.resModel || null;
+        this._activeResId = callContext.resId || null;
+        this._activeLeadId = callContext.leadId || (callContext.resModel === "crm.lead" ? callContext.resId : null) || null;
 
         try {
             // Normalize destination phone number to clean E.164 using shared helper

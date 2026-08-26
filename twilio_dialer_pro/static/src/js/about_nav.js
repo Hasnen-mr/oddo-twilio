@@ -13,7 +13,7 @@ const SECTIONS = [
 ];
 
 export class TwilioAboutNav extends Component {
-    static template = "twilio_dialer.TwilioAboutNav";
+    static template = "twilio_dialer_pro.TwilioAboutNav";
     static props = { ...standardFieldProps };
 
     setup() {

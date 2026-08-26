@@ -10,7 +10,7 @@ const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";
 const DRAFT_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days expiry
 
 export class TwilioSmsPopup extends Component {
-    static template = "twilio_dialer.TwilioSmsPopup";
+    static template = "twilio_dialer_pro.TwilioSmsPopup";
     static props = {
         phone: { type: String },
         partnerId: { type: [Number, Boolean], optional: true },

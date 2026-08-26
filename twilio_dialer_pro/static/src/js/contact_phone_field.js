@@ -23,7 +23,7 @@ const formPhoneField = phoneFieldModule.formPhoneField;
 // value holds the phone number to dial.
 
 export class ContactCallButton extends Component {
-    static template = "twilio_dialer.ContactCallButton";
+    static template = "twilio_dialer_pro.ContactCallButton";
     static props = {
         record: { type: Object },
         name: { type: String },
@@ -97,7 +97,7 @@ if (formPhoneField) {
 // red circular call button — identical to the one on the Contacts page.
 
 class TwilioCallButtonField extends Component {
-    static template = "twilio_dialer.TwilioCallButtonField";
+    static template = "twilio_dialer_pro.TwilioCallButtonField";
     static props = {
         ...standardFieldProps,
     };

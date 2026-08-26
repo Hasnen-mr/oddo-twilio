@@ -11,6 +11,8 @@ const dialerState = reactive({
     fromNumber: "",
     partnerId: null,
     partnerName: "",
+    resModel: null,
+    resId: null,
     requestId: 0,
     autoDialerId: null,
     queueLineId: null,
@@ -34,6 +36,8 @@ export const dialerService = {
             console.log("[dialerService] Incoming call received:", fromNumber, callSid, toNumber);
             dialerState.phone = fromNumber || "";
             dialerState.fromNumber = (toNumber && !toNumber.startsWith("client:") && !toNumber.startsWith("id_odoo_")) ? toNumber : "";
+            dialerState.resModel = null;
+            dialerState.resId = null;
             dialerState.requestId += 1;
             dialerState.isOpen = true;
         });
@@ -61,6 +65,8 @@ export const dialerService = {
                 fromNumber = "",
                 partnerId = null,
                 partnerName = "",
+                resModel = null,
+                resId = null,
                 autoDialerId = null,
                 queueLineId = null,
                 queueName = "",
@@ -73,6 +79,8 @@ export const dialerService = {
                 dialerState.fromNumber = fromNumber || "";
                 dialerState.partnerId = partnerId || null;
                 dialerState.partnerName = partnerName || "";
+                dialerState.resModel = resModel || null;
+                dialerState.resId = resId || null;
                 dialerState.autoDialerId = autoDialerId || null;
                 dialerState.queueLineId = queueLineId || null;
                 dialerState.queueName = queueName || "";
@@ -89,11 +97,16 @@ export const dialerService = {
             toggle() {
                 dialerState.isOpen = !dialerState.isOpen;
             },
+            openTroubleshooter() {
+                dialerState.openTroubleshooter = true;
+                dialerState.requestId += 1;
+                dialerState.isOpen = true;
+            },
         };
     },
 };
 
-registry.category("services").add("twilio_dialer", dialerService);
+registry.category("services").add("twilio_dialer", dialerService, { force: true });
 
 const openDialerAction = (env, action) => {
     const params = action.params || {};
@@ -115,6 +128,7 @@ const openDialerAction = (env, action) => {
     }
 };
 
-registry.category("actions").add("twilio_dialer.open_dialer", openDialerAction);
-registry.category("actions").add("open_dialer", openDialerAction);
-registry.category("actions").add("action_twilio_dialer_open", openDialerAction);
+registry.category("actions").add("twilio_dialer.open_dialer", openDialerAction, { force: true });
+registry.category("actions").add("twilio_dialer_pro.open_dialer", openDialerAction, { force: true });
+registry.category("actions").add("open_dialer", openDialerAction, { force: true });
+registry.category("actions").add("action_twilio_dialer_open", openDialerAction, { force: true });

@@ -14,8 +14,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     static template = "twilio_dialer.TwilioSmsWorkspaceClientAction";
 
     setup() {
-
-        this.action = useService("action");
+                this.action = useService("action");
         this.dialog = useService("dialog");
         this.state = useState({
             loading: true,
@@ -156,4 +155,4 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     }
 }
 
-registry.category("actions").add("twilio_sms_workspace_action", TwilioSmsWorkspaceClientAction);
+registry.category("actions").add("twilio_sms_workspace_action", TwilioSmsWorkspaceClientAction, { force: true });

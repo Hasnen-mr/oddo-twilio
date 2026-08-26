@@ -125,6 +125,20 @@ export class AIBubbleContainer extends Component {
             this.state.globalOtpError = "Please enter a valid email address.";
             return;
         }
+
+        const emailLower = email.toLowerCase();
+        const domain = emailLower.split("@")[1] || "";
+        const userPart = emailLower.split("@")[0] || "";
+        const dummyDomains = ["example.com", "example.org", "example.net", "test.com", "sample.com", "invalid.com", "mailinator.com", "tempmail.com", "10minutemail.com", "guerrillamail.com", "yopmail.com", "yourcompany.example.com"];
+        if (dummyDomains.includes(domain) || domain.includes("example.") || domain.includes(".example") || domain.includes("yourcompany.")) {
+            this.state.globalOtpError = "Please enter a real work or personal email address (example and test domains are not supported).";
+            return;
+        }
+        if (["example", "dummy", "fake", "tempmail", "testmail"].some(k => userPart.includes(k)) && (domain.includes("gmail") || domain.includes("yahoo") || domain.includes("outlook") || domain.includes("hotmail"))) {
+            this.state.globalOtpError = "Please enter a real work or personal email address (example and dummy email addresses are not supported).";
+            return;
+        }
+
         if (!phone && !isResend) {
             this.state.globalOtpError = "Please enter your phone number.";
             return;

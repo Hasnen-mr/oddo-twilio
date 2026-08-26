@@ -2576,9 +2576,7 @@ export class MCPControlCenter extends Component {
         this.state.showEmailVerification = true;
         this.state.otpError = "";
         this.state.otpSuccessMessage = "";
-        if (!this.state.otpSent && !this.state.emailVerified) {
-            this.sendOtp(false);
-        }
+        // Do not auto-send until user enters details and clicks send
     }
 
     startEditingEmail() {
@@ -2603,6 +2601,52 @@ export class MCPControlCenter extends Component {
         this.state.otp = "";
         this.state.otpError = "";
         await this.sendOtp(true);
+    }
+
+    
+    async sendRegistrationData(isResend = false) {
+        if (this.state.sendingOtp) return;
+        const email = (this.state.userEmail || "").trim();
+        const phone = (this.state.userPhone || "").trim();
+        const name = (this.state.userName || "").trim();
+
+        if (!email) {
+            this.state.otpError = "Please enter a valid work email address.";
+            return;
+        }
+        if (!phone && !isResend) {
+            this.state.otpError = "Please enter your phone number.";
+            return;
+        }
+
+        this.state.sendingOtp = true;
+        this.state.otpError = "";
+        this.state.otpSuccessMessage = "";
+
+        try {
+            const res = await this.orm.call("mcp.tool", "send_registration_otp", [], {
+                email: email,
+                first_name: name,
+                phone: phone,
+            });
+            if (res && res.success) {
+                this.state.otpSent = true;
+                this.state.otpSuccessMessage = res.message || "Verification code sent to your email.";
+            } else {
+                this.state.otpError = (res && res.error) || "Failed to send verification code.";
+            }
+        } catch (e) {
+            this.state.otpError = (e && e.data && e.data.message) || e.message || "Failed to send verification email.";
+        } finally {
+            this.state.sendingOtp = false;
+        }
+    }
+
+    changeRegistrationData() {
+        this.state.otpSent = false;
+        this.state.otp = "";
+        this.state.otpError = "";
+        this.state.otpSuccessMessage = "";
     }
 
     async sendOtp(isResend = false) {
@@ -2707,9 +2751,7 @@ export class MCPControlCenter extends Component {
         this.state.showEmailVerification = true;
         this.state.otpError = "";
         this.state.otpSuccessMessage = "";
-        if (!this.state.otpSent && !this.state.emailVerified) {
-            this.sendOtp(false);
-        }
+        // Do not auto-send until user enters details and clicks send
     }
 
     goToEmailVerificationStep() {
@@ -2723,7 +2765,7 @@ export class MCPControlCenter extends Component {
         this.state.otp = "";
         this.state.otpError = "";
         this.state.otpSuccessMessage = "";
-        this.sendOtp(false);
+        // User will trigger send
     }
 
     async autoConfigureClaudeConfig() {
@@ -2791,7 +2833,7 @@ export class MCPControlCenter extends Component {
                     this.state.wizardStep = 6;
                     this.state.showEmailVerification = true;
                     if (!this.state.otpSent) {
-                        this.sendOtp(false);
+                        // User will trigger send
                     }
                 } else {
                     this.state.wizardStep = 5;

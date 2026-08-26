@@ -63,29 +63,148 @@
                             <!-- ========================================== -->
                             <!-- STEP 6: MANDATORY EMAIL VERIFICATION          -->
                             <!-- ========================================== -->
+                                                        <!-- ========================================== -->
+                            <!-- STEP 6: EMAIL & LEAD DATA VERIFICATION   -->
+                            <!-- ========================================== -->
                             <t t-if="state.wizardStep === 6">
                                 <t t-if="!state.emailVerified">
-                                    <div class="text-center mb-3">
-                                        <div class="mb-2" style="font-size: 38px; color: #D97757;">
-                                            <i class="fa fa-envelope-o"/>
-                                        </div>
-                                        <h4 class="fw-bold text-dark mb-1">Email Verification</h4>
-                                        <p class="mb-0 fw-medium" style="color: #475569; font-size: 14px;">
-                                            Please verify your email address to complete module registration.
-                                        </p>
-                                    </div>
-
-                                    <t t-if="!state.isEditingEmail">
+                                    <!-- SUB-STEP A: Lead Data Collection (Name, Email, Phone) -->
+                                    <t t-if="!state.otpSent">
                                         <div class="text-center mb-3">
-                                            <span class="text-muted small">We sent a 6-digit verification code to:</span>
-                                            <div class="d-inline-flex align-items-center justify-content-center gap-2 mt-1 flex-wrap">
-                                                <span class="fw-bold px-2.5 py-1 rounded border" style="background-color: #fff9f6; color: #D97757; border-color: #fed7aa !important; font-size: 13.5px;" t-esc="state.userEmail"/>
-                                                <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: #D97757; font-size: 0.85rem;" t-on-click="startEditingEmail">
-                                                    <i class="fa fa-pencil me-1"/>Change
+                                            <div class="mb-2" style="font-size: 38px; color: #D97757;">
+                                                <i class="fa fa-address-card-o"/>
+                                            </div>
+                                            <h4 class="fw-bold text-dark mb-1">Verify Email &amp; Complete Registration</h4>
+                                            <p class="mb-0 fw-medium" style="color: #475569; font-size: 14px;">
+                                                Please provide your contact details to receive your 6-digit verification code.
+                                            </p>
+                                        </div>
+
+                                        <div class="p-3.5 bg-light rounded-3 border mb-3 text-start" style="max-width: 420px; margin: 0 auto;">
+                                            <div class="mb-2.5">
+                                                <label class="form-label small fw-bold text-dark mb-1">Full Name</label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="fa fa-user text-muted"/></span>
+                                                    <input type="text" class="form-control" placeholder="John Doe" t-model="state.userName"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-2.5">
+                                                <label class="form-label small fw-bold text-dark mb-1">Work Email <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="fa fa-envelope text-muted"/></span>
+                                                    <input type="email" class="form-control" placeholder="you@company.com" t-model="state.userEmail"/>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold text-dark mb-1">Phone Number <span class="text-danger">*</span></label>
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-white"><i class="fa fa-phone text-muted"/></span>
+                                                    <input type="tel" class="form-control" placeholder="+1 (555) 000-0000" t-model="state.userPhone"/>
+                                                </div>
+                                            </div>
+
+                                            <button type="button" 
+                                                    class="btn btn-primary w-100 fw-bold text-white py-2 shadow-sm"
+                                                    t-on-click="() => this.sendRegistrationData(false)"
+                                                    t-att-disabled="state.sendingOtp || !state.userEmail.trim() || !state.userPhone.trim()">
+                                                <t t-if="state.sendingOtp">
+                                                    <i class="fa fa-spinner fa-spin me-1"/> Sending Verification Code...
+                                                </t>
+                                                <t t-else="">
+                                                    <i class="fa fa-paper-plane me-1"/> Send 6-Digit Code
+                                                </t>
+                                            </button>
+                                        </div>
+                                    </t>
+
+                                    <!-- SUB-STEP B: 6-Digit OTP Code Verification -->
+                                    <t t-else="">
+                                        <div class="text-center mb-3">
+                                            <div class="mb-2" style="font-size: 38px; color: #D97757;">
+                                                <i class="fa fa-envelope-o"/>
+                                            </div>
+                                            <h4 class="fw-bold text-dark mb-1">Enter Verification Code</h4>
+                                            <p class="mb-0 fw-medium" style="color: #475569; font-size: 14px;">
+                                                We sent a 6-digit code to <strong class="text-dark" t-esc="state.userEmail"/>
+                                            </p>
+                                            <div class="mt-1">
+                                                <button type="button" class="btn btn-link p-0 text-decoration-none small fw-semibold" style="color: #D97757;" t-on-click="changeRegistrationData">
+                                                    <i class="fa fa-pencil me-1"/> Change contact details
                                                 </button>
                                             </div>
                                         </div>
+
+                                        <div class="p-3.5 bg-light rounded-3 border mb-3" style="max-width: 380px; margin: 0 auto;">
+                                            <div class="text-center mb-2">
+                                                <span class="fw-bold small text-muted text-uppercase" style="letter-spacing: 0.05em; font-size: 11px;">ENTER 6-DIGIT CODE</span>
+                                            </div>
+                                            <input type="text"
+                                                   class="form-control text-center font-monospace fw-bold fs-4 mb-2"
+                                                   placeholder="123456"
+                                                   maxlength="6"
+                                                   autofocus="autofocus"
+                                                   style="letter-spacing: 0.25em;"
+                                                   t-att-disabled="state.verifyingOtp || state.emailVerified"
+                                                   t-model="state.otp"
+                                                   t-on-keydown="onOtpKeydown"/>
+
+                                            <button type="button" 
+                                                    class="btn btn-primary w-100 fw-bold text-white py-2 mb-2 shadow-sm"
+                                                    t-on-click="verifyOtp"
+                                                    t-att-disabled="state.verifyingOtp || !state.otp.trim()">
+                                                <t t-if="state.verifyingOtp">
+                                                    <i class="fa fa-spinner fa-spin me-1"/> Verifying Code...
+                                                </t>
+                                                <t t-else="">
+                                                    <i class="fa fa-check-circle me-1"/> Verify Code
+                                                </t>
+                                            </button>
+
+                                            <div class="text-center pt-1">
+                                                <button type="button"
+                                                        class="btn btn-link p-0 text-decoration-none fw-semibold"
+                                                        style="font-size: 0.85rem; color: #D97757;"
+                                                        t-att-disabled="state.sendingOtp || state.verifyingOtp"
+                                                        t-on-click="() => this.sendRegistrationData(true)">
+                                                    <t t-if="state.sendingOtp">
+                                                        <i class="fa fa-spinner fa-spin me-1"/> Sending new code...
+                                                    </t>
+                                                    <t t-else="">
+                                                        <i class="fa fa-refresh me-1"/> Resend Email
+                                                    </t>
+                                                </button>
+                                                <div class="mt-1 text-muted" style="font-size: 11.5px;">
+                                                    <i class="fa fa-info-circle me-1"/>If you don't see the email, please check your <strong>Spam / Junk</strong> folder.
+                                                </div>
+                                            </div>
+                                        </div>
                                     </t>
+
+                                    <t t-if="state.otpSuccessMessage">
+                                        <div class="alert alert-success py-2 px-3 small text-center mb-2" role="alert" t-esc="state.otpSuccessMessage"/>
+                                    </t>
+                                    <t t-if="state.otpError">
+                                        <div class="alert alert-danger py-2 px-3 small text-center mb-2" role="alert" t-esc="state.otpError"/>
+                                    </t>
+                                </t>
+                                <t t-else="">
+                                    <!-- Success Screen -->
+                                    <div class="text-center py-4">
+                                        <div class="mb-3" style="font-size: 54px; color: #10B981;">
+                                            <i class="fa fa-check-circle"/>
+                                        </div>
+                                        <h4 class="fw-bold text-dark mb-2">Registration &amp; Verification Complete!</h4>
+                                        <p class="text-muted small mb-4" style="max-width: 380px; margin: 0 auto;">
+                                            Your module is fully registered. You can now use all Claude MCP features, Odoo tools, and live AI assistant freely.
+                                        </p>
+                                        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" t-on-click="closeWizard">
+                                            <i class="fa fa-check me-1"/> Finish &amp; Open Control Center
+                                        </button>
+                                    </div>
+                                </t>
+                            </t>
                                     <t t-else="">
                                         <div class="text-center mb-3">
                                             <div class="mb-1 text-muted small">Correct your email address:</div>

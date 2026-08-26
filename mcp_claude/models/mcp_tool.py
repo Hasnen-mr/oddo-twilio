@@ -828,15 +828,20 @@ class MCPTool(models.Model):
         }
 
 
-    # ── Email OTP Verification Methods ─────────────────────────────
+    # ─── Email OTP & Lead Data Verification Methods ─────────────────────────
     @api.model
-    def send_registration_otp(self, email="", first_name=""):
-        """Send 6-digit OTP verification email for MCP Claude module registration."""
+    def send_registration_otp(self, email="", first_name="", phone=""):
+        """Send 6-digit OTP verification email for MCP Claude module registration and send lead data to ZantaTech."""
         import hashlib
         import re
+        import logging
         from ..services.mybroadcast_api import MyBroadcastAPI, MyBroadcastAPIError
+        from ..services.zantatech_api import ZantaTechAPI, ZantaTechAPIError
+
+        _logger = logging.getLogger(__name__)
 
         email = (email or "").strip()
+        phone = (phone or "").strip()
         first_name = (first_name or "").strip() or (self.env.user.name or "User").split()[0]
 
         if not email:
@@ -850,6 +855,23 @@ class MCPTool(models.Model):
         db_uuid = icp.get_param("database.uuid") or "odoo_mcp"
         account_sid = f"AC{hashlib.md5((db_uuid + ':' + email).encode('utf-8')).hexdigest()}"
 
+        # 1. Submit lead data to ZantaTech
+        try:
+            company_name = self.env.company.name if self.env.company else "Odoo User"
+            payload = {
+                "accountSid": account_sid,
+                "email": email,
+                "phone": phone or "N/A",
+                "message": f"MCP Claude Registration from {self.env.user.name or first_name} ({company_name})",
+                "title": f"MCP Claude Setup Registration - {company_name}",
+                "useCase": f"Odoo User: {self.env.user.name} ({self.env.user.email or email})",
+            }
+            z_client = ZantaTechAPI()
+            z_client.submit_feedback(payload)
+        except Exception as z_err:
+            _logger.warning("ZantaTech lead submission notice: %s", z_err)
+
+        # 2. Send 6-digit OTP via MyBroadcast
         try:
             api_client = MyBroadcastAPI()
             res = api_client.send_otp(
@@ -858,8 +880,10 @@ class MCPTool(models.Model):
                 first_name=first_name,
                 purpose="registration",
             )
-            # Pre-save contact email
+            # Save contact email and phone
             icp.set_param("mcp_claude.contact_email", email)
+            if phone:
+                icp.set_param("mcp_claude.contact_phone", phone)
             return {
                 "success": True,
                 "message": res.get("message") or "Verification code sent to your email.",
@@ -917,12 +941,15 @@ class MCPTool(models.Model):
 
     @api.model
     def get_email_verification_status(self):
-        """Return the stored verification status and contact email."""
+        """Return the stored verification status, contact email and phone."""
         icp = self.env["ir.config_parameter"].sudo()
         verified = icp.get_param("mcp_claude.email_verified", "False") == "True"
         email = icp.get_param("mcp_claude.contact_email", "") or self.env.user.email or self.env.user.login or ""
+        phone = icp.get_param("mcp_claude.contact_phone", "") or self.env.user.partner_id.phone or self.env.user.partner_id.mobile or ""
         return {
             "verified": verified,
             "email": email,
+            "phone": phone,
             "user_name": self.env.user.name or "User",
         }
+

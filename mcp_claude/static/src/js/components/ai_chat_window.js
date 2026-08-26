@@ -42,9 +42,13 @@ export class AIChatWindow extends Component {
         });
 
         // Single-tick debounced event listeners for Odoo Action Manager and URL Router
-        useBus(this.env.bus, "ACTION_MANAGER:UPDATE", (ev) => this.handleEvent("ACTION_MANAGER:UPDATE", ev));
-        useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", (ev) => this.handleEvent("ACTION_MANAGER:UI-UPDATED", ev));
-        useBus(routerBus, "ROUTE_CHANGE", (ev) => this.handleEvent("ROUTE_CHANGE", ev));
+        if (this.env && this.env.bus) {
+            useBus(this.env.bus, "ACTION_MANAGER:UPDATE", (ev) => this.handleEvent("ACTION_MANAGER:UPDATE", ev));
+            useBus(this.env.bus, "ACTION_MANAGER:UI-UPDATED", (ev) => this.handleEvent("ACTION_MANAGER:UI-UPDATED", ev));
+        }
+        if (typeof routerBus !== "undefined" && routerBus && typeof routerBus.addEventListener === "function") {
+            useBus(routerBus, "ROUTE_CHANGE", (ev) => this.handleEvent("ROUTE_CHANGE", ev));
+        }
 
         onWillStart(async () => {
             await this.loadChat(null, true);

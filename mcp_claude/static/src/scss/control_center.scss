@@ -664,3 +664,66 @@ $claude-accent:     #D97757;
         }
     }
 }
+
+
+/* No-Scroll Compact Wizard Styling */
+.mcp-onboard-backdrop {
+    .modal-dialog {
+        max-width: 740px !important;
+        margin: 1.5rem auto !important;
+    }
+    .modal-content {
+        overflow: hidden !important;
+        border-radius: 16px !important;
+    }
+    .modal-header {
+        padding: 12px 24px !important;
+    }
+    .modal-body {
+        padding: 16px 24px !important;
+        overflow-y: hidden !important;
+        overflow-x: hidden !important;
+        min-height: auto !important;
+    }
+    .modal-footer {
+        padding: 10px 24px !important;
+    }
+}
+
+.mcp-wizard-stepper {
+    padding: 0 5px !important;
+    .mcp-wizard-dot {
+        .dot-num {
+            width: 25px !important;
+            height: 25px !important;
+            font-size: 11.5px !important;
+        }
+        .dot-label {
+            font-size: 11px !important;
+            margin-top: 3px !important;
+        }
+    }
+    .mcp-wizard-line {
+        margin: 0 6px !important;
+        margin-bottom: 14px !important;
+    }
+}
+
+.mcp-select-option-row {
+    padding: 9px 14px !important;
+    margin-bottom: 7px !important;
+    border-radius: 10px !important;
+    
+    .row-icon-box {
+        width: 34px !important;
+        height: 34px !important;
+        font-size: 15px !important;
+    }
+    .row-title {
+        font-size: 13.5px !important;
+    }
+    .row-desc {
+        font-size: 12px !important;
+        line-height: 1.25 !important;
+    }
+}

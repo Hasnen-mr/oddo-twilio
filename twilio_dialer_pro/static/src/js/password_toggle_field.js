@@ -8,7 +8,7 @@ import { CharField, charField } from "@web/views/fields/char/char_field";
 import { formatChar } from "@web/views/fields/formatters";
 
 export class PasswordToggleField extends CharField {
-    static template = "twilio_dialer.PasswordToggleField";
+    static template = "twilio_dialer_pro.PasswordToggleField";
 
     setup() {
         this.rpc = useService("rpc");

@@ -5,7 +5,7 @@ import { Dialog } from "@web/core/dialog/dialog";
 import { _t } from "@web/core/l10n/translation";
 
 export class VersionUpdateDialog extends Component {
-    static template = "twilio_dialer.VersionUpdateDialog";
+    static template = "twilio_dialer_pro.VersionUpdateDialog";
     static components = { Dialog };
     static props = {
         close: Function,

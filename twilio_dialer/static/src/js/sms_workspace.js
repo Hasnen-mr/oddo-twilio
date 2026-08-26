@@ -3,7 +3,7 @@
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
+import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -14,7 +14,6 @@ export class TwilioSmsWorkspaceClientAction extends Component {
     static template = "twilio_dialer.TwilioSmsWorkspaceClientAction";
 
     setup() {
-        this.rpc = useService("rpc");
                 this.action = useService("action");
         this.dialog = useService("dialog");
         this.state = useState({
@@ -38,7 +37,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
         this.state.loading = true;
         try {
             // Load record counts
-            const res = await this.rpc("/twilio_dialer/sms/workspace_counts");
+            const res = await rpc("/twilio_dialer/sms/workspace_counts");
             if (res && res.success) {
                 this.state.counts = res.counts;
             }
@@ -84,7 +83,7 @@ export class TwilioSmsWorkspaceClientAction extends Component {
             this.state.drafts = foundDrafts;
 
             // Load recent SMS logs for the embedded workspace table
-            const logsRes = await this.rpc("/twilio_dialer/sms/get_recent_logs", { limit: 50 });
+            const logsRes = await rpc("/twilio_dialer/sms/get_recent_logs", { limit: 50 });
             if (logsRes && logsRes.success) {
                 this.state.recentLogs = logsRes.logs || [];
             }

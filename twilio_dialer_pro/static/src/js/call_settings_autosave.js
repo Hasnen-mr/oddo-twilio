@@ -65,7 +65,7 @@ function applyCallSettingPatch(record, patch) {
 }
 
 export class CallSettingsAutosave extends Component {
-    static template = "twilio_dialer.CallSettingsAutosave";
+    static template = "twilio_dialer_pro.CallSettingsAutosave";
     static props = { ...standardFieldProps };
 
     setup() {

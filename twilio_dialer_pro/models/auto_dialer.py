@@ -459,7 +459,7 @@ class TwilioAutoDialer(models.Model):
 
         return {
             "type": "ir.actions.client",
-            "tag": "twilio_dialer.open_dialer",
+            "tag": "twilio_dialer_pro.open_dialer",
             "params": {
                 "phone": line.phone,
                 "from_number": self.from_number or "",

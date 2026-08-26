@@ -18,7 +18,7 @@ const SECTIONS = [
 ];
 
 export class TwilioConfigNav extends Component {
-    static template = "twilio_dialer.TwilioConfigNav";
+    static template = "twilio_dialer_pro.TwilioConfigNav";
     static props = { ...standardFieldProps };
 
     setup() {
@@ -189,7 +189,7 @@ export const twilioConfigNav = {
 registry.category("fields").add("twilio_config_nav", twilioConfigNav, { force: true });
 
 export class TwilioAllocationPanel extends Component {
-    static template = "twilio_dialer.TwilioAllocationPanel";
+    static template = "twilio_dialer_pro.TwilioAllocationPanel";
     static props = { ...standardFieldProps };
     static components = { NumberAllocationPanel };
 }
@@ -202,7 +202,7 @@ export const twilioAllocationPanel = {
 registry.category("fields").add("twilio_allocation_panel", twilioAllocationPanel, { force: true });
 
 export class TwilioBillingPanel extends Component {
-    static template = "twilio_dialer.TwilioBillingPanel";
+    static template = "twilio_dialer_pro.TwilioBillingPanel";
     static props = { ...standardFieldProps };
     static components = { BillingDashboard };
 }

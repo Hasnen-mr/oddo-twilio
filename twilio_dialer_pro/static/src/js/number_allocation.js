@@ -6,7 +6,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
 export class NumberAllocationPanel extends Component {
-    static template = "twilio_dialer.NumberAllocationPanel";
+    static template = "twilio_dialer_pro.NumberAllocationPanel";
     static props = {
         "*": true,
     };

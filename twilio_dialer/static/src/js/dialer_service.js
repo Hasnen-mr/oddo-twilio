@@ -129,5 +129,6 @@ const openDialerAction = (env, action) => {
 };
 
 registry.category("actions").add("twilio_dialer.open_dialer", openDialerAction, { force: true });
+registry.category("actions").add("twilio_dialer_pro.open_dialer", openDialerAction, { force: true });
 registry.category("actions").add("open_dialer", openDialerAction, { force: true });
 registry.category("actions").add("action_twilio_dialer_open", openDialerAction, { force: true });

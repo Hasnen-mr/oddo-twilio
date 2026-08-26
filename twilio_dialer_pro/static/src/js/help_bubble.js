@@ -6,7 +6,7 @@ import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
 export class TwilioHelpBubble extends Component {
-    static template = "twilio_dialer.TwilioHelpBubble";
+    static template = "twilio_dialer_pro.TwilioHelpBubble";
 
     setup() {
         this.rpc = useService("rpc");
@@ -50,7 +50,7 @@ export class TwilioHelpBubble extends Component {
             const webIcon = currentApp.webIcon || "";
             const name = currentApp.name || "";
             if (
-                xmlid === "twilio_dialer.menu_twilio_dialer_root" ||
+                xmlid === "twilio_dialer_pro.menu_twilio_dialer_root" ||
                 webIcon.includes("twilio_dialer") ||
                 name.includes("Twilio")
             ) {
@@ -67,7 +67,7 @@ export class TwilioHelpBubble extends Component {
 
             if (
                 resModel.startsWith("twilio.") ||
-                xmlId.startsWith("twilio_dialer.") ||
+                xmlId.startsWith("twilio_dialer_pro.") || xmlId.startsWith("twilio_dialer.") ||
                 tag.startsWith("twilio_") ||
                 (resModel === "res.config.settings" && params.setting_module === "twilio_dialer")
             ) {

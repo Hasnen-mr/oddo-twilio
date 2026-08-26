@@ -12,7 +12,7 @@ const LAST_DIAL_STORAGE_KEY = "twilio_dialer.last_dial";
 const CONTACT_PAGE_SIZE = 30;
 
 export class DialerPopup extends Component {
-    static template = "twilio_dialer.DialerPopup";
+    static template = "twilio_dialer_pro.DialerPopup";
     static components = { AutoDialerRunner };
 
     static props = {

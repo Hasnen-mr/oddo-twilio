@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { Component, onWillStart, useState } from "@odoo/owl";
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
+import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 
@@ -31,13 +31,12 @@ const CALL_PACKAGES = Object.freeze([
 ]);
 
 export class BillingDashboard extends Component {
-    static template = "twilio_dialer.BillingDashboard";
+    static template = "twilio_dialer_pro.BillingDashboard";
     static props = {
         "*": true,
     };
 
     setup() {
-        this.rpc = useService("rpc");
                 this.notification = useService("notification");
         this.packages = CALL_PACKAGES;
         this.state = useState({ loading: true, error: "", billing: null });
@@ -48,7 +47,7 @@ export class BillingDashboard extends Component {
         this.state.loading = true;
         this.state.error = "";
         try {
-            const result = await this.rpc("/twilio_dialer/billing");
+            const result = await rpc("/twilio_dialer/billing");
             if (!result.success) {
                 this.state.error = result.message || "Unable to load billing information.";
                 return;
@@ -84,4 +83,5 @@ export class BillingDashboard extends Component {
     }
 }
 
-registry.category("actions").add("twilio_dialer.billing", BillingDashboard, { force: true });
+registry.category("actions").add("twilio_dialer_pro.billing", BillingDashboard, { force: true });
+registry.category("actions").add("twilio_dialer_pro.billing", BillingDashboard, { force: true });

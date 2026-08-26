@@ -115,11 +115,20 @@ button.o_mcp_ai_bubble_trigger,
 
 /* --- Skeleton Overlay inside Message Body --- */
 .o_mcp_skeleton_overlay {
+    display: none;
+    position: absolute !important;
     top: 0 !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 0 !important;
+    background: rgba(255, 255, 255, 0.75) !important;
+    backdrop-filter: blur(2px) !important;
+    z-index: 10 !important;
     pointer-events: auto !important;
+
+    &.o_mcp_active {
+        display: block !important;
+    }
 }
 
 /* --- Skeleton Pulse Animation --- */

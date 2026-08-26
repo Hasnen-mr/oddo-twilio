@@ -115,7 +115,7 @@
                               t-att-disabled="state.sending"/>
                     <button class="btn btn-primary rounded-3 px-3" 
                             t-on-click="onSendMessage" 
-                            t-att-disabled="state.sending || !state.promptText.trim()">
+                            t-att-disabled="state.sending || !state.promptText">
                         <t t-if="state.sending">
                             <i class="fa fa-spinner fa-spin"/>
                         </t>

@@ -2476,14 +2476,45 @@ export class MCPControlCenter extends Component {
     }
 
     setWizardStep(step) {
-        this.state.wizardStep = Math.max(1, Math.min(5, step));
+        this.state.wizardStep = Math.max(1, Math.min(6, step));
     }
 
     nextWizardStep() {
-        this.state.wizardStep = Math.min(5, this.state.wizardStep + 1);
+        if (this.state.wizardStep === 1) {
+            this.state.wizardStep = 2;
+            return;
+        }
+        if (this.state.wizardStep === 2 && this.state.wizardClient === 'web') {
+            if (!this.state.webKeyVerified) {
+                this.notification.add("Please enter and verify your Claude API Key before continuing.", { type: "warning" });
+                return;
+            }
+            this.state.wizardStep = 6;
+            return;
+        }
+        if (this.state.wizardStep === 2) {
+            this.state.wizardStep = 3;
+            return;
+        }
+        if (this.state.wizardStep === 3) {
+            this.state.wizardStep = 4;
+            return;
+        }
+        if (this.state.wizardStep === 4) {
+            this.state.wizardStep = 5;
+            return;
+        }
+        if (this.state.wizardStep === 5) {
+            this.state.wizardStep = 6;
+            return;
+        }
     }
 
     prevWizardStep() {
+        if (this.state.wizardStep === 6 && this.state.wizardClient === 'web') {
+            this.state.wizardStep = 2;
+            return;
+        }
         this.state.wizardStep = Math.max(1, this.state.wizardStep - 1);
     }
 

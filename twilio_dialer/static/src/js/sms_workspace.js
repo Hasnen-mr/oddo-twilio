@@ -3,7 +3,7 @@
 import { Component, onWillStart, useState } from "@odoo/owl";
 import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 

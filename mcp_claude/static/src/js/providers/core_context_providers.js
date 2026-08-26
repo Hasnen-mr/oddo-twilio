@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { aiContextProviderRegistry } from "@mcp_claude/js/registries/ai_context_provider_registry";
-import { user } from "@web/core/user";
+import { user } from "@web/core/user_service";
 
 aiContextProviderRegistry.add("action_provider", {
     name: "Action & Controller Provider",

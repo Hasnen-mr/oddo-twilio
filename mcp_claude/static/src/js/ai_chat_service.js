@@ -1,9 +1,9 @@
 /** @odoo-module **/
 
 import { aiContextProviderRegistry } from "@mcp_claude/js/registries/ai_context_provider_registry";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { registry } from "@web/core/registry";
-import { user } from "@web/core/user";
+import { user } from "@web/core/user_service";
 
 export const aiChatService = {
     dependencies: ["action", "notification"],

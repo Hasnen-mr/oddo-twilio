@@ -82,6 +82,21 @@ class TwilioController(http.Controller):
             return False
 
 
+    @http.route("/twilio_dialer/billing", type="json", auth="user")
+    def get_billing_info(self, **kwargs):
+        """Fetch billing information for the active Twilio account."""
+        try:
+            from ..services import MyBroadcastAPI, MyBroadcastAPIError
+            icp = request.env["ir.config_parameter"].sudo()
+            account_sid = icp.get_param("twilio_dialer.account_sid") or ""
+            if not account_sid:
+                return {"success": False, "message": "No active Twilio account connected."}
+            api = MyBroadcastAPI()
+            return api.get_billing(account_sid)
+        except Exception as e:
+            _logger.warning("Failed to fetch billing info: %s", e)
+            return {"success": False, "message": str(e)}
+
     @http.route("/twilio_dialer/token", type="http", auth="user", methods=["GET"])
     def get_token(self, **kwargs):
         """Return a Voice Access Token.

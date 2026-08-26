@@ -3,7 +3,7 @@
 import { loadJS } from "@web/core/assets";
 import { rpc } from "@web/core/network/rpc";
 
-const TWILIO_SDK_PATH = "/twilio_dialer/static/lib/twilio/twilio.min.js";
+const TWILIO_SDK_PATH = "/twilio_dialer_pro/static/lib/twilio/twilio.min.js";
 
 const STATUS = Object.freeze({
     INITIALIZING: "initializing",
@@ -332,6 +332,7 @@ class DeviceManager {
             codecPreferences: ["opus", "pcmu"],
             fakeLocalDTMF: true,
             enableRingingState: true,
+            disableAudioContextSounds: true,
         });
 
         this.device.on("error", (error) => {

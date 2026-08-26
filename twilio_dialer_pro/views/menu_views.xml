@@ -3,10 +3,10 @@
 
     <!-- Root Menu -->
     <menuitem id="menu_twilio_dialer_root"
-              name="Pro Twilio Calling System"
+              name="Twilio Calling System"
               groups="base.group_user"
               sequence="35"
-              web_icon="twilio_dialer_pro,static/description/icon.png"/>
+              web_icon="twilio_dialer,static/description/icon.png"/>
 
     <!-- Dashboard -->
     <menuitem id="menu_twilio_dialer_dashboard"

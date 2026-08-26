@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <t t-name="twilio_dialer.TwilioSmsWorkspaceClientAction">
+    <t t-name="twilio_dialer_pro.TwilioSmsWorkspaceClientAction">
         <div class="o_twilio_sms_workspace container-fluid p-4">
 
             <!-- Workspace Header Banner -->

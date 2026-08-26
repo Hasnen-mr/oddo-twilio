@@ -4,13 +4,13 @@
         <field name="name">mcp.oauth.client.list</field>
         <field name="model">mcp.oauth.client</field>
         <field name="arch" type="xml">
-            <list string="OAuth Clients" decoration-success="active == True">
+            <tree string="OAuth Clients" decoration-success="active == True">
                 <field name="name"/>
                 <field name="client_id"/>
                 <field name="client_type"/>
                 <field name="redirect_uris"/>
                 <field name="active"/>
-            </list>
+            </tree>
         </field>
     </record>
 

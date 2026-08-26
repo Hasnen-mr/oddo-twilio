@@ -4,14 +4,14 @@
         <field name="name">mcp.tool.list</field>
         <field name="model">mcp.tool</field>
         <field name="arch" type="xml">
-            <list string="MCP Tools" decoration-info="risk_level == 'low'" decoration-warning="risk_level == 'medium'" decoration-danger="risk_level == 'high'">
+            <tree string="MCP Tools" decoration-info="risk_level == 'low'" decoration-warning="risk_level == 'medium'" decoration-danger="risk_level == 'high'">
                 <field name="name"/>
                 <field name="version"/>
                 <field name="category"/>
                 <field name="risk_level"/>
                 <field name="requires_approval"/>
                 <field name="active"/>
-            </list>
+            </tree>
         </field>
     </record>
 

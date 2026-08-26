@@ -4,14 +4,14 @@
         <field name="name">mcp.api.key.list</field>
         <field name="model">mcp.api.key</field>
         <field name="arch" type="xml">
-            <list string="API Keys" decoration-success="active == True" decoration-muted="active == False">
+            <tree string="API Keys" decoration-success="active == True" decoration-muted="active == False">
                 <field name="name"/>
                 <field name="user_id"/>
                 <field name="key_prefix"/>
                 <field name="expires_at"/>
                 <field name="last_used_at"/>
                 <field name="active"/>
-            </list>
+            </tree>
         </field>
     </record>
 

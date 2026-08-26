@@ -4,13 +4,13 @@
         <field name="name">mcp.session.list</field>
         <field name="model">mcp.session</field>
         <field name="arch" type="xml">
-            <list string="Active Sessions" decoration-success="active == True" decoration-muted="active == False">
+            <tree string="Active Sessions" decoration-success="active == True" decoration-muted="active == False">
                 <field name="session_token"/>
                 <field name="user_id"/>
                 <field name="client_name"/>
                 <field name="expires_at"/>
                 <field name="active"/>
-            </list>
+            </tree>
         </field>
     </record>
 

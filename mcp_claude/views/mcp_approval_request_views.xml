@@ -4,13 +4,13 @@
         <field name="name">mcp.approval.request.list</field>
         <field name="model">mcp.approval.request</field>
         <field name="arch" type="xml">
-            <list string="Approval Requests" decoration-warning="state == 'pending'" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'">
+            <tree string="Approval Requests" decoration-warning="state == 'pending'" decoration-success="state == 'approved'" decoration-danger="state == 'rejected'">
                 <field name="name"/>
                 <field name="tool_name"/>
                 <field name="requested_by_user_id"/>
                 <field name="state"/>
                 <field name="create_date"/>
-            </list>
+            </tree>
         </field>
     </record>
 

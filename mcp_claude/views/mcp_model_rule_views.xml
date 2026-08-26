@@ -4,7 +4,7 @@
         <field name="name">mcp.model.rule.list</field>
         <field name="model">mcp.model.rule</field>
         <field name="arch" type="xml">
-            <list string="Model Permissions" decoration-success="active == True">
+            <tree string="Model Permissions" decoration-success="active == True">
                 <field name="model_id"/>
                 <field name="allow_read"/>
                 <field name="allow_create"/>
@@ -12,7 +12,7 @@
                 <field name="allow_unlink"/>
                 <field name="allow_call_method"/>
                 <field name="active"/>
-            </list>
+            </tree>
         </field>
     </record>
 

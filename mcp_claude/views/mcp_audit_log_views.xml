@@ -4,14 +4,14 @@
         <field name="name">mcp.audit.log.list</field>
         <field name="model">mcp.audit.log</field>
         <field name="arch" type="xml">
-            <list string="Audit Logs" decoration-success="status == 'success'" decoration-danger="status == 'error'">
+            <tree string="Audit Logs" decoration-success="status == 'success'" decoration-danger="status == 'error'">
                 <field name="timestamp"/>
                 <field name="user_id"/>
                 <field name="tool_name"/>
                 <field name="model_name"/>
                 <field name="execution_time_ms"/>
                 <field name="status"/>
-            </list>
+            </tree>
         </field>
     </record>
 

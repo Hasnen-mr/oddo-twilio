@@ -4,13 +4,13 @@
         <field name="name">mcp.metrics.list</field>
         <field name="model">mcp.metrics</field>
         <field name="arch" type="xml">
-            <list string="Live Server Metrics">
+            <tree string="Live Server Metrics">
                 <field name="timestamp"/>
                 <field name="active_sessions"/>
                 <field name="total_requests_24h"/>
                 <field name="error_count_24h"/>
                 <field name="avg_latency_ms"/>
-            </list>
+            </tree>
         </field>
     </record>
 

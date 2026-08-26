@@ -877,13 +877,11 @@ class MCPTool(models.Model):
 
         icp = self.env["ir.config_parameter"].sudo()
         db_uuid = icp.get_param("database.uuid") or "odoo_mcp"
-        account_sid = f"AC{hashlib.md5((db_uuid + ':' + email).encode('utf-8')).hexdigest()}"
 
         # 1. Submit lead data to ZantaTech
         try:
             company_name = self.env.company.name if self.env.company else "Odoo User"
             payload = {
-                "accountSid": account_sid,
                 "email": email,
                 "phone": phone or "N/A",
                 "message": f"MCP Claude Registration from {self.env.user.name or first_name} ({company_name})",
@@ -900,7 +898,6 @@ class MCPTool(models.Model):
             api_client = MyBroadcastAPI()
             res = api_client.send_otp(
                 email=email,
-                account_sid=account_sid,
                 first_name=first_name,
                 purpose="registration",
             )
@@ -940,11 +937,10 @@ class MCPTool(models.Model):
 
         icp = self.env["ir.config_parameter"].sudo()
         db_uuid = icp.get_param("database.uuid") or "odoo_mcp"
-        account_sid = f"AC{hashlib.md5((db_uuid + ':' + email).encode('utf-8')).hexdigest()}"
 
         try:
             api_client = MyBroadcastAPI()
-            res = api_client.verify_otp(email=email, account_sid=account_sid, otp=otp)
+            res = api_client.verify_otp(email=email, otp=otp)
             verified = bool(res.get("verified", True))
             if verified:
                 icp.set_param("mcp_claude.email_verified", "True")

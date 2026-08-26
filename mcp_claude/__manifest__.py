@@ -19,7 +19,7 @@ and a control center.
     'currency': 'USD',
 
     'category': 'Productivity',
-    'version': '18.0.1.0.9',
+    'version': '18.0.26.08',
     'license': 'LGPL-3',
 
     'depends': ['base', 'web', 'bus'],

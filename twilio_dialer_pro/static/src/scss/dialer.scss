@@ -788,7 +788,7 @@ button.o_twilio_dash_open_dialer:hover {
     grid-template-rows: auto auto;
     gap: 18px 24px;
     align-items: start;
-    max-width: 1440px !important;
+    max-width: 100% !important;
     width: 100%;
 }
 
@@ -5630,3 +5630,72 @@ button.o_twilio_dash_open_dialer:hover {
 }
 
 
+
+
+/* ==========================================================================
+   Full-Width Dashboard Layout & Zero Unnecessary Right Margin
+   ========================================================================== */
+.o_form_view.o_twilio_dashboard_shell,
+.o_form_view:has(.o_twilio_dash_sidebar) {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0 !important;
+
+    .o_form_sheet_bg {
+        max-width: 100% !important;
+        width: 100% !important;
+        padding: 16px 24px !important;
+        margin: 0 !important;
+    }
+
+    .o_form_sheet {
+        display: grid !important;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        grid-template-rows: auto auto;
+        gap: 18px 24px;
+        align-items: start;
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+}
+
+/* ==========================================================================
+   Custom Theme Scrollbars
+   ========================================================================== */
+html,
+body,
+.o_content,
+.o_action_manager,
+.o_view_controller,
+.o_form_view,
+.o_form_sheet_bg,
+.o_twilio_dashboard_shell,
+.o_twilio_sms_workspace_root,
+.o_twilio_config_container,
+.o_dialer_panel_body,
+.o_dialer_history_list,
+.o_dialer_keypad_container {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+
+    &::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+        transition: background 0.2s ease;
+
+        &:hover {
+            background: #714b67;
+        }
+    }
+}

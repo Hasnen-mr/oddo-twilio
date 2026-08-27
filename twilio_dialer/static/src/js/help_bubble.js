@@ -74,12 +74,22 @@ export class TwilioHelpBubble extends Component {
             }
         }
 
-        // 3. Fallback: Check if any twilio shell / container is present in the DOM
+        // 3. Fallback: Check if URL, title, or DOM matches Twilio workspace
         if (!isTwilioModule) {
+            const path = (window.location && window.location.pathname) || "";
+            const hash = (window.location && window.location.hash) || "";
+            const href = (window.location && window.location.href) || "";
+            const docTitle = document.title || "";
             const hasTwilioEl = document.querySelector(
-                ".o_twilio_dashboard_shell, .o_twilio_sms_workspace_root, .o_twilio_config_container, .o_twilio_contact_us_container, .o_twilio_auto_dialer_container"
+                ".o_twilio_dashboard_shell, .o_twilio_sms_workspace_root, .o_twilio_config_container, .o_twilio_contact_us_container, .o_twilio_auto_dialer_container, [js_class='twilio_dashboard_form']"
             );
-            if (hasTwilioEl) {
+            if (
+                path.includes("twilio") ||
+                hash.includes("twilio") ||
+                href.includes("twilio") ||
+                docTitle.includes("Twilio") ||
+                hasTwilioEl
+            ) {
                 isTwilioModule = true;
             }
         }

@@ -189,6 +189,8 @@ Bitly: https://bit.ly/odoo-twilio-dialer
             'twilio_dialer/static/src/js/version_update_dialog.js',
             'twilio_dialer/static/src/js/version_update_service.js',
             'twilio_dialer/static/src/js/transcript_tab_nav.js',
+            'twilio_dialer/static/src/js/help_dialog.js',
+            'twilio_dialer/static/src/js/help_bubble.js',
             'twilio_dialer/static/src/xml/**/*.xml',
             'twilio_dialer/static/src/scss/**/*.scss',
         ],

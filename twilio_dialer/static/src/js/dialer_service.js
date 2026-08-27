@@ -108,8 +108,8 @@ export const dialerService = {
 
 registry.category("services").add("twilio_dialer", dialerService, { force: true });
 
-const openDialerAction = (env, action) => {
-    const params = action.params || {};
+function _handleOpenDialerAction(env, action) {
+    const params = (action && action.params) || {};
     const service = env.services.twilio_dialer;
     if (service) {
         service.open({
@@ -126,9 +126,9 @@ const openDialerAction = (env, action) => {
             queueStatus: params.queue_status || "",
         });
     }
-};
+}
 
-registry.category("actions").add("twilio_dialer.open_dialer", openDialerAction, { force: true });
-registry.category("actions").add("twilio_dialer_pro.open_dialer", openDialerAction, { force: true });
-registry.category("actions").add("open_dialer", openDialerAction, { force: true });
-registry.category("actions").add("action_twilio_dialer_open", openDialerAction, { force: true });
+registry.category("actions").add("twilio_dialer.open_dialer", _handleOpenDialerAction, { force: true });
+registry.category("actions").add("twilio_dialer_pro.open_dialer", _handleOpenDialerAction, { force: true });
+registry.category("actions").add("open_dialer", _handleOpenDialerAction, { force: true });
+registry.category("actions").add("action_twilio_dialer_open", _handleOpenDialerAction, { force: true });

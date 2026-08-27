@@ -128,7 +128,7 @@ function _handleOpenDialerAction(env, action) {
     }
 }
 
-registry.category("actions").add("twilio_dialer.open_dialer", _handleOpenDialerAction, { force: true });
+registry.category("actions").add("twilio_dialer_pro.open_dialer", _handleOpenDialerAction, { force: true });
 registry.category("actions").add("twilio_dialer_pro.open_dialer", _handleOpenDialerAction, { force: true });
 registry.category("actions").add("open_dialer", _handleOpenDialerAction, { force: true });
 registry.category("actions").add("action_twilio_dialer_open", _handleOpenDialerAction, { force: true });

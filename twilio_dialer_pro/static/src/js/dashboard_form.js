@@ -48,7 +48,7 @@ function scrollTwilioDashboardToTop() {
 }
 
 export class TwilioDashboardFormController extends FormController {
-    static template = "twilio_dialer_pro.TwilioDashboardFormView";
+    static template = "web.FormView";
 
     setup() {
         super.setup();

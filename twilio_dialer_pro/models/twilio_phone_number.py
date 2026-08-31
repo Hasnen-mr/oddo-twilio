@@ -48,7 +48,7 @@ class TwilioPhoneNumber(models.Model):
 
     @api.model
     def _auto_sync_cached_numbers(self):
-        """Auto-populate twilio.phone.number records including the 'All numbers' first option."""
+        """Auto-populate twilio.phone.number records including the 'All numbers' first option and any Twilio numbers."""
         try:
             PhoneNumber = self.sudo()
             # 1. Ensure 'All numbers' first option exists
@@ -65,7 +65,7 @@ class TwilioPhoneNumber(models.Model):
             icp = self.env["ir.config_parameter"].sudo()
             cached_json = icp.get_param("twilio_dialer.incoming_phone_numbers", "[]")
             try:
-                phone_list = json.loads(cached_json)
+                phone_list = json.loads(cached_json) if cached_json else []
             except Exception:
                 phone_list = []
 
@@ -73,7 +73,31 @@ class TwilioPhoneNumber(models.Model):
             if single_num and not any(isinstance(p, dict) and p.get("phone_number") == single_num for p in phone_list):
                 phone_list.append({"phone_number": single_num, "friendly_name": single_num, "sid": ""})
 
-            if phone_list:
-                self.env["twilio.service"].sudo()._sync_phone_number_records(phone_list)
+            existing_db = {rec.phone_number: rec for rec in PhoneNumber.search([])}
+            for p in phone_list:
+                if not isinstance(p, dict):
+                    continue
+                num = p.get("phone_number")
+                if not num or num == "ALL":
+                    continue
+                fname = p.get("friendly_name") or num
+                sid = p.get("sid") or ""
+                if num not in existing_db:
+                    created = PhoneNumber.create({
+                        "phone_number": num,
+                        "friendly_name": fname,
+                        "sid": sid,
+                        "sequence": 10,
+                        "active": True,
+                    })
+                    existing_db[num] = created
+                else:
+                    vals = {}
+                    if fname and existing_db[num].friendly_name != fname:
+                        vals["friendly_name"] = fname
+                    if sid and existing_db[num].sid != sid:
+                        vals["sid"] = sid
+                    if vals:
+                        existing_db[num].write(vals)
         except Exception:
             pass

@@ -33,7 +33,7 @@ export class DialerPopup extends Component {
         const savedCountry =
             this._findCountry(lastDial?.countryCode, lastDial?.countryLabel) || defaultCountry;
 
-        const hasAutoDialer = !!(this.props.autoDialerId || this.dialerState.autoDialerId);
+        const hasAutoDialer = !!(this.props.autoDialerId);
         const initialTab = hasAutoDialer ? "auto_dialer" : "dialpad";
 
         this.state = useState({
@@ -82,11 +82,11 @@ export class DialerPopup extends Component {
             this._applyFromNumber(this.props.fromNumber || this.state.lastDialedFromNumber);
             
             // Connect UI status change listener to global deviceManager
-            deviceManager.setStatusCallback(this._onDeviceStatusChange.bind(this));
+            deviceManager.setStatusCallback((status) => this._onDeviceStatusChange(status));
             
             // Sync status if deviceManager is already ready or in another state
             if (deviceManager.status) {
-                this.state.connectionStatus = deviceManager.status;
+                this._onDeviceStatusChange(deviceManager.status);
             }
         });
 
@@ -169,13 +169,18 @@ export class DialerPopup extends Component {
     }
 
     onAcceptCall() {
-        console.log("[Twilio JS DialerPopup] User clicked Accept Call button");
         deviceManager.acceptCall();
     }
 
     onRejectCall() {
-        console.log("[Twilio JS DialerPopup] User clicked Decline/Reject Call button");
         deviceManager.rejectCall();
+    }
+
+    _onDeviceStatusChange(status) {
+        this.state.connectionStatus = status;
+        if (status === "incoming") {
+            this.state.activeTab = "dialpad";
+        }
     }
 
     _loadLastDial() {
@@ -302,7 +307,11 @@ export class DialerPopup extends Component {
         }
 
         if (status === "incoming") {
+            this.state.activeTab = "dialpad";
             this.state.showIncomingKeypad = false;
+            if (deviceManager.activeIncomingNumber) {
+                this._applyIncomingPhone(deviceManager.activeIncomingNumber);
+            }
         }
         if (status === "connected" || status === "connecting" || status === "incoming") {
             this._startTimer();
@@ -346,14 +355,17 @@ export class DialerPopup extends Component {
         if (this.props.phone) {
             return this.props.phone;
         }
+        if (deviceManager.activeIncomingNumber) {
+            return deviceManager.activeIncomingNumber;
+        }
         if (this.state.phoneNumber) {
             return (this.state.selectedCountry?.code || "") + " " + this.state.phoneNumber;
         }
-        return "Unknown Caller";
+        return "Incoming Call";
     }
 
     get incomingToDisplayNumber() {
-        const raw = this.props.fromNumber || this.dialerState.fromNumber || "";
+        const raw = this.props.fromNumber || this.dialerState.fromNumber || deviceManager.activeIncomingTo || "";
         if (raw && !raw.startsWith("client:") && !raw.startsWith("id_odoo_")) {
             return raw;
         }
@@ -376,6 +388,7 @@ export class DialerPopup extends Component {
             this.state.selectedCaller?.number ||
             result.phone_number;
         const numbers = result.phone_numbers || [];
+        deviceManager.setAllowedNumbers(numbers);
         const callers = [];
         const seen = new Set();
 
@@ -517,7 +530,7 @@ export class DialerPopup extends Component {
     }
 
     openAutoCallingSetup() {
-        this.action.doAction("twilio_dialer_pro.action_twilio_auto_dialer_menu");
+        this.action.doAction("twilio_dialer.action_twilio_auto_dialer_menu");
         if (this.props.onClose) {
             this.props.onClose();
         }
@@ -529,7 +542,7 @@ export class DialerPopup extends Component {
         if (dialer?.state) {
             dialer.state.isOpen = true;
         }
-        this.action.doAction("twilio_dialer_pro.action_twilio_configuration_menu");
+        this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
     }
 
     openContacts() {
@@ -1022,9 +1035,9 @@ export class DialerPopup extends Component {
     openHelpSupport() {
         this.closeQuickDebugModal();
         try {
-            this.action.doAction("twilio_dialer_pro.action_twilio_help");
+            this.action.doAction("twilio_dialer.action_twilio_help");
         } catch (e) {
-            this.action.doAction("twilio_dialer_pro.action_twilio_contact_us", {
+            this.action.doAction("twilio_dialer.action_twilio_contact_us", {
                 additionalContext: { twilio_about_section: "help" },
             });
         }
@@ -1033,7 +1046,6 @@ export class DialerPopup extends Component {
             triggerQuickDebugBanner(duration = 1) {
         this._wasDialing = false;
         this.state.lastCallDuration = duration;
-        console.log("[Twilio JS DialerPopup] Triggering Quick Debug Banner (" + duration + "s)");
         this.state.showQuickDebugBanner = true;
         clearTimeout(this._debugBannerTimer);
         this._debugBannerTimer = setTimeout(() => {

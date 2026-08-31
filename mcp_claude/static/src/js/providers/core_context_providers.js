@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { aiContextProviderRegistry } from "@mcp_claude/js/registries/ai_context_provider_registry";
-import { user } from "@web/core/user";
+import { session } from "@web/session";
 
 aiContextProviderRegistry.add("action_provider", {
     name: "Action & Controller Provider",
@@ -31,8 +31,12 @@ aiContextProviderRegistry.add("user_company_provider", {
     merge_strategy: "append",
     extractContext(env, actionService, userService) {
         return {
-            user_name: user ? user.name : null,
-            user_id: user ? user.userId : null,
+            user_name: session.name || session.userName || (userService ? userService.name : null),
+            user_id: session.userId || session.uid || (userService ? userService.userId : null),
+            partner_id: session.partnerId || null,
+            company_id: session.companyId || (session.user_context && session.user_context.allowed_company_ids ? session.user_context.allowed_company_ids[0] : null),
+            lang: session.user_context ? session.user_context.lang : (session.lang || "en_US"),
+            tz: session.user_context ? session.user_context.tz : (session.tz || "UTC"),
         };
     }
 });

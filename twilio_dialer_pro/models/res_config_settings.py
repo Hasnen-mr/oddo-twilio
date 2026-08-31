@@ -879,6 +879,13 @@ class ResConfigSettings(models.TransientModel):
 
     def action_open_credentials_help(self):
         """Open the Twilio credentials finder guide."""
+                # Broadcast disconnection to all active web clients to reset dialer & device states
+        try:
+            channels = [(p, "twilio_connection_disconnected", {}) for p in self.env["res.partner"].sudo().search([])]
+            self.env["bus.bus"]._sendmany(channels)
+        except Exception:
+            pass
+
         return {
             "type": "ir.actions.client",
             "tag": "twilio_dialer_pro.action_credentials_help",

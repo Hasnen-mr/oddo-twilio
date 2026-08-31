@@ -3,7 +3,7 @@
 import { aiContextProviderRegistry } from "@mcp_claude/js/registries/ai_context_provider_registry";
 import { rpc } from "@web/core/network/rpc";
 import { registry } from "@web/core/registry";
-import { user } from "@web/core/user";
+import { session } from "@web/session";
 
 export const aiChatService = {
     dependencies: ["action", "notification"],
@@ -31,64 +31,67 @@ export const aiChatService = {
                 for (const provider of providers) {
                     if (provider.enabled && typeof provider.extractContext === "function") {
                         try {
-                            const ctx = provider.extractContext(env, action, user);
+                            const ctx = provider.extractContext(env, action, session);
                             if (ctx) {
                                 Object.assign(contextPayload, ctx);
                             }
                         } catch (e) {
-                            console.error("[AI Context Provider Error]", provider.name, e);
+                            console.warn(`[MCP Claude Context] Provider ${provider.name} failed:`, e);
                         }
                     }
                 }
                 return contextPayload;
             },
-            async initChat(scope = "global", modelName = null, resId = null, workspaceApp = null, signal = null) {
+            async initChat(scope = "global", resModel = null, resId = null, forcedConvId = null, signal = null) {
                 try {
-                    const validSessionId = parseValidId(activeSessionId);
-                    const res = await rpc("/mcp/ai/v1/chat/init", {
-                        session_id: validSessionId,
-                        scope: "global",
-                        model_name: null,
-                        res_id: null,
-                        workspace_app: null,
-                    }, { signal });
+                    const ctx = this.collectActiveContext();
+                    const body = {
+                        scope,
+                        res_model: resModel || ctx.resModel || null,
+                        res_id: resId || ctx.resId || null,
+                        session_id: this.getActiveSessionId(),
+                        forced_conversation_id: forcedConvId || null,
+                        context: ctx,
+                    };
 
+                    const res = await rpc("/mcp_claude/chat/init", body, { signal });
                     if (res && res.success) {
-                        activeSessionId = res.session_id;
-                        activeConversationId = res.conversation_id;
-                        localStorage.setItem("mcp_ai_session_id", activeSessionId);
-                        localStorage.setItem("mcp_ai_conversation_id", activeConversationId);
-                        return res;
+                        if (res.session_id) {
+                            activeSessionId = String(res.session_id);
+                            localStorage.setItem("mcp_ai_session_id", activeSessionId);
+                        }
+                        if (res.conversation_id) {
+                            activeConversationId = String(res.conversation_id);
+                            localStorage.setItem("mcp_ai_conversation_id", activeConversationId);
+                        }
                     }
-                } catch (e) {
-                    if (e && (e.name === "AbortError" || e.code === 20)) {
-                        console.info("[AI Chat Init] In-flight RPC aborted gracefully.");
-                        return { aborted: true };
-                    }
-                    console.error("[AI Chat Init Error]", e);
-                }
-                return null;
-            },
-            async sendMessage(prompt) {
-                const validConvId = parseValidId(activeConversationId);
-                if (!validConvId) {
-                    await this.initChat();
-                }
-                const contextSnapshot = {};
-                try {
-                    const res = await rpc("/mcp/ai/v1/chat/message", {
-                        conversation_id: parseValidId(activeConversationId),
-                        prompt: prompt,
-                        context_snapshot: contextSnapshot,
-                    });
                     return res;
-                } catch (e) {
-                    notification.add(`AI Communication Error: ${e.message || e}`, { type: "danger" });
-                    return { success: false, error: e.message };
+                } catch (error) {
+                    if (error && error.name === "AbortError") {
+                        return { success: false, aborted: true };
+                    }
+                    console.error("[MCP Claude InitChat RPC Error]", error);
+                    return { success: false, error: error.message || "Failed to initialize conversation" };
+                }
+            },
+            async sendMessage(prompt, options = {}) {
+                try {
+                    const ctx = this.collectActiveContext();
+                    const body = {
+                        session_id: this.getActiveSessionId(),
+                        conversation_id: this.getActiveConversationId(),
+                        prompt,
+                        context: ctx,
+                        ...options,
+                    };
+                    return await rpc("/mcp_claude/chat/message", body);
+                } catch (error) {
+                    console.error("[MCP Claude SendMessage RPC Error]", error);
+                    return { success: false, error: error.message || "Failed to send message" };
                 }
             }
         };
-    }
+    },
 };
 
 registry.category("services").add("ai_chat_service", aiChatService);

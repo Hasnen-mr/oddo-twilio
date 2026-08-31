@@ -32,7 +32,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openMessagesList" role="button" tabindex="0">
                         <button type="button" class="btn btn-primary o_twilio_sms_action_btn">
                             <i class="fa fa-paper-plane me-2"/>Message
-                            <span class="badge bg-white text-primary ms-2" t-esc="state.counts.contacts"/>
+                            <span class="badge bg-white text-primary ms-2" t-esc="(state.counts and state.counts.contacts) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             Select any contact from your list to open live SMS chat &amp; message them directly.
@@ -42,7 +42,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openSmsLogs" role="button" tabindex="0">
                         <button type="button" class="btn btn-success o_twilio_sms_action_btn">
                             <i class="fa fa-history me-2"/>Logs
-                            <span class="badge bg-white text-success ms-2" t-esc="state.counts.logs"/>
+                            <span class="badge bg-white text-success ms-2" t-esc="(state.counts and state.counts.logs) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             View live incoming and outgoing Twilio SMS message history.
@@ -52,7 +52,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openSmsTemplates" role="button" tabindex="0">
                         <button type="button" class="btn btn-info o_twilio_sms_action_btn text-white">
                             <i class="fa fa-file-text-o me-2"/>Templates
-                            <span class="badge bg-white text-info ms-2" t-esc="state.counts.templates"/>
+                            <span class="badge bg-white text-info ms-2" t-esc="(state.counts and state.counts.templates) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             Manage reusable text templates with dynamic placeholders.
@@ -62,7 +62,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openQuickReplies" role="button" tabindex="0">
                         <button type="button" class="btn btn-warning o_twilio_sms_action_btn">
                             <i class="fa fa-bolt me-2"/>Quick Replies
-                            <span class="badge bg-dark text-warning ms-2" t-esc="state.counts.quick_replies"/>
+                            <span class="badge bg-dark text-warning ms-2" t-esc="(state.counts and state.counts.quick_replies) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             Configure quick response pills for one-click insertion.
@@ -76,7 +76,7 @@
                         <h5 class="fw-bold m-0 text-slate-800">
                             <i class="fa fa-history text-success me-2"/>Logs
                         </h5>
-                        <span class="badge bg-success rounded-pill px-3 py-2" t-esc="state.counts.logs + ' Messages'"/>
+                        <span class="badge bg-success rounded-pill px-3 py-2" t-esc="((state.counts and state.counts.logs) or 0) + ' Messages'"/>
                     </div>
                     <div class="card-body p-0">
                         <t t-if="!state.recentLogs or state.recentLogs.length === 0">

@@ -3,7 +3,6 @@
 import { useState } from "@odoo/owl";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
 import { CharField, charField } from "@web/views/fields/char/char_field";
 import { formatChar } from "@web/views/fields/formatters";
 
@@ -11,7 +10,6 @@ export class PasswordToggleField extends CharField {
     static template = "twilio_dialer_pro.PasswordToggleField";
 
     setup() {
-        this.rpc = useService("rpc");
         super.setup();
         this.revealState = useState({ visible: false });
     }

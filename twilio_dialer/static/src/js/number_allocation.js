@@ -1,18 +1,14 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, useRef, useState } from "@odoo/owl";
-import { _t } from "@web/core/l10n/translation";
+import { Component, useState, onWillStart } from "@odoo/owl";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
+import { _t } from "@web/core/l10n/translation";
 
 export class NumberAllocationPanel extends Component {
     static template = "twilio_dialer.NumberAllocationPanel";
-    static props = {
-        "*": true,
-    };
 
     setup() {
-        this.rpc = useService("rpc");
         this.orm = useService("orm");
         this.notification = useService("notification");
         this.state = useState({
@@ -23,7 +19,7 @@ export class NumberAllocationPanel extends Component {
             numbers: [],
             allocations: [],
             activeDropdownId: null,
-            draftSelection: {},
+            draftNumberIds: [],
         });
 
         onWillStart(async () => {
@@ -141,27 +137,30 @@ export class NumberAllocationPanel extends Component {
     openPicker(alloc) {
         if (this.state.activeDropdownId === alloc.id) {
             this.state.activeDropdownId = null;
+            this.state.draftNumberIds = [];
             return;
         }
         this.state.activeDropdownId = alloc.id;
         const allOptId = this.allOptionNumber ? this.allOptionNumber.id : null;
         const isAll = this.isAllAssigned(alloc);
 
-        this.state.draftSelection[alloc.id] = isAll ? (allOptId ? [allOptId] : []) : [...alloc.number_ids];
+        this.state.draftNumberIds = isAll ? (allOptId ? [allOptId] : []) : [...(alloc.number_ids || [])];
     }
 
     closePicker() {
         this.state.activeDropdownId = null;
+        this.state.draftNumberIds = [];
     }
 
     isDraftSelected(allocId, numId) {
-        const draft = this.state.draftSelection[allocId] || [];
-        return draft.includes(numId);
+        if (this.state.activeDropdownId !== allocId) return false;
+        return this.state.draftNumberIds.includes(numId);
     }
 
     toggleDraftNumber(allocId, num) {
+        if (this.state.activeDropdownId !== allocId) return;
         const allOptId = this.allOptionNumber ? this.allOptionNumber.id : null;
-        let draft = [...(this.state.draftSelection[allocId] || [])];
+        let draft = [...this.state.draftNumberIds];
 
         if (num.is_all || num.phone_number === "ALL") {
             // Selected "All numbers" -> replace draft with only ALL option
@@ -182,18 +181,19 @@ export class NumberAllocationPanel extends Component {
             }
         }
 
-        this.state.draftSelection[allocId] = draft;
+        this.state.draftNumberIds = draft;
     }
 
     async saveDraft(alloc) {
-        const draft = this.state.draftSelection[alloc.id] || [];
+        const draft = [...this.state.draftNumberIds];
         this.state.savingId = alloc.id;
         try {
             const res = await this.orm.call("twilio.number.allocation", "update_allocation", [alloc.id, draft]);
             if (res && res.success) {
-                alloc.number_ids = res.number_ids;
-                alloc.status = res.status;
+                this.state.numbers = res.numbers || this.state.numbers;
+                this.state.allocations = res.allocations || this.state.allocations;
                 this.state.activeDropdownId = null;
+                this.state.draftNumberIds = [];
                 this.notification.add(_t("Number allocation updated for %s", alloc.user_name), {
                     type: "success",
                 });
@@ -214,8 +214,8 @@ export class NumberAllocationPanel extends Component {
         try {
             const res = await this.orm.call("twilio.number.allocation", "update_allocation", [alloc.id, [allOptId]]);
             if (res && res.success) {
-                alloc.number_ids = res.number_ids;
-                alloc.status = res.status;
+                this.state.numbers = res.numbers || this.state.numbers;
+                this.state.allocations = res.allocations || this.state.allocations;
                 this.notification.add(_t("%s set to All Numbers", alloc.user_name), {
                     type: "success",
                 });
@@ -229,7 +229,7 @@ export class NumberAllocationPanel extends Component {
     }
 
     async quickRemoveNumber(alloc, numId) {
-        const current = alloc.number_ids.filter((id) => id !== numId);
+        const current = (alloc.number_ids || []).filter((id) => id !== numId);
         const allOptId = this.allOptionNumber ? this.allOptionNumber.id : null;
         const target = current.length > 0 ? current : (allOptId ? [allOptId] : []);
 
@@ -237,8 +237,8 @@ export class NumberAllocationPanel extends Component {
         try {
             const res = await this.orm.call("twilio.number.allocation", "update_allocation", [alloc.id, target]);
             if (res && res.success) {
-                alloc.number_ids = res.number_ids;
-                alloc.status = res.status;
+                this.state.numbers = res.numbers || this.state.numbers;
+                this.state.allocations = res.allocations || this.state.allocations;
                 this.notification.add(_t("Updated allocation for %s", alloc.user_name), {
                     type: "info",
                 });
@@ -273,3 +273,9 @@ export class NumberAllocationPanel extends Component {
         }
     }
 }
+
+export { NumberAllocationPanel as TwilioNumberAllocationWidget };
+
+registry.category("fields").add("twilio_number_allocation_widget", {
+    component: NumberAllocationPanel,
+}, { force: true });

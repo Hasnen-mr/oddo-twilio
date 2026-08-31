@@ -55,6 +55,10 @@ class DeviceManager {
         this._destroyed = false;
         this._activeConnection = null;
         this._activePartnerId = null;
+        this.activeIncomingNumber = null;
+        this.activeIncomingTo = null;
+        this.allowedPhoneNumbers = [];
+        this.isAllAllowed = false;
         this._activeQueueLineId = null;
         this._tokenRegenAttempted = false;
         this._registering = false;
@@ -243,6 +247,12 @@ class DeviceManager {
         this.token = null;
         this._activeConnection = null;
         this._activePartnerId = null;
+        this.activeIncomingNumber = null;
+        this.activeIncomingTo = null;
+        this.allowedPhoneNumbers = null;
+        this.activeIncomingNumber = null;
+        this.activeIncomingTo = null;
+        this.allowedPhoneNumbers = null;
         this._activeQueueLineId = null;
         this._registering = false;
         if (!keepListeners) {
@@ -279,6 +289,9 @@ class DeviceManager {
             throw new Error(data.message || "Token request failed");
         }
         this.token = data.token;
+        if (data.allowed_numbers) {
+            this.setAllowedNumbers(data.allowed_numbers);
+        }
 
         console.log(regenerate ? "JWT regenerated" : "JWT received");
         return data.token;
@@ -355,6 +368,8 @@ class DeviceManager {
 
         this._teardownDevice();
 
+        console.log("[Twilio JS] Creating Twilio Device with token identity");
+
         this.device = new Twilio.Device(token, {
             codecPreferences: ["opus", "pcmu"],
             fakeLocalDTMF: true,
@@ -369,20 +384,10 @@ class DeviceManager {
         });
 
         this.device.on("error", (error) => {
-            console.group("Twilio Device Error");
-
-            console.error("Full Error:", error);
-            console.log("Code:", error.code);
-            console.log("Message:", error.message);
-            console.log("Explanation:", error.explanation);
-            console.log("Causes:", error.causes);
-            console.log("Solutions:", error.solutions);
-
-            console.groupEnd();
-
             if (this._destroyed) {
                 return;
             }
+            console.error("[Twilio JS] Device error:", error.message || error);
             if (this._isAccessTokenInvalid(error)) {
                 // Fire-and-forget; catch so UncaughtPromiseError is avoided.
                 this._recoverInvalidAccessToken(error).catch((err) => {
@@ -418,10 +423,8 @@ class DeviceManager {
             this._refreshToken();
         });
 
-        this.device.on("incoming", (call) => {
-            console.log("[Twilio JS] device.on('incoming') event fired!", call);
+        this.device.on("incoming", async (call) => {
             if (this._dndEnabled) {
-                console.log("[Twilio JS] DND enabled — rejecting incoming call");
                 try {
                     if (typeof call.reject === "function") {
                         call.reject();
@@ -433,8 +436,27 @@ class DeviceManager {
             }
             this._activeConnection = call;
             const fromNumber = call.parameters?.From || call.parameters?.from || "Unknown";
-            const toNumber = call.parameters?.To || call.parameters?.to || "";
-            const callSid = call.parameters?.CallSid || "";
+            const callSid = call.parameters?.CallSid || call.parameters?.callSid || "";
+
+            let toNumber = this.extractActualIncomingNumber(call);
+            if (!toNumber && callSid) {
+                toNumber = await this.resolveIncomingNumber(callSid);
+            }
+
+            console.log(`[Twilio JS] Incoming Call: From=${fromNumber}, To=${toNumber}, CallSid=${callSid || "N/A"}, Odoo ID=${this._activePartnerId || this._activeResId || "N/A"}`);
+
+            // Strict Front-End Filter: Block incoming call if destination is not in this user's dropdown allocation
+            if (!this.isIncomingNumberAssigned(toNumber)) {
+                console.log(`[Twilio JS] Incoming call filtered: Destination ${toNumber || "Unknown"} is NOT assigned to this user's dropdown.`);
+                try {
+                    if (typeof call.ignore === "function") {
+                        call.ignore();
+                    }
+                } catch (e) {}
+                return;
+            }
+            this.activeIncomingNumber = fromNumber;
+            this.activeIncomingTo = toNumber;
 
             this._attachCallListeners(call, callSid, fromNumber, "incoming");
 
@@ -447,8 +469,6 @@ class DeviceManager {
             }
         });
 
-        console.log("[Twilio JS] Creating Twilio Device with token identity");
-
         if (this._registering) {
             return;
         }
@@ -459,7 +479,7 @@ class DeviceManager {
                 await registerResult;
             }
         } catch (error) {
-            console.error("[Twilio JS] device.register() failed:", error);
+            this._setStatus(STATUS.ERROR);
             if (this._isAccessTokenInvalid(error)) {
                 await this._recoverInvalidAccessToken(error);
                 return;
@@ -470,13 +490,26 @@ class DeviceManager {
         }
     }
 
+    async disconnectAll() {
+        if (this.device) {
+            try {
+                this.device.disconnectAll();
+            } catch (err) {
+                console.warn("[Twilio JS] Device disconnectAll error:", err);
+            }
+            this._activeConnection = null;
+        }
+        if (!this._destroyed) {
+            this._setStatus(STATUS.READY);
+        }
+    }
+
     onIncomingCall(callback) {
         this._onIncomingCall = callback;
     }
 
     acceptCall() {
         if (this._activeConnection && typeof this._activeConnection.accept === "function") {
-            console.log("[Twilio JS] acceptCall() -> call.accept() executing");
             try {
                 this._activeConnection.accept();
                 this._setStatus(STATUS.CONNECTED);
@@ -486,13 +519,11 @@ class DeviceManager {
                 return false;
             }
         }
-        console.warn("[Twilio JS] acceptCall() failed: no active incoming connection");
         return false;
     }
 
     rejectCall() {
         if (this._activeConnection) {
-            console.log("[Twilio JS] rejectCall() -> call.reject() executing");
             try {
                 if (typeof this._activeConnection.reject === "function") {
                     this._activeConnection.reject();
@@ -514,35 +545,19 @@ class DeviceManager {
             return;
         }
 
-        const logState = (event) => {
-            console.log(`[Twilio Call Event: ${event}]`, {
-                timestamp: new Date().toISOString(),
-                callSid: call.parameters?.CallSid || callSid,
-                deviceManagerStatus: this.status,
-                activeQueueLineId: this._activeQueueLineId,
-                callState: typeof call.status === "function" ? call.status() : "unknown"
-            });
-        };
-
-        call.on("accept", () => {
-            logState("accept");
-            this._syncCallLog(call, callSid, phoneNumber, "in_progress", direction);
+        call.on("accept", async () => {
+            const logId = await this._syncCallLog(call, callSid, phoneNumber, "in_progress", direction);
             if (!this._destroyed) {
                 this._setStatus(STATUS.CONNECTED);
             }
-            console.log("Call Accepted");
-            console.log(call.parameters);
+            console.log(`[Twilio JS] Call Connected: CallSid=${callSid || call.parameters?.CallSid || "N/A"}, Call ID=${logId || "N/A"}`);
         });
 
         call.on("ringing", () => {
-            logState("ringing");
             this._syncCallLog(call, callSid, phoneNumber, "ringing", direction);
-            console.log(" Ringing");
-            console.log(call.parameters);
         });
 
         call.on("disconnect", () => {
-            logState("disconnect");
             this._syncCallLog(
                 call,
                 callSid,
@@ -554,12 +569,9 @@ class DeviceManager {
             if (!this._destroyed) {
                 this._setStatus(STATUS.READY);
             }
-            console.log(" Call Disconnected");
-            console.log(call.parameters);
         });
 
         call.on("cancel", () => {
-            logState("cancel");
             this._syncCallLog(call, callSid, phoneNumber, "canceled", direction);
             this._activeConnection = null;
             if (!this._destroyed) {
@@ -568,7 +580,6 @@ class DeviceManager {
         });
 
         call.on("reject", () => {
-            logState("reject");
             this._syncCallLog(call, callSid, phoneNumber, "rejected", direction);
             this._activeConnection = null;
             if (!this._destroyed) {
@@ -577,14 +588,7 @@ class DeviceManager {
         });
 
         call.on("error", (error) => {
-            console.group("Twilio Call Error");
-            console.error("Full Error:", error);
-            console.log("Code:", error.code);
-            console.log("Message:", error.message);
-            console.groupEnd();
-
-            logState(`error (code: ${error.code}, msg: ${error.message})`);
-
+            console.error("[Twilio JS] Call error:", error.message || error);
             this._syncCallLog(call, callSid, phoneNumber, "failed", direction);
             this._activeConnection = null;
 
@@ -613,7 +617,7 @@ class DeviceManager {
     async _createCallLog(callSid, phoneNumber, partnerId = null, direction = "outgoing", retries = 3) {
         for (let attempt = 1; attempt <= retries; attempt++) {
             try {
-                await rpc("/twilio_dialer/call_log/create", {
+                const res = await rpc("/twilio_dialer/call_log/create", {
                     call_sid: callSid,
                     to_number: phoneNumber,
                     from_number: direction === "incoming" ? phoneNumber : null,
@@ -623,24 +627,23 @@ class DeviceManager {
                     res_id: this._activeResId || null,
                     lead_id: this._activeLeadId || null,
                 });
-                return;
+                return res?.call_log_id || res?.id || null;
             } catch (err) {
-                console.warn(`[DeviceManager] _createCallLog attempt ${attempt}/${retries} failed:`, err);
                 if (attempt === retries) throw err;
                 await new Promise((r) => setTimeout(r, 500 * attempt));
             }
         }
+        return null;
     }
 
     async _syncCallLog(call, fallbackCallSid, phoneNumber, status, direction = "outgoing") {
         const callSid = call.parameters?.CallSid || call.parameters?.callSid || fallbackCallSid || this._activeConnection?.parameters?.CallSid;
         if (!callSid) {
-            console.warn("[DeviceManager] Twilio Call SID is not available yet for call log update. Skipping transient sync.");
-            return;
+            return null;
         }
 
         try {
-            await this._createCallLog(callSid, phoneNumber, this._activePartnerId, direction);
+            const logId = await this._createCallLog(callSid, phoneNumber, this._activePartnerId, direction);
             await this._updateCallLog(callSid, status);
 
             if (this._activeQueueLineId) {
@@ -653,8 +656,10 @@ class DeviceManager {
                     console.error("Failed to sync Auto Dialer queue line status:", queueErr);
                 }
             }
+            return logId;
         } catch (error) {
-            console.error("Failed to create Twilio call log:", error);
+            console.error("Failed to sync Twilio call log:", error);
+            return null;
         }
     }
 
@@ -746,16 +751,9 @@ class DeviceManager {
         this._activeLeadId = callContext.leadId || (callContext.resModel === "crm.lead" ? callContext.resId : null) || null;
 
         try {
-            // Normalize destination phone number to clean E.164 using shared helper
             const cleanNumber = this.normalizePhoneNumber(phoneNumber);
             const fromNumber = customParameters.From || customParameters.from_number || customParameters.callerId || "";
-
-            console.log("[DeviceManager] makeCall trace:", {
-                phoneNumber: cleanNumber,
-                customParameters: customParameters,
-                callContext: callContext,
-                selectedCaller: fromNumber
-            });
+            console.log(`[Twilio JS] Outgoing call: From=${fromNumber}, To=${cleanNumber}`);
 
             const connectParams = {
                 To: cleanNumber,
@@ -768,33 +766,18 @@ class DeviceManager {
                 ...customParameters,
             };
 
-            if (window.TWILIO_DIALER_DEBUG) {
-                console.log("[DEBUG TRACE] device.connect params:", JSON.stringify(connectParams, null, 2));
-            }
-
             const call = await this.device.connect({
                 params: connectParams,
             });
 
-            console.group("Call Debug");
+            let callSid = call.parameters?.CallSid || "";
+            let callLogId = null;
 
-            console.log("Call:", call);
-            console.log("Parameters:", call.parameters);
-            console.log("CallSid:", call.parameters?.CallSid);
-            console.log("Status:", call.status?.());
-            console.log("Direction:", call.direction);
-
-            console.dir(call);
-
-            console.groupEnd();
-
-            let callSid = call.parameters?.CallSid;
-
-            if (!callSid) {
-                console.warn("Call SID not available yet.");
-            } else {
-                await this._createCallLog(callSid, phoneNumber, this._activePartnerId);
+            if (callSid) {
+                callLogId = await this._createCallLog(callSid, phoneNumber, this._activePartnerId);
             }
+
+            console.log(`[Twilio JS] Outgoing Call: From=${fromNumber}, To=${cleanNumber}, CallSid=${callSid || "N/A"}, Call ID=${callLogId || "N/A"}, Odoo ID=${this._activeResId || this._activePartnerId || "N/A"}`);
 
             this._activeConnection = call;
             this._attachCallListeners(call, callSid, phoneNumber);
@@ -802,30 +785,18 @@ class DeviceManager {
             return true;
 
         } catch (error) {
-            console.group("CONNECT FAILED");
-
-            console.error(error);
-            console.log("Code:", error.code);
-            console.log("Message:", error.message);
-            console.log("Explanation:", error.explanation);
-            console.log("Causes:", error.causes);
-            console.log("Solutions:", error.solutions);
-
-            console.groupEnd();
+            console.error("[Twilio JS] Outgoing call failed:", error.message || error);
 
             if (this._isAccessTokenInvalid(error)) {
                 await this._recoverInvalidAccessToken(error);
                 return false;
             }
-
             this._setStatus(STATUS.ERROR);
             return false;
         }
     }
 
     disconnect() {
-        console.error("[DEBUG TRACE] deviceManager.disconnect() requested!");
-        console.trace("[DEBUG TRACE] Stack trace for deviceManager.disconnect:");
         if (this._destroyed) {
             return;
         }
@@ -878,6 +849,84 @@ class DeviceManager {
             console.error("[DeviceManager] Failed to send DTMF digits:", error);
             return false;
         }
+    }
+
+
+    setAllowedNumbers(numbers) {
+        if (!Array.isArray(numbers)) {
+            this.allowedPhoneNumbers = [];
+            this.isAllAllowed = false;
+            return;
+        }
+        this.isAllAllowed = numbers.some((n) => {
+            if (typeof n === "object" && n !== null) {
+                return n.is_all || n.phone_number === "ALL";
+            }
+            return n === "ALL";
+        });
+        this.allowedPhoneNumbers = numbers
+            .map((n) => {
+                const p = typeof n === "object" && n !== null ? (n.phone_number || "") : String(n || "");
+                return p !== "ALL" ? p.replace(/\D/g, "") : "";
+            })
+            .filter(Boolean);
+        console.log("[DeviceManager] Set allowed phone numbers:", this.allowedPhoneNumbers, "isAllAllowed:", this.isAllAllowed);
+    }
+
+    async resolveIncomingNumber(callSid) {
+        if (!callSid) return "";
+        try {
+            const res = await rpc("/twilio_dialer/call_info", { call_sid: callSid });
+            if (res && res.success && res.to_number) {
+                return res.to_number;
+            }
+        } catch (e) {
+            console.warn("[DeviceManager] Failed to resolve incoming call destination:", e);
+        }
+        return "";
+    }
+
+    isNumberAllowed(toNumber) {
+        if (this.isAllAllowed) {
+            return true;
+        }
+        if (!this.allowedPhoneNumbers || this.allowedPhoneNumbers.length === 0) {
+            return false; // Fail closed if no numbers allocated
+        }
+        if (!toNumber) {
+            return false; // Strict fail-closed: do not allow unallocated or unknown destinations
+        }
+        const cleanTo = String(toNumber).replace(/\D/g, "");
+        const cleanTo10 = cleanTo.length > 10 && cleanTo.startsWith("1") ? cleanTo.substring(1) : (cleanTo.length >= 10 ? cleanTo.slice(-10) : cleanTo);
+
+        return this.allowedPhoneNumbers.some((allowed) => {
+            const cleanA = allowed.replace(/\D/g, "");
+            const cleanA10 = cleanA.length > 10 && cleanA.startsWith("1") ? cleanA.substring(1) : (cleanA.length >= 10 ? cleanA.slice(-10) : cleanA);
+            return cleanA === cleanTo || (cleanTo10 && cleanA10 === cleanTo10);
+        });
+    }
+
+    extractActualIncomingNumber(call) {
+        if (!call) return "";
+        let customTo = "";
+        if (call.customParameters && typeof call.customParameters.get === "function") {
+            customTo = call.customParameters.get("To") || call.customParameters.get("CalledNumber") || "";
+        } else if (call.customParameters) {
+            customTo = call.customParameters.To || call.customParameters.CalledNumber || "";
+        }
+
+        let toNumber = customTo || call.parameters?.Called || call.parameters?.called || "";
+        if (!toNumber) {
+            const rawTo = call.parameters?.To || call.parameters?.to || "";
+            if (rawTo && !rawTo.startsWith("client:") && !rawTo.startsWith("id_odoo_") && !rawTo.startsWith("id_")) {
+                toNumber = rawTo;
+            }
+        }
+        return toNumber;
+    }
+
+    isIncomingNumberAssigned(incomingNumber) {
+        return this.isNumberAllowed(incomingNumber);
     }
 
     destroy() {

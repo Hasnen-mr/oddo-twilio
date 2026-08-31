@@ -1,72 +1,70 @@
 # -*- coding: utf-8 -*-
-import json
-from odoo import api, fields, models
+import logging
+from odoo import api, fields, models, _
+
+_logger = logging.getLogger(__name__)
 
 
 class TwilioNumberAllocation(models.Model):
     _name = "twilio.number.allocation"
-    _description = "Twilio Phone Number Allocation"
-    _order = "user_id asc"
+    _description = "Twilio Phone Number User Allocation"
+    _rec_name = "user_name"
+    _order = "user_name asc"
 
-    user_id = fields.Many2one(
-        "res.users",
-        string="User",
-        required=True,
-        ondelete="cascade",
-        index=True,
-    )
-    user_login = fields.Char(related="user_id.login", string="Login / Email", readonly=True)
-
-    @api.model
-    def _default_twilio_number_ids(self):
-        try:
-            all_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
-            if all_opt:
-                return [(6, 0, [all_opt.id])]
-        except Exception:
-            pass
-        return []
-
+    user_id = fields.Many2one("res.users", string="User", required=True, ondelete="cascade", index=True)
+    user_name = fields.Char(related="user_id.name", string="User Name", store=True)
+    user_login = fields.Char(related="user_id.login", string="Login / Email", store=True)
+    user_email = fields.Char(related="user_id.email", string="Email", store=True)
+    active = fields.Boolean(related="user_id.active", string="Active User", store=True)
+    company_id = fields.Many2one(related="user_id.company_id", string="Company", store=True)
+    
     twilio_number_ids = fields.Many2many(
         "twilio.phone.number",
         "twilio_number_allocation_rel",
         "allocation_id",
         "number_id",
-        string="Assigned Numbers",
-        default=_default_twilio_number_ids,
-        help="Select assigned Twilio numbers. Default is 'All numbers'.",
+        string="Allocated Twilio Numbers",
+        help="Specific Twilio phone numbers assigned to this user.",
     )
-
+    
+    number_count = fields.Integer(
+        string="Assigned Count",
+        compute="_compute_allocation_summary",
+        store=False,
+    )
     allocation_status = fields.Char(
         string="Allocation Status",
-        compute="_compute_allocation_status",
-        store=True,
+        compute="_compute_allocation_summary",
+        store=False,
     )
-
-    @api.depends("twilio_number_ids", "twilio_number_ids.phone_number")
-    def _compute_allocation_status(self):
+    
+    @api.depends("twilio_number_ids", "twilio_number_ids.phone_number", "twilio_number_ids.active")
+    def _compute_allocation_summary(self):
         for rec in self:
-            numbers = rec.twilio_number_ids.mapped("phone_number")
-            if not numbers or "ALL" in numbers:
+            nums = rec.twilio_number_ids.filtered(lambda n: n.active)
+            if not nums or any(n.phone_number == "ALL" for n in nums):
+                rec.number_count = 0
                 rec.allocation_status = "All Numbers"
-            elif len(numbers) == 1:
-                rec.allocation_status = f"1 Number ({numbers[0]})"
             else:
-                nums_str = ", ".join(numbers)
-                rec.allocation_status = f"{len(numbers)} Numbers ({nums_str})"
+                real_nums = nums.filtered(lambda n: n.phone_number != "ALL")
+                count = len(real_nums)
+                rec.number_count = count
+                rec.allocation_status = f"{count} Number" if count == 1 else f"{count} Numbers"
 
     def write(self, vals):
         res = super().write(vals)
-        if "twilio_number_ids" in vals:
-            for rec in self:
-                try:
-                    self.env["bus.bus"]._sendone(
-                        rec.user_id.partner_id,
-                        "twilio_number_allocation_updated",
-                        {"user_id": rec.user_id.id}
-                    )
-                except Exception:
-                    pass
+        if "twilio_number_ids" in vals and self.env.get("bus.bus"):
+            try:
+                for rec in self:
+                    partner = rec.user_id.partner_id
+                    if partner:
+                        self.env["bus.bus"]._sendone(
+                            partner,
+                            "twilio_number_allocation_updated",
+                            {"user_id": rec.user_id.id},
+                        )
+            except Exception:
+                pass
         return res
 
     @api.model
@@ -115,12 +113,6 @@ class TwilioNumberAllocation(models.Model):
         return super().web_search_read(domain=domain, specification=specification, offset=offset, limit=limit, order=order, count_limit=count_limit)
 
     @api.model
-    def search_read(self, domain=None, fields=None, offset=0, limit=None, order=None):
-        if not self.env.context.get("no_sync_user_allocations"):
-            self.sync_user_allocations()
-        return super().search_read(domain=domain, fields=fields, offset=offset, limit=limit, order=order)
-
-    @api.model
     def get_allocation_data(self):
         """Return all phone numbers and user allocation records for the UI."""
         self.sync_user_allocations()
@@ -146,6 +138,7 @@ class TwilioNumberAllocation(models.Model):
                 "user_id": a.user_id.id,
                 "user_name": a.user_id.name or "Unknown User",
                 "user_login": a.user_login or "",
+                "user_email": a.user_email or a.user_login or "",
                 "number_ids": a.twilio_number_ids.ids,
                 "status": a.allocation_status or "All Numbers",
             }
@@ -170,11 +163,10 @@ class TwilioNumberAllocation(models.Model):
             number_ids = [all_opt.id] if all_opt else []
 
         alloc.write({"twilio_number_ids": [(6, 0, number_ids)]})
-        return {
-            "success": True,
-            "status": alloc.allocation_status,
-            "number_ids": alloc.twilio_number_ids.ids,
-        }
+        if hasattr(alloc.user_id, "twilio_number_ids"):
+            alloc.user_id.sudo().write({"twilio_number_ids": [(6, 0, number_ids)]})
+
+        return self.get_allocation_data()
 
     @api.model
     def reset_all_to_default(self):
@@ -189,3 +181,84 @@ class TwilioNumberAllocation(models.Model):
             })
         self.sudo().search([]).write({"twilio_number_ids": [(6, 0, [all_opt.id])]})
         return self.get_allocation_data()
+
+    @api.model
+    def get_user_allowed_numbers(self, user_id=None):
+        """Return the list of phone number dicts that user_id is authorized to use for outbound and inbound."""
+        if not user_id:
+            user_id = self.env.user.id
+            
+        self.sync_user_allocations()
+        self.env["twilio.phone.number"].sudo()._auto_sync_cached_numbers()
+        
+        all_active = self.env["twilio.phone.number"].sudo().search(
+            [("active", "=", True), ("phone_number", "!=", "ALL")],
+            order="sequence asc, phone_number asc"
+        )
+        
+        alloc = self.sudo().search([("user_id", "=", user_id)], limit=1)
+        if not alloc or not alloc.twilio_number_ids:
+            allowed_recs = all_active
+        else:
+            nums = alloc.twilio_number_ids.filtered(lambda n: n.active)
+            if any(n.phone_number == "ALL" for n in nums):
+                allowed_recs = all_active
+            else:
+                allowed_recs = nums.filtered(lambda n: n.phone_number != "ALL")
+                
+        if not allowed_recs:
+            allowed_recs = all_active
+
+        return [
+            {
+                "id": n.id,
+                "phone_number": n.phone_number,
+                "friendly_name": n.friendly_name or n.phone_number,
+                "display_name": n.display_name or f"{n.friendly_name or n.phone_number} ({n.phone_number})",
+                "type": "incoming",
+            }
+            for n in allowed_recs
+        ]
+
+    @api.model
+    def get_users_for_number(self, phone_number):
+        """Return the active res.users records authorized to receive calls on phone_number."""
+        self.sync_user_allocations()
+        self.env["twilio.phone.number"].sudo()._auto_sync_cached_numbers()
+
+        if not phone_number:
+            return self.env["res.users"].sudo().search([("share", "=", False), ("active", "=", True)])
+
+        import re
+        clean_target = re.sub(r"\D", "", str(phone_number or ""))
+        clean_target_10 = clean_target[1:] if len(clean_target) > 10 and clean_target.startswith("1") else (clean_target[-10:] if len(clean_target) >= 10 else clean_target)
+
+        all_nums = self.env["twilio.phone.number"].sudo().search([("active", "=", True)])
+        target_number_ids = set()
+        all_opt_ids = set()
+
+        for n in all_nums:
+            if n.phone_number == "ALL":
+                all_opt_ids.add(n.id)
+                continue
+            clean_n = re.sub(r"\D", "", str(n.phone_number or ""))
+            clean_n_10 = clean_n[1:] if len(clean_n) > 10 and clean_n.startswith("1") else (clean_n[-10:] if len(clean_n) >= 10 else clean_n)
+            if clean_n == clean_target or (clean_target_10 and clean_n_10 == clean_target_10):
+                target_number_ids.add(n.id)
+
+        allocations = self.sudo().search([])
+        authorized_user_ids = set()
+
+        for alloc in allocations:
+            if not alloc.user_id or not alloc.user_id.active:
+                continue
+            u_nums = set(alloc.twilio_number_ids.ids)
+            has_all = not u_nums or bool(u_nums & all_opt_ids)
+            has_specific = bool(u_nums & target_number_ids)
+            if has_all or has_specific:
+                authorized_user_ids.add(alloc.user_id.id)
+
+        if not authorized_user_ids:
+            return self.env["res.users"].sudo().search([("share", "=", False), ("active", "=", True)])
+
+        return self.env["res.users"].sudo().browse(list(authorized_user_ids))

@@ -3,7 +3,6 @@
 import { Component, useState } from "@odoo/owl";
 import { Dialog } from "@web/core/dialog/dialog";
 import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
 
 export class TwilioCredentialsHelpDialog extends Component {
     static template = "twilio_dialer_pro.CredentialsHelpDialog";
@@ -13,7 +12,6 @@ export class TwilioCredentialsHelpDialog extends Component {
     };
 
     setup() {
-        this.rpc = useService("rpc");
         this.state = useState({
             activeTab: "classic", // 'classic' or 'new'
         });

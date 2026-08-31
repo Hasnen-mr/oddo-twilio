@@ -3,6 +3,7 @@
 import { reactive } from "@odoo/owl";
 import { deviceManager } from "@twilio_dialer_pro/js/device_manager";
 import { normalizePhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { registry } from "@web/core/registry";
 
 const dialerState = reactive({
@@ -33,11 +34,12 @@ export const dialerService = {
 
         // Automatically open the dialer popup when an incoming call arrives
         deviceManager.onIncomingCall((call, fromNumber, callSid, toNumber) => {
-            console.log("[dialerService] Incoming call received:", fromNumber, callSid, toNumber);
             dialerState.phone = fromNumber || "";
             dialerState.fromNumber = (toNumber && !toNumber.startsWith("client:") && !toNumber.startsWith("id_odoo_")) ? toNumber : "";
             dialerState.resModel = null;
             dialerState.resId = null;
+            dialerState.autoDialerId = null;
+            dialerState.queueLineId = null;
             dialerState.requestId += 1;
             dialerState.isOpen = true;
         });
@@ -45,13 +47,44 @@ export const dialerService = {
         // Cleanup listener: Ensure Twilio WebSocket connections & Device instance are cleanly
         // un-registered and destroyed when user logs out, closes browser tab, or unloads window.
         const cleanupDevice = () => {
-            console.log("[dialerService] Unload/Logout cleanup: destroying deviceManager");
             try {
                 deviceManager.destroy();
             } catch (err) {
                 console.error("[dialerService] Error during deviceManager cleanup:", err);
             }
         };
+
+        // Real-time Disconnect Listener: Reset dialer and destroy Twilio device when connection is removed
+        if (env.services.bus_service) {
+            env.services.bus_service.subscribe("twilio_connection_disconnected", () => {
+                try {
+                    deviceManager.destroy();
+                } catch (e) {
+                    console.warn("[dialerService] Error destroying device on disconnect:", e);
+                }
+                dialerState.isOpen = false;
+                dialerState.phone = "";
+                dialerState.fromNumber = "";
+                dialerState.partnerId = null;
+                dialerState.partnerName = "";
+                dialerState.resModel = null;
+                dialerState.resId = null;
+                dialerState.autoDialerId = null;
+                dialerState.queueLineId = null;
+                dialerState.requestId += 1;
+            });
+
+            env.services.bus_service.subscribe("twilio_number_allocation_updated", async (payload) => {
+                try {
+                    const res = await rpc("/twilio_dialer/phone_number");
+                    if (res && res.phone_numbers) {
+                        deviceManager.setAllowedNumbers(res.phone_numbers);
+                    }
+                } catch (err) {
+                    console.warn("[dialerService] Failed to refresh allocations on bus update:", err);
+                }
+            });
+        }
 
         window.addEventListener("pagehide", cleanupDevice);
         window.addEventListener("beforeunload", cleanupDevice);
@@ -128,7 +161,13 @@ function _handleOpenDialerAction(env, action) {
     }
 }
 
-registry.category("actions").add("twilio_dialer_pro.open_dialer", _handleOpenDialerAction, { force: true });
-registry.category("actions").add("twilio_dialer_pro.open_dialer", _handleOpenDialerAction, { force: true });
-registry.category("actions").add("open_dialer", _handleOpenDialerAction, { force: true });
-registry.category("actions").add("action_twilio_dialer_open", _handleOpenDialerAction, { force: true });
+const dialerActionTags = [
+    "twilio_dialer_pro.open_dialer",
+    "twilio_dialer_pro.open_dialer",
+    "open_dialer",
+    "action_twilio_dialer_open",
+    "action_twilio_open_phone",
+];
+for (const tag of dialerActionTags) {
+    registry.category("actions").add(tag, _handleOpenDialerAction, { force: true });
+}

@@ -879,6 +879,13 @@ class ResConfigSettings(models.TransientModel):
 
     def action_open_credentials_help(self):
         """Open the Twilio credentials finder guide."""
+                # Broadcast disconnection to all active web clients to reset dialer & device states
+        try:
+            channels = [(p, "twilio_connection_disconnected", {}) for p in self.env["res.partner"].sudo().search([])]
+            self.env["bus.bus"]._sendmany(channels)
+        except Exception:
+            pass
+
         return {
             "type": "ir.actions.client",
             "tag": "twilio_dialer_pro.action_credentials_help",
@@ -887,10 +894,10 @@ class ResConfigSettings(models.TransientModel):
 
     def _get_formatted_odoo_base_version(self, odoo_version=None):
         """Format Odoo version dynamically as:
-        Normal (Community): 17.0.DD.MM (e.g. 17.0.26.08)
-        Pro (Enterprise): 17.0.DD.MM-pro (e.g. 17.0.26.08-pro)
+        Normal (Community): 18.0.DD.MM (e.g. 18.0.26.08)
+        Pro (Enterprise): 18.0.DD.MM-pro (e.g. 18.0.26.08-pro)
         """
-        raw_version = (odoo_version or "").strip() or odoo_release_version or "17.0"
+        raw_version = (odoo_version or "").strip() or odoo_release_version or "18.0"
 
         # Detect Enterprise / Pro
         is_enterprise = False
@@ -910,9 +917,9 @@ class ResConfigSettings(models.TransientModel):
                 except Exception:
                     pass
 
-        # Extract major series (e.g. 17.0)
+        # Extract major series (e.g. 18.0)
         series_match = re.search(r"(\d+\.\d+)", raw_version)
-        series = series_match.group(1) if series_match else "17.0"
+        series = series_match.group(1) if series_match else "18.0"
 
         # Extract date (DD and MM)
         # Matches YYYYMMDD (e.g. 20260826 -> MM=08, DD=26)
@@ -951,7 +958,7 @@ class ResConfigSettings(models.TransientModel):
                 return str(mf.get("version")).strip()
         except Exception:
             pass
-        return "17.0.26.08"
+        return "18.0.26.08"
 
     def _submit_module_registration(self, odoo_version=None):
         """Notify ZantaTech when a Twilio account is connected to the module."""

@@ -20,7 +20,6 @@ export class TwilioOnboardingWizard extends Component {
     };
 
     setup() {
-        this.rpc = useService("rpc");
         this.orm = useService("orm");
         this.dialog = useService("dialog");
         this.notification = useService("notification");

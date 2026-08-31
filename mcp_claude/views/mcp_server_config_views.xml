@@ -99,7 +99,7 @@
     <record id="action_mcp_server_config" model="ir.actions.act_window">
         <field name="name">Server Configurations</field>
         <field name="res_model">mcp.server.config</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">tree,form</field>
         <field name="view_id" ref="view_mcp_server_config_list"/>
         <field name="search_view_id" ref="view_mcp_server_config_search"/>
         <field name="help" type="html">

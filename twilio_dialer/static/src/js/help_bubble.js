@@ -1,5 +1,6 @@
 /** @odoo-module **/
 
+import { session } from "@web/session";
 import { Component, onMounted, onWillUnmount, reactive, useState } from "@odoo/owl";
 import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
 import { registry } from "@web/core/registry";
@@ -9,7 +10,6 @@ export class TwilioHelpBubble extends Component {
     static template = "twilio_dialer.TwilioHelpBubble";
 
     setup() {
-        this.rpc = useService("rpc");
         this.dialog = useService("dialog");
         this.actionService = useService("action");
         this.menuService = useService("menu");
@@ -41,6 +41,21 @@ export class TwilioHelpBubble extends Component {
         const currentController = this.actionService ? this.actionService.currentController : null;
         const currentApp = this.menuService ? this.menuService.getCurrentApp() : null;
         const action = currentController ? currentController.action : null;
+
+                // Guard: Never show on portal, website, login, or non-backend web client
+        const path = window.location.pathname || "";
+        if (
+            path.startsWith("/my") ||
+            path.startsWith("/website") ||
+            path.startsWith("/shop") ||
+            path.startsWith("/slides") ||
+            path.startsWith("/web/login") ||
+            (session && (session.is_portal || session.is_public || session.is_internal_user === false)) ||
+            !document.body.classList.contains("o_web_client")
+        ) {
+            this.state.isVisible = false;
+            return;
+        }
 
         let isTwilioModule = false;
 

@@ -30,7 +30,6 @@ export class ContactCallButton extends Component {
     };
 
     setup() {
-        this.rpc = useService("rpc");
         this.dialer = useService("twilio_dialer");
         this.notification = useService("notification");
     }
@@ -113,7 +112,6 @@ class TwilioCallButtonField extends Component {
     };
 
     setup() {
-        this.rpc = useService("rpc");
         this.dialer = useService("twilio_dialer");
         this.dialog = useService("dialog");
         this.notification = useService("notification");

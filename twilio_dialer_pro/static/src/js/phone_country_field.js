@@ -4,7 +4,6 @@ import { Component, useEffect, useExternalListener, useState } from "@odoo/owl";
 import { COUNTRY_CODES } from "@twilio_dialer_pro/js/country_codes";
 import { buildE164, splitPhoneNumber } from "@twilio_dialer_pro/js/phone_utils";
 import { registry } from "@web/core/registry";
-import { useService } from "@web/core/utils/hooks";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 export class TwilioPhoneCountryField extends Component {
@@ -12,7 +11,6 @@ export class TwilioPhoneCountryField extends Component {
     static props = { ...standardFieldProps };
 
     setup() {
-        this.rpc = useService("rpc");
         const parsed = splitPhoneNumber(this.props.record.data[this.props.name]);
         this.state = useState({
             selectedCountry: parsed.country,

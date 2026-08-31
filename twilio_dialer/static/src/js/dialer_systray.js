@@ -10,7 +10,6 @@ export class DialerSystray extends Component {
     static template = "twilio_dialer.DialerSystray";
 
     setup() {
-        this.rpc = useService("rpc");
         this.dialer = useService("twilio_dialer");
         this.state = useState(this.dialer.state);
     }

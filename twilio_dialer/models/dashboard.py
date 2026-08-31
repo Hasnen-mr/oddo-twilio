@@ -1,3 +1,4 @@
+import re
 # -*- coding: utf-8 -*-
 from collections import defaultdict
 from datetime import datetime, time, timedelta
@@ -58,9 +59,9 @@ class TwilioDialerDashboard(models.TransientModel):
                 "twilio_dialer.application_sid",
             )
         )
-        call_logs = self.env["twilio.call.log"]
-        campaigns = self.env["twilio.auto.dialer"]
-        contacts = self.env["res.partner"]
+        call_logs = self.env["twilio.call.log"].sudo().sudo()
+        campaigns = self.env["twilio.auto.dialer"].sudo().sudo()
+        contacts = self.env["res.partner"].sudo().sudo()
         today = fields.Date.context_today(self)
         start_30_days = datetime.combine(today - timedelta(days=29), time.min)
         logs = call_logs.search([("start_time", ">=", start_30_days)])
@@ -165,7 +166,7 @@ class TwilioDialerDashboard(models.TransientModel):
     def _get_or_create_dashboard(self):
         dashboard = self.search([], order="id desc", limit=1)
         if not dashboard:
-            dashboard = self.create(self._dashboard_values())
+            dashboard = self.sudo().create(self._dashboard_values())
         return dashboard
 
     def web_read(self, specification):
@@ -190,14 +191,19 @@ class TwilioDialerDashboard(models.TransientModel):
 
     @api.model
     def action_open_dashboard(self):
-        dashboard = self.create(self._dashboard_values())
+        dashboard = self.sudo().create(self._dashboard_values())
+        view_id = (
+            self.env.ref("twilio_dialer_pro.view_twilio_dialer_dashboard_form", raise_if_not_found=False) or
+            self.env.ref("twilio_dialer.view_twilio_dialer_dashboard_form", raise_if_not_found=False)
+        )
         return {
             "type": "ir.actions.act_window",
             "name": "Dashboard",
             "res_model": self._name,
             "res_id": dashboard.id,
             "view_mode": "form",
-            "views": [(False, "form")],
+            "views": [(view_id.id if view_id else False, "form")],
+            "view_id": view_id.id if view_id else False,
             "target": "current",
         }
 
@@ -208,7 +214,17 @@ class TwilioDialerDashboard(models.TransientModel):
         """Open softphone when connected; otherwise send user to Configuration."""
         self.ensure_one()
         if self.connection_configured:
-            return self.env.ref("twilio_dialer.action_twilio_open_phone").read()[0]
+            action = (
+                self.env.ref("twilio_dialer_pro.action_twilio_open_phone", raise_if_not_found=False) or
+                self.env.ref("twilio_dialer.action_twilio_open_phone", raise_if_not_found=False)
+            )
+            if action:
+                return action.read()[0]
+            return {
+                "type": "ir.actions.client",
+                "name": "Open Phone",
+                "tag": "twilio_dialer.open_dialer",
+            }
         return self.action_open_configuration()
 
     def action_open_call_logs(self):

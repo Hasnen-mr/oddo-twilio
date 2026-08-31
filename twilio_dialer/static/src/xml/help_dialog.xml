@@ -32,9 +32,6 @@
         </t>
     </t>
 
-    <!-- Inherited Twilio Dashboard Form View -->
-    <t t-name="twilio_dialer.TwilioDashboardFormView" t-inherit="web.FormView" owl="1">
-    </t>
 
     <!-- Help Dialog / Panel -->
     <t t-name="twilio_dialer.TwilioHelpDialog">

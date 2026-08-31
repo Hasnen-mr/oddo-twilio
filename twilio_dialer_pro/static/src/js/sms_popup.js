@@ -20,7 +20,6 @@ export class TwilioSmsPopup extends Component {
     };
 
     setup() {
-        this.rpc = useService("rpc");
                 this.notification = useService("notification");
         this.chatBodyRef = useRef("chatBody");
         this.messageInputRef = useRef("messageInput");
@@ -182,7 +181,7 @@ export class TwilioSmsPopup extends Component {
 
     async loadTemplates() {
         try {
-            const res = await this.rpc("/twilio_dialer/sms/get_templates", {
+            const res = await rpc("/twilio_dialer/sms/get_templates", {
                 partner_id: this.props.partnerId || false,
             });
             if (res && res.success) {
@@ -195,7 +194,7 @@ export class TwilioSmsPopup extends Component {
 
     async loadQuickReplies() {
         try {
-            const res = await this.rpc("/twilio_dialer/sms/get_quick_replies");
+            const res = await rpc("/twilio_dialer/sms/get_quick_replies");
             if (res && res.success) {
                 this.state.quickReplies = res.quick_replies || [];
             }
@@ -219,7 +218,7 @@ export class TwilioSmsPopup extends Component {
             const chatEl = this.chatBodyRef.el;
             const oldScrollHeight = chatEl ? chatEl.scrollHeight : 0;
 
-            const result = await this.rpc("/twilio_dialer/sms/get_history", {
+            const result = await rpc("/twilio_dialer/sms/get_history", {
                 phone: this.normalizedPhone || this.props.phone,
                 partner_id: this.props.partnerId || false,
                 limit: limit,
@@ -344,7 +343,7 @@ export class TwilioSmsPopup extends Component {
         this.state.sending = true;
 
         try {
-            const result = await this.rpc("/twilio_dialer/sms/send", {
+            const result = await rpc("/twilio_dialer/sms/send", {
                 recipient: this.normalizedPhone || this.props.phone,
                 body: body,
                 partner_id: this.props.partnerId || false,

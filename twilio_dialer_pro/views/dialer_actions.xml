@@ -3,7 +3,7 @@
 
     <record id="action_twilio_open_phone" model="ir.actions.client">
         <field name="name">Open Phone</field>
-        <field name="tag">twilio_dialer.open_dialer</field>
+        <field name="tag">twilio_dialer_pro.open_dialer</field>
         <field name="params">{}</field>
     </record>
 

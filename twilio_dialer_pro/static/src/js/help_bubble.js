@@ -1,5 +1,6 @@
 /** @odoo-module **/
 
+import { session } from "@web/session";
 import { Component, onMounted, onWillUnmount, reactive, useState } from "@odoo/owl";
 import { TwilioHelpDialog } from "@twilio_dialer_pro/js/help_dialog";
 import { registry } from "@web/core/registry";
@@ -41,6 +42,21 @@ export class TwilioHelpBubble extends Component {
         const currentApp = this.menuService ? this.menuService.getCurrentApp() : null;
         const action = currentController ? currentController.action : null;
 
+                // Guard: Never show on portal, website, login, or non-backend web client
+        const path = window.location.pathname || "";
+        if (
+            path.startsWith("/my") ||
+            path.startsWith("/website") ||
+            path.startsWith("/shop") ||
+            path.startsWith("/slides") ||
+            path.startsWith("/web/login") ||
+            (session && (session.is_portal || session.is_public || session.is_internal_user === false)) ||
+            !document.body.classList.contains("o_web_client")
+        ) {
+            this.state.isVisible = false;
+            return;
+        }
+
         let isTwilioModule = false;
 
         // 1. Check if current active menu/app is Twilio Calling System
@@ -74,22 +90,12 @@ export class TwilioHelpBubble extends Component {
             }
         }
 
-        // 3. Fallback: Check if URL, title, or DOM matches Twilio workspace
+        // 3. Fallback: Check if any twilio shell / container is present in the DOM
         if (!isTwilioModule) {
-            const path = (window.location && window.location.pathname) || "";
-            const hash = (window.location && window.location.hash) || "";
-            const href = (window.location && window.location.href) || "";
-            const docTitle = document.title || "";
             const hasTwilioEl = document.querySelector(
-                ".o_twilio_dashboard_shell, .o_twilio_sms_workspace_root, .o_twilio_config_container, .o_twilio_contact_us_container, .o_twilio_auto_dialer_container, [js_class='twilio_dashboard_form']"
+                ".o_twilio_dashboard_shell, .o_twilio_sms_workspace_root, .o_twilio_config_container, .o_twilio_contact_us_container, .o_twilio_auto_dialer_container"
             );
-            if (
-                path.includes("twilio") ||
-                hash.includes("twilio") ||
-                href.includes("twilio") ||
-                docTitle.includes("Twilio") ||
-                hasTwilioEl
-            ) {
+            if (hasTwilioEl) {
                 isTwilioModule = true;
             }
         }

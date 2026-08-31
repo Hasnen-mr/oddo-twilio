@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 import logging
+import re
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
@@ -35,13 +36,18 @@ class ResConfigSettings(models.TransientModel):
     # Left-sidebar section on Configuration page (client-only, not persisted)
     twilio_config_section = fields.Selection(
         selection=[
+            ("account", "Account Settings"),
             ("call", "Call Settings"),
+            ("allocation", "Number Allocation"),
             ("ai", "AI Settings"),
-            ("account", "Account Setting"),
             ("billing", "Billing"),
         ],
         string="Configuration Section",
-        default="call",
+        default="account",
+    )
+    twilio_allocation_panel = fields.Char(
+        string="Allocation Panel",
+        default="1",
     )
     twilio_billing_panel = fields.Char(
         string="Billing Panel",
@@ -365,12 +371,11 @@ class ResConfigSettings(models.TransientModel):
 
     @api.model
     def action_open_twilio_configuration(self):
-        """Open Configuration; default to Call Settings when Twilio is connected."""
+        """Open Configuration; default to Account Settings."""
         action = self.env.ref("twilio_dialer.action_twilio_configuration").sudo().read()[0]
-        connected = self._twilio_is_configured()
         section = self.env.context.get("default_twilio_config_section")
-        if section not in ("call", "ai", "account", "billing"):
-            section = "call" if connected else "account"
+        if section not in ("account", "call", "allocation", "ai", "billing"):
+            section = "account"
         action["context"] = {
             "module": "twilio_dialer",
             "default_twilio_config_section": section,
@@ -381,16 +386,13 @@ class ResConfigSettings(models.TransientModel):
     def get_values(self):
         icp = self.env["ir.config_parameter"].sudo()
         values = super().get_values()
-        connected = self._twilio_is_configured() or bool(
-            values.get("twilio_api_key_sid") and values.get("twilio_application_sid")
-        )
-        values["twilio_config_section"] = "call" if connected else "account"
+        values["twilio_config_section"] = self.env.context.get("default_twilio_config_section") or "account"
 
         account_sid = icp.get_param("twilio_dialer.account_sid")
         if not account_sid:
             return values
 
-        # Instant local fallback values
+        # Instant local stored values
         values["twilio_incoming_enabled"] = icp.get_param("twilio_dialer.incoming_enabled", "1") in ("True", "true", "1")
         values["twilio_incoming_record"] = icp.get_param("twilio_dialer.incoming_record") in ("True", "true", "1")
         values["twilio_incoming_voicemail"] = icp.get_param("twilio_dialer.incoming_voicemail") in ("True", "true", "1")
@@ -401,19 +403,6 @@ class ResConfigSettings(models.TransientModel):
         values["twilio_incoming_forward_to"] = icp.get_param("twilio_dialer.incoming_forward_to", "")
         values["twilio_outgoing_record"] = icp.get_param("twilio_dialer.outgoing_record") in ("True", "true", "1")
         values["twilio_outgoing_smart_copy"] = icp.get_param("twilio_dialer.outgoing_smart_copy") in ("True", "true", "1")
-
-        # Fast background check with 2s timeout
-        try:
-            from ..services import MyBroadcastAPI
-            api_client = MyBroadcastAPI()
-            api_client._timeout = 2
-            payload = api_client.get_call_settings(account_sid)
-            incoming, outgoing, error = self._parse_call_settings(payload)
-            if not error:
-                call_values = self._call_settings_values(incoming, outgoing)
-                values.update(call_values)
-        except Exception as error:
-            _logger.debug("Fast load fallback for Call Settings: %s", error)
 
         return values
 
@@ -888,12 +877,27 @@ class ResConfigSettings(models.TransientModel):
         result = super().create(vals_list)
         return result
 
+    def action_open_credentials_help(self):
+        """Open the Twilio credentials finder guide."""
+                # Broadcast disconnection to all active web clients to reset dialer & device states
+        try:
+            channels = [(p, "twilio_connection_disconnected", {}) for p in self.env["res.partner"].sudo().search([])]
+            self.env["bus.bus"]._sendmany(channels)
+        except Exception:
+            pass
+
+        return {
+            "type": "ir.actions.client",
+            "tag": "twilio_dialer.action_credentials_help",
+            "target": "new",
+        }
+
     def _get_formatted_odoo_base_version(self, odoo_version=None):
         """Format Odoo version dynamically as:
-        Normal (Community): 19.0.DD.MM (e.g. 19.0.26.08)
-        Pro (Enterprise): 19.0.DD.MM-pro (e.g. 19.0.26.08-pro)
+        Normal (Community): 18.0.DD.MM (e.g. 18.0.26.08)
+        Pro (Enterprise): 18.0.DD.MM-pro (e.g. 18.0.26.08-pro)
         """
-        raw_version = (odoo_version or "").strip() or odoo_release_version or "19.0"
+        raw_version = (odoo_version or "").strip() or odoo_release_version or "18.0"
 
         # Detect Enterprise / Pro
         is_enterprise = False
@@ -913,9 +917,9 @@ class ResConfigSettings(models.TransientModel):
                 except Exception:
                     pass
 
-        # Extract major series (e.g. 19.0)
+        # Extract major series (e.g. 18.0)
         series_match = re.search(r"(\d+\.\d+)", raw_version)
-        series = series_match.group(1) if series_match else "19.0"
+        series = series_match.group(1) if series_match else "18.0"
 
         # Extract date (DD and MM)
         # Matches YYYYMMDD (e.g. 20260826 -> MM=08, DD=26)
@@ -954,7 +958,7 @@ class ResConfigSettings(models.TransientModel):
                 return str(mf.get("version")).strip()
         except Exception:
             pass
-        return "19.0.26.08"
+        return "18.0.26.08"
 
     def _submit_module_registration(self, odoo_version=None):
         """Notify ZantaTech when a Twilio account is connected to the module."""
@@ -1283,3 +1287,166 @@ class ResConfigSettings(models.TransientModel):
             "success": True,
             "phone_number": settings.twilio_phone_number or "",
         }
+
+    @api.model
+    def twilio_send_registration_otp(self, email="", account_sid="", first_name=""):
+        """Send 6-digit OTP verification email for registration."""
+        email = (email or "").strip()
+        account_sid = (account_sid or "").strip()
+        first_name = (first_name or "").strip() or (self.env.user.name or "User").split()[0]
+
+        if not email:
+            return {"success": False, "error": "Please enter a valid email address."}
+        if not account_sid:
+            return {"success": False, "error": "Twilio Account SID is required."}
+
+        try:
+            api_client = MyBroadcastAPI()
+            res = api_client.send_otp(
+                email=email,
+                account_sid=account_sid,
+                first_name=first_name,
+                purpose="registration",
+            )
+            return {
+                "success": True,
+                "message": res.get("message") or "Verification code sent to your email.",
+                "expiresInSeconds": res.get("expiresInSeconds", 600),
+            }
+        except MyBroadcastAPIError as e:
+            err_msg = str(e)
+            if "limit reached" in err_msg.lower():
+                err_msg = "Daily email limit reached (5 per email per day). You can use a code already sent to your inbox (active for 10 minutes), or try again tomorrow."
+            return {"success": False, "error": err_msg}
+        except Exception as e:
+            _logger.exception("Failed to send registration OTP")
+            return {
+                "success": False,
+                "error": "Failed to send verification email. Please check your network and try again.",
+            }
+
+    @api.model
+    def twilio_verify_registration_otp(self, email="", account_sid="", otp="", allow_incoming=None):
+        """Verify 6-digit OTP code submitted by user."""
+        email = (email or "").strip()
+        account_sid = (account_sid or "").strip()
+        otp = (otp or "").strip()
+
+        if not email:
+            return {"success": False, "error": "Email address is required."}
+        if not account_sid:
+            return {"success": False, "error": "Twilio Account SID is required."}
+        if not otp:
+            return {"success": False, "error": "Please enter the 6-digit verification code."}
+
+        try:
+            api_client = MyBroadcastAPI()
+            res = api_client.verify_otp(email=email, account_sid=account_sid, otp=otp)
+            verified = bool(res.get("verified", True))
+            if verified and allow_incoming is not None:
+                # Update call settings incoming switch
+                try:
+                    enabled_str = "True" if allow_incoming else "False"
+                    icp = self.env["ir.config_parameter"].sudo()
+                    icp.set_param("twilio_dialer.incoming_enabled", enabled_str)
+                    icp.set_param("twilio_dialer.twilio_incoming_enabled", enabled_str)
+                    if allow_incoming:
+                        self.env["twilio.service"].configure_incoming_phone_number()
+                    api_client.save_call_settings(
+                        account_sid,
+                        {"incomingCallSetting": {"allow": bool(allow_incoming)}},
+                    )
+                except Exception as ex:
+                    _logger.warning("Failed to save incoming call setting on OTP verify: %s", ex)
+
+            return {
+                "success": True,
+                "verified": verified,
+                "message": res.get("message") or "Email verified successfully.",
+            }
+        except MyBroadcastAPIError as e:
+            return {"success": False, "error": str(e)}
+        except Exception as e:
+            _logger.exception("Failed to verify registration OTP")
+            return {
+                "success": False,
+                "error": "Failed to verify code. Please check the code and try again.",
+            }
+
+    @api.model
+    def twilio_update_incoming_setting(self, allow_incoming=True):
+        """Sync incoming call setting and configure Twilio Application ID on phone numbers."""
+        icp = self.env["ir.config_parameter"].sudo()
+        enabled_str = "True" if allow_incoming else "False"
+        icp.set_param("twilio_dialer.incoming_enabled", enabled_str)
+        icp.set_param("twilio_dialer.twilio_incoming_enabled", enabled_str)
+        account_sid = icp.get_param("twilio_dialer.account_sid")
+
+        if allow_incoming:
+            try:
+                self.env["twilio.service"].configure_incoming_phone_number()
+            except Exception as e:
+                _logger.warning("Failed to configure incoming phone number on toggle change: %s", e)
+
+        if account_sid:
+            try:
+                MyBroadcastAPI().save_call_settings(
+                    account_sid,
+                    {"incomingCallSetting": {"allow": bool(allow_incoming)}},
+                )
+            except Exception as e:
+                _logger.warning("Failed to save incoming call settings on toggle change: %s", e)
+
+        return {"success": True, "incoming_enabled": bool(allow_incoming)}
+
+    @api.model
+    def twilio_update_contact_email(self, email=""):
+        """Update stored contact email when user fixes a typo."""
+        email = (email or "").strip()
+        if email:
+            self.env["ir.config_parameter"].sudo().set_param(
+                "twilio_dialer.contact_email", email
+            )
+        return {"success": True, "email": email}
+
+    @api.model
+    def twilio_get_call_settings_api(self, account_sid=""):
+        """Fetch call settings from MyBroadcast /get-call-settings endpoint.
+        Called on-demand by client when 10-minute client cache expires.
+        """
+        icp = self.env["ir.config_parameter"].sudo()
+        account_sid = (account_sid or "").strip() or (icp.get_param("twilio_dialer.account_sid") or "").strip()
+        if not account_sid:
+            return {"success": False, "error": "Account SID is required."}
+
+        try:
+            from ..services import MyBroadcastAPI
+            api_client = MyBroadcastAPI()
+            payload = api_client.get_call_settings(account_sid)
+            incoming, outgoing, error = self._parse_call_settings(payload)
+            if not error:
+                call_values = self._call_settings_values(incoming, outgoing)
+                # Cache parsed values in ICP for offline / fast fallback
+                for k, v in call_values.items():
+                    if k.startswith("twilio_"):
+                        param_name = k.replace("twilio_", "twilio_dialer.")
+                        icp.set_param(param_name, str(v) if v is not None else "")
+                if "twilio_incoming_enabled" in call_values:
+                    icp.set_param(
+                        "twilio_dialer.incoming_enabled",
+                        "True" if call_values["twilio_incoming_enabled"] else "False",
+                    )
+            return {
+                "success": True,
+                "data": payload,
+            }
+        except Exception as e:
+            _logger.warning("twilio_get_call_settings_api error: %s", e)
+            return {
+                "success": False,
+                "error": str(e),
+            }
+
+
+
+

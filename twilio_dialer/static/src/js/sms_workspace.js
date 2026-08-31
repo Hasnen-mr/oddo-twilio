@@ -38,8 +38,13 @@ export class TwilioSmsWorkspaceClientAction extends Component {
         try {
             // Load record counts
             const res = await rpc("/twilio_dialer/sms/workspace_counts");
-            if (res && res.success) {
-                this.state.counts = res.counts;
+            if (res && res.success && res.counts) {
+                this.state.counts = {
+                    contacts: res.counts.contacts || 0,
+                    logs: res.counts.logs || 0,
+                    templates: res.counts.templates || 0,
+                    quick_replies: res.counts.quick_replies || 0,
+                };
             }
 
             // Scan localStorage for active unsent SMS drafts

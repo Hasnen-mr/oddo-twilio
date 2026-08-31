@@ -17,8 +17,7 @@ export class TwilioSmsMessagingDialog extends Component {
     };
 
     setup() {
-
-        this.state = useState({
+                this.state = useState({
             loading: true,
             searchQuery: "",
             contacts: [],

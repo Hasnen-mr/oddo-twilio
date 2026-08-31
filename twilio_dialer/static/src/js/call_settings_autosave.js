@@ -1,11 +1,17 @@
 /** @odoo-module **/
 
-import { Component, onWillUnmount, useEffect } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useEffect } from "@odoo/owl";
 import { setUiField } from "@twilio_dialer/js/settings_ui_field";
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
+import {
+
+    getCachedCallSettings,
+    setCachedCallSettings,
+    fetchCallSettingsWithCache,
+} from "@twilio_dialer/js/call_settings_cache";
 
 const WATCHED_FIELDS = [
     "twilio_phone_number",
@@ -73,6 +79,58 @@ export class CallSettingsAutosave extends Component {
         this._seq = 0;
         this._prevVoicemail = false;
         this._prevForward = false;
+
+        onMounted(async () => {
+            const data = this.props.record.data;
+            if (!data.twilio_is_connected || !data.twilio_account_sid) {
+                return;
+            }
+            try {
+                // Check 10-minute client cache; only call API if missing or >10m old
+                const res = await fetchCallSettingsWithCache(this.orm, data.twilio_account_sid);
+                if (res && res.success && res.data) {
+                    const incoming = res.data.incoming || res.data.incomingCallSetting || {};
+                    const outgoing = res.data.outgoing || res.data.outgoingCallSetting || {};
+                    const patch = {};
+                    if (incoming.allow !== undefined && incoming.allow !== data.twilio_incoming_enabled) {
+                        patch.twilio_incoming_enabled = Boolean(incoming.allow);
+                    }
+                    if (incoming.record !== undefined && incoming.record !== data.twilio_incoming_record) {
+                        patch.twilio_incoming_record = Boolean(incoming.record);
+                    }
+                    if (incoming.voicemail !== undefined && incoming.voicemail !== data.twilio_incoming_voicemail) {
+                        patch.twilio_incoming_voicemail = Boolean(incoming.voicemail);
+                    }
+                    if (incoming.voicemailText !== undefined && incoming.voicemailText !== data.twilio_incoming_voicemail_text) {
+                        patch.twilio_incoming_voicemail_text = incoming.voicemailText || "";
+                    }
+                    if (incoming.welcomeGreeting !== undefined && incoming.welcomeGreeting !== data.twilio_incoming_welcome_greeting) {
+                        patch.twilio_incoming_welcome_greeting = Boolean(incoming.welcomeGreeting);
+                    }
+                    if (incoming.welcomeGreetingText !== undefined && incoming.welcomeGreetingText !== data.twilio_incoming_welcome_greeting_text) {
+                        patch.twilio_incoming_welcome_greeting_text = incoming.welcomeGreetingText || "";
+                    }
+                    if (incoming.forward !== undefined && incoming.forward !== data.twilio_incoming_forward) {
+                        patch.twilio_incoming_forward = Boolean(incoming.forward);
+                    }
+                    if (incoming.forwardTo !== undefined && incoming.forwardTo !== data.twilio_incoming_forward_to) {
+                        patch.twilio_incoming_forward_to = incoming.forwardTo || "";
+                    }
+                    if (outgoing.record !== undefined && outgoing.record !== data.twilio_outgoing_record) {
+                        patch.twilio_outgoing_record = Boolean(outgoing.record);
+                    }
+                    if (outgoing.smartCopy !== undefined && outgoing.smartCopy !== data.twilio_outgoing_smart_copy) {
+                        patch.twilio_outgoing_smart_copy = Boolean(outgoing.smartCopy);
+                    }
+                    if (Object.keys(patch).length > 0) {
+                        applyCallSettingPatch(this.props.record, patch);
+                        this._lastSaved = snapshotCallSettings(this.props.record.data);
+                    }
+                }
+            } catch (err) {
+                console.warn("[TwilioDialer] Failed to sync call settings on mount:", err);
+            }
+        });
 
         useEffect(
             () => {
@@ -178,6 +236,26 @@ export class CallSettingsAutosave extends Component {
             }
             this._lastSaved = snap;
             this._pending = null;
+            // Update client-side 10-minute cache with the saved values
+            setCachedCallSettings({
+                success: true,
+                accountSid: snap.twilio_account_sid,
+                incoming: {
+                    allow: snap.twilio_incoming_enabled,
+                    record: snap.twilio_incoming_record,
+                    voicemail: snap.twilio_incoming_voicemail,
+                    voicemailText: snap.twilio_incoming_voicemail_text,
+                    welcomeGreeting: snap.twilio_incoming_welcome_greeting,
+                    welcomeGreetingText: snap.twilio_incoming_welcome_greeting_text,
+                    forward: snap.twilio_incoming_forward,
+                    forwardTo: snap.twilio_incoming_forward_to,
+                },
+                outgoing: {
+                    record: snap.twilio_outgoing_record,
+                    smartCopy: snap.twilio_outgoing_smart_copy,
+                },
+            });
+
             // Call settings were written via RPC; keep the form clean.
             this.props.record.dirty = false;
             this.notification.add(_t("Settings updated successfully."), {
@@ -205,4 +283,4 @@ export const callSettingsAutosave = {
     supportedTypes: ["char"],
 };
 
-registry.category("fields").add("twilio_call_settings_autosave", callSettingsAutosave);
+registry.category("fields").add("twilio_call_settings_autosave", callSettingsAutosave, { force: true });

@@ -28,5 +28,5 @@ registry
     .add(
         "twilio_dialer_pro.dialer_systray",
         { Component: DialerSystray },
-        { sequence: 30 }
+        { sequence: 30, force: true }
     );

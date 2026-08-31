@@ -105,6 +105,7 @@
                     <button name="action_create_transcript" type="object" string="Create Transcript" class="btn-secondary"/>
                     <button name="action_create_summary" type="object" string="Create Summary" class="btn-secondary"/>
                     <button name="action_post_summary_to_contact" type="object" string="Post to Contact" class="btn-secondary"/>
+                    <button name="action_sync_to_entities" type="object" string="Sync to Activities" class="btn-secondary" icon="fa-refresh"/>
                     <button name="action_open_recording" type="object" string="Open Recording" class="btn-link"
                             invisible="not recording_sid"/>
                     <field name="status" widget="statusbar"
@@ -141,6 +142,9 @@
                     <group>
                         <group string="Call">
                             <field name="partner_id"/>
+                            <field name="lead_id" invisible="not lead_id"/>
+                            <field name="res_model" invisible="1"/>
+                            <field name="res_id" invisible="1"/>
                             <field name="direction"/>
                             <field name="call_type"/>
                             <field name="from_number"/>

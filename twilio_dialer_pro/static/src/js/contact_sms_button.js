@@ -52,4 +52,4 @@ patch(PhoneField, {
         ...PhoneField.components,
         ContactSmsButton,
     },
-});
+}, { force: true });

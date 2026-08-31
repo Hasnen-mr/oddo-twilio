@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "Odoo Twilio Dialer | VoIP Softphone Auto Dialer Call Center | Click to Call Recording",
+    'name': "Odoo Dialer | Twilio Calling | Twilio Dialer | Twilio Softphone | Twilio Auto Dialer | Odoo Calling | Odoo VoIP | Twilio VoIP | Twilio SMS",
 
     'summary': "Twilio VoIP softphone, auto dialer, power dialer, click-to-call, call recording, AI transcription, voicemail & CRM call logs for Odoo sales and call center teams.",
 
@@ -113,7 +113,7 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     'currency': 'USD',
 
     'category': 'Productivity/Communications',
-    'version': '19.0.27.08',
+    'version': '19.0.31.08',
     'license': 'LGPL-3',
 
     'depends': [
@@ -176,11 +176,16 @@ Bitly: https://bit.ly/odoo-twilio-dialer
             'twilio_dialer/static/src/js/sms_messaging_dialog.js',
             'twilio_dialer/static/src/js/sms_workspace.js',
             'twilio_dialer/static/src/js/billing.js',
+            'twilio_dialer/static/src/js/number_allocation.js',
             'twilio_dialer/static/src/js/onboarding_wizard.js',
+            'twilio_dialer/static/src/js/credentials_help_dialog.js',
+            'twilio_dialer/static/src/js/help_dialog.js',
+            'twilio_dialer/static/src/js/help_bubble.js',
             'twilio_dialer/static/src/js/dashboard_form.js',
             'twilio_dialer/static/src/js/settings_ui_field.js',
             'twilio_dialer/static/src/js/config_nav.js',
             'twilio_dialer/static/src/js/about_nav.js',
+            'twilio_dialer/static/src/js/call_settings_cache.js',
             'twilio_dialer/static/src/js/call_settings_autosave.js',
             'twilio_dialer/static/src/js/ai_settings_link.js',
             'twilio_dialer/static/src/js/password_toggle_field.js',
@@ -189,8 +194,6 @@ Bitly: https://bit.ly/odoo-twilio-dialer
             'twilio_dialer/static/src/js/version_update_dialog.js',
             'twilio_dialer/static/src/js/version_update_service.js',
             'twilio_dialer/static/src/js/transcript_tab_nav.js',
-            'twilio_dialer/static/src/js/help_dialog.js',
-            'twilio_dialer/static/src/js/help_bubble.js',
             'twilio_dialer/static/src/xml/**/*.xml',
             'twilio_dialer/static/src/scss/**/*.scss',
         ],

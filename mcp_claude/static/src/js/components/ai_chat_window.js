@@ -2,7 +2,6 @@
 
 import { AIChatSkeleton } from "@mcp_claude/js/components/ai_chat_skeleton";
 import { Component, markup, onMounted, onWillStart, useRef, useState } from "@odoo/owl";
-import { routerBus } from "@web/core/browser/router";
 import { useBus, useService } from "@web/core/utils/hooks";
 
 export class AIChatWindow extends Component {

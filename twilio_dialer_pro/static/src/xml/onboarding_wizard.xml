@@ -307,7 +307,7 @@
                     </t>
                     <t t-elif="this.state.tokenReady">
                         <button type="button" class="btn btn-success ms-auto"
-                                t-on-click="this.openDialer">
+                                t-on-click="openDialer">
                             <i class="fa fa-phone me-1"/> Open Dialer
                         </button>
                     </t>

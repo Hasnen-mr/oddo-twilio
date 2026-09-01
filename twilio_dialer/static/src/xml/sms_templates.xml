@@ -7,7 +7,7 @@
                 class="o_twilio_contact_sms_button"
                 t-att-disabled="!phone"
                 t-att-title="phone ? 'Send SMS via Twilio' : 'No phone number available.'"
-                t-on-click.stop="this.openSms">
+                t-on-click.stop="openSms">
             <i class="fa fa-comment" aria-label="SMS"/>
         </button>
     </t>

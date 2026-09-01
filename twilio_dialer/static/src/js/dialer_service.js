@@ -30,7 +30,11 @@ export const dialerService = {
     start(env) {
         // Initialize DeviceManager once globally when the Odoo web client loads
         deviceManager.initialize().catch((err) => {
-            console.error("[dialerService] DeviceManager global initialize failed:", err);
+            if (err && err.message && err.message.includes("required")) {
+                console.info("[dialerService] Device initialization deferred: Twilio credentials not configured yet.");
+            } else {
+                console.warn("[dialerService] DeviceManager global initialize:", err);
+            }
         });
 
         // Automatically open the dialer popup when an incoming call arrives

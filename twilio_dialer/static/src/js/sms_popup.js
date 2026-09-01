@@ -2,7 +2,6 @@
 
 import { Component, onMounted, onWillStart, onWillUnmount, useRef } from "@odoo/owl";
 import * as owl from "@odoo/owl";
-import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { normalizePhoneNumber } from "@twilio_dialer/js/phone_utils";
 import { _t } from "@web/core/l10n/translation";

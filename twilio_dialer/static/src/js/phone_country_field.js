@@ -2,7 +2,6 @@
 
 import { Component, useEffect, useExternalListener } from "@odoo/owl";
 import * as owl from "@odoo/owl";
-import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { COUNTRY_CODES } from "@twilio_dialer/js/country_codes";
 import { buildE164, splitPhoneNumber } from "@twilio_dialer/js/phone_utils";

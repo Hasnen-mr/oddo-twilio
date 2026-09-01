@@ -2,7 +2,6 @@
 
 import { Component } from "@odoo/owl";
 import * as owl from "@odoo/owl";
-import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { DialerPopup } from "@twilio_dialer/js/dialer_popup";
 import { registry } from "@web/core/registry";

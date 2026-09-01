@@ -59,12 +59,18 @@ class TwilioDialerDashboard(models.TransientModel):
                 "twilio_dialer.application_sid",
             )
         )
-        call_logs = self.env["twilio.call.log"].sudo().sudo()
-        campaigns = self.env["twilio.auto.dialer"].sudo().sudo()
-        contacts = self.env["res.partner"].sudo().sudo()
+        is_admin = self.env["twilio.number.allocation"]._is_current_twilio_admin()
+        call_logs = self.env["twilio.call.log"].sudo()
+        campaigns = self.env["twilio.auto.dialer"].sudo()
+        contacts = self.env["res.partner"].sudo()
         today = fields.Date.context_today(self)
         start_30_days = datetime.combine(today - timedelta(days=29), time.min)
-        logs = call_logs.search([("start_time", ">=", start_30_days)])
+        
+        # Twilio Admin sees team-wide calls; standard users see only their own calls
+        if is_admin:
+            logs = call_logs.search([("start_time", ">=", start_30_days)])
+        else:
+            logs = call_logs.search([("start_time", ">=", start_30_days), ("user_id", "=", self.env.user.id)])
         missed_statuses = {"busy", "no_answer", "failed", "canceled"}
 
         date_stats = defaultdict(
@@ -216,14 +222,14 @@ class TwilioDialerDashboard(models.TransientModel):
         if self.connection_configured:
             action = (
                 self.env.ref("twilio_dialer_pro.action_twilio_open_phone", raise_if_not_found=False) or
-                self.env.ref("twilio_dialer_pro.action_twilio_open_phone", raise_if_not_found=False)
+                self.env.ref("twilio_dialer.action_twilio_open_phone", raise_if_not_found=False)
             )
             if action:
                 return action.read()[0]
             return {
                 "type": "ir.actions.client",
                 "name": "Open Phone",
-                "tag": "twilio_dialer_pro.open_dialer",
+                "tag": "twilio_dialer.open_dialer",
             }
         return self.action_open_configuration()
 
@@ -240,6 +246,23 @@ class TwilioDialerDashboard(models.TransientModel):
             "view_mode": "graph,pivot,list",
         })
         return action
+
+    def action_open_agent_screen(self):
+        """Open the Agents & Number Allocation management hub in Configurations."""
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Settings",
+            "res_model": "res.config.settings",
+            "view_mode": "form",
+            "target": "inline",
+            "context": {
+                "module": "twilio_dialer",
+                "bin_size": False,
+                "active_section": "allocation",
+                "default_active_section": "allocation",
+                "default_twilio_config_section": "allocation",
+            },
+        }
 
     def action_open_agent_analytics(self):
         action = self.action_open_call_logs()

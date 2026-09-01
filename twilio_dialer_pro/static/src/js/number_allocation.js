@@ -12,7 +12,7 @@ export class NumberAllocationPanel extends Component {
         this.orm = useService("orm");
         this.action = useService("action");
         this.notification = useService("notification");
-        this.busService = useService("bus_service");
+        this.busService = this.env.services.bus_service || null;
         this.trackedChannels = new Set();
         this._onImStatusUpdated = this._onImStatusUpdated.bind(this);
         this.state = useState({

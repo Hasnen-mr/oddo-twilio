@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
-import { reactive } from "@odoo/owl";
+import * as owl from "@odoo/owl";
+const reactive = owl.reactive || owl.proxy || ((obj) => obj);
 import { deviceManager } from "@twilio_dialer/js/device_manager";
 import { normalizePhoneNumber } from "@twilio_dialer/js/phone_utils";
 import { rpc } from "@web/core/network/rpc";

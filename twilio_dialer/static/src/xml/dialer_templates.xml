@@ -9,7 +9,7 @@
                 t-att-class="{ 'o_dialer_toggle_btn--open': this.state.isOpen }"
                 title="Twilio Call Auto Dialer"
                 aria-label="Twilio Call Auto Dialer"
-                t-on-click="this.togglePanel">
+                t-on-click="togglePanel">
             <span class="o_dialer_toggle_visual" aria-hidden="true">
                 <span class="o_dialer_toggle_ring o_dialer_toggle_ring--outer"/>
                 <span class="o_dialer_toggle_ring o_dialer_toggle_ring--inner"/>

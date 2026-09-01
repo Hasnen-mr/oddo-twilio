@@ -8,7 +8,7 @@
                 class="o_twilio_contact_call_button"
                 t-att-disabled="!phone"
                 t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
-                t-on-click.stop="this.openDialer">
+                t-on-click.stop="openDialer">
             <i class="fa fa-phone" aria-label="Call"/>
         </button>
     </t>
@@ -38,14 +38,14 @@
                         class="o_twilio_contact_call_button"
                         t-att-disabled="!phone"
                         t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
-                        t-on-click.stop="this.openDialer">
+                        t-on-click.stop="openDialer">
                     <i class="fa fa-phone" aria-label="Call"/>
                 </button>
                 <button type="button"
                         class="o_twilio_contact_sms_button"
                         t-att-disabled="!phone"
                         t-att-title="phone ? 'Send SMS via Twilio' : 'No phone number available.'"
-                        t-on-click.stop="this.openSms">
+                        t-on-click.stop="openSms">
                     <i class="fa fa-comment" aria-label="SMS"/>
                 </button>
             </div>

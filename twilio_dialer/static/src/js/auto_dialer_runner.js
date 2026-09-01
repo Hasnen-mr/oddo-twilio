@@ -1,6 +1,9 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, onWillUnmount, useEffect, useState } from "@odoo/owl";
+import { Component, onWillStart, onWillUnmount, useEffect } from "@odoo/owl";
+import * as owl from "@odoo/owl";
+import * as owl from "@odoo/owl";
+const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { deviceManager } from "@twilio_dialer/js/device_manager";
 import { rpc } from "@web/core/network/rpc";
 import { useService } from "@web/core/utils/hooks";

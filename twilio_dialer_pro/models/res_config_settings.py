@@ -377,6 +377,7 @@ class ResConfigSettings(models.TransientModel):
             "name": "Settings",
             "res_model": "res.config.settings",
             "view_mode": "form",
+            "views": [[False, "form"]],
             "target": "inline",
             "context": {"module": "twilio_dialer", "bin_size": False},
         }

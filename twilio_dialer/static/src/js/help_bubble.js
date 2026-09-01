@@ -1,7 +1,7 @@
 /** @odoo-module **/
 
 import { session } from "@web/session";
-import { Component, onMounted, onWillUnmount, reactive, useState } from "@odoo/owl";
+import { Component, onMounted, onWillUnmount, useState } from "@odoo/owl";
 import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";

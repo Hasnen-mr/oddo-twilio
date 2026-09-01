@@ -3,7 +3,6 @@
 import { session } from "@web/session";
 import { Component, onMounted, onWillUnmount } from "@odoo/owl";
 import * as owl from "@odoo/owl";
-import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";
 import { registry } from "@web/core/registry";

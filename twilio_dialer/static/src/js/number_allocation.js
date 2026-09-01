@@ -2,7 +2,6 @@
 
 import { Component, onWillStart, onWillUnmount } from "@odoo/owl";
 import * as owl from "@odoo/owl";
-import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";

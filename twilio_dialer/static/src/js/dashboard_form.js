@@ -2,7 +2,6 @@
 
 import { onMounted, onWillUnmount } from "@odoo/owl";
 import * as owl from "@odoo/owl";
-import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { deviceManager } from "@twilio_dialer/js/device_manager";
 import { TwilioHelpDialog } from "@twilio_dialer/js/help_dialog";

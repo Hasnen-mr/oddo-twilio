@@ -176,11 +176,18 @@
                                         <h3>Agent Performance</h3>
                                         <p>Agent-wise results for the last 30 days</p>
                                     </div>
-                                    <button name="action_open_agent_analytics"
-                                            type="object"
-                                            string="Agent Pivot"
-                                            icon="fa-table"
-                                            class="btn-link"/>
+                                    <div class="d-flex gap-2">
+                                        <button name="action_open_agent_screen"
+                                                type="object"
+                                                string="My Team"
+                                                icon="fa-users"
+                                                class="btn btn-sm btn-outline-primary"/>
+                                        <button name="action_open_agent_analytics"
+                                                type="object"
+                                                string="Agent Pivot"
+                                                icon="fa-table"
+                                                class="btn btn-sm btn-link"/>
+                                    </div>
                                 </div>
                                 <field name="agent_line_ids" nolabel="1">
                                     <list create="0" edit="0" delete="0">

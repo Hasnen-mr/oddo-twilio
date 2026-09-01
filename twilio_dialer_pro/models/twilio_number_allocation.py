@@ -113,6 +113,53 @@ class TwilioNumberAllocation(models.Model):
         return super().web_search_read(domain=domain, specification=specification, offset=offset, limit=limit, order=order, count_limit=count_limit)
 
     @api.model
+    def _get_current_twilio_admin_id(self):
+        """Retrieve the UID of the single designated Twilio Admin."""
+        admin_id_str = self.env["ir.config_parameter"].sudo().get_param("twilio_dialer.admin_user_id")
+        if admin_id_str:
+            try:
+                admin_uid = int(admin_id_str)
+                user = self.env["res.users"].sudo().browse(admin_uid)
+                if user.exists() and user.active:
+                    return admin_uid
+            except (ValueError, TypeError):
+                pass
+        
+        # Fallback to root admin (UID 2 or first system admin)
+        root_admin = self.env["res.users"].sudo().search([("id", "=", 2), ("active", "=", True)], limit=1)
+        if not root_admin:
+            root_admin = self.env["res.users"].sudo().search([("share", "=", False), ("active", "=", True)], order="id asc", limit=1)
+        
+        if root_admin:
+            self.env["ir.config_parameter"].sudo().set_param("twilio_dialer.admin_user_id", str(root_admin.id))
+            return root_admin.id
+        return 2
+
+    @api.model
+    def _is_current_twilio_admin(self, user=None):
+        """Check if user (or current user) is the designated Twilio Admin or Superuser."""
+        target_uid = user.id if user else self.env.user.id
+        if target_uid == 1:  # Superuser is always admin
+            return True
+        admin_uid = self._get_current_twilio_admin_id()
+        return target_uid == admin_uid
+
+    @api.model
+    def action_transfer_admin(self, new_user_id):
+        """Transfer the single Twilio Admin privilege to another user."""
+        if not self._is_current_twilio_admin():
+            from odoo.exceptions import AccessError
+            raise AccessError(_("Only the current Twilio Admin can transfer admin privileges."))
+        
+        new_user = self.env["res.users"].sudo().browse(new_user_id)
+        if not new_user.exists() or not new_user.active or new_user.share:
+            return {"success": False, "message": "Invalid user selected for admin transfer."}
+        
+        self.env["ir.config_parameter"].sudo().set_param("twilio_dialer.admin_user_id", str(new_user.id))
+        _logger.info("Twilio Admin privileges transferred from UID %s to UID %s (%s)", self.env.user.id, new_user.id, new_user.name)
+        return self.get_allocation_data()
+
+    @api.model
     def get_allocation_data(self):
         """Return all phone numbers and user allocation records for the UI."""
         self.sync_user_allocations()
@@ -132,15 +179,29 @@ class TwilioNumberAllocation(models.Model):
             for n in numbers
         ]
 
+        current_admin_id = self._get_current_twilio_admin_id()
+        current_user_is_admin = self._is_current_twilio_admin()
+
+        # Compute calls count per user
+        call_logs = self.env["twilio.call.log"].sudo().search([])
+        calls_per_user = {}
+        for log in call_logs:
+            if log.user_id:
+                calls_per_user[log.user_id.id] = calls_per_user.get(log.user_id.id, 0) + 1
+
         alloc_data = [
             {
                 "id": a.id,
                 "user_id": a.user_id.id,
+                "partner_id": a.user_id.partner_id.id,
                 "user_name": a.user_id.name or "Unknown User",
                 "user_login": a.user_login or "",
                 "user_email": a.user_email or a.user_login or "",
                 "number_ids": a.twilio_number_ids.ids,
                 "status": a.allocation_status or "All Numbers",
+                "is_admin": a.user_id.id == current_admin_id,
+                "calls_count": calls_per_user.get(a.user_id.id, 0),
+                "im_status": getattr(a.user_id, "im_status", False) or getattr(a.user_id.partner_id, "im_status", "offline") or "offline",
             }
             for a in allocations
         ]
@@ -149,11 +210,16 @@ class TwilioNumberAllocation(models.Model):
             "success": True,
             "numbers": num_data,
             "allocations": alloc_data,
+            "current_user_is_admin": current_user_is_admin,
+            "admin_user_id": current_admin_id,
         }
 
     @api.model
     def update_allocation(self, allocation_id, number_ids):
         """Update assigned phone numbers for a specific user allocation."""
+        if not self._is_current_twilio_admin():
+            from odoo.exceptions import AccessError
+            raise AccessError(_("Only the designated Twilio Admin can modify number allocations."))
         alloc = self.sudo().browse(allocation_id)
         if not alloc.exists():
             return {"success": False, "message": "Record not found"}
@@ -171,6 +237,9 @@ class TwilioNumberAllocation(models.Model):
     @api.model
     def reset_all_to_default(self):
         """Reset all users to 'All Numbers'."""
+        if not self._is_current_twilio_admin():
+            from odoo.exceptions import AccessError
+            raise AccessError(_("Only the designated Twilio Admin can reset number allocations."))
         all_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
         if not all_opt:
             all_opt = self.env["twilio.phone.number"].sudo().create({

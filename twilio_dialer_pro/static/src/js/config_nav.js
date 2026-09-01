@@ -12,7 +12,7 @@ import { standardFieldProps } from "@web/views/fields/standard_field_props";
 const SECTIONS = [
     { id: "account", label: _t("Account Settings"), icon: "fa-key" },
     { id: "call", label: _t("Call Settings"), icon: "fa-phone" },
-    { id: "allocation", label: _t("Number Allocation"), icon: "fa-list-ol" },
+    { id: "allocation", label: _t("My Team"), icon: "fa-users" },
     { id: "ai", label: _t("AI Settings"), icon: "fa-magic" },
     { id: "billing", label: _t("Billing"), icon: "fa-credit-card" },
 ];
@@ -65,7 +65,8 @@ export class TwilioConfigNav extends Component {
         if (!this.isConnected) {
             return "account";
         }
-        return this.props.record.data.twilio_config_section || "account";
+        const ctxSection = this.props.record.context?.active_section || this.props.record.context?.default_active_section;
+        return this.props.record.data.twilio_config_section || ctxSection || "account";
     }
 
     get isConnected() {
@@ -91,24 +92,19 @@ export class TwilioConfigNav extends Component {
     }
 
     backToDashboard() {
-        // Tab browsing must not block leave with a false "unsaved changes" dialog.
         const record = this.props.record;
         if (record && !this._hasRealPendingEdits(record)) {
             record.dirty = false;
         }
-        this.action.doAction("twilio_dialer_pro.action_twilio_dashboard");
+        const dashAction = "twilio_dialer_pro.action_twilio_dashboard";
+        this.action.doAction(dashAction);
     }
 
-    /**
-     * Switch tabs via CSS + UI field sync. Never use record.update() so the
-     * settings form stays clean and no save dialog appears.
-     */
     _setConfigSection(sectionId) {
         const record = this.props.record;
         const wasDirty = record.dirty;
         setUiField(record, "twilio_config_section", sectionId);
         this._applySectionAttr(sectionId);
-        // Field remounts / commits can flip dirty during a tab switch — restore.
         const clearSpurious = () => {
             if (!wasDirty && record.dirty) {
                 record.dirty = false;
@@ -120,8 +116,6 @@ export class TwilioConfigNav extends Component {
     }
 
     _hasRealPendingEdits(record) {
-        // New settings records keep baseline values in `_changes` while dirty=false.
-        // Only treat the form as needing save when Odoo marked it dirty.
         return !!record.dirty;
     }
 
@@ -137,11 +131,12 @@ export class TwilioConfigNav extends Component {
         if (this._syncingSection) {
             return;
         }
-        const current = this.props.record.data.twilio_config_section;
+        const ctxSection = this.props.record.context?.active_section || this.props.record.context?.default_active_section;
+        const current = this.props.record.data.twilio_config_section || ctxSection;
         const target = current || "account";
         this._syncingSection = true;
         try {
-            if (current !== target) {
+            if (this.props.record.data.twilio_config_section !== target) {
                 this._setConfigSection(target);
             } else {
                 this._applySectionAttr(target);
@@ -152,7 +147,7 @@ export class TwilioConfigNav extends Component {
     }
 
     _findAppBlock() {
-        return this.rootRef.el?.closest(".app_settings_block[data-key='twilio_dialer']") || null;
+        return this.rootRef.el?.closest(".app_settings_block[data-key='twilio_dialer'], .app_settings_block[data-key='twilio_dialer_pro'], .app_settings_block") || null;
     }
 
     _applyShellLayout() {
@@ -163,11 +158,25 @@ export class TwilioConfigNav extends Component {
         appBlock.classList.add("o_twilio_cfg_shell");
         this._applySectionAttr(this.activeSection);
         const host =
-            this.rootRef.el.closest(".o_setting_box") ||
-            this.rootRef.el.closest(".o_settings_container") ||
-            this.rootRef.el.parentElement;
+            this.rootRef.el?.closest(".o_setting_box") ||
+            this.rootRef.el?.closest(".o_settings_container") ||
+            this.rootRef.el?.parentElement;
         if (host) {
             host.classList.add("o_twilio_cfg_nav_host");
+        }
+
+        // Hide outer multi-app Odoo settings sidebar and expand to full width
+        const settingsTab = document.querySelector(".settings_tab");
+        const settingsBody = document.querySelector(".settings");
+        const settingsView = this.rootRef.el?.closest(".settings_form_view, .o_form_view, .o_settings_container");
+        if (settingsTab) {
+            settingsTab.classList.add("o_twilio_hide_outer_sidebar");
+        }
+        if (settingsBody) {
+            settingsBody.classList.add("o_twilio_fullwidth_settings");
+        }
+        if (settingsView) {
+            settingsView.classList.add("o_twilio_standalone_settings");
         }
     }
 
@@ -176,6 +185,11 @@ export class TwilioConfigNav extends Component {
         appBlock?.classList.remove("o_twilio_cfg_shell");
         document.querySelectorAll(".o_twilio_cfg_nav_host").forEach((el) => {
             el.classList.remove("o_twilio_cfg_nav_host");
+        });
+        document.querySelector(".settings_tab")?.classList.remove("o_twilio_hide_outer_sidebar");
+        document.querySelector(".settings")?.classList.remove("o_twilio_fullwidth_settings");
+        document.querySelectorAll(".o_twilio_standalone_settings").forEach((el) => {
+            el.classList.remove("o_twilio_standalone_settings");
         });
     }
 }

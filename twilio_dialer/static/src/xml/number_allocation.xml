@@ -2,90 +2,111 @@
 <templates xml:space="preserve">
 
     <t t-name="twilio_dialer.NumberAllocationPanel">
-        <div class="o_twilio_allocation_container w-100">
+        <div class="o_twilio_allocation_container w-100" style="max-width: 100%; box-sizing: border-box; overflow-x: hidden;">
+
+            <!-- Non-Admin Notice Banner -->
+            <div t-if="!state.currentUserIsAdmin" class="alert alert-info d-flex align-items-center gap-2 mb-3 shadow-sm border py-2 px-3 rounded-3">
+                <i class="fa fa-info-circle fs-5 text-primary flex-shrink-0"/>
+                <div class="small">
+                    <strong>Standard Team Member View:</strong> You are viewing your assigned phone numbers and call performance. Line assignments are managed by the designated <strong>Twilio Admin</strong>.
+                </div>
+            </div>
 
             <!-- Top Header Card -->
-            <div class="o_twilio_cfg_card mb-3">
+            <div class="o_twilio_cfg_card mb-3 shadow-sm border rounded-3 p-3 bg-white">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
                     <div>
-                        <div class="o_twilio_cfg_card_title d-flex align-items-center gap-2">
-                            <i class="fa fa-list-ol text-primary"/>
-                            <span>Number Allocation Manager</span>
+                        <div class="o_twilio_cfg_card_title d-flex align-items-center gap-2 fw-bold text-dark fs-6">
+                            <i class="fa fa-users text-primary"/>
+                            <span>My Team &amp; Number Allocation</span>
                         </div>
-                        <div class="o_twilio_cfg_card_sub mt-1">
-                            Assign Twilio phone numbers to internal users. Users with <strong>All numbers</strong> can make and receive calls from any configured line.
+                        <div class="o_twilio_cfg_card_sub mt-1 text-muted small">
+                            Manage team members, monitor live availability, check call counts, allocate Twilio phone numbers, and administer Twilio privileges.
                         </div>
                     </div>
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" t-on-click="() => this.loadData()" title="Refresh / Sync with Twilio">
-                            <i class="fa fa-refresh me-1" t-att-class="{ 'fa-spin': state.loading }"/>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-sm" t-on-click="() => this.loadData()" title="Sync lines &amp; refresh list">
+                            <i class="fa fa-refresh" t-att-class="{ 'fa-spin': state.loading }"/>
                             <span>Sync &amp; Refresh</span>
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-danger" t-on-click="() => this.resetAllToDefault()" title="Reset all users to All numbers">
-                            <i class="fa fa-undo me-1"/>
+                        <button t-if="state.currentUserIsAdmin"
+                                type="button"
+                                class="btn btn-sm btn-outline-danger d-inline-flex align-items-center gap-1 shadow-sm"
+                                t-on-click="() => this.resetAllToDefault()"
+                                title="Reset all users to All numbers">
+                            <i class="fa fa-undo"/>
                             <span>Reset All to Default</span>
                         </button>
                     </div>
                 </div>
 
-                <!-- Live Stats Cards -->
-                <div class="row g-3 mt-2">
-                    <div class="col-6 col-md-3">
-                        <div class="o_twilio_stat_card p-3 rounded border bg-light">
-                            <div class="text-muted small">Total Users</div>
-                            <div class="fs-4 fw-bold text-dark" t-esc="stats.totalUsers"/>
+                <!-- Live Stats Cards with Hover Elevation -->
+                <div class="row g-2 mt-2">
+                    <div class="col-6 col-md">
+                        <div class="p-2 rounded-3 border bg-light shadow-xs" style="transition: transform 0.15s ease;">
+                            <div class="text-muted small" style="font-size: 11px;">Total Team Members</div>
+                            <div class="fs-5 fw-bold text-dark" t-esc="stats.totalUsers"/>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <div class="o_twilio_stat_card p-3 rounded border bg-light">
-                            <div class="text-muted small">Full Access (All Lines)</div>
-                            <div class="fs-4 fw-bold text-success" t-esc="stats.allAccessCount"/>
+                    <div class="col-6 col-md">
+                        <div class="p-2 rounded-3 border bg-light shadow-xs" style="transition: transform 0.15s ease;">
+                            <div class="text-muted small d-flex align-items-center gap-1" style="font-size: 11px;">
+                                <span class="rounded-circle bg-success flex-shrink-0" style="width: 7px; height: 7px; display: inline-block;"/>
+                                <span>Online Now</span>
+                            </div>
+                            <div class="fs-5 fw-bold text-success" t-esc="stats.onlineCount"/>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <div class="o_twilio_stat_card p-3 rounded border bg-light">
-                            <div class="text-muted small">Custom Assigned</div>
-                            <div class="fs-4 fw-bold text-primary" t-esc="stats.customCount"/>
+                    <div class="col-6 col-md">
+                        <div class="p-2 rounded-3 border bg-light shadow-xs" style="transition: transform 0.15s ease;">
+                            <div class="text-muted small" style="font-size: 11px;">Full Access (All Lines)</div>
+                            <div class="fs-5 fw-bold text-primary" t-esc="stats.allAccessCount"/>
                         </div>
                     </div>
-                    <div class="col-6 col-md-3">
-                        <div class="o_twilio_stat_card p-3 rounded border bg-light">
-                            <div class="text-muted small">Available Twilio Lines</div>
-                            <div class="fs-4 fw-bold text-secondary" t-esc="stats.totalNumbers"/>
+                    <div class="col-6 col-md">
+                        <div class="p-2 rounded-3 border bg-light shadow-xs" style="transition: transform 0.15s ease;">
+                            <div class="text-muted small" style="font-size: 11px;">Custom Assigned</div>
+                            <div class="fs-5 fw-bold text-info" t-esc="stats.customCount"/>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md">
+                        <div class="p-2 rounded-3 border bg-light shadow-xs" style="transition: transform 0.15s ease;">
+                            <div class="text-muted small" style="font-size: 11px;">Available Lines</div>
+                            <div class="fs-5 fw-bold text-secondary" t-esc="stats.totalNumbers"/>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- Main Allocation List Card -->
-            <div class="o_twilio_cfg_card">
+            <div class="o_twilio_cfg_card shadow-sm border rounded-3 p-3 bg-white">
                 <!-- Search & Filters Toolbar -->
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 pb-3 mb-3 border-bottom">
-                    <div class="o_twilio_search_box position-relative" style="min-width: 280px; max-width: 400px;">
-                        <i class="fa fa-search position-absolute text-muted" style="left: 12px; top: 10px;"/>
+                    <div class="o_twilio_search_box position-relative" style="flex: 1 1 200px; max-width: 320px;">
+                        <i class="fa fa-search position-absolute text-muted" style="left: 10px; top: 9px; font-size: 12px;"/>
                         <input type="text"
-                               class="form-control form-control-sm ps-4"
-                               placeholder="Search user by name or email..."
+                               class="form-control form-control-sm ps-4 rounded-pill"
+                               placeholder="Search team member by name or email..."
                                t-model="state.searchQuery"/>
                     </div>
 
                     <!-- Filter Tabs -->
-                    <div class="btn-group btn-group-sm" role="group">
+                    <div class="btn-group btn-group-sm flex-wrap" role="group">
                         <button type="button"
                                 class="btn"
-                                t-att-class="state.filterTab === 'all' ? 'btn-primary' : 'btn-outline-secondary'"
+                                t-att-class="state.filterTab === 'all' ? 'btn-primary shadow-xs' : 'btn-outline-secondary'"
                                 t-on-click="() => this.state.filterTab = 'all'">
                             All (<t t-esc="stats.totalUsers"/>)
                         </button>
                         <button type="button"
                                 class="btn"
-                                t-att-class="state.filterTab === 'default' ? 'btn-primary' : 'btn-outline-secondary'"
-                                t-on-click="() => this.state.filterTab = 'default'">
-                            Full Access (<t t-esc="stats.allAccessCount"/>)
+                                t-att-class="state.filterTab === 'all_lines' ? 'btn-primary shadow-xs' : 'btn-outline-secondary'"
+                                t-on-click="() => this.state.filterTab = 'all_lines'">
+                            All Lines (<t t-esc="stats.allAccessCount"/>)
                         </button>
                         <button type="button"
                                 class="btn"
-                                t-att-class="state.filterTab === 'custom' ? 'btn-primary' : 'btn-outline-secondary'"
+                                t-att-class="state.filterTab === 'custom' ? 'btn-primary shadow-xs' : 'btn-outline-secondary'"
                                 t-on-click="() => this.state.filterTab = 'custom'">
                             Custom Assigned (<t t-esc="stats.customCount"/>)
                         </button>
@@ -95,92 +116,110 @@
                 <!-- Loading Spinner -->
                 <div t-if="state.loading" class="text-center py-5">
                     <i class="fa fa-spinner fa-spin fa-2x text-primary"/>
-                    <div class="text-muted mt-2">Loading number allocations...</div>
+                    <div class="text-muted mt-2 small">Loading team members &amp; allocations...</div>
                 </div>
 
-                <!-- Allocation Table -->
-                <div t-else="" class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
-                        <thead class="table-light">
+                <!-- 4-Column Professional Allocation Table with Live Status -->
+                <div t-else="" class="w-100" style="overflow-x: visible;">
+                    <table class="table table-hover align-middle mb-0 w-100" style="table-layout: fixed;">
+                        <thead class="table-light border-bottom">
                             <tr>
-                                <th style="min-width: 200px;">User</th>
-                                <th style="min-width: 220px;">Login / Email</th>
-                                <th style="min-width: 300px;">Assigned Phone Numbers</th>
-                                <th style="min-width: 140px;">Status</th>
-                                <th style="min-width: 160px; text-align: right;">Quick Action</th>
+                                <th style="width: 30%;">Team Member</th>
+                                <th style="width: 36%;">Line Access &amp; Assigned Numbers</th>
+                                <th style="width: 14%; text-align: center;">Call Activity</th>
+                                <th style="width: 20%; text-align: center;">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr t-if="filteredAllocations.length === 0">
-                                <td colspan="5" class="text-center text-muted py-4">
+                                <td colspan="4" class="text-center text-muted py-4">
                                     <i class="fa fa-info-circle me-1"/>
-                                    <span>No users match the search criteria.</span>
+                                    <span>No team members match the search criteria.</span>
                                 </td>
                             </tr>
                             <tr t-foreach="filteredAllocations" t-as="alloc" t-key="alloc.id">
-                                <!-- User Column -->
-                                <td>
+                                <!-- 1. Team Member Column with Live Status Indicator -->
+                                <td style="width: 30%;">
                                     <div class="d-flex align-items-center gap-2">
-                                        <div class="o_twilio_user_avatar d-flex align-items-center justify-content-center rounded-circle text-white fw-bold"
-                                             t-attf-style="background-color: {{ this.getUserColor(alloc.user_name) }}; width: 34px; height: 34px; font-size: 13px;">
-                                            <t t-esc="this.getUserInitials(alloc.user_name)"/>
+                                        <div class="position-relative flex-shrink-0">
+                                            <div class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold shadow-sm"
+                                                 t-attf-style="background-color: {{ this.getUserColor(alloc.user_name) }}; width: 36px; height: 36px; font-size: 12px;">
+                                                <t t-esc="this.getUserInitials(alloc.user_name)"/>
+                                            </div>
+                                            <!-- Live Status Indicator Dot on Avatar (2px White Ring) -->
+                                            <span class="position-absolute bottom-0 end-0 rounded-circle border border-2 border-white shadow-xs"
+                                                  t-att-class="this.getLiveStatusDotClass(alloc)"
+                                                  style="width: 11px; height: 11px;"
+                                                  t-att-title="'Live Status: ' + this.getLiveStatusLabel(alloc)"/>
                                         </div>
-                                        <div>
-                                            <div class="fw-semibold text-dark" t-esc="alloc.user_name"/>
+                                        <div class="text-truncate min-w-0" style="max-width: calc(100% - 46px);">
+                                            <div class="fw-bold text-dark d-flex align-items-center gap-1 text-truncate" style="font-size: 13px;">
+                                                <span class="text-truncate" t-att-title="alloc.user_name" t-esc="alloc.user_name"/>
+                                                <span t-if="alloc.is_admin" class="badge bg-warning text-dark border border-warning-subtle small px-1 py-0 flex-shrink-0" style="font-size: 10px;" title="Designated Twilio Administrator">
+                                                    <i class="fa fa-shield me-1 text-dark"/>Admin
+                                                </span>
+                                            </div>
+                                            <div class="d-flex align-items-center gap-2 mt-0">
+                                                <span class="text-muted small text-truncate" style="font-size: 11px;" t-att-title="alloc.user_login" t-esc="alloc.user_login || '—'"/>
+                                                <!-- Live Status Text Pill -->
+                                                <span class="badge px-1 py-0 small fw-normal flex-shrink-0"
+                                                      t-att-class="this.getLiveStatusBadgeClass(alloc)"
+                                                      style="font-size: 9.5px;"
+                                                      t-esc="this.getLiveStatusLabel(alloc)"/>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>
 
-                                <!-- Login / Email Column -->
-                                <td>
-                                    <span class="text-muted small" t-esc="alloc.user_login || '—'"/>
-                                </td>
-
-                                <!-- Assigned Phone Numbers Column -->
-                                <td>
+                                <!-- 2. Line Access & Assigned Numbers Column -->
+                                <td style="width: 36%;">
                                     <div class="position-relative">
-                                        <div class="d-flex flex-wrap align-items-center gap-1">
-                                            <!-- All numbers pill -->
-                                            <t t-if="this.isAllAssigned(alloc)">
-                                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
-                                                    <i class="fa fa-globe me-1"/>
-                                                    <span>All numbers</span>
-                                                </span>
-                                            </t>
-                                            <!-- Specific individual numbers -->
-                                            <t t-else="">
-                                                <t t-foreach="this.getAssignedNumberObjs(alloc)" t-as="numObj" t-key="numObj.id">
-                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 d-inline-flex align-items-center gap-1">
-                                                        <i class="fa fa-phone small"/>
-                                                        <span t-esc="numObj.friendly_name || numObj.phone_number"/>
-                                                        <i class="fa fa-times text-danger ms-1 cursor-pointer"
-                                                           title="Remove number"
-                                                           style="cursor: pointer;"
-                                                           t-on-click="() => this.quickRemoveNumber(alloc, numObj.id)"/>
-                                                    </span>
-                                                </t>
-                                            </t>
-
-                                            <!-- Edit / Assign Button -->
-                                            <button type="button"
-                                                    class="btn btn-xs btn-outline-secondary py-0 px-2 rounded-pill small"
-                                                    style="font-size: 11px;"
-                                                    t-on-click="() => this.openPicker(alloc)">
-                                                <i class="fa fa-pencil me-1"/>
-                                                <span>Edit</span>
-                                            </button>
+                                        <!-- Case A: All Lines Assigned -->
+                                        <div t-if="this.isAllAssigned(alloc)" class="d-flex align-items-center gap-2 flex-wrap">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 d-inline-flex align-items-center gap-1 shadow-xs" style="font-size: 11.5px;">
+                                                <i class="fa fa-globe"/>
+                                                <span class="fw-semibold">All Lines (Full Access)</span>
+                                            </span>
+                                            <span class="text-muted small d-none d-lg-inline" style="font-size: 11px;">Can dial from all lines</span>
                                         </div>
 
-                                        <!-- Number Picker Popover / Dropdown -->
+                                        <!-- Case B: Custom Assigned Lines -->
+                                        <div t-else="" class="d-flex align-items-center gap-1 flex-wrap">
+                                            <!-- Visible Number Chips (Max 2) -->
+                                            <t t-foreach="this.getVisibleAssignedNumbers(alloc, 2)" t-as="numObj" t-key="numObj.id">
+                                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 d-inline-flex align-items-center gap-1 shadow-xs" style="font-size: 11px;">
+                                                    <i class="fa fa-phone small text-muted"/>
+                                                    <span class="fw-semibold text-truncate" style="max-width: 140px;" t-esc="numObj.friendly_name || numObj.phone_number"/>
+                                                    <i t-if="state.currentUserIsAdmin"
+                                                       class="fa fa-times text-danger ms-1 cursor-pointer"
+                                                       title="Remove line"
+                                                       style="cursor: pointer;"
+                                                       t-on-click="() => this.quickRemoveNumber(alloc, numObj.id)"/>
+                                                </span>
+                                            </t>
+
+                                            <!-- Remaining Chips Badge Counter -->
+                                            <span t-if="this.getRemainingCount(alloc, 2) > 0"
+                                                  class="badge bg-secondary-subtle text-secondary border px-2 py-1 cursor-pointer shadow-xs"
+                                                  style="font-size: 10.5px; cursor: pointer;"
+                                                  title="Click to view all assigned numbers"
+                                                  t-on-click="() => this.openPicker(alloc)">
+                                                +<t t-esc="this.getRemainingCount(alloc, 2)"/> more
+                                            </span>
+                                        </div>
+
+                                        <!-- Number Picker Popover Modal with Keyboard Support -->
                                         <div t-if="state.activeDropdownId === alloc.id"
-                                             class="o_twilio_number_dropdown position-absolute p-3 bg-white border rounded shadow-lg"
-                                             style="z-index: 1050; top: 100%; left: 0; min-width: 300px; max-width: 360px;">
+                                             class="o_twilio_number_dropdown position-absolute p-3 bg-white border rounded-3 shadow-lg"
+                                             style="z-index: 1050; top: 100%; left: 0; min-width: 280px; max-width: 340px;"
+                                             tabindex="0"
+                                             t-on-keydown="(ev) => this.handlePickerKeyDown(ev, alloc)">
                                             <div class="d-flex justify-content-between align-items-center mb-2 pb-2 border-bottom">
-                                                <span class="fw-bold small text-dark">Assign Numbers for <t t-esc="alloc.user_name"/></span>
+                                                <span class="fw-bold small text-dark text-truncate">Assign Lines: <t t-esc="alloc.user_name"/></span>
                                                 <i class="fa fa-times text-muted cursor-pointer" style="cursor: pointer;" t-on-click="() => this.closePicker()"/>
                                             </div>
 
-                                            <div class="o_twilio_numbers_checklist" style="max-height: 200px; overflow-y: auto;">
+                                            <div class="o_twilio_numbers_checklist" style="max-height: 180px; overflow-y: auto;">
                                                 <t t-foreach="state.numbers" t-as="num" t-key="num.id">
                                                     <div class="form-check py-1">
                                                         <input class="form-check-input"
@@ -188,7 +227,7 @@
                                                                t-att-id="'chk_' + alloc.id + '_' + num.id"
                                                                t-att-checked="this.isDraftSelected(alloc.id, num.id)"
                                                                t-on-change="() => this.toggleDraftNumber(alloc.id, num)"/>
-                                                        <label class="form-check-label small" t-att-for="'chk_' + alloc.id + '_' + num.id">
+                                                        <label class="form-check-label small cursor-pointer" t-att-for="'chk_' + alloc.id + '_' + num.id" style="cursor: pointer;">
                                                             <t t-if="num.is_all">
                                                                 <strong><i class="fa fa-globe text-success me-1"/>All numbers</strong>
                                                             </t>
@@ -204,7 +243,7 @@
                                             <div class="d-flex justify-content-end gap-2 mt-3 pt-2 border-top">
                                                 <button type="button" class="btn btn-xs btn-light" t-on-click="() => this.closePicker()">Cancel</button>
                                                 <button type="button"
-                                                        class="btn btn-xs btn-primary"
+                                                        class="btn btn-xs btn-primary shadow-xs"
                                                         t-att-disabled="state.savingId === alloc.id"
                                                         t-on-click="() => this.saveDraft(alloc)">
                                                     <i t-if="state.savingId === alloc.id" class="fa fa-spinner fa-spin me-1"/>
@@ -215,35 +254,71 @@
                                     </div>
                                 </td>
 
-                                <!-- Allocation Status Column -->
-                                <td>
-                                    <span t-if="this.isAllAssigned(alloc)" class="badge bg-success text-white px-2 py-1 small">
-                                        <i class="fa fa-check-circle me-1"/>All Numbers
-                                    </span>
-                                    <span t-else="" class="badge bg-info text-white px-2 py-1 small">
-                                        <i class="fa fa-lock me-1"/><t t-esc="alloc.status"/>
-                                    </span>
+                                <!-- 3. Call Activity Column -->
+                                <td style="width: 14%; text-align: center;">
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-info rounded-pill py-1 px-3 small fw-semibold shadow-xs"
+                                            style="font-size: 12px;"
+                                            title="View team member call logs"
+                                            t-on-click="() => this.openAgentCallLogs(alloc)">
+                                        <i class="fa fa-phone me-1"/>
+                                        <t t-esc="alloc.calls_count || 0"/> Calls
+                                    </button>
                                 </td>
 
-                                <!-- Quick Action Column -->
-                                <td style="text-align: right;">
-                                    <button t-if="!this.isAllAssigned(alloc)"
-                                            type="button"
-                                            class="btn btn-xs btn-outline-success py-1 px-2 small"
-                                            title="Quickly assign all numbers to this user"
-                                            t-att-disabled="state.savingId === alloc.id"
-                                            t-on-click="() => this.quickSetAll(alloc)">
-                                        <i class="fa fa-globe me-1"/>
-                                        <span>Set to All</span>
-                                    </button>
-                                    <button t-else=""
-                                            type="button"
-                                            class="btn btn-xs btn-outline-primary py-1 px-2 small"
-                                            title="Assign specific numbers"
-                                            t-on-click="() => this.openPicker(alloc)">
-                                        <i class="fa fa-sliders me-1"/>
-                                        <span>Customize</span>
-                                    </button>
+                                <!-- 4. Actions Column -->
+                                <td style="width: 20%; text-align: center;">
+                                    <div class="position-relative d-inline-flex align-items-center justify-content-center gap-2">
+                                        <t t-if="state.currentUserIsAdmin">
+                                            <!-- Primary Action: Assign Lines / Edit -->
+                                            <button type="button"
+                                                    class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 px-3 py-1 fw-semibold shadow-xs"
+                                                    style="font-size: 12px; border-radius: 6px;"
+                                                    title="Assign or modify phone lines"
+                                                    t-on-click="() => this.openPicker(alloc)">
+                                                <i class="fa fa-pencil"/>
+                                                <span>Assign</span>
+                                            </button>
+
+                                            <!-- Contextual Action Trigger: ⋮ Kebab Menu -->
+                                            <button type="button"
+                                                    class="btn btn-sm btn-light border d-inline-flex align-items-center justify-content-center text-secondary shadow-xs"
+                                                    style="width: 32px; height: 32px; font-size: 14px; border-radius: 6px;"
+                                                    title="More actions"
+                                                    t-on-click="() => this.toggleActionMenu(alloc.id)">
+                                                <i class="fa fa-ellipsis-v"/>
+                                            </button>
+
+                                            <!-- Kebab Dropdown Menu -->
+                                            <div t-if="state.activeMenuId === alloc.id"
+                                                 class="dropdown-menu show position-absolute shadow-lg border rounded-3 p-1"
+                                                 style="z-index: 1060; right: 0; top: 100%; min-width: 185px; text-align: left;">
+                                                <button type="button"
+                                                        class="dropdown-item small py-1 px-2 d-flex align-items-center gap-2"
+                                                        t-on-click="() => this.quickSetAll(alloc)">
+                                                    <i class="fa fa-globe text-success"/>
+                                                    <span>Set All Lines</span>
+                                                </button>
+                                                <button t-if="!alloc.is_admin"
+                                                        type="button"
+                                                        class="dropdown-item small py-1 px-2 d-flex align-items-center gap-2 text-warning"
+                                                        t-on-click="() => this.transferAdmin(alloc)">
+                                                    <i class="fa fa-shield text-warning"/>
+                                                    <span>Make Twilio Admin</span>
+                                                </button>
+                                                <div class="dropdown-divider my-1"/>
+                                                <button type="button"
+                                                        class="dropdown-item small py-1 px-2 d-flex align-items-center gap-2 text-info"
+                                                        t-on-click="() => this.openAgentCallLogs(alloc)">
+                                                    <i class="fa fa-list-alt"/>
+                                                    <span>View Call Logs</span>
+                                                </button>
+                                            </div>
+                                        </t>
+                                        <t t-else="">
+                                            <span class="badge bg-light text-muted border small px-2 py-1" style="font-size: 11px;">Member</span>
+                                        </t>
+                                    </div>
                                 </td>
                             </tr>
                         </tbody>

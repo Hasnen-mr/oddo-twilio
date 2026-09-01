@@ -37,7 +37,7 @@
             <div class="o_dialer_header">
                 <div class="o_dialer_header_left">
                     <i class="fa fa-phone-o o_dialer_header_icon"/>
-                    <span class="o_dialer_title">Twilio Call Auto Dialer</span>
+                    <span class="o_dialer_title text-truncate" style="max-width: 155px;">Twilio Call Auto Dialer</span>
                     <span class="o_dialer_status_badge" t-att-class="'o_dialer_status_badge--' + statusClass">
                         <span class="o_dialer_status_dot"/>
                         <t t-esc="statusLabel"/>

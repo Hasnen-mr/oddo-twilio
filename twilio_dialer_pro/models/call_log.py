@@ -24,6 +24,17 @@ _logger = logging.getLogger(__name__)
 
 
 class TwilioCallLog(models.Model):
+    @api.model
+    def _search(self, domain, offset=0, limit=None, order=None):
+        if not self.env.is_superuser() and not self.env.user.has_group("base.group_system"):
+            if self.env.get("twilio.number.allocation"):
+                try:
+                    if self.env["twilio.number.allocation"]._is_current_twilio_admin():
+                        return super(TwilioCallLog, self.sudo())._search(domain, offset=offset, limit=limit, order=order)
+                except Exception:
+                    pass
+        return super()._search(domain, offset=offset, limit=limit, order=order)
+
     _name = "twilio.call.log"
     _description = "Twilio Call Log"
     _inherit = ["mail.thread", "mail.activity.mixin"]

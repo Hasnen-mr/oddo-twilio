@@ -5,17 +5,17 @@
         <Dialog size="'md'" contentClass="'o_twilio_version_dialog'"
                title="dialogTitle">
             <div class="o_twilio_version_body">
-                <p class="o_twilio_version_message" t-esc="props.message"/>
+                <p class="o_twilio_version_message" t-esc="this.props.message"/>
 
                 <div class="o_twilio_version_meta">
                     <div class="o_twilio_version_pill">
                         <span class="o_twilio_version_label">Installed</span>
-                        <strong t-esc="props.installed_version"/>
+                        <strong t-esc="this.props.installed_version"/>
                     </div>
                     <span class="o_twilio_version_arrow" aria-hidden="true">→</span>
                     <div class="o_twilio_version_pill o_twilio_version_pill--new">
                         <span class="o_twilio_version_label">Latest</span>
-                        <strong t-esc="props.latest_version"/>
+                        <strong t-esc="this.props.latest_version"/>
                     </div>
                 </div>
 
@@ -28,7 +28,7 @@
                     </ul>
                 </t>
 
-                <t t-if="props.download_url">
+                <t t-if="this.props.download_url">
                     <button type="button"
                             class="btn btn-link o_twilio_version_download px-0"
                             t-on-click="openDownload">

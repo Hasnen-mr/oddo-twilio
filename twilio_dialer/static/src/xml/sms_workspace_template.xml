@@ -19,7 +19,7 @@
                 </button>
             </div>
 
-            <t t-if="state.loading">
+            <t t-if="this.state.loading">
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary mb-3" role="status"/>
                     <div class="text-muted fw-medium">Loading SMS Workspace Dashboard...</div>
@@ -32,7 +32,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openMessagesList" role="button" tabindex="0">
                         <button type="button" class="btn btn-primary o_twilio_sms_action_btn">
                             <i class="fa fa-paper-plane me-2"/>Message
-                            <span class="badge bg-white text-primary ms-2" t-esc="(state.counts and state.counts.contacts) or 0"/>
+                            <span class="badge bg-white text-primary ms-2" t-esc="(this.state.counts and this.state.counts.contacts) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             Select any contact from your list to open live SMS chat &amp; message them directly.
@@ -42,7 +42,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openSmsLogs" role="button" tabindex="0">
                         <button type="button" class="btn btn-success o_twilio_sms_action_btn">
                             <i class="fa fa-history me-2"/>Logs
-                            <span class="badge bg-white text-success ms-2" t-esc="(state.counts and state.counts.logs) or 0"/>
+                            <span class="badge bg-white text-success ms-2" t-esc="(this.state.counts and this.state.counts.logs) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             View live incoming and outgoing Twilio SMS message history.
@@ -52,7 +52,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openSmsTemplates" role="button" tabindex="0">
                         <button type="button" class="btn btn-info o_twilio_sms_action_btn text-white">
                             <i class="fa fa-file-text-o me-2"/>Templates
-                            <span class="badge bg-white text-info ms-2" t-esc="(state.counts and state.counts.templates) or 0"/>
+                            <span class="badge bg-white text-info ms-2" t-esc="(this.state.counts and this.state.counts.templates) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             Manage reusable text templates with dynamic placeholders.
@@ -62,7 +62,7 @@
                     <div class="o_twilio_sms_quick_btn" t-on-click="openQuickReplies" role="button" tabindex="0">
                         <button type="button" class="btn btn-warning o_twilio_sms_action_btn">
                             <i class="fa fa-bolt me-2"/>Quick Replies
-                            <span class="badge bg-dark text-warning ms-2" t-esc="(state.counts and state.counts.quick_replies) or 0"/>
+                            <span class="badge bg-dark text-warning ms-2" t-esc="(this.state.counts and this.state.counts.quick_replies) or 0"/>
                         </button>
                         <div class="o_twilio_sms_action_hint">
                             Configure quick response pills for one-click insertion.
@@ -76,10 +76,10 @@
                         <h5 class="fw-bold m-0 text-slate-800">
                             <i class="fa fa-history text-success me-2"/>Logs
                         </h5>
-                        <span class="badge bg-success rounded-pill px-3 py-2" t-esc="((state.counts and state.counts.logs) or 0) + ' Messages'"/>
+                        <span class="badge bg-success rounded-pill px-3 py-2" t-esc="((this.state.counts and this.state.counts.logs) or 0) + ' Messages'"/>
                     </div>
                     <div class="card-body p-0">
-                        <t t-if="!state.recentLogs or state.recentLogs.length === 0">
+                        <t t-if="!this.state.recentLogs or this.state.recentLogs.length === 0">
                             <div class="text-center py-5 text-muted">
                                 <i class="fa fa-comments-o fa-2x mb-2 opacity-50"/>
                                 <p class="mb-0">No SMS logs available.</p>
@@ -99,7 +99,7 @@
                                         </tr>
                                     </thead>
                                     <tbody class="small">
-                                        <t t-foreach="state.recentLogs" t-as="log" t-key="log.id">
+                                        <t t-foreach="this.state.recentLogs" t-as="log" t-key="log.id">
                                             <tr class="cursor-pointer" t-on-click="() => this.openSmsForPhone(log.phone_number, log.partner_id ? log.partner_id[0] : false, log.partner_id ? log.partner_id[1] : log.phone_number)">
                                                 <td class="ps-4 text-nowrap text-muted" t-esc="log.date_sent || ''"/>
                                                 <td class="fw-semibold text-slate-800">
@@ -159,17 +159,17 @@
                         <h6 class="fw-bold m-0 text-slate-800 fs-6">
                             <i class="fa fa-pencil-square-o text-warning me-2"/>Active Unsent Drafts
                         </h6>
-                        <span class="badge bg-warning text-dark px-2 py-1 small" t-esc="state.drafts.length + ' Drafts'"/>
+                        <span class="badge bg-warning text-dark px-2 py-1 small" t-esc="this.state.drafts.length + ' Drafts'"/>
                     </div>
                     <div class="card-body px-3 pb-3 pt-2">
-                        <t t-if="state.drafts.length === 0">
+                        <t t-if="this.state.drafts.length === 0">
                             <div class="text-center py-2 text-muted small">
                                 <i class="fa fa-check-circle-o me-1 text-success"/>No active unsent drafts.
                             </div>
                         </t>
                         <t t-else="">
                             <div class="row g-2">
-                                <t t-foreach="state.drafts" t-as="draft" t-key="draft.phone">
+                                <t t-foreach="this.state.drafts" t-as="draft" t-key="draft.phone">
                                     <div class="col-12 col-md-4 col-lg-3">
                                         <div class="card h-100 border o_twilio_draft_card p-2" t-on-click="() => this.openDraft(draft)">
                                             <div class="d-flex align-items-center justify-content-between mb-1">

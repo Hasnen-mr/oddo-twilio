@@ -14,8 +14,8 @@
                         <t t-foreach="[1,2,3,4,5]" t-as="n" t-key="n">
                             <span t-att-class="{
                                 'o_twilio_onboard_dot': true,
-                                'is-active': state.step === n,
-                                'is-done': state.step &gt; n,
+                                'is-active': this.state.step === n,
+                                'is-done': this.state.step &gt; n,
                             }"/>
                         </t>
                     </div>
@@ -23,7 +23,7 @@
 
                 <div class="o_twilio_onboard_body">
                     <!-- Step 1: Features Overview -->
-                    <t t-if="state.step === 1">
+                    <t t-if="this.state.step === 1">
                         <div class="o_twilio_onboard_icon">
                             <i class="fa fa-phone"/>
                         </div>
@@ -35,7 +35,7 @@
                     </t>
 
                     <!-- Step 2: Pay-as-you-go Twilio Info -->
-                    <t t-elif="state.step === 2">
+                    <t t-elif="this.state.step === 2">
                         <div class="o_twilio_onboard_icon">
                             <i class="fa fa-credit-card"/>
                         </div>
@@ -53,7 +53,7 @@
                     </t>
 
                     <!-- Step 3: Enter Twilio Credentials & Connect -->
-                    <t t-elif="state.step === 3">
+                    <t t-elif="this.state.step === 3">
                         <div class="o_twilio_onboard_icon">
                             <i class="fa fa-plug"/>
                         </div>
@@ -72,8 +72,8 @@
                                 <input type="text"
                                        class="form-control"
                                        placeholder="ACxxxxxxxx"
-                                       t-att-disabled="state.connecting or state.connected"
-                                       t-model="state.accountSid"/>
+                                       t-att-disabled="this.state.connecting or this.state.connected"
+                                       t-model="this.state.accountSid"/>
                             </label>
                             <label class="o_twilio_onboard_field">
                                 <div class="d-flex justify-content-between align-items-center w-100 mb-1">
@@ -83,46 +83,46 @@
                                 <input type="password"
                                        class="form-control"
                                        placeholder="Your Auth Token"
-                                       t-att-disabled="state.connecting or state.connected"
-                                       t-model="state.authToken"/>
+                                       t-att-disabled="this.state.connecting or this.state.connected"
+                                       t-model="this.state.authToken"/>
                             </label>
                             <label class="o_twilio_onboard_field">
                                 <span>Email</span>
                                 <input type="email"
                                        class="form-control"
                                        placeholder="you@company.com"
-                                       t-att-disabled="state.connecting or state.connected"
-                                       t-model="state.email"/>
+                                       t-att-disabled="this.state.connecting or this.state.connected"
+                                       t-model="this.state.email"/>
                             </label>
                             <label class="o_twilio_onboard_field">
                                 <span>Phone</span>
                                 <input type="tel"
                                        class="form-control"
                                        placeholder="+1…"
-                                       t-att-disabled="state.connecting or state.connected"
-                                       t-model="state.phone"/>
+                                       t-att-disabled="this.state.connecting or this.state.connected"
+                                       t-model="this.state.phone"/>
                             </label>
                         </div>
 
-                        <t t-if="state.error">
+                        <t t-if="this.state.error">
                             <div class="alert alert-danger o_twilio_onboard_error" role="alert"
-                                 t-esc="state.error"/>
+                                 t-esc="this.state.error"/>
                         </t>
                     </t>
 
                     <!-- Step 4: Email Verification -->
-                    <t t-elif="state.step === 4">
+                    <t t-elif="this.state.step === 4">
                         <div class="o_twilio_onboard_icon">
                             <i class="fa fa-envelope-o text-primary"/>
                         </div>
                         <h3 class="o_twilio_onboard_title">Email Verification</h3>
 
-                        <t t-if="!state.isEditingEmail">
+                        <t t-if="!this.state.isEditingEmail">
                             <p class="o_twilio_onboard_text mb-2">
                                 We sent a 6-digit verification code to:
                                 <br/>
                                 <span class="d-inline-flex align-items-center justify-content-center gap-2 mt-1 flex-wrap">
-                                    <span class="o_twilio_onboard_email_highlight fw-semibold" t-esc="state.email"/>
+                                    <span class="o_twilio_onboard_email_highlight fw-semibold" t-esc="this.state.email"/>
                                     <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: #714b67; font-size: 0.85rem;" t-on-click="startEditingEmail">
                                         <i class="fa fa-pencil me-1"/>Change
                                     </button>
@@ -133,14 +133,14 @@
                             <div class="o_twilio_onboard_text mb-2">
                                 <div class="mb-1 text-muted" style="font-size: 0.85rem;">Correct your email address:</div>
                                 <div class="d-flex align-items-center justify-content-center gap-2" style="max-width: 380px; margin: 0 auto;">
-                                    <input type="email" class="form-control form-control-sm" placeholder="you@company.com" t-model="state.newEmail" style="max-width: 220px;"/>
-                                    <button type="button" class="btn btn-sm btn-primary text-nowrap" t-on-click="saveAndResendNewEmail" t-att-disabled="state.sendingOtp or !state.newEmail">
-                                        <t t-if="state.sendingOtp">
+                                    <input type="email" class="form-control form-control-sm" placeholder="you@company.com" t-model="this.state.newEmail" style="max-width: 220px;"/>
+                                    <button type="button" class="btn btn-sm btn-primary text-nowrap" t-on-click="saveAndResendNewEmail" t-att-disabled="this.state.sendingOtp or !this.state.newEmail">
+                                        <t t-if="this.state.sendingOtp">
                                             <i class="fa fa-spinner fa-spin me-1"/>
                                         </t>
                                         Save &amp; Send
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-light border" t-on-click="cancelEditingEmail" t-att-disabled="state.sendingOtp">Cancel</button>
+                                    <button type="button" class="btn btn-sm btn-light border" t-on-click="cancelEditingEmail" t-att-disabled="this.state.sendingOtp">Cancel</button>
                                 </div>
                             </div>
                         </t>
@@ -153,8 +153,8 @@
                                        placeholder="123456"
                                        maxlength="6"
                                        autofocus="autofocus"
-                                       t-att-disabled="state.verifyingOtp or state.emailVerified"
-                                       t-model="state.otp"
+                                       t-att-disabled="this.state.verifyingOtp or this.state.emailVerified"
+                                       t-model="this.state.otp"
                                        t-on-keydown="onOtpKeydown"/>
                             </label>
 
@@ -162,9 +162,9 @@
                                 <button type="button"
                                         class="btn btn-link p-0 text-decoration-none fw-semibold"
                                         style="font-size: 0.88rem; color: #714b67;"
-                                        t-att-disabled="state.sendingOtp or state.verifyingOtp"
+                                        t-att-disabled="this.state.sendingOtp or this.state.verifyingOtp"
                                         t-on-click="onResendOtp">
-                                    <t t-if="state.sendingOtp">
+                                    <t t-if="this.state.sendingOtp">
                                         <i class="fa fa-spinner fa-spin me-1"/> Sending new code…
                                     </t>
                                     <t t-else="">
@@ -182,35 +182,35 @@
                                     <div class="text-start pe-2">
                                         <div style="color: #212529; font-weight: 600; font-size: 0.92rem;">Allow Incoming call</div>
                                         <div style="color: #6C757D; font-size: 0.8rem; margin-top: 2px;">
-                                            <t t-if="state.allowIncomingCall">Incoming is ON from your Call Settings. You can change this later.</t>
+                                            <t t-if="this.state.allowIncomingCall">Incoming is ON from your Call Settings. You can change this later.</t>
                                             <t t-else="">Incoming is OFF from your Call Settings. You can change this later.</t>
                                         </div>
                                     </div>
                                     <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
                                         <input class="form-check-input" type="checkbox" role="switch" id="allowIncomingCallSwitch"
-                                               t-model="state.allowIncomingCall"
+                                               t-model="this.state.allowIncomingCall"
                                                t-on-change="onToggleIncomingCall"
-                                               t-att-disabled="state.verifyingOtp"
+                                               t-att-disabled="this.state.verifyingOtp"
                                                style="width: 2.8rem; height: 1.4rem; cursor: pointer;"/>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <t t-if="state.otpSuccessMessage">
+                        <t t-if="this.state.otpSuccessMessage">
                             <div class="alert alert-success o_twilio_onboard_error mt-3 py-2 text-center" role="alert"
-                                 t-esc="state.otpSuccessMessage"/>
+                                 t-esc="this.state.otpSuccessMessage"/>
                         </t>
 
-                        <t t-if="state.otpError">
+                        <t t-if="this.state.otpError">
                             <div class="alert alert-danger o_twilio_onboard_error mt-3 py-2 text-center" role="alert"
-                                 t-esc="state.otpError"/>
+                                 t-esc="this.state.otpError"/>
                         </t>
                     </t>
 
                     <!-- Step 5: Setup Complete / Registering Softphone Token -->
-                    <t t-elif="state.step === 5">
-                        <t t-if="state.registeringToken">
+                    <t t-elif="this.state.step === 5">
+                        <t t-if="this.state.registeringToken">
                             <div class="o_twilio_onboard_icon">
                                 <i class="fa fa-spinner fa-spin"/>
                             </div>
@@ -219,7 +219,7 @@
                                 Registering your softphone voice token. Please wait a moment…
                             </p>
                         </t>
-                        <t t-elif="state.tokenReady">
+                        <t t-elif="this.state.tokenReady">
                             <div class="o_twilio_onboard_icon o_twilio_onboard_icon--success">
                                 <i class="fa fa-check"/>
                             </div>
@@ -236,9 +236,9 @@
                             <p class="o_twilio_onboard_text">
                                 Your Twilio credentials and email were verified successfully, but the softphone token registration needs attention.
                             </p>
-                            <t t-if="state.error">
+                            <t t-if="this.state.error">
                                 <div class="alert alert-warning o_twilio_onboard_error" role="alert"
-                                     t-esc="state.error"/>
+                                     t-esc="this.state.error"/>
                             </t>
                         </t>
                     </t>
@@ -247,8 +247,8 @@
 
             <t t-set-slot="footer">
                 <!-- Step 1 & 2 Footer -->
-                <t t-if="state.step &lt; 3">
-                    <t t-if="state.step &gt; 1">
+                <t t-if="this.state.step &lt; 3">
+                    <t t-if="this.state.step &gt; 1">
                         <button type="button" class="btn btn-secondary"
                                 t-on-click="prevStep">
                             Back
@@ -261,16 +261,16 @@
                 </t>
 
                 <!-- Step 3 Footer -->
-                <t t-elif="state.step === 3">
+                <t t-elif="this.state.step === 3">
                     <button type="button" class="btn btn-secondary"
-                            t-att-disabled="state.connecting"
+                            t-att-disabled="this.state.connecting"
                             t-on-click="prevStep">
                         Back
                     </button>
                     <button type="button" class="btn btn-primary o_twilio_onboard_connect ms-auto"
                             t-att-disabled="!canConnect"
                             t-on-click="onConnect">
-                        <t t-if="state.connecting">
+                        <t t-if="this.state.connecting">
                             <i class="fa fa-spinner fa-spin me-1"/> Connecting…
                         </t>
                         <t t-else="">
@@ -280,16 +280,16 @@
                 </t>
 
                 <!-- Step 4 Footer (Email Verification) -->
-                <t t-elif="state.step === 4">
+                <t t-elif="this.state.step === 4">
                     <button type="button" class="btn btn-secondary"
-                            t-att-disabled="state.verifyingOtp"
+                            t-att-disabled="this.state.verifyingOtp"
                             t-on-click="prevStep">
                         Back
                     </button>
                     <button type="button" class="btn btn-primary ms-auto"
-                            t-att-disabled="state.verifyingOtp or !state.otp"
+                            t-att-disabled="this.state.verifyingOtp or !this.state.otp"
                             t-on-click="verifyOtp">
-                        <t t-if="state.verifyingOtp">
+                        <t t-if="this.state.verifyingOtp">
                             <i class="fa fa-spinner fa-spin me-1"/> Verifying…
                         </t>
                         <t t-else="">
@@ -299,15 +299,15 @@
                 </t>
 
                 <!-- Step 5 Footer (Complete) -->
-                <t t-elif="state.step === 5">
-                    <t t-if="state.registeringToken">
+                <t t-elif="this.state.step === 5">
+                    <t t-if="this.state.registeringToken">
                         <button type="button" class="btn btn-primary ms-auto" disabled="disabled">
                             <i class="fa fa-spinner fa-spin me-1"/> Registering…
                         </button>
                     </t>
-                    <t t-elif="state.tokenReady">
+                    <t t-elif="this.state.tokenReady">
                         <button type="button" class="btn btn-success ms-auto"
-                                t-on-click="openDialer">
+                                t-on-click="this.openDialer">
                             <i class="fa fa-phone me-1"/> Open Dialer
                         </button>
                     </t>

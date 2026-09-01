@@ -1,6 +1,9 @@
 /** @odoo-module **/
 
-import { Component, onWillStart, useState } from "@odoo/owl";
+import { Component, onWillStart } from "@odoo/owl";
+import * as owl from "@odoo/owl";
+import * as owl from "@odoo/owl";
+const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { TwilioSmsMessagingDialog } from "@twilio_dialer/js/sms_messaging_dialog";
 import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
 import { jsonrpc as rpc } from "@web/core/network/rpc_service";

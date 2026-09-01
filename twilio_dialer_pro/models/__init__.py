@@ -21,3 +21,5 @@ from . import res_users
 from . import twilio_number_allocation
 
 from . import call_log_export_wizard
+
+from . import ir_config_parameter

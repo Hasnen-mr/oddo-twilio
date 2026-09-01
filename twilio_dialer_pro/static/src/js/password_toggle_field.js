@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
-import { useState } from "@odoo/owl";
+import * as owl from "@odoo/owl";
+const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { _t } from "@web/core/l10n/translation";
 import { registry } from "@web/core/registry";
 import { CharField, charField } from "@web/views/fields/char/char_field";

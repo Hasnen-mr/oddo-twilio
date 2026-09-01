@@ -1,6 +1,8 @@
 /** @odoo-module **/
 
-import { Component, onMounted, onWillStart, onWillUnmount, onWillUpdateProps, useExternalListener, useState } from "@odoo/owl";
+import { Component, onMounted, onWillStart, onWillUnmount, onWillUpdateProps, useExternalListener } from "@odoo/owl";
+import * as owl from "@odoo/owl";
+const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { AutoDialerRunner } from "@twilio_dialer_pro/js/auto_dialer_runner";
 import { COUNTRY_CODES } from "@twilio_dialer_pro/js/country_codes";
 import { deviceManager } from "@twilio_dialer_pro/js/device_manager";

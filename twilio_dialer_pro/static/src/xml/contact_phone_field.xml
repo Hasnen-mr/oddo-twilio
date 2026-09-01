@@ -8,7 +8,7 @@
                 class="o_twilio_contact_call_button"
                 t-att-disabled="!phone"
                 t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
-                t-on-click.stop="openDialer">
+                t-on-click.stop="this.openDialer">
             <i class="fa fa-phone" aria-label="Call"/>
         </button>
     </t>
@@ -17,9 +17,9 @@
 
     <t t-inherit="web.PhoneField" t-inherit-mode="extension">
         <xpath expr="//div[hasclass('o_phone_content')]" position="inside">
-            <t t-if="props.enableDialerCall">
-                <ContactCallButton record="props.record" name="props.name"/>
-                <ContactSmsButton record="props.record" name="props.name"/>
+            <t t-if="this.props.enableDialerCall">
+                <ContactCallButton record="this.props.record" name="this.props.name"/>
+                <ContactSmsButton record="this.props.record" name="this.props.name"/>
             </t>
         </xpath>
     </t>
@@ -38,14 +38,14 @@
                         class="o_twilio_contact_call_button"
                         t-att-disabled="!phone"
                         t-att-title="phone ? 'Open Twilio Dialer' : 'No phone number available.'"
-                        t-on-click.stop="openDialer">
+                        t-on-click.stop="this.openDialer">
                     <i class="fa fa-phone" aria-label="Call"/>
                 </button>
                 <button type="button"
                         class="o_twilio_contact_sms_button"
                         t-att-disabled="!phone"
                         t-att-title="phone ? 'Send SMS via Twilio' : 'No phone number available.'"
-                        t-on-click.stop="openSms">
+                        t-on-click.stop="this.openSms">
                     <i class="fa fa-comment" aria-label="SMS"/>
                 </button>
             </div>

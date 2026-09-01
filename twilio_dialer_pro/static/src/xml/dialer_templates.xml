@@ -6,10 +6,10 @@
     <t t-name="twilio_dialer_pro.DialerSystray">
         <button type="button"
                 class="o_dialer_toggle_btn"
-                t-att-class="{ 'o_dialer_toggle_btn--open': state.isOpen }"
+                t-att-class="{ 'o_dialer_toggle_btn--open': this.state.isOpen }"
                 title="Twilio Call Auto Dialer"
                 aria-label="Twilio Call Auto Dialer"
-                t-on-click="togglePanel">
+                t-on-click="this.togglePanel">
             <span class="o_dialer_toggle_visual" aria-hidden="true">
                 <span class="o_dialer_toggle_ring o_dialer_toggle_ring--outer"/>
                 <span class="o_dialer_toggle_ring o_dialer_toggle_ring--inner"/>
@@ -19,14 +19,14 @@
             </span>
             <span class="o_dialer_toggle_label">Open Dialer</span>
         </button>
-        <div class="o_dialer_panel" t-att-class="state.isOpen ? 'o_dialer_panel--open' : ''">
+        <div class="o_dialer_panel" t-att-class="this.state.isOpen ? 'o_dialer_panel--open' : ''">
             <DialerPopup onClose.bind="closePanel"
-                         phone="state.phone"
-                         fromNumber="state.fromNumber"
-                         partnerId="state.partnerId || undefined"
-                         partnerName="state.partnerName"
-                         autoDialerId="state.autoDialerId || undefined"
-                         requestId="state.requestId || undefined"/>
+                         phone="this.state.phone"
+                         fromNumber="this.state.fromNumber"
+                         partnerId="this.state.partnerId || undefined"
+                         partnerName="this.state.partnerName"
+                         autoDialerId="this.state.autoDialerId || undefined"
+                         requestId="this.state.requestId || undefined"/>
         </div>
     </t>
 
@@ -55,8 +55,8 @@
             <div class="o_dialer_body">
 
                 <!-- Dialpad tab / Incoming Call View -->
-                <t t-if="state.activeTab === 'dialpad'">
-                    <t t-if="isIncoming and !state.showIncomingKeypad">
+                <t t-if="this.state.activeTab === 'dialpad'">
+                    <t t-if="isIncoming and !this.state.showIncomingKeypad">
                         <!-- Modern Incoming Call Screen (Default View) -->
                         <div class="o_dialer_incoming_view">
                             <div class="o_dialer_incoming_hero">
@@ -64,9 +64,9 @@
                                     <i class="fa fa-user"/>
                                 </div>
                                 <h2 class="o_dialer_incoming_caller" t-esc="fullIncomingDisplayNumber"/>
-                                <div class="o_dialer_incoming_location" t-if="state.selectedCountry">
-                                    <span class="o_dialer_incoming_flag" t-esc="state.selectedCountry.flag"/>
-                                    <span class="o_dialer_incoming_country_name" t-esc="state.selectedCountry.name"/>
+                                <div class="o_dialer_incoming_location" t-if="this.state.selectedCountry">
+                                    <span class="o_dialer_incoming_flag" t-esc="this.state.selectedCountry.flag"/>
+                                    <span class="o_dialer_incoming_country_name" t-esc="this.state.selectedCountry.name"/>
                                 </div>
                                 <div class="o_dialer_incoming_status_row">
                                     <span class="o_dialer_incoming_badge">
@@ -126,9 +126,9 @@
                         <div class="o_dialer_keypad_view"
                              t-att-class="{
                                  'o_dialer_keypad_view--dimmed': showTokenOverlay,
-                                 'o_dialer_keypad_view--dnd': state.dndEnabled and !isIncoming and !isCallActive
+                                 'o_dialer_keypad_view--dnd': this.state.dndEnabled and !isIncoming and !isCallActive
                              }">
-                            <div class="o_dialer_incoming_back_row" t-if="isIncoming and state.showIncomingKeypad">
+                            <div class="o_dialer_incoming_back_row" t-if="isIncoming and this.state.showIncomingKeypad">
                                 <button type="button" class="o_dialer_back_btn" t-on-click="backToIncomingView">
                                     <i class="fa fa-arrow-left"/>
                                     <span>Back</span>
@@ -142,19 +142,19 @@
                                         <button
                                             type="button"
                                             class="o_dialer_caller_dropdown_btn"
-                                            t-att-disabled="state.dndEnabled"
+                                            t-att-disabled="this.state.dndEnabled"
                                             t-on-click.stop="toggleCallerDropdown">
                                             <span class="o_dialer_caller_number" t-esc="formattedCallerDisplay"/>
                                             <i class="fa fa-chevron-down o_dialer_dropdown_arrow"/>
                                         </button>
-                                        <div class="o_dialer_caller_list" t-if="state.showCallerDropdown and !state.dndEnabled">
+                                        <div class="o_dialer_caller_list" t-if="this.state.showCallerDropdown and !this.state.dndEnabled">
                                             <t t-if="twilioCallerNumbers.length">
                                                 <div class="o_dialer_caller_group_label">Twilio Numbers</div>
                                                 <t t-foreach="twilioCallerNumbers" t-as="caller" t-key="caller.number">
                                                     <button
                                                         type="button"
                                                         class="o_dialer_caller_option"
-                                                        t-att-class="{ 'o_dialer_caller_option--active': state.selectedCaller and state.selectedCaller.number === caller.number }"
+                                                        t-att-class="{ 'o_dialer_caller_option--active': this.state.selectedCaller and this.state.selectedCaller.number === caller.number }"
                                                         t-on-click.stop="() => this.selectCaller(caller)">
                                                         <span class="o_dialer_caller_option_name" t-esc="caller.friendlyName || 'Twilio Number'"/>
                                                         <span class="o_dialer_caller_option_number" t-esc="caller.number"/>
@@ -170,7 +170,7 @@
                                                     <button
                                                         type="button"
                                                         class="o_dialer_caller_option"
-                                                        t-att-class="{ 'o_dialer_caller_option--active': state.selectedCaller and state.selectedCaller.number === caller.number }"
+                                                        t-att-class="{ 'o_dialer_caller_option--active': this.state.selectedCaller and this.state.selectedCaller.number === caller.number }"
                                                         t-on-click.stop="() => this.selectCaller(caller)">
                                                         <span class="o_dialer_caller_option_name" t-esc="caller.friendlyName || 'Outgoing Caller ID'"/>
                                                         <span class="o_dialer_caller_option_number" t-esc="caller.number"/>
@@ -182,7 +182,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="button" class="o_dialer_icon_btn" title="Refresh numbers" t-att-disabled="state.dndEnabled" t-on-click.stop="_loadConfiguredPhoneNumber">
+                                    <button type="button" class="o_dialer_icon_btn" title="Refresh numbers" t-att-disabled="this.state.dndEnabled" t-on-click.stop="_loadConfiguredPhoneNumber">
                                         <i class="fa fa-refresh"/>
                                     </button>
                                     <button type="button" class="o_dialer_icon_btn o_dialer_icon_btn--disabled" disabled="true" title="Add number">
@@ -197,13 +197,13 @@
                                         <button
                                             type="button"
                                             class="o_dialer_country_btn"
-                                            t-att-disabled="isCallActive or isIncoming or state.dndEnabled"
+                                            t-att-disabled="isCallActive or isIncoming or this.state.dndEnabled"
                                             t-on-click.stop="toggleCountryDropdown">
-                                            <span class="o_dialer_country_flag" t-esc="state.selectedCountry.flag"/>
-                                            <span class="o_dialer_country_code" t-esc="state.selectedCountry.code"/>
-                                            <i class="fa fa-caret-down" t-if="!isCallActive and !isIncoming and !state.dndEnabled"/>
+                                            <span class="o_dialer_country_flag" t-esc="this.state.selectedCountry.flag"/>
+                                            <span class="o_dialer_country_code" t-esc="this.state.selectedCountry.code"/>
+                                            <i class="fa fa-caret-down" t-if="!isCallActive and !isIncoming and !this.state.dndEnabled"/>
                                         </button>
-                                        <div class="o_dialer_country_list" t-if="state.showCountryDropdown and !isCallActive and !isIncoming and !state.dndEnabled">
+                                        <div class="o_dialer_country_list" t-if="this.state.showCountryDropdown and !isCallActive and !isIncoming and !this.state.dndEnabled">
                                             <div class="o_dialer_country_search">
                                                 <input
                                                     type="text"
@@ -216,7 +216,7 @@
                                                     <button
                                                         type="button"
                                                         class="o_dialer_country_option"
-                                                        t-att-class="{ 'o_dialer_country_option--active': state.selectedCountry.label === country.label }"
+                                                        t-att-class="{ 'o_dialer_country_option--active': this.state.selectedCountry.label === country.label }"
                                                         t-on-click.stop="() => this.selectCountry(country)">
                                                         <span class="o_dialer_country_option_flag" t-esc="country.flag"/>
                                                         <span class="o_dialer_country_option_name" t-esc="country.name"/>
@@ -231,17 +231,17 @@
                                     </div>
                                     <input
                                         type="tel"
-                                        t-att-value="state.phoneNumber"
+                                        t-att-value="this.state.phoneNumber"
                                         t-on-input="onInput"
                                         t-on-keydown="onPhoneInputKeydown"
-                                        t-att-disabled="isCallActive or isIncoming or state.dndEnabled"
-                                        t-att-readonly="isCallActive or isIncoming or state.dndEnabled"
+                                        t-att-disabled="isCallActive or isIncoming or this.state.dndEnabled"
+                                        t-att-readonly="isCallActive or isIncoming or this.state.dndEnabled"
                                         class="o_dialer_phone_input"
                                         placeholder="Enter phone number"/>
                                     <button
                                         type="button"
                                         class="o_dialer_phone_erase"
-                                        t-att-disabled="!state.phoneNumber or isCallActive or isIncoming or state.dndEnabled"
+                                        t-att-disabled="!this.state.phoneNumber or isCallActive or isIncoming or this.state.dndEnabled"
                                         t-on-click="backspace"
                                         title="Erase last digit"
                                         aria-label="Erase last digit">
@@ -250,14 +250,14 @@
                                 </div>
                             </div>
 
-                            <div class="o_dialer_keypad" t-att-class="{ 'o_dialer_keypad--dtmf': isCallActive or isIncoming, 'o_dialer_keypad--disabled': state.dndEnabled and !isCallActive and !isIncoming }">
+                            <div class="o_dialer_keypad" t-att-class="{ 'o_dialer_keypad--dtmf': isCallActive or isIncoming, 'o_dialer_keypad--disabled': this.state.dndEnabled and !isCallActive and !isIncoming }">
                                 <t t-foreach="dialPadKeys"
                                    t-as="key"
                                    t-key="key.digit">
                                     <button
                                         type="button"
                                         class="o_dialer_key"
-                                        t-att-disabled="state.dndEnabled and !isCallActive and !isIncoming"
+                                        t-att-disabled="this.state.dndEnabled and !isCallActive and !isIncoming"
                                         t-on-click="() => this.appendDigit(key.digit)">
                                         <span class="o_dialer_key_digit" t-esc="key.digit"/>
                                         <span class="o_dialer_key_letters" t-esc="key.letters"/>
@@ -265,9 +265,9 @@
                                 </t>
                             </div>
 
-                            <div class="o_dialer_dtmf_feedback" t-if="(isCallActive or isIncoming) and state.dtmfBuffer">
+                            <div class="o_dialer_dtmf_feedback" t-if="(isCallActive or isIncoming) and this.state.dtmfBuffer">
                                 <span class="o_dialer_dtmf_label">DTMF</span>
-                                <span class="o_dialer_dtmf_digits" t-esc="state.dtmfBuffer"/>
+                                <span class="o_dialer_dtmf_digits" t-esc="this.state.dtmfBuffer"/>
                             </div>
 
                             <div class="o_dialer_actions" t-att-class="{ 'o_dialer_actions--in-call': isCallActive or isIncoming }">
@@ -297,12 +297,12 @@
                                     <button
                                         type="button"
                                         class="o_dialer_action_btn o_dialer_action_btn--mute"
-                                        t-att-class="{ 'o_dialer_action_btn--mute-active': state.isMuted }"
+                                        t-att-class="{ 'o_dialer_action_btn--mute-active': this.state.isMuted }"
                                         t-on-click="onToggleMute"
-                                        t-att-title="state.isMuted ? 'Unmute' : 'Mute'"
-                                        t-att-aria-label="state.isMuted ? 'Unmute' : 'Mute'">
-                                        <i t-att-class="state.isMuted ? 'fa fa-microphone-slash' : 'fa fa-microphone'"/>
-                                        <span t-esc="state.isMuted ? 'Unmute' : 'Mute'"/>
+                                        t-att-title="this.state.isMuted ? 'Unmute' : 'Mute'"
+                                        t-att-aria-label="this.state.isMuted ? 'Unmute' : 'Mute'">
+                                        <i t-att-class="this.state.isMuted ? 'fa fa-microphone-slash' : 'fa fa-microphone'"/>
+                                        <span t-esc="this.state.isMuted ? 'Unmute' : 'Mute'"/>
                                     </button>
                                     <button
                                         type="button"
@@ -319,11 +319,11 @@
                                         <button
                                             type="button"
                                             class="o_dialer_action_btn o_dialer_action_btn--dnd"
-                                            t-att-class="{ 'o_dialer_action_btn--dnd-active': state.dndEnabled }"
-                                            t-att-disabled="state.refreshingToken"
+                                            t-att-class="{ 'o_dialer_action_btn--dnd-active': this.state.dndEnabled }"
+                                            t-att-disabled="this.state.refreshingToken"
                                             t-on-click="onToggleDnd"
-                                            t-att-title="state.dndEnabled ? 'Disable Do Not Disturb' : 'Do Not Disturb'"
-                                            t-att-aria-label="state.dndEnabled ? 'Disable Do Not Disturb' : 'Do Not Disturb'">
+                                            t-att-title="this.state.dndEnabled ? 'Disable Do Not Disturb' : 'Do Not Disturb'"
+                                            t-att-aria-label="this.state.dndEnabled ? 'Disable Do Not Disturb' : 'Do Not Disturb'">
                                             <svg class="o_dialer_dnd_icon" viewBox="0 0 24 24" aria-hidden="true">
                                                 <path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8.009 8.009 0 0 1-8 8Zm3.707-11.293-8 8a1 1 0 0 1-1.414-1.414l8-8a1 1 0 0 1 1.414 1.414Z"/>
                                             </svg>
@@ -367,9 +367,9 @@
                                         <p>Refresh to regenerate token</p>
                                         <button type="button"
                                                 class="o_dialer_token_refresh_btn"
-                                                t-att-disabled="state.refreshingToken"
+                                                t-att-disabled="this.state.refreshingToken"
                                                 t-on-click="onRefreshToken">
-                                            <t t-if="state.refreshingToken">
+                                            <t t-if="this.state.refreshingToken">
                                                 <i class="fa fa-spinner fa-spin"/> Refreshing…
                                             </t>
                                             <t t-else="">
@@ -381,7 +381,7 @@
                             </div>
 
                             <div class="o_dialer_dnd_overlay"
-                                 t-if="state.dndEnabled and !isIncoming and !isCallActive">
+                                 t-if="this.state.dndEnabled and !isIncoming and !isCallActive">
                                 <div class="o_dialer_dnd_card">
                                     <div class="o_dialer_dnd_card_icon">
                                         <svg class="o_dialer_dnd_icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -398,12 +398,12 @@
 
                 <!-- Auto Dialer tab — Queue Runner (always mounted, hidden via CSS when inactive) -->
                 <div class="o_dialer_tab_panel o_dialer_auto_tab"
-                     t-att-style="state.activeTab !== 'auto_dialer' ? 'display:none' : ''">
+                     t-att-style="this.state.activeTab !== 'auto_dialer' ? 'display:none' : ''">
                     <AutoDialerRunner/>
                 </div>
 
                 <!-- Contacts tab -->
-                <t t-if="state.activeTab === 'contacts'">
+                <t t-if="this.state.activeTab === 'contacts'">
                     <div class="o_dialer_tab_panel o_dialer_contacts">
                         <div class="o_dialer_contacts_toolbar">
                             <div class="o_dialer_contacts_search">
@@ -411,7 +411,7 @@
                                 <input type="text"
                                        class="o_dialer_contacts_search_input"
                                        placeholder="Search name, company, phone..."
-                                       t-att-value="state.contactSearchQuery"
+                                       t-att-value="this.state.contactSearchQuery"
                                        t-on-input="onContactSearch"/>
                             </div>
                             <button type="button"
@@ -443,7 +443,7 @@
                                         <button type="button"
                                                 class="o_dialer_contact_btn o_dialer_contact_btn--call"
                                                 title="Call"
-                                                t-att-disabled="state.dndEnabled or isCallActive or isIncoming"
+                                                t-att-disabled="this.state.dndEnabled or isCallActive or isIncoming"
                                                 t-on-click.stop="() => this.callContact(contact)">
                                             <i class="fa fa-phone"/>
                                             <span>Call</span>
@@ -452,17 +452,17 @@
                                 </div>
                             </t>
 
-                            <div class="o_dialer_contacts_status" t-if="state.contactsLoading">
+                            <div class="o_dialer_contacts_status" t-if="this.state.contactsLoading">
                                 <i class="fa fa-spinner fa-spin"/>
                                 <span>Loading contacts…</span>
                             </div>
                             <div class="o_dialer_contacts_status" t-elif="!filteredContacts.length">
                                 <i class="fa fa-user-o"/>
-                                <span t-if="state.contactSearchQuery.trim()">No matching contacts</span>
+                                <span t-if="this.state.contactSearchQuery.trim()">No matching contacts</span>
                                 <span t-else="">No contacts with a phone number</span>
                             </div>
                             <div class="o_dialer_contacts_status o_dialer_contacts_status--more"
-                                 t-elif="state.contactsHasMore">
+                                 t-elif="this.state.contactsHasMore">
                                 <span>Scroll for more</span>
                             </div>
                         </div>
@@ -470,7 +470,7 @@
                 </t>
 
                 <!-- Settings tab -->
-                <t t-elif="state.activeTab === 'settings'">
+                <t t-elif="this.state.activeTab === 'settings'">
                     <div class="o_dialer_tab_panel o_dialer_launch_panel">
                         <div class="o_dialer_launch_card">
                             <div class="o_dialer_launch_icon">
@@ -501,7 +501,7 @@
                 </t>
 
                 <!-- About Us tab -->
-                <t t-elif="state.activeTab === 'about'">
+                <t t-elif="this.state.activeTab === 'about'">
                     <div class="o_dialer_tab_panel o_dialer_about">
                         <div class="o_dialer_tab_hero">
                             <i class="fa fa-info-circle o_dialer_tab_hero_icon"/>
@@ -529,7 +529,7 @@
 
                                                                                     <!-- Quick Debug Notification Banner (Light Theme matching Dialer UI) -->
             <div class="o_dialer_debug_banner mx-3 my-2 rounded-3 position-relative overflow-hidden"
-                 t-if="state.showQuickDebugBanner"
+                 t-if="this.state.showQuickDebugBanner"
                  t-on-click="openQuickDebugModal">
                 <div class="p-2 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-2">
@@ -543,12 +543,12 @@
             </div>
 
             <!-- Quick Debug Modal Overlay (Light Theme) -->
-            <div class="o_dialer_debug_modal_overlay" t-if="state.showQuickDebugModal" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.98); z-index: 1050; display: flex; flex-direction: column; padding: 16px; border-radius: 14px; overflow-y: auto;">
+            <div class="o_dialer_debug_modal_overlay" t-if="this.state.showQuickDebugModal" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.98); z-index: 1050; display: flex; flex-direction: column; padding: 16px; border-radius: 14px; overflow-y: auto;">
                 <div class="d-flex align-items-center justify-content-between pb-3 mb-2" style="border-bottom: 1px solid rgba(113, 75, 103, 0.12);">
                     <div>
                         <h4 class="mb-0" style="color: #1F2937; font-weight: 700; font-size: 1.05rem;">Checking Call Quality</h4>
                         <p class="mb-0 text-muted" style="font-size: 0.8rem;">
-                            <t t-if="state.debugStep &lt; 5">
+                            <t t-if="this.state.debugStep &lt; 5">
                                 <i class="fa fa-circle-o-notch fa-spin me-1 text-primary"/> Running diagnostic checks…
                             </t>
                             <t t-else="">Diagnostic checks completed.</t>
@@ -565,7 +565,7 @@
                                 <i class="fa fa-phone text-muted"/>
                                 <strong style="color: #1F2937; font-size: 0.9rem;">1. Last call completed</strong>
                             </div>
-                            <t t-if="state.debugStep &gt;= 1">
+                            <t t-if="this.state.debugStep &gt;= 1">
                                 <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
                                     <i class="fa fa-check me-1"/> OK
                                 </span>
@@ -575,8 +575,8 @@
                             </t>
                         </div>
                         <div class="small mt-1 text-muted" style="padding-left: 1.5rem; font-size: 0.8rem;">
-                            <t t-if="state.debugStep &gt;= 1">
-                                Disconnected after <t t-esc="state.lastCallDuration || 1"/>s
+                            <t t-if="this.state.debugStep &gt;= 1">
+                                Disconnected after <t t-esc="this.state.lastCallDuration || 1"/>s
                             </t>
                             <t t-else="">Evaluating call duration…</t>
                         </div>
@@ -589,7 +589,7 @@
                                 <i class="fa fa-building-o text-muted"/>
                                 <strong style="color: #1F2937; font-size: 0.9rem;">2. Business profile (US calling)</strong>
                             </div>
-                            <t t-if="state.debugStep &gt;= 2">
+                            <t t-if="this.state.debugStep &gt;= 2">
                                 <t t-if="isUSCanadaCall">
                                     <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="font-size: 0.75rem;">
                                         <i class="fa fa-exclamation-triangle me-1"/> Profile Needed
@@ -606,7 +606,7 @@
                             </t>
                         </div>
                         <div class="small mt-1 text-muted" style="padding-left: 1.5rem; font-size: 0.8rem;">
-                            <t t-if="state.debugStep &gt;= 2">
+                            <t t-if="this.state.debugStep &gt;= 2">
                                 <t t-if="isUSCanadaCall">
                                     Twilio requires a registered Trust Hub profile for US/Canada calling.
                                     <div class="mt-2">
@@ -630,7 +630,7 @@
                                 <i class="fa fa-globe text-muted"/>
                                 <strong style="color: #1F2937; font-size: 0.9rem;">3. Geo permissions</strong>
                             </div>
-                            <t t-if="state.debugStep &gt;= 3">
+                            <t t-if="this.state.debugStep &gt;= 3">
                                 <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
                                     <i class="fa fa-check me-1"/> Checked
                                 </span>
@@ -640,7 +640,7 @@
                             </t>
                         </div>
                         <div class="small mt-1 text-muted" style="padding-left: 1.5rem; font-size: 0.8rem;">
-                            <t t-if="state.debugStep &gt;= 3">Voice geographic permissions enabled</t>
+                            <t t-if="this.state.debugStep &gt;= 3">Voice geographic permissions enabled</t>
                             <t t-else="">Verifying country dialing permissions…</t>
                         </div>
                     </div>
@@ -652,7 +652,7 @@
                                 <i class="fa fa-wifi text-muted"/>
                                 <strong style="color: #1F2937; font-size: 0.9rem;">4. Network test</strong>
                             </div>
-                            <t t-if="state.debugStep &gt;= 4">
+                            <t t-if="this.state.debugStep &gt;= 4">
                                 <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1" style="font-size: 0.75rem;">
                                     <i class="fa fa-check me-1"/> Pass
                                 </span>
@@ -662,7 +662,7 @@
                             </t>
                         </div>
                         <div class="small mt-1 text-muted" style="padding-left: 1.5rem; font-size: 0.8rem;">
-                            <t t-if="state.debugStep &gt;= 4">
+                            <t t-if="this.state.debugStep &gt;= 4">
                                 WebRTC connection &amp; ICE candidates active
                                 <div class="mt-2">
                                     <a href="https://networktest.twilio.com/" target="_blank" class="btn btn-sm btn-outline-primary px-2 py-1" style="font-size: 0.78rem;">
@@ -681,7 +681,7 @@
                                 <i class="fa fa-life-ring text-muted"/>
                                 <strong style="color: #1F2937; font-size: 0.9rem;">5. Help &amp; Support</strong>
                             </div>
-                            <t t-if="state.debugStep &gt;= 5">
+                            <t t-if="this.state.debugStep &gt;= 5">
                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1" style="font-size: 0.75rem;">
                                     Ready
                                 </span>
@@ -691,7 +691,7 @@
                             </t>
                         </div>
                         <div class="small mt-1" style="padding-left: 1.5rem; font-size: 0.8rem;">
-                            <t t-if="state.debugStep &gt;= 5">
+                            <t t-if="this.state.debugStep &gt;= 5">
                                 <button type="button" class="btn btn-sm btn-link p-0 text-decoration-underline text-primary" t-on-click="openHelpSupport" style="font-weight: 600;">
                                     Open Module Help &amp; Support Page
                                 </button>
@@ -709,7 +709,7 @@
                 <button
                     type="button"
                     class="o_dialer_nav_btn"
-                    t-att-class="{ 'o_dialer_nav_btn--active': state.activeTab === 'dialpad' }"
+                    t-att-class="{ 'o_dialer_nav_btn--active': this.state.activeTab === 'dialpad' }"
                     t-on-click="() => this.setActiveTab('dialpad')">
                     <i class="fa fa-phone"/>
                     <span>Dial Pad</span>
@@ -717,7 +717,7 @@
                 <button
                     type="button"
                     class="o_dialer_nav_btn"
-                    t-att-class="{ 'o_dialer_nav_btn--active': state.activeTab === 'auto_dialer' }"
+                    t-att-class="{ 'o_dialer_nav_btn--active': this.state.activeTab === 'auto_dialer' }"
                     t-on-click="() => this.setActiveTab('auto_dialer')">
                     <i class="fa fa-bolt"/>
                     <span>Auto Dialer</span>
@@ -725,7 +725,7 @@
                 <button
                     type="button"
                     class="o_dialer_nav_btn"
-                    t-att-class="{ 'o_dialer_nav_btn--active': state.activeTab === 'contacts' }"
+                    t-att-class="{ 'o_dialer_nav_btn--active': this.state.activeTab === 'contacts' }"
                     t-on-click="() => this.setActiveTab('contacts')">
                     <i class="fa fa-user"/>
                     <span>Contacts</span>
@@ -733,7 +733,7 @@
                 <button
                     type="button"
                     class="o_dialer_nav_btn"
-                    t-att-class="{ 'o_dialer_nav_btn--active': state.activeTab === 'settings' }"
+                    t-att-class="{ 'o_dialer_nav_btn--active': this.state.activeTab === 'settings' }"
                     t-on-click="() => this.setActiveTab('settings')">
                     <i class="fa fa-cog"/>
                     <span>Settings</span>
@@ -764,11 +764,11 @@
                     <div class="o_dialer_qrunner_select_shell">
                         <select class="o_dialer_qrunner_select"
                                 t-on-change="(ev) => this.onSelectQueue(ev.target.value)"
-                                t-att-disabled="state.actionPending || isRunning">
+                                t-att-disabled="this.state.actionPending || isRunning">
                             <option value="">— Select a queue —</option>
-                            <t t-foreach="state.queues" t-as="q" t-key="q.id">
+                            <t t-foreach="this.state.queues" t-as="q" t-key="q.id">
                                 <option t-att-value="q.id"
-                                        t-att-selected="state.activeQueue and state.activeQueue.id === q.id">
+                                        t-att-selected="this.state.activeQueue and this.state.activeQueue.id === q.id">
                                     <t t-esc="q.name"/> (<t t-esc="q.pending_contacts"/> pending)
                                 </option>
                             </t>
@@ -778,29 +778,29 @@
                     <button type="button"
                             class="o_dialer_qrunner_tool_btn"
                             title="Open Queue in Odoo"
-                            t-if="state.activeQueue"
+                            t-if="this.state.activeQueue"
                             t-on-click.stop="openQueueInOdoo">
                         <i class="fa fa-external-link"/>
                     </button>
                     <button type="button"
                             class="o_dialer_qrunner_tool_btn"
                             title="Refresh queue list"
-                            t-att-disabled="state.loadingQueues"
+                            t-att-disabled="this.state.loadingQueues"
                             t-on-click.stop="onRefresh">
-                        <i t-att-class="state.loadingQueues ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
+                        <i t-att-class="this.state.loadingQueues ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
                     </button>
                 </div>
             </div>
 
             <!-- No Queue Selected -->
-            <t t-if="!state.activeQueue">
+            <t t-if="!this.state.activeQueue">
                 <div class="o_dialer_qrunner_empty">
                     <div class="o_dialer_qrunner_empty_icon">
-                        <i t-att-class="state.loadingQueues ? 'fa fa-spinner fa-spin' : 'fa fa-list-ol'"/>
+                        <i t-att-class="this.state.loadingQueues ? 'fa fa-spinner fa-spin' : 'fa fa-list-ol'"/>
                     </div>
-                    <strong t-if="state.loadingQueues">Loading queues…</strong>
+                    <strong t-if="this.state.loadingQueues">Loading queues…</strong>
                     <strong t-else="">No queue selected</strong>
-                    <p t-if="!state.loadingQueues">
+                    <p t-if="!this.state.loadingQueues">
                         Pick a campaign above to see progress and start auto dialing.
                     </p>
                 </div>
@@ -811,7 +811,7 @@
                 <div class="o_dialer_qrunner_campaign_card">
                     <div class="o_dialer_qrunner_header">
                         <div class="o_dialer_qrunner_header_title">
-                            <span class="o_dialer_qrunner_name" t-esc="state.activeQueue.name"/>
+                            <span class="o_dialer_qrunner_name" t-esc="this.state.activeQueue.name"/>
                             <div class="o_dialer_qrunner_meta_chips">
                                 <span class="o_dialer_qrunner_chip">
                                     <i class="fa fa-clock-o"/>
@@ -832,14 +832,14 @@
                     <div class="o_dialer_qrunner_progress_wrap">
                         <div class="o_dialer_qrunner_progress_bar">
                             <div class="o_dialer_qrunner_progress_fill"
-                                 t-att-style="'width:' + state.stats.progress + '%'"/>
+                                 t-att-style="'width:' + this.state.stats.progress + '%'"/>
                         </div>
                         <div class="o_dialer_qrunner_progress_info">
                             <span class="o_dialer_qrunner_progress_label">
-                                <t t-esc="state.stats.progress"/>% complete
+                                <t t-esc="this.state.stats.progress"/>% complete
                             </span>
                             <span class="o_dialer_qrunner_success_badge"
-                                  t-if="state.stats.completed + state.stats.failed > 0">
+                                  t-if="this.state.stats.completed + this.state.stats.failed > 0">
                                 <i class="fa fa-trophy"/>
                                 <t t-esc="successRate"/>% success
                             </span>
@@ -848,23 +848,23 @@
 
                     <div class="o_dialer_qrunner_stats">
                         <div class="o_dialer_qrunner_stat">
-                            <span class="o_dialer_qrunner_stat_value" t-esc="state.stats.total"/>
+                            <span class="o_dialer_qrunner_stat_value" t-esc="this.state.stats.total"/>
                             <span class="o_dialer_qrunner_stat_label">Total</span>
                         </div>
                         <div class="o_dialer_qrunner_stat o_dialer_qrunner_stat--pending">
-                            <span class="o_dialer_qrunner_stat_value" t-esc="state.stats.pending"/>
+                            <span class="o_dialer_qrunner_stat_value" t-esc="this.state.stats.pending"/>
                             <span class="o_dialer_qrunner_stat_label">Pending</span>
                         </div>
                         <div class="o_dialer_qrunner_stat o_dialer_qrunner_stat--done">
-                            <span class="o_dialer_qrunner_stat_value" t-esc="state.stats.completed"/>
+                            <span class="o_dialer_qrunner_stat_value" t-esc="this.state.stats.completed"/>
                             <span class="o_dialer_qrunner_stat_label">Done</span>
                         </div>
                         <div class="o_dialer_qrunner_stat o_dialer_qrunner_stat--fail">
-                            <span class="o_dialer_qrunner_stat_value" t-esc="state.stats.failed"/>
+                            <span class="o_dialer_qrunner_stat_value" t-esc="this.state.stats.failed"/>
                             <span class="o_dialer_qrunner_stat_label">Failed</span>
                         </div>
                         <div class="o_dialer_qrunner_stat o_dialer_qrunner_stat--skip">
-                            <span class="o_dialer_qrunner_stat_value" t-esc="state.stats.skipped"/>
+                            <span class="o_dialer_qrunner_stat_value" t-esc="this.state.stats.skipped"/>
                             <span class="o_dialer_qrunner_stat_label">Skipped</span>
                         </div>
                     </div>
@@ -875,7 +875,7 @@
                     <t t-if="isDraft">
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--start"
-                                t-att-disabled="state.actionPending || state.stats.total === 0"
+                                t-att-disabled="this.state.actionPending || this.state.stats.total === 0"
                                 t-on-click="onStart">
                             <i class="fa fa-play"/>
                             <span>Start Campaign</span>
@@ -884,14 +884,14 @@
                     <t t-elif="isRunning">
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--pause"
-                                t-att-disabled="state.actionPending"
+                                t-att-disabled="this.state.actionPending"
                                 t-on-click="onPause">
                             <i class="fa fa-pause"/>
                             <span>Pause</span>
                         </button>
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--stop"
-                                t-att-disabled="state.actionPending"
+                                t-att-disabled="this.state.actionPending"
                                 t-on-click="onStop">
                             <i class="fa fa-stop"/>
                             <span>Stop</span>
@@ -900,14 +900,14 @@
                     <t t-elif="isPaused">
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--start"
-                                t-att-disabled="state.actionPending"
+                                t-att-disabled="this.state.actionPending"
                                 t-on-click="onResume">
                             <i class="fa fa-play"/>
                             <span>Resume</span>
                         </button>
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--stop"
-                                t-att-disabled="state.actionPending"
+                                t-att-disabled="this.state.actionPending"
                                 t-on-click="onStop">
                             <i class="fa fa-stop"/>
                             <span>Stop</span>
@@ -922,7 +922,7 @@
                 </div>
 
                 <!-- Current contact -->
-                <t t-if="state.currentLine and (isRunning or isPaused)">
+                <t t-if="this.state.currentLine and (isRunning or isPaused)">
                     <div class="o_dialer_qrunner_contact_card"
                          t-att-class="{ 'o_dialer_qrunner_contact_card--active': isRunning, 'o_dialer_qrunner_contact_card--paused': isPaused }">
                         <div class="o_dialer_qrunner_contact_eyebrow">
@@ -942,25 +942,25 @@
                             </div>
                             <div class="o_dialer_qrunner_contact_info">
                                 <span class="o_dialer_qrunner_contact_name"
-                                      t-esc="state.currentLine.partner_name || state.currentLine.phone"/>
+                                      t-esc="this.state.currentLine.partner_name || this.state.currentLine.phone"/>
                                 <span class="o_dialer_qrunner_contact_phone"
-                                      t-esc="state.currentLine.phone"/>
+                                      t-esc="this.state.currentLine.phone"/>
                             </div>
                         </div>
                         <div class="o_dialer_qrunner_contact_meta">
                             <span class="o_dialer_qrunner_meta_item">
                                 <i class="fa fa-list-ol"/>
-                                Pos <t t-esc="state.currentLine.queue_position || '—'"/>
+                                Pos <t t-esc="this.state.currentLine.queue_position || '—'"/>
                             </span>
                             <span class="o_dialer_qrunner_meta_item">
                                 <i class="fa fa-repeat"/>
-                                Attempt <t t-esc="(state.currentLine.attempt_count || 0) + 1"/>
+                                Attempt <t t-esc="(this.state.currentLine.attempt_count || 0) + 1"/>
                             </span>
                         </div>
-                        <t t-if="state.currentLine.notes">
+                        <t t-if="this.state.currentLine.notes">
                             <div class="o_dialer_qrunner_notes">
                                 <i class="fa fa-sticky-note-o"/>
-                                <span t-esc="state.currentLine.notes"/>
+                                <span t-esc="this.state.currentLine.notes"/>
                             </div>
                         </t>
                     </div>
@@ -969,7 +969,7 @@
                         <button type="button"
                                 class="o_dialer_qrunner_nav_btn"
                                 title="Previous contact"
-                                t-att-disabled="state.actionPending"
+                                t-att-disabled="this.state.actionPending"
                                 t-on-click="onPrev">
                             <i class="fa fa-chevron-left"/>
                             <span>Prev</span>
@@ -977,7 +977,7 @@
                         <button type="button"
                                 class="o_dialer_qrunner_nav_btn o_dialer_qrunner_nav_btn--skip"
                                 title="Skip this contact"
-                                t-att-disabled="state.actionPending"
+                                t-att-disabled="this.state.actionPending"
                                 t-on-click="onSkip">
                             <i class="fa fa-forward"/>
                             <span>Skip</span>
@@ -985,7 +985,7 @@
                         <button type="button"
                                 class="o_dialer_qrunner_nav_btn"
                                 title="Next contact"
-                                t-att-disabled="state.actionPending"
+                                t-att-disabled="this.state.actionPending"
                                 t-on-click="onNext">
                             <i class="fa fa-chevron-right"/>
                             <span>Next</span>
@@ -993,16 +993,16 @@
                     </div>
                 </t>
 
-                <t t-elif="isDraft and state.stats.total > 0">
+                <t t-elif="isDraft and this.state.stats.total > 0">
                     <div class="o_dialer_qrunner_hint">
                         <i class="fa fa-info-circle"/>
                         <span>
-                            <t t-esc="state.stats.total"/> contact(s) ready. Press Start Campaign to begin.
+                            <t t-esc="this.state.stats.total"/> contact(s) ready. Press Start Campaign to begin.
                         </span>
                     </div>
                 </t>
 
-                <t t-elif="isDraft and state.stats.total === 0">
+                <t t-elif="isDraft and this.state.stats.total === 0">
                     <div class="o_dialer_qrunner_empty o_dialer_qrunner_empty--compact">
                         <div class="o_dialer_qrunner_empty_icon">
                             <i class="fa fa-users"/>

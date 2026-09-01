@@ -27,13 +27,13 @@
                             <input type="text"
                                    class="form-control border-start-0 shadow-none ps-0"
                                    placeholder="Search contacts..."
-                                   t-model="state.searchQuery"/>
+                                   t-model="this.state.searchQuery"/>
                         </div>
                     </div>
 
                     <!-- Contact List Scroll Container -->
                     <div class="o_twilio_contact_list">
-                        <t t-if="state.loading">
+                        <t t-if="this.state.loading">
                             <div class="text-center py-4 text-muted small">
                                 <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"/>
                                 <div>Loading contacts...</div>
@@ -46,7 +46,7 @@
                         </t>
                         <t t-else="">
                             <t t-foreach="filteredContacts" t-as="contact" t-key="contact.id">
-                                <div t-att-class="state.selectedContact and state.selectedContact.id === contact.id ? 'o_twilio_contact_item active' : 'o_twilio_contact_item'"
+                                <div t-att-class="this.state.selectedContact and this.state.selectedContact.id === contact.id ? 'o_twilio_contact_item active' : 'o_twilio_contact_item'"
                                      t-on-click="() => this.onSelectContact(contact)">
                                     <div class="o_twilio_contact_avatar">
                                         <i class="fa fa-user"/>
@@ -68,12 +68,12 @@
 
                 <!-- Right Panel: Conversation View (Reuses TwilioSmsPopup Component) -->
                 <div class="o_twilio_messaging_main">
-                    <t t-if="state.selectedContact">
+                    <t t-if="this.state.selectedContact">
                         <!-- Embedded OWL Conversation Component without nesting backdrop -->
-                        <TwilioSmsPopup t-key="state.selectedContact.id + '_' + state.selectedContact.phone"
-                                        phone="state.selectedContact.phone"
-                                        partnerId="state.selectedContact.id"
-                                        partnerName="state.selectedContact.name"
+                        <TwilioSmsPopup t-key="this.state.selectedContact.id + '_' + this.state.selectedContact.phone"
+                                        phone="this.state.selectedContact.phone"
+                                        partnerId="this.state.selectedContact.id"
+                                        partnerName="this.state.selectedContact.name"
                                         onClose="() => this.onClose()"/>
                     </t>
                     <t t-else="">

@@ -3,20 +3,20 @@
 
     <!-- Global Floating Help Bubble for Twilio Calling System screens -->
     <t t-name="twilio_dialer_pro.TwilioHelpBubble">
-        <t t-if="state.isVisible">
+        <t t-if="this.state.isVisible">
             <div class="o_twilio_help_bubble_container" title="Twilio Dialer Help &amp; User Guide">
                 <!-- Hover × close button -->
                 <button type="button"
                         class="o_twilio_help_bubble_close"
                         title="Hide help bubble for this screen"
-                        t-on-click.stop="onHideHelpBubble">
+                        t-on-click.stop="this.onHideHelpBubble">
                     <i class="fa fa-times"/>
                 </button>
                 <!-- Main floating calling help button with recreated Phone Info vector icon -->
                 <button type="button"
                         class="o_twilio_help_bubble_btn"
                         title="Twilio Dialer Help &amp; User Guide"
-                        t-on-click.stop="onOpenHelpDialog">
+                        t-on-click.stop="this.onOpenHelpDialog">
                     <svg class="o_twilio_help_phone_info_svg" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
                         <!-- Handset receiver -->
                         <path d="M 4 13.8 C 3.1 12.8 2.6 11.5 2.6 10.2 C 2.6 8.8 3.2 7.7 4.1 6.8 C 4.6 6.3 5.3 6 6 6 C 6.6 6 7.2 6.3 7.6 6.8 L 9 8.6 C 9.4 9.1 9.4 9.8 9 10.3 L 8.1 11.2 C 8.9 12.8 10.2 14.1 11.8 14.9 L 12.7 14 C 13.2 13.6 13.9 13.6 14.4 14 L 16.2 15.4 C 16.7 15.8 17 16.4 17 17 C 17 17.7 16.7 18.4 16.2 18.9 C 15.3 19.8 14.2 20.4 12.8 20.4 C 11.5 20.4 10.2 19.9 9.2 18.9 C 7.2 17.4 5.6 15.7 4 13.8 Z" fill="#ffffff"/>
@@ -45,7 +45,7 @@
                     <div class="d-flex align-items-center gap-2 ms-auto me-3">
                         <button type="button"
                                 class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm o_twilio_open_dialer_header_btn"
-                                t-on-click="openDialer">
+                                t-on-click="this.openDialer">
                             <i class="fa fa-phone"/> Open Dialer
                         </button>
                     </div>
@@ -57,56 +57,56 @@
                 <div class="o_twilio_help_sidebar">
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'make_call' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'make_call' }"
                             t-on-click="() => this.setCategory('make_call')">
                         <i class="fa fa-phone me-2 text-primary"/>
                         <span>1. How to Make a Call</span>
                     </button>
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'caller_id' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'caller_id' }"
                             t-on-click="() => this.setCategory('caller_id')">
                         <i class="fa fa-id-card-o me-2 text-info"/>
                         <span>2. Select a Caller ID</span>
                     </button>
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'call_logs' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'call_logs' }"
                             t-on-click="() => this.setCategory('call_logs')">
                         <i class="fa fa-history me-2 text-success"/>
                         <span>3. Call Logs &amp; Activity Sync</span>
                     </button>
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'auto_dialer' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'auto_dialer' }"
                             t-on-click="() => this.setCategory('auto_dialer')">
                         <i class="fa fa-bolt me-2 text-warning"/>
                         <span>4. Auto Dialer Campaigns</span>
                     </button>
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'config' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'config' }"
                             t-on-click="() => this.setCategory('config')">
                         <i class="fa fa-cogs me-2 text-secondary"/>
                         <span>5. Twilio Configuration</span>
                     </button>
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'number_allocation' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'number_allocation' }"
                             t-on-click="() => this.setCategory('number_allocation')">
                         <i class="fa fa-users me-2 text-dark"/>
                         <span>6. Number Allocation</span>
                     </button>
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'troubleshooting' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'troubleshooting' }"
                             t-on-click="() => this.setCategory('troubleshooting')">
                         <i class="fa fa-wrench me-2 text-danger"/>
                         <span>7. Troubleshooting &amp; FAQs</span>
                     </button>
                     <button type="button"
                             class="o_twilio_help_tab_btn"
-                            t-att-class="{ 'active': state.activeCategory === 'about_help' }"
+                            t-att-class="{ 'active': this.state.activeCategory === 'about_help' }"
                             t-on-click="() => this.setCategory('about_help')">
                         <i class="fa fa-life-ring me-2 text-info"/>
                         <span>8. Help &amp; Support</span>
@@ -117,7 +117,7 @@
                 <div class="o_twilio_help_body">
                     
                     <!-- Section 1: How to Make a Call -->
-                    <div t-if="state.activeCategory === 'make_call'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'make_call'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-phone text-primary me-2"/>How to Make a Call</h3>
                             <p class="text-muted">Placing outbound calls via browser VoIP softphone or 1-click dialing.</p>
@@ -157,7 +157,7 @@
                     </div>
 
                     <!-- Section 2: How to Select a Caller ID -->
-                    <div t-if="state.activeCategory === 'caller_id'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'caller_id'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-id-card-o text-info me-2"/>Caller ID Selection</h3>
                             <p class="text-muted">Choosing which Twilio phone number is presented to recipients.</p>
@@ -183,7 +183,7 @@
                     </div>
 
                     <!-- Section 3: Call Logs & Multi-Entity Chatter Sync -->
-                    <div t-if="state.activeCategory === 'call_logs'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'call_logs'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-history text-success me-2"/>Call Logs &amp; Multi-Entity Sync</h3>
                             <p class="text-muted">Automatic call tracking, recordings, transcripts, and chatter activity syncing.</p>
@@ -214,7 +214,7 @@
                     </div>
 
                     <!-- Section 4: Auto Dialer Campaigns -->
-                    <div t-if="state.activeCategory === 'auto_dialer'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'auto_dialer'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-bolt text-warning me-2"/>Auto Dialer Campaigns</h3>
                             <p class="text-muted">High-volume outbound calling with automated queues and disposition tracking.</p>
@@ -241,7 +241,7 @@
                     </div>
 
                     <!-- Section 5: Twilio Configuration -->
-                    <div t-if="state.activeCategory === 'config'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'config'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-cogs text-secondary me-2"/>Twilio Configuration</h3>
                             <p class="text-muted">Connecting your Twilio account credentials and telephony webhooks.</p>
@@ -270,7 +270,7 @@
                     </div>
 
                     <!-- Section 6: Number Allocation -->
-                    <div t-if="state.activeCategory === 'number_allocation'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'number_allocation'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-users text-dark me-2"/>Number Allocation</h3>
                             <p class="text-muted">Assigning dedicated Twilio phone numbers to internal agents and sales reps.</p>
@@ -293,7 +293,7 @@
                     </div>
 
                     <!-- Section 7: Troubleshooting & FAQs -->
-                    <div t-if="state.activeCategory === 'troubleshooting'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'troubleshooting'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-wrench text-danger me-2"/>Troubleshooting &amp; FAQs</h3>
                             <p class="text-muted">Quick solutions for common telephony and browser audio questions.</p>
@@ -334,7 +334,7 @@
                     </div>
 
                     <!-- Section 8: Help & Support -->
-                    <div t-if="state.activeCategory === 'about_help'" class="o_twilio_help_section">
+                    <div t-if="this.state.activeCategory === 'about_help'" class="o_twilio_help_section">
                         <div class="o_twilio_help_section_header">
                             <h3><i class="fa fa-life-ring text-info me-2"/>Help &amp; Support</h3>
                             <p class="text-muted">Submit support tickets, contact technical support, and view detailed app documentation.</p>
@@ -373,7 +373,7 @@
                             <i class="fa fa-cog me-1"/> Settings
                         </button>
                     </div>
-                    <button type="button" class="btn btn-secondary px-4" t-on-click="props.close">
+                    <button type="button" class="btn btn-secondary px-4" t-on-click="this.props.close">
                         Close
                     </button>
                 </div>

@@ -2,9 +2,9 @@
 <templates xml:space="preserve">
     <t t-name="twilio_dialer.BillingDashboard">
         <div class="o_twilio_billing">
-            <t t-if="state.loading"><div class="o_twilio_billing_skeleton"/></t>
-            <t t-elif="state.error">
-                <div class="alert alert-warning m-0"><t t-esc="state.error"/></div>
+            <t t-if="this.state.loading"><div class="o_twilio_billing_skeleton"/></t>
+            <t t-elif="this.state.error">
+                <div class="alert alert-warning m-0"><t t-esc="this.state.error"/></div>
                 <button class="btn btn-primary mt-2" t-on-click="refresh">Refresh</button>
             </t>
             <t t-else="">
@@ -24,7 +24,7 @@
                     <span class="o_billing_kpi_pulse" t-att-class="'o_billing_kpi_pulse--' + usageState"/>
                 </div>
                 <span class="o_billing_kpi_label">Credits Remaining</span>
-                <b class="o_billing_kpi_value" t-esc="state.billing.remaining"/>
+                <b class="o_billing_kpi_value" t-esc="this.state.billing.remaining"/>
                 <small>Available for calls</small>
                 <div class="o_billing_kpi_meter">
                     <span t-att-style="'width: ' + Math.max(100 - Math.round(progress), 0) + '%'"/>
@@ -36,7 +36,7 @@
                     <span class="o_billing_kpi_icon"><i class="fa fa-coins"/></span>
                 </div>
                 <span class="o_billing_kpi_label">Total Credits</span>
-                <b class="o_billing_kpi_value" t-esc="state.billing.limit"/>
+                <b class="o_billing_kpi_value" t-esc="this.state.billing.limit"/>
                 <small>Current allowance</small>
             </article>
 
@@ -45,15 +45,15 @@
                     <span class="o_billing_kpi_icon"><i class="fa fa-phone"/></span>
                 </div>
                 <span class="o_billing_kpi_label">Calls Used</span>
-                <b class="o_billing_kpi_value" t-esc="state.billing.usage"/>
+                <b class="o_billing_kpi_value" t-esc="this.state.billing.usage"/>
                 <div class="o_billing_kpi_chips">
                     <span class="o_billing_kpi_chip o_billing_kpi_chip--in">
                         <i class="fa fa-arrow-down"/>
-                        <t t-esc="state.billing.incoming"/> in
+                        <t t-esc="this.state.billing.incoming"/> in
                     </span>
                     <span class="o_billing_kpi_chip o_billing_kpi_chip--out">
                         <i class="fa fa-arrow-up"/>
-                        <t t-esc="state.billing.outgoing"/> out
+                        <t t-esc="this.state.billing.outgoing"/> out
                     </span>
                 </div>
             </article>

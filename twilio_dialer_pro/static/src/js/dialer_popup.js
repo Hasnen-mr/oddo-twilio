@@ -530,7 +530,7 @@ export class DialerPopup extends Component {
     }
 
     openAutoCallingSetup() {
-        this.action.doAction("twilio_dialer.action_twilio_auto_dialer_menu");
+        this.action.doAction("twilio_dialer_pro.action_twilio_auto_dialer_menu");
         if (this.props.onClose) {
             this.props.onClose();
         }
@@ -542,7 +542,7 @@ export class DialerPopup extends Component {
         if (dialer?.state) {
             dialer.state.isOpen = true;
         }
-        this.action.doAction("twilio_dialer.action_twilio_configuration_menu");
+        this.action.doAction("twilio_dialer_pro.action_twilio_configuration_menu");
     }
 
     openContacts() {
@@ -1035,9 +1035,9 @@ export class DialerPopup extends Component {
     openHelpSupport() {
         this.closeQuickDebugModal();
         try {
-            this.action.doAction("twilio_dialer.action_twilio_help");
+            this.action.doAction("twilio_dialer_pro.action_twilio_help");
         } catch (e) {
-            this.action.doAction("twilio_dialer.action_twilio_contact_us", {
+            this.action.doAction("twilio_dialer_pro.action_twilio_contact_us", {
                 additionalContext: { twilio_about_section: "help" },
             });
         }

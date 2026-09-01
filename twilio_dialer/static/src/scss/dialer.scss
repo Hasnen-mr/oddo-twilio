@@ -1,34 +1,97 @@
-// ── Variables ────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// ── DESIGN SYSTEM FOUNDATION (Phase 1 Token Architecture) ───────────────────
+// ══════════════════════════════════════════════════════════════════════════════
 
-$o_dialer-primary: #714b67;
-$o_dialer-primary-light: #f3edf2;
-$o_dialer-success: #28a745;
-$o_dialer-danger: #dc3545;
-$o_dialer-warning: #ffc107;
-$o_dialer-info: #17a2b8;
-$o_dialer-gray-100: #f8f9fa;
-$o_dialer-gray-200: #e9ecef;
-$o_dialer-gray-300: #dee2e6;
-$o_dialer-gray-400: #ced4da;
-$o_dialer-gray-500: #adb5bd;
-$o_dialer-gray-600: #6c757d;
-$o_dialer-gray-700: #495057;
-$o_dialer-gray-800: #343a40;
-$o_dialer-gray-900: #212529;
+// 1. Core Brand Colors (Unified Purple Palette)
+$o_dialer-primary:          #714b67;
+$o_dialer-primary-hover:    #5c3c54;
+$o_dialer-primary-active:   #4a2f43;
+$o_dialer-primary-light:    #f8f4f7;
+$o_dialer-primary-subtle:   #ede4eb;
+$o_dialer-primary-accent:   #9333ea;
 
-$o_dialer-radius: 12px;
-$o_dialer-radius-sm: 8px;
-$o_dialer-radius-lg: 16px;
-$o_dialer-radius-pill: 50px;
-$o_dialer-radius-circle: 50%;
+// 2. Semantic Surface & Background Tokens
+$o_dialer-bg-body:          #f8fafc;
+$o_dialer-bg-surface:       #ffffff;
+$o_dialer-bg-subtle:        #f1f5f9;
+$o_dialer-bg-hover:         #f8fafc;
+$o_dialer-border-color:     rgba(113, 75, 103, 0.14);
+$o_dialer-border-subtle:    #e2e8f0;
+$o_dialer-border-focus:     #714b67;
 
-$o_dialer-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-$o_dialer-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-$o_dialer-shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.15);
+// 3. Status Palette (WCAG 2.1 AA compliant)
+$o_dialer-success:          #10b981;
+$o_dialer-success-bg:       #ecfdf5;
+$o_dialer-success-text:     #065f46;
+$o_dialer-warning:          #f59e0b;
+$o_dialer-warning-bg:       #fffbeb;
+$o_dialer-warning-text:     #92400e;
+$o_dialer-danger:           #ef4444;
+$o_dialer-danger-bg:        #fef2f2;
+$o_dialer-danger-text:      #991b1b;
+$o_dialer-info:             #3b82f6;
+$o_dialer-info-bg:          #eff6ff;
+$o_dialer-info-text:        #1e40af;
 
-$o_dialer-transition: 0.2s ease;
+// 4. Neutral Grayscale
+$o_dialer-gray-50:          #f8fafc;
+$o_dialer-gray-100:         #f1f5f9;
+$o_dialer-gray-200:         #e2e8f0;
+$o_dialer-gray-300:         #cbd5e1;
+$o_dialer-gray-400:         #94a3b8;
+$o_dialer-gray-500:         #64748b;
+$o_dialer-gray-600:         #475569;
+$o_dialer-gray-700:         #334155;
+$o_dialer-gray-800:         #1e293b;
+$o_dialer-gray-900:         #0f172a;
 
-$o_dialer-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+// 5. Typography Scale
+$o_dialer-font:             -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+$o_dialer-font-xs:          11px;
+$o_dialer-font-sm:          12px;
+$o_dialer-font-base:        13px;
+$o_dialer-font-md:          14px;
+$o_dialer-font-lg:          16px;
+$o_dialer-font-xl:          20px;
+$o_dialer-font-2xl:         24px;
+
+// 6. Spatial System (8pt Spacing Grid)
+$o_dialer-space-1:          4px;
+$o_dialer-space-2:          8px;
+$o_dialer-space-3:          12px;
+$o_dialer-space-4:          16px;
+$o_dialer-space-5:          20px;
+$o_dialer-space-6:          24px;
+$o_dialer-space-8:          32px;
+
+// 7. Component Metrics
+$o_dialer-input-height:     38px;
+$o_dialer-input-height-sm:  32px;
+$o_dialer-btn-height:       38px;
+$o_dialer-btn-height-sm:    32px;
+
+// 8. Radius & Elevation
+$o_dialer-radius-xs:        4px;
+$o_dialer-radius-sm:        6px;
+$o_dialer-radius:           8px;
+$o_dialer-radius-md:        8px;
+$o_dialer-radius-lg:        12px;
+$o_dialer-radius-xl:        16px;
+$o_dialer-radius-pill:      9999px;
+$o_dialer-radius-circle:    50%;
+
+$o_dialer-shadow-xs:        0 1px 2px rgba(15, 23, 42, 0.04);
+$o_dialer-shadow-sm:        0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
+$o_dialer-shadow:           0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+$o_dialer-shadow-md:        0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+$o_dialer-shadow-lg:        0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
+$o_dialer-shadow-xl:        0 20px 25px -5px rgba(15, 23, 42, 0.10), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+
+// 9. Transitions & Animations
+$o_dialer-transition-fast:  0.15s cubic-bezier(0.4, 0, 0.2, 1);
+$o_dialer-transition:       0.2s cubic-bezier(0.4, 0, 0.2, 1);
+$o_dialer-transition-base:  0.2s cubic-bezier(0.4, 0, 0.2, 1);
+$o_dialer-transition-slow:  0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
 // ── List View Queue Circular Action Buttons (Spotify/Linear aesthetic) ─────────
 
@@ -3205,7 +3268,7 @@ button.o_twilio_dash_open_dialer:hover {
 .app_settings_block[data-key="twilio_dialer"] {
     --o-twilio-cfg-primary: #{$o_dialer-primary};
     --o-twilio-cfg-primary-light: #{$o_dialer-primary-light};
-    max-width: 1280px;
+    max-width: 100% !important; width: 100% !important;
 
     &.o_twilio_cfg_shell {
         display: grid !important;
@@ -5697,5 +5760,290 @@ body,
         &:hover {
             background: #714b67;
         }
+    }
+}
+
+
+// ── Centered Balanced Twilio Configuration Layout (Phase 2) ──────────────
+.settings_tab.o_twilio_hide_outer_sidebar {
+    display: none !important;
+}
+
+.settings.o_twilio_fullwidth_settings {
+    width: 100% !important;
+    max-width: 100% !important;
+    flex: 1 1 100% !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    box-sizing: border-box !important;
+}
+
+.o_twilio_standalone_settings {
+    .settings_tab {
+        display: none !important;
+    }
+    .settings {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: 1 1 100% !important;
+        padding: 0 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        box-sizing: border-box !important;
+    }
+}
+
+.app_settings_block[data-key="twilio_dialer"],
+.app_settings_block[data-key="twilio_dialer_pro"] {
+    width: 100% !important;
+    max-width: 1440px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    padding: 1.5rem 1.5rem 3rem 1.5rem !important;
+    box-sizing: border-box !important;
+
+    &.o_twilio_cfg_shell {
+        display: grid !important;
+        grid-template-columns: 240px minmax(0, 1fr) !important;
+        gap: 0 28px !important;
+        align-items: start !important;
+        width: 100% !important;
+        max-width: 1440px !important;
+        margin-left: auto !important;
+        margin-right: auto !important;
+        padding: 1.5rem 1.5rem 3rem 1.5rem !important;
+        box-sizing: border-box !important;
+    }
+
+    .o_twilio_cfg_nav_host {
+        grid-column: 1 !important;
+        grid-row: 1 / span 80;
+        width: 100% !important;
+        max-width: 240px !important;
+        position: sticky;
+        top: 16px;
+        align-self: start;
+    }
+
+    .o_twilio_cfg_grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 20px !important;
+        width: 100% !important;
+        margin-bottom: 12px !important;
+    }
+
+    .o_twilio_cfg_card {
+        width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .o_twilio_cfg_banner {
+        width: 100% !important;
+    }
+
+    .o_twilio_cfg_panel {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .o_twilio_allocation_container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    .o_twilio_billing {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+// ── Responsive Viewport Scaling (1440px / 1280px / 992px) ──────────────────
+@media (max-width: 1440px) {
+    .app_settings_block[data-key="twilio_dialer"],
+    .app_settings_block[data-key="twilio_dialer_pro"] {
+        max-width: 100% !important;
+        padding: 1.25rem 1.25rem 2.5rem !important;
+
+        &.o_twilio_cfg_shell {
+            grid-template-columns: 230px minmax(0, 1fr) !important;
+            gap: 0 24px !important;
+        }
+
+        .o_twilio_cfg_nav_host {
+            max-width: 230px !important;
+        }
+    }
+}
+
+@media (max-width: 1280px) {
+    .app_settings_block[data-key="twilio_dialer"],
+    .app_settings_block[data-key="twilio_dialer_pro"] {
+        padding: 1rem 1rem 2rem !important;
+
+        &.o_twilio_cfg_shell {
+            grid-template-columns: 210px minmax(0, 1fr) !important;
+            gap: 0 20px !important;
+        }
+
+        .o_twilio_cfg_nav_host {
+            max-width: 210px !important;
+        }
+
+        .o_twilio_cfg_grid {
+            gap: 16px !important;
+        }
+    }
+}
+
+@media (max-width: 992px) {
+    .app_settings_block[data-key="twilio_dialer"],
+    .app_settings_block[data-key="twilio_dialer_pro"] {
+        &.o_twilio_cfg_shell {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px 0 !important;
+        }
+
+        .o_twilio_cfg_nav_host {
+            position: static !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            grid-column: auto !important;
+        }
+
+        .o_twilio_cfg_grid {
+            grid-template-columns: 1fr !important;
+            gap: 14px !important;
+        }
+    }
+}
+
+// ── Softphone Floating Panel & Active Call Screen (Phase 4 UX Polish) ────
+.o_dialer_panel {
+    position: fixed;
+    right: 24px;
+    top: 68px;
+    width: 360px;
+    z-index: 1050;
+    transform: translateX(calc(100% + 40px));
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+
+    &--open {
+        transform: translateX(0);
+        pointer-events: auto;
+    }
+}
+
+.o_dialer_popup {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+    border: 1px solid rgba(113, 75, 103, 0.14);
+    overflow: hidden;
+    height: 640px;
+    max-height: calc(100vh - 88px);
+}
+
+.o_dialer_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #fcfafb 0%, #f3edf2 100%);
+    border-bottom: 1px solid rgba(113, 75, 103, 0.10);
+
+    .o_dialer_title {
+        max-width: 155px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 700;
+        font-size: 13px;
+        color: #2f1d2a;
+    }
+}
+
+.o_dialer_incoming_caller,
+.o_dialer_active_caller_name {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin: 0 auto;
+}
+
+// ── SMS Workspace Polish ──────────────────────────────────────────────────
+.o_twilio_sms_workspace {
+    width: 100% !important;
+    max-width: 1440px !important;
+    margin: 0 auto !important;
+    box-sizing: border-box !important;
+
+    .o_twilio_sms_action_btn {
+        border-radius: 8px;
+        font-weight: 600;
+        height: 38px;
+    }
+}
+
+// ── Dashboard, Auto Dialer & Call Logs UX (Phase 5 Polish) ───────────────
+.o_twilio_dashboard_kpi {
+    cursor: default;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease !important;
+    border: 1px solid rgba(113, 75, 103, 0.12) !important;
+    border-radius: 12px !important;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+        border-color: rgba(113, 75, 103, 0.28) !important;
+    }
+}
+
+.o_twilio_dashboard_card {
+    border: 1px solid rgba(113, 75, 103, 0.12) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+// ── Global WCAG 2.1 AA Focus-Visible & Accessibility (Phase 6 Polish) ────
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+.o_dialer_key:focus-visible,
+.o_dialer_tab:focus-visible,
+.o_dialer_ctrl_btn:focus-visible {
+    outline: 2px solid #714b67 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 4px rgba(113, 75, 103, 0.18) !important;
+}
+
+.o_twilio_sr_only {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+}
+
+@media (max-width: 768px) {
+    button,
+    .btn,
+    .o_dialer_key,
+    .o_dialer_ctrl_btn {
+        min-height: 40px !important;
     }
 }

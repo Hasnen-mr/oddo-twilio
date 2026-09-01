@@ -38,7 +38,7 @@ class ResConfigSettings(models.TransientModel):
         selection=[
             ("account", "Account Settings"),
             ("call", "Call Settings"),
-            ("allocation", "Number Allocation"),
+            ("allocation", "My Team"),
             ("ai", "AI Settings"),
             ("billing", "Billing"),
         ],
@@ -370,97 +370,16 @@ class ResConfigSettings(models.TransientModel):
         )
 
     @api.model
-    def action_open_twilio_configuration(self):
-        """Open Configuration; default to Account Settings."""
-        action = self.env.ref("twilio_dialer.action_twilio_configuration").sudo().read()[0]
-        section = self.env.context.get("default_twilio_config_section")
-        if section not in ("account", "call", "allocation", "ai", "billing"):
-            section = "account"
-        action["context"] = {
-            "module": "twilio_dialer",
-            "default_twilio_config_section": section,
+    def action_open_twilio_configuration(self, *args, **kwargs):
+        """Open Twilio configuration directly into Twilio Call Auto Dialer app settings."""
+        return {
+            "type": "ir.actions.act_window",
+            "name": "Settings",
+            "res_model": "res.config.settings",
+            "view_mode": "form",
+            "target": "inline",
+            "context": {"module": "twilio_dialer", "bin_size": False},
         }
-        return action
-
-    @api.model
-    def get_values(self):
-        icp = self.env["ir.config_parameter"].sudo()
-        values = super().get_values()
-        values["twilio_config_section"] = self.env.context.get("default_twilio_config_section") or "account"
-
-        account_sid = icp.get_param("twilio_dialer.account_sid")
-        if not account_sid:
-            return values
-
-        # Instant local stored values
-        values["twilio_incoming_enabled"] = icp.get_param("twilio_dialer.incoming_enabled", "1") in ("True", "true", "1")
-        values["twilio_incoming_record"] = icp.get_param("twilio_dialer.incoming_record") in ("True", "true", "1")
-        values["twilio_incoming_voicemail"] = icp.get_param("twilio_dialer.incoming_voicemail") in ("True", "true", "1")
-        values["twilio_incoming_voicemail_text"] = icp.get_param("twilio_dialer.incoming_voicemail_text", "")
-        values["twilio_incoming_welcome_greeting"] = icp.get_param("twilio_dialer.incoming_welcome_greeting") in ("True", "true", "1")
-        values["twilio_incoming_welcome_greeting_text"] = icp.get_param("twilio_dialer.incoming_welcome_greeting_text", "")
-        values["twilio_incoming_forward"] = icp.get_param("twilio_dialer.incoming_forward") in ("True", "true", "1")
-        values["twilio_incoming_forward_to"] = icp.get_param("twilio_dialer.incoming_forward_to", "")
-        values["twilio_outgoing_record"] = icp.get_param("twilio_dialer.outgoing_record") in ("True", "true", "1")
-        values["twilio_outgoing_smart_copy"] = icp.get_param("twilio_dialer.outgoing_smart_copy") in ("True", "true", "1")
-
-        return values
-
-    def action_save_call_settings(self):
-        self.ensure_one()
-        _logger.info(
-            "action_save_call_settings() — twilio_incoming_transcription=%s twilio_outgoing_transcription=%s",
-            self.twilio_incoming_transcription,
-            self.twilio_outgoing_transcription,
-        )
-        result = self.autosave_call_settings({
-            "twilio_account_sid": self.twilio_account_sid,
-            "twilio_phone_number": self.twilio_phone_number,
-            "twilio_incoming_enabled": self.twilio_incoming_enabled,
-            "twilio_incoming_record": self.twilio_incoming_record,
-            "twilio_incoming_transcription": self.twilio_incoming_transcription,
-            "twilio_incoming_voicemail": self.twilio_incoming_voicemail,
-            "twilio_incoming_voicemail_text": self.twilio_incoming_voicemail_text or "",
-            "twilio_incoming_welcome_greeting": self.twilio_incoming_welcome_greeting,
-            "twilio_incoming_welcome_greeting_text": self.twilio_incoming_welcome_greeting_text or "",
-            "twilio_incoming_forward": self.twilio_incoming_forward,
-            "twilio_incoming_forward_to": self.twilio_incoming_forward_to or "",
-            "twilio_outgoing_record": self.twilio_outgoing_record,
-            "twilio_outgoing_transcription": self.twilio_outgoing_transcription,
-            "twilio_outgoing_smart_copy": self.twilio_outgoing_smart_copy,
-        })
-        notif_type = "success" if result.get("success") else "danger"
-        if result.get("success"):
-            incoming = result.get("incoming") or {}
-            outgoing = result.get("outgoing") or {}
-            if incoming or outgoing:
-                self.update(self._call_settings_values(incoming, outgoing))
-        return self._reload_twilio_settings(
-            "Call Settings",
-            result.get("message") or "Settings updated successfully.",
-            notif_type,
-        )
-
-    @api.model
-    def autosave_call_settings(self, values):
-        """Persist Call Settings immediately (no Save button / no page reload)."""
-        values = values or {}
-        # Diagnostic log: entry into autosave_call_settings
-        _logger.info(
-            "autosave_call_settings START — incoming_transcription=%r outgoing_transcription=%r values_keys=%r",
-            values.get("twilio_incoming_transcription"),
-            values.get("twilio_outgoing_transcription"),
-            list(values.keys()),
-        )
-        account_sid = (
-            values.get("twilio_account_sid")
-            or self.env["ir.config_parameter"].sudo().get_param("twilio_dialer.account_sid")
-        )
-        if not account_sid:
-            return {
-                "success": False,
-                "message": "Configure and save a Twilio Account SID before updating call settings.",
-            }
 
         phone_number = values.get("twilio_phone_number")
         if phone_number:

@@ -410,6 +410,7 @@ class TwilioAutoDialer(models.Model):
             "type": "ir.actions.act_window",
             "res_model": "twilio.auto.dialer.import.wizard",
             "view_mode": "form",
+            "views": [[False, "form"]],
             "target": "new",
             "context": {
                 "default_dialer_id": self.id,

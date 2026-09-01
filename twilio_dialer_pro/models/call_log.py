@@ -1029,6 +1029,7 @@ class TwilioCallLog(models.Model):
             "name": "Contact",
             "res_model": "res.partner",
             "view_mode": "form",
+            "views": [[False, "form"]],
             "res_id": self.partner_id.id,
             "target": "current",
         }

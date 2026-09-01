@@ -2,7 +2,6 @@
 
 import { Component, onMounted, onWillUnmount } from "@odoo/owl";
 import * as owl from "@odoo/owl";
-import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { getCachedCallSettings, setCachedCallSettings } from "@twilio_dialer/js/call_settings_cache";
 import { TwilioCredentialsHelpDialog } from "@twilio_dialer/js/credentials_help_dialog";

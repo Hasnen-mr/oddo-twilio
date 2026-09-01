@@ -27,3 +27,4 @@ access_twilio_sms_workspace_user,twilio.sms.workspace.user,model_twilio_sms_work
 access_twilio_phone_number,access_twilio_phone_number,model_twilio_phone_number,base.group_user,1,1,1,1
 access_twilio_number_allocation,access_twilio_number_allocation,model_twilio_number_allocation,base.group_user,1,1,1,1
 access_twilio_call_log_export_wizard_user,twilio.call.log.export.wizard.user,model_twilio_call_log_export_wizard,base.group_user,1,1,1,1
+access_res_config_settings_user,res.config.settings.user,base.model_res_config_settings,base.group_user,1,1,1,1

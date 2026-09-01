@@ -852,3 +852,20 @@ class TwilioService(models.AbstractModel):
             raise UserError(
                 "Failed to assign TwiML Application to Twilio phone numbers:\n%s" % clean_msg
             ) from e
+
+    def get_billing_info(self):
+        """Fetch Twilio account balance and billing details safely."""
+        try:
+            client = self.get_twilio_client()
+            if not client:
+                return {}
+            account = client.api.accounts(client.account_sid).fetch()
+            return {
+                "friendly_name": getattr(account, "friendly_name", ""),
+                "status": getattr(account, "status", ""),
+                "type": getattr(account, "type", ""),
+            }
+        except Exception as e:
+            _logger.debug("Failed to retrieve billing info from Twilio: %s", e)
+            return {}
+

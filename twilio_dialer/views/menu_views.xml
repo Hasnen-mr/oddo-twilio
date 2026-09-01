@@ -48,7 +48,7 @@
               name="Configuration"
               parent="menu_twilio_dialer_root"
               action="action_twilio_configuration"
-              groups="base.group_system"
+              groups="base.group_user"
               sequence="30"/>
 
     <!-- About Us (Overview / Help / Terms live in the left sidebar) -->

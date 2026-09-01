@@ -1,6 +1,9 @@
 /** @odoo-module **/
 
-import { Component, useState } from "@odoo/owl";
+import { Component } from "@odoo/owl";
+import * as owl from "@odoo/owl";
+import * as owl from "@odoo/owl";
+const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { Dialog } from "@web/core/dialog/dialog";
 
 export class TwilioHelpDialog extends Component {

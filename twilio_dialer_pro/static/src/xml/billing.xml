@@ -87,7 +87,7 @@
                 </div>
             </header>
             <div class="o_billing_package_grid">
-                <t t-foreach="packages" t-as="pkg" t-key="pkg.id">
+                <t t-foreach="packages || []" t-as="pkg" t-key="pkg.id">
                     <article class="o_billing_package"
                              t-att-class="pkg.featured ? 'o_billing_package--featured' : ''">
                         <t t-if="pkg.featured">

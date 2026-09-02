@@ -599,7 +599,7 @@ export class DialerPopup extends Component {
     }
 
     get filteredContacts() {
-        return this.state.contacts;
+        return this.state.contacts || [];
     }
 
     _applyContactPhone(contact) {

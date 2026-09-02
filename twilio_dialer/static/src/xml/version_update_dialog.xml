@@ -22,7 +22,7 @@
                 <t t-if="features.length">
                     <h4 class="o_twilio_version_features_title">What's new</h4>
                     <ul class="o_twilio_version_features">
-                        <t t-foreach="features" t-as="feature" t-key="feature_index">
+                        <t t-foreach="features || []" t-as="feature" t-key="feature_index">
                             <li t-esc="feature"/>
                         </t>
                     </ul>

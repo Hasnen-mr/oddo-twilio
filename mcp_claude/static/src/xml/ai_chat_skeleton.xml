@@ -3,7 +3,7 @@
 
     <t t-name="mcp_claude.AIChatSkeleton">
         <div t-attf-class="o_mcp_skeleton_container d-flex flex-column gap-3 p-3 #{props.isOverlay ? 'o_mcp_skeleton_overlay_content' : 'w-100 h-100'}">
-            <t t-foreach="placeholders" t-as="item" t-key="item.id">
+            <t t-foreach="placeholders || []" t-as="item" t-key="item.id">
                 <div t-attf-class="d-flex flex-column max-w-85 #{item.role === 'user' ? 'align-self-end text-end' : 'align-self-start text-start'}">
                     <div class="d-flex align-items-center gap-2 mb-1" t-if="item.role === 'assistant'">
                         <div class="o_mcp_skeleton_avatar rounded-circle"/>

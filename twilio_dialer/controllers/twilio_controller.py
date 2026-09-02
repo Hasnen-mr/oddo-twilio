@@ -232,16 +232,30 @@ class TwilioController(http.Controller):
                 or ""
             )
 
+            to_raw = (
+                params.get("To")
+                or params.get("to")
+                or params.get("destination")
+                or params.get("phone")
+                or request.httprequest.args.get("To", "")
+                or request.httprequest.args.get("to", "")
+                or request.httprequest.args.get("destination", "")
+                or request.httprequest.args.get("phone", "")
+                or ""
+            )
+
             # An outbound call from Odoo browser softphone always has a client identity (e.g. client:id_odoo_...)
+            # or a dialed destination phone number.
             is_outbound_softphone = (
                 str(caller_param).strip().lower().startswith("client:")
                 or str(caller_param).strip().lower().startswith("id_odoo_")
+                or (to_raw and not str(to_raw).strip().lower().startswith("client:") and not str(to_raw).strip().lower().startswith("id_odoo_") and any(ch.isdigit() for ch in str(to_raw)))
                 or bool(params.get("destination"))
                 or bool(params.get("phone"))
             )
 
             # If it's an inbound call from an outside phone, route to incoming_call handler
-            if direction.startswith("inbound") or not is_outbound_softphone:
+            if not is_outbound_softphone:
                 return self.incoming_call(**kwargs)
 
             raw_caller_id = (
@@ -275,17 +289,6 @@ class TwilioController(http.Controller):
             if not caller_id or not caller_id.startswith("+"):
                 caller_id = request.env["twilio.service"].sudo().get_verified_twilio_phone_number()
 
-            to_raw = (
-                params.get("To")
-                or params.get("to")
-                or params.get("destination")
-                or params.get("phone")
-                or request.httprequest.args.get("To", "")
-                or request.httprequest.args.get("to", "")
-                or request.httprequest.args.get("destination", "")
-                or request.httprequest.args.get("phone", "")
-            )
-
             to_number = _sanitize_e164(to_raw)
             if not to_number:
                 digits_to = re.sub(r"\D", "", str(to_raw or ""))
@@ -297,7 +300,7 @@ class TwilioController(http.Controller):
 
             if _TWILIO_TWIML_AVAILABLE:
                 response = VoiceResponse()
-                dial = Dial(caller_id=caller_id)
+                dial = Dial(caller_id=caller_id, answer_on_bridge=True)
                 dial.number(to_number)
                 response.append(dial)
                 return request.make_response(
@@ -305,7 +308,7 @@ class TwilioController(http.Controller):
                     headers=[("Content-Type", "text/xml")],
                 )
             else:
-                xml = f'<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="{caller_id}"><Number>{to_number}</Number></Dial></Response>'
+                xml = f'<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="{caller_id}" answerOnBridge="true"><Number>{to_number}</Number></Dial></Response>'
                 return request.make_response(
                     xml,
                     headers=[("Content-Type", "application/xml")],

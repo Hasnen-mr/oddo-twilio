@@ -335,6 +335,27 @@ class DeviceManager {
         this._activeConnection = null;
     }
 
+    _isAccessTokenInvalid(error) {
+        if (!error) return false;
+        const msg = (error.message || "" || String(error)).toLowerCase();
+        const name = (error.name || "").toLowerCase();
+        const code = error.code;
+        return (
+            code === 20101 ||
+            code === 20104 ||
+            code === 20105 ||
+            code === 20107 ||
+            code === 31204 ||
+            code === 31205 ||
+            name.includes("accesstokeninvalid") ||
+            name.includes("accesstokenexpired") ||
+            msg.includes("accesstokeninvalid") ||
+            msg.includes("unable to validate your access token") ||
+            msg.includes("access token expired") ||
+            msg.includes("jwt")
+        );
+    }
+
     async _recoverInvalidAccessToken(error) {
         if (this._destroyed || this._tokenRegenAttempted) {
             console.error("[DeviceManager] Access token still invalid after regenerate:", error);

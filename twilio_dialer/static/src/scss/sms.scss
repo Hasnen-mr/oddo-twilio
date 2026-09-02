@@ -577,3 +577,499 @@
     text-align: center;
     background: #fafafa;
 }
+
+
+/* ── WhatsApp Web Style SMS Listing & Sidebar ───────────────────── */
+
+.o_twilio_wa_workspace {
+    display: flex;
+    width: 100%;
+    height: calc(100vh - 48px);
+    background: #ffffff;
+    overflow: hidden;
+}
+
+.o_twilio_wa_sidebar {
+    width: 450px;
+    min-width: 400px;
+    max-width: 520px;
+    height: 100%;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.o_twilio_wa_sidebar_header {
+    height: 60px;
+    padding: 10px 16px;
+    background: #f0f2f5;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+.o_twilio_wa_user_profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.o_twilio_wa_avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #0284c7;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.o_twilio_wa_avatar--me {
+    background: #0f172a;
+    font-size: 16px;
+}
+
+.o_twilio_wa_hub_title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.o_twilio_wa_title_text {
+    font-weight: 700;
+    font-size: 15px;
+    color: #0f172a;
+}
+
+.o_twilio_wa_status_dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    display: inline-block;
+}
+
+.o_twilio_wa_header_actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.o_twilio_wa_icon_btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: #54656f;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: background 0.15s ease, color 0.15s ease;
+
+    &:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+}
+
+.o_twilio_wa_search_row {
+    padding: 8px 12px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
+}
+
+.o_twilio_wa_search_box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: #f0f2f5;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+
+.o_twilio_wa_search_icon {
+    color: #54656f;
+    font-size: 13px;
+    margin-right: 8px;
+}
+
+.o_twilio_wa_search_input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 13.5px;
+    color: #0f172a;
+    outline: none;
+
+    &::placeholder {
+        color: #64748b;
+        font-size: 13px;
+    }
+}
+
+.o_twilio_wa_search_clear {
+    border: none;
+    background: transparent;
+    color: #94a3b8;
+    padding: 0;
+    cursor: pointer;
+    font-size: 12px;
+
+    &:hover {
+        color: #0f172a;
+    }
+}
+
+.o_twilio_wa_filter_row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    flex-shrink: 0;
+    overflow-x: auto;
+}
+
+.o_twilio_wa_filter_chip {
+    padding: 4px 10px;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+    }
+
+    &.active {
+        background: #0284c7;
+        color: #ffffff;
+        border-color: #0284c7;
+
+        .o_twilio_wa_chip_badge {
+            background: rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+    }
+}
+
+.o_twilio_wa_chip_badge {
+    background: #e2e8f0;
+    color: #475569;
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+}
+
+.o_twilio_wa_conversation_list {
+    flex: 1;
+    overflow-y: auto;
+    background: #ffffff;
+}
+
+.o_twilio_wa_item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-bottom: 1px solid #f8fafc;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.12s ease;
+
+    &:hover {
+        background: #f8fafc;
+
+        .o_twilio_wa_quick_call_btn {
+            opacity: 1;
+            visibility: visible;
+        }
+    }
+
+    &.active {
+        background: #f0f7ff;
+        border-left: 3px solid #0284c7;
+
+        .o_twilio_wa_item_name {
+            color: #0284c7;
+            font-weight: 700;
+        }
+    }
+}
+
+.o_twilio_wa_item_body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.o_twilio_wa_item_header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.o_twilio_wa_item_name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.o_twilio_wa_item_time {
+    font-size: 11.5px;
+    color: #64748b;
+    margin-left: 6px;
+}
+
+.o_twilio_wa_item_preview_row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.o_twilio_wa_item_snippet {
+    font-size: 12.5px;
+    color: #475569;
+    flex: 1;
+}
+
+.o_twilio_wa_item_meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.o_twilio_wa_unread_badge {
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    background: #25d366;
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
+.o_twilio_wa_quick_call_btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: none;
+    background: #22c55e;
+    color: #ffffff;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+        background: #16a34a;
+        transform: scale(1.1);
+    }
+}
+
+.o_twilio_wa_loading,
+.o_twilio_wa_empty_list {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 16px;
+    color: #64748b;
+    font-size: 13px;
+    text-align: center;
+}
+
+.o_twilio_wa_main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #f0f2f5;
+    position: relative;
+    overflow: hidden;
+}
+
+.o_twilio_wa_chat_container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .o_twilio_sms_modal_backdrop {
+        position: relative !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: transparent !important;
+        backdrop-filter: none !important;
+        z-index: 1 !important;
+    }
+
+    .o_twilio_sms_modal {
+        width: 100% !important;
+        height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+    }
+}
+
+.o_twilio_wa_hero_empty {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    background: #f8fafc;
+}
+
+.o_twilio_wa_hero_icon {
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: #e0f2fe;
+    color: #0284c7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.15);
+}
+
+.o_twilio_wa_dialog {
+    width: 92vw;
+    max-width: 1200px;
+    height: 88vh;
+    max-height: 850px;
+}
+
+
+/* ── Skeleton Loading for SMS Conversation ─────────────────────── */
+
+.o_twilio_sms_skeleton_body {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    padding: 24px 20px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.o_twilio_skeleton_bubble {
+    height: 40px;
+    border-radius: 14px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: smsSkeletonShimmer 1.2s ease-in-out infinite;
+
+    &--in {
+        border-bottom-left-radius: 4px;
+        align-self: flex-start;
+    }
+
+    &--out {
+        border-bottom-right-radius: 4px;
+        align-self: flex-end;
+    }
+}
+
+@keyframes smsSkeletonShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.o_twilio_sms_chat_list {
+    animation: smsContentFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes smsContentFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Simplified Header Styling */
+.o_twilio_wa_header_title_block {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.o_twilio_wa_title_text {
+    font-weight: 700;
+    font-size: 18px;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.o_twilio_header_call_btn {
+    font-weight: 600;
+    font-size: 12.5px;
+    padding: 5px 14px;
+    transition: all 0.15s ease;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 3px 8px rgba(34, 197, 94, 0.3) !important;
+    }
+}
+
+.o_twilio_wa_sidebar_title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #111b21;
+    letter-spacing: -0.3px;
+    margin: 0;
+    padding: 0;
+    line-height: 1;
+}

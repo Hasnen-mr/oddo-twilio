@@ -10,11 +10,11 @@ import { useService } from "@web/core/utils/hooks";
 import { standardFieldProps } from "@web/views/fields/standard_field_props";
 
 const SECTIONS = [
-    { id: "account", label: _t("Account Settings"), icon: "fa-key" },
     { id: "call", label: _t("Call Settings"), icon: "fa-phone" },
     { id: "allocation", label: _t("My Team"), icon: "fa-users" },
     { id: "ai", label: _t("AI Settings"), icon: "fa-magic" },
     { id: "billing", label: _t("Billing"), icon: "fa-credit-card" },
+    { id: "account", label: _t("Account Settings"), icon: "fa-key" },
 ];
 
 export class TwilioConfigNav extends Component {
@@ -66,7 +66,7 @@ export class TwilioConfigNav extends Component {
             return "account";
         }
         const ctxSection = this.props.record.context?.active_section || this.props.record.context?.default_active_section;
-        return this.props.record.data.twilio_config_section || ctxSection || "account";
+        return this.props.record.data.twilio_config_section || ctxSection || "call";
     }
 
     get isConnected() {
@@ -131,9 +131,10 @@ export class TwilioConfigNav extends Component {
         if (this._syncingSection) {
             return;
         }
+        const fallback = this.isConnected ? "call" : "account";
         const ctxSection = this.props.record.context?.active_section || this.props.record.context?.default_active_section;
         const current = this.props.record.data.twilio_config_section || ctxSection;
-        const target = current || "account";
+        const target = current || fallback;
         this._syncingSection = true;
         try {
             if (this.props.record.data.twilio_config_section !== target) {

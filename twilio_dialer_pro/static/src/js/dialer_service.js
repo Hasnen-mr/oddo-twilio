@@ -91,6 +91,19 @@ export const dialerService = {
             });
         }
 
+        
+        // Global Keyboard Shortcut: Alt + D (or Alt + Shift + D / Ctrl + Shift + D) to toggle dialer
+        const onGlobalKeyDown = (ev) => {
+            const isD = ev.key === "d" || ev.key === "D" || ev.code === "KeyD";
+            if ((ev.altKey && isD) || (ev.ctrlKey && ev.shiftKey && isD)) {
+                if (ev.altKey && isD) {
+                    ev.preventDefault();
+                    dialerState.isOpen = !dialerState.isOpen;
+                }
+            }
+        };
+        window.addEventListener("keydown", onGlobalKeyDown);
+
         window.addEventListener("pagehide", cleanupDevice);
         window.addEventListener("beforeunload", cleanupDevice);
 

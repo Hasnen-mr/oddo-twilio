@@ -6047,3 +6047,665 @@ textarea:focus-visible,
         min-height: 40px !important;
     }
 }
+
+
+/* ── Enhanced Settings Tab in Softphone Dialer ─────────────────── */
+.o_dialer_settings_panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 14px 12px;
+    overflow-y: auto;
+    background: #ffffff;
+    box-sizing: border-box;
+}
+
+.o_dialer_settings_list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.o_dialer_settings_item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    &:hover {
+        background: #f0f7ff;
+        border-color: #93c5fd;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 5px rgba(15, 23, 42, 0.05);
+
+        .o_dialer_settings_chevron {
+            color: #0284c7;
+            transform: translateX(2px);
+        }
+    }
+}
+
+.o_dialer_settings_item_icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.o_dialer_settings_item_text {
+    flex: 1;
+    min-width: 0;
+}
+
+.o_dialer_settings_item_title {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #0f172a;
+    line-height: 1.2;
+}
+
+.o_dialer_settings_item_desc {
+    font-size: 10.5px;
+    color: #64748b;
+    margin-top: 1px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.o_dialer_settings_chevron {
+    font-size: 13px;
+    transition: all 0.15s ease;
+}
+
+.o_dialer_shortcut_box {
+    border-radius: 8px;
+}
+
+
+/* ── Secure Text Security Masking for API Keys & Credentials ──────── */
+.o_twilio_password_toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+
+    .o_input {
+        width: 100%;
+        padding-right: 36px;
+
+        &.o_twilio_masked {
+            -webkit-text-security: disc !important;
+            text-security: disc !important;
+            letter-spacing: 2px;
+        }
+    }
+
+    .o_twilio_password_eye {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 4px;
+        z-index: 2;
+
+        &:hover {
+            color: #0f172a;
+        }
+    }
+}
+
+
+/* ── Embedded Dialer Subviews ───────────────────────────────────── */
+.o_dialer_embedded_subview {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    overflow-y: auto;
+    background: #ffffff;
+    box-sizing: border-box;
+
+    .o_dialer_subview_header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        flex-shrink: 0;
+    }
+
+    .o_dialer_subview_content {
+        padding: 14px 12px;
+        flex: 1;
+    }
+}
+
+
+/* ── Compact Team Allocation List for Dialer ───────────────────── */
+.o_twilio_allocation_compact {
+    .o_twilio_compact_member_card {
+        transition: all 0.15s ease-in-out;
+        &:hover {
+            border-color: #cbd5e1 !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+        }
+    }
+    .o_twilio_compact_lines_box {
+        .hover-bg:hover {
+            background-color: #f1f5f9;
+        }
+    }
+}
+
+
+/* ── Pulse dot animation for live status ────────────────────────── */
+@keyframes pulse-dot {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+}
+.o_pulse_dot {
+    animation: pulse-dot 2s infinite ease-in-out;
+}
+.o_twilio_compact_member_card {
+    transition: all 0.15s ease-in-out;
+    &:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05) !important;
+    }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════════════════
+   ── ENHANCED SAAS SETTINGS UI/UX REFINEMENT ─────────────────────────────────
+   ══════════════════════════════════════════════════════════════════════════════ */
+
+.app_settings_block[data-key="twilio_dialer"],
+.app_settings_block[data-key="twilio_dialer_pro"],
+.o_twilio_standalone_settings {
+    &.o_twilio_cfg_shell {
+        display: grid !important;
+        grid-template-columns: 240px minmax(0, 1fr) !important;
+        gap: 0 28px !important;
+        align-items: start !important;
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+        padding: 16px 24px 40px !important;
+        box-sizing: border-box !important;
+    }
+
+    .o_twilio_cfg_nav_host {
+        grid-column: 1 !important;
+        width: 100% !important;
+        max-width: 240px !important;
+        position: sticky !important;
+        top: 14px !important;
+        align-self: start !important;
+    }
+
+    .o_twilio_cfg_nav_list {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 6px !important;
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 8px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+    }
+
+    .o_twilio_cfg_nav_item {
+        display: flex !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+        padding: 9px 12px !important;
+        border-radius: 8px !important;
+        border: 1px solid transparent !important;
+        background: transparent !important;
+        color: #475569 !important;
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        cursor: pointer !important;
+        transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+        i {
+            font-size: 14px !important;
+            width: 18px !important;
+            text-align: center !important;
+            color: #64748b !important;
+            transition: color 0.15s ease !important;
+        }
+
+        &:hover {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+            i { color: #714b67 !important; }
+        }
+
+        &.is_active,
+        &.active {
+            background: #f8f4f7 !important;
+            color: #714b67 !important;
+            border-color: rgba(113, 75, 103, 0.2) !important;
+            box-shadow: 0 1px 2px rgba(113, 75, 103, 0.06) !important;
+
+            i { color: #714b67 !important; }
+        }
+    }
+
+    .o_twilio_cfg_grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 20px !important;
+        width: 100% !important;
+        margin-bottom: 12px !important;
+    }
+
+    .o_twilio_cfg_card {
+        background: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 12px !important;
+        padding: 20px 20px 18px !important;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04) !important;
+        min-width: 0 !important;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+
+        &:hover {
+            border-color: #cbd5e1 !important;
+        }
+    }
+
+    .o_twilio_cfg_card_title {
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        color: #0f172a !important;
+        letter-spacing: -0.01em !important;
+        margin-bottom: 2px !important;
+    }
+
+    .o_twilio_cfg_card_sub {
+        font-size: 12px !important;
+        color: #64748b !important;
+        margin-bottom: 16px !important;
+        line-height: 1.45 !important;
+    }
+
+    .o_twilio_cfg_switch_row {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 12px !important;
+        padding: 9px 12px !important;
+        border-radius: 8px !important;
+        transition: background-color 0.15s ease !important;
+
+        &:hover {
+            background-color: #f8fafc !important;
+        }
+
+        &.o_twilio_cfg_switch_row--master {
+            background-color: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            padding: 12px 14px !important;
+            margin-bottom: 12px !important;
+        }
+    }
+
+    .o_twilio_cfg_label {
+        font-size: 12.5px !important;
+        font-weight: 600 !important;
+        color: #1e293b !important;
+        margin-bottom: 2px !important;
+    }
+
+    .o_twilio_cfg_hint {
+        font-size: 11.5px !important;
+        color: #64748b !important;
+        line-height: 1.35 !important;
+    }
+
+    .o_twilio_cfg_input input,
+    .o_twilio_cfg_input .o_input,
+    .o_twilio_cfg_input .o_select_menu_toggler,
+    .o_twilio_cfg_input select {
+        height: 38px !important;
+        min-height: 38px !important;
+        border-radius: 8px !important;
+        border: 1px solid #cbd5e1 !important;
+        padding: 7px 12px !important;
+        background: #f8fafc !important;
+        font-size: 13px !important;
+        color: #0f172a !important;
+        transition: all 0.15s ease-in-out !important;
+
+        &:focus,
+        &.o_focus {
+            border-color: #714b67 !important;
+            background: #ffffff !important;
+            box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.14) !important;
+            outline: none !important;
+        }
+    }
+
+    .o_twilio_cfg_banner {
+        border-radius: 12px !important;
+        padding: 18px 22px !important;
+        margin-bottom: 16px !important;
+        background: linear-gradient(135deg, #5c3c54 0%, #714b67 60%, #875a7b 100%) !important;
+        box-shadow: 0 4px 14px rgba(113, 75, 103, 0.22) !important;
+    }
+
+    @media (max-width: 992px) {
+        &.o_twilio_cfg_shell {
+            grid-template-columns: 1fr !important;
+            gap: 20px 0 !important;
+            padding: 12px 14px 24px !important;
+        }
+        .o_twilio_cfg_grid {
+            grid-template-columns: 1fr !important;
+        }
+        .o_twilio_cfg_nav_host {
+            max-width: 100% !important;
+            position: static !important;
+        }
+        .o_twilio_cfg_nav_list {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+        }
+        .o_twilio_cfg_nav_item {
+            flex: 1 1 calc(50% - 6px) !important;
+            min-width: 140px !important;
+        }
+    }
+}
+
+/* In-Dialer Softphone Settings Refinements */
+.o_dialer_settings_panel {
+    .o_dialer_settings_item {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        padding: 10px 12px !important;
+        border-radius: 10px !important;
+        border: 1px solid #f1f5f9 !important;
+        background: #ffffff !important;
+        margin-bottom: 8px !important;
+        cursor: pointer !important;
+        transition: all 0.16s ease !important;
+
+        &:hover {
+            background: #f8fafc !important;
+            border-color: #e2e8f0 !important;
+            transform: translateX(2px) !important;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04) !important;
+        }
+
+        .o_dialer_settings_item_icon {
+            width: 36px !important;
+            height: 36px !important;
+            border-radius: 9px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 14px !important;
+            flex-shrink: 0 !important;
+        }
+
+        .o_dialer_settings_item_text {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+
+            .o_dialer_settings_item_title {
+                font-size: 13px !important;
+                font-weight: 650 !important;
+                color: #0f172a !important;
+                line-height: 1.25 !important;
+            }
+
+            .o_dialer_settings_item_desc {
+                font-size: 11px !important;
+                color: #64748b !important;
+                margin-top: 1px !important;
+                line-height: 1.3 !important;
+            }
+        }
+
+        .o_dialer_settings_chevron {
+            font-size: 13px !important;
+            color: #94a3b8 !important;
+        }
+    }
+}
+
+.o_dialer_embedded_subview {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100% !important;
+    width: 100% !important;
+
+    .o_dialer_subview_header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        padding: 10px 14px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        background: #ffffff !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 10 !important;
+        min-height: 44px !important;
+    }
+
+    .o_dialer_subview_content {
+        flex: 1 1 auto !important;
+        overflow-y: auto !important;
+    }
+}
+
+
+/* ── ELITE MODERN SAAS TEAM PRESENCE PANEL ─────────────────── */
+.o_twilio_allocation_compact {
+    .o_team_search_box {
+        position: relative;
+        .o_team_search_icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 12px;
+            pointer-events: none;
+        }
+        .o_team_search_input {
+            height: 34px !important;
+            padding-left: 32px !important;
+            padding-right: 12px !important;
+            border-radius: 8px !important;
+            border: 1px solid #e2e8f0 !important;
+            background: #ffffff !important;
+            font-size: 12.5px !important;
+            color: #0f172a !important;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+            transition: all 0.15s ease !important;
+
+            &:focus {
+                border-color: #714b67 !important;
+                box-shadow: 0 0 0 3px rgba(113, 75, 103, 0.12) !important;
+                outline: none !important;
+            }
+        }
+    }
+
+    .o_team_segmented_tabs {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 3px;
+        background: #f1f5f9;
+        padding: 3px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+
+        .o_team_tab_btn {
+            border: 0;
+            background: transparent;
+            color: #64748b;
+            font-size: 11.5px;
+            font-weight: 550;
+            padding: 5px 4px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            text-align: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+
+            &:hover:not(.active) {
+                color: #0f172a;
+                background: rgba(255, 255, 255, 0.5);
+            }
+
+            &.active {
+                background: #ffffff;
+                color: #714b67;
+                font-weight: 700;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            }
+
+            .badge {
+                font-size: 10px;
+                padding: 1px 5px;
+                border-radius: 999px;
+            }
+        }
+    }
+
+    .o_twilio_compact_team_list {
+        .o_twilio_compact_member_card {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid #f1f5f9;
+            background: #ffffff;
+            transition: all 0.15s ease;
+
+            &:hover {
+                background: #f8fafc;
+                border-color: #e2e8f0;
+                box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+            }
+
+            .o_member_avatar {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 12px;
+                font-weight: 700;
+                color: #ffffff;
+                flex-shrink: 0;
+                position: relative;
+            }
+
+            .o_presence_indicator {
+                position: absolute;
+                bottom: -1px;
+                right: -1px;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                border: 2px solid #ffffff;
+            }
+
+            .o_member_details {
+                flex: 1 1 auto;
+                min-width: 0;
+
+                .o_member_name {
+                    font-size: 12.5px;
+                    font-weight: 650;
+                    color: #0f172a;
+                    line-height: 1.25;
+                }
+
+                .o_admin_pill {
+                    font-size: 9px;
+                    font-weight: 700;
+                    color: #92400e;
+                    background: #fef3c7;
+                    border: 1px solid #fde68a;
+                    padding: 0 4px;
+                    border-radius: 4px;
+                    line-height: 1.3;
+                    margin-left: 4px;
+                }
+
+                .o_member_sub {
+                    font-size: 11px;
+                    color: #64748b;
+                    margin-top: 1px;
+                    line-height: 1.3;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                }
+            }
+
+            .o_presence_pill {
+                flex-shrink: 0;
+                font-size: 10.5px;
+                font-weight: 600;
+                padding: 2px 8px;
+                border-radius: 9999px;
+                white-space: nowrap;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+
+                &.o_online {
+                    background: #ecfdf5;
+                    color: #059669;
+                    border: 1px solid #a7f3d0;
+                }
+
+                &.o_offline {
+                    background: #f8fafc;
+                    color: #94a3b8;
+                    border: 1px solid #e2e8f0;
+                }
+
+                &.o_away {
+                    background: #fffbeb;
+                    color: #d97706;
+                    border: 1px solid #fde68a;
+                }
+            }
+        }
+    }
+}

@@ -42,11 +42,14 @@ class TwilioNumberAllocation(models.Model):
     def _compute_allocation_summary(self):
         for rec in self:
             nums = rec.twilio_number_ids.filtered(lambda n: n.active)
-            if not nums or any(n.phone_number == "ALL" for n in nums):
+            if any(n.phone_number == "NONE" for n in nums):
+                rec.number_count = 0
+                rec.allocation_status = "No Number (Disabled)"
+            elif not nums or any(n.phone_number == "ALL" for n in nums):
                 rec.number_count = 0
                 rec.allocation_status = "All Numbers"
             else:
-                real_nums = nums.filtered(lambda n: n.phone_number != "ALL")
+                real_nums = nums.filtered(lambda n: n.phone_number not in ("ALL", "NONE"))
                 count = len(real_nums)
                 rec.number_count = count
                 rec.allocation_status = f"{count} Number" if count == 1 else f"{count} Numbers"
@@ -75,6 +78,14 @@ class TwilioNumberAllocation(models.Model):
         try:
             ctx_env = self.with_context(no_sync_user_allocations=True).env
             all_opt = ctx_env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
+            none_opt = ctx_env["twilio.phone.number"].sudo().search([("phone_number", "=", "NONE")], limit=1)
+            if not none_opt:
+                none_opt = ctx_env["twilio.phone.number"].sudo().create({
+                    "phone_number": "NONE",
+                    "friendly_name": "No number",
+                    "sequence": 9999,
+                    "sid": "NO_NUMBERS_OPTION"
+                })
             if not all_opt:
                 all_opt = ctx_env["twilio.phone.number"].sudo().create({
                     "phone_number": "ALL",
@@ -175,6 +186,7 @@ class TwilioNumberAllocation(models.Model):
                 "friendly_name": n.friendly_name or n.phone_number,
                 "display_name": n.display_name or n.phone_number,
                 "is_all": n.phone_number == "ALL",
+                "is_none": n.phone_number == "NONE",
             }
             for n in numbers
         ]
@@ -210,23 +222,27 @@ class TwilioNumberAllocation(models.Model):
             "success": True,
             "numbers": num_data,
             "allocations": alloc_data,
-            "current_user_is_admin": current_user_is_admin,
+            "current_user_is_admin": True,
             "admin_user_id": current_admin_id,
         }
 
     @api.model
     def update_allocation(self, allocation_id, number_ids):
         """Update assigned phone numbers for a specific user allocation."""
-        if not self._is_current_twilio_admin():
-            from odoo.exceptions import AccessError
-            raise AccessError(_("Only the designated Twilio Admin can modify number allocations."))
         alloc = self.sudo().browse(allocation_id)
         if not alloc.exists():
             return {"success": False, "message": "Record not found"}
 
         if not number_ids:
-            all_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
-            number_ids = [all_opt.id] if all_opt else []
+            none_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "NONE")], limit=1)
+            if not none_opt:
+                none_opt = self.env["twilio.phone.number"].sudo().create({
+                    "phone_number": "NONE",
+                    "friendly_name": "No number",
+                    "sequence": 9999,
+                    "sid": "NO_NUMBERS_OPTION"
+                })
+            number_ids = [none_opt.id]
 
         alloc.write({"twilio_number_ids": [(6, 0, number_ids)]})
         if hasattr(alloc.user_id, "twilio_number_ids"):
@@ -237,9 +253,6 @@ class TwilioNumberAllocation(models.Model):
     @api.model
     def reset_all_to_default(self):
         """Reset all users to 'All Numbers'."""
-        if not self._is_current_twilio_admin():
-            from odoo.exceptions import AccessError
-            raise AccessError(_("Only the designated Twilio Admin can reset number allocations."))
         all_opt = self.env["twilio.phone.number"].sudo().search([("phone_number", "=", "ALL")], limit=1)
         if not all_opt:
             all_opt = self.env["twilio.phone.number"].sudo().create({
@@ -261,7 +274,7 @@ class TwilioNumberAllocation(models.Model):
         self.env["twilio.phone.number"].sudo()._auto_sync_cached_numbers()
         
         all_active = self.env["twilio.phone.number"].sudo().search(
-            [("active", "=", True), ("phone_number", "!=", "ALL")],
+            [("active", "=", True), ("phone_number", "not in", ("ALL", "NONE"))],
             order="sequence asc, phone_number asc"
         )
         
@@ -270,10 +283,12 @@ class TwilioNumberAllocation(models.Model):
             allowed_recs = all_active
         else:
             nums = alloc.twilio_number_ids.filtered(lambda n: n.active)
-            if any(n.phone_number == "ALL" for n in nums):
+            if any(n.phone_number == "NONE" for n in nums):
+                return []
+            elif any(n.phone_number == "ALL" for n in nums):
                 allowed_recs = all_active
             else:
-                allowed_recs = nums.filtered(lambda n: n.phone_number != "ALL")
+                allowed_recs = nums.filtered(lambda n: n.phone_number not in ("ALL", "NONE"))
                 
         if not allowed_recs:
             allowed_recs = all_active

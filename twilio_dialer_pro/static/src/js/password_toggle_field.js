@@ -8,15 +8,15 @@ import { CharField, charField } from "@web/views/fields/char/char_field";
 import { formatChar } from "@web/views/fields/formatters";
 
 export class PasswordToggleField extends CharField {
-    static template = "twilio_dialer_pro.PasswordToggleField";
+    static template = "twilio_dialer.PasswordToggleField";
 
     setup() {
         super.setup();
         this.revealState = useState({ visible: false });
     }
 
-    get inputType() {
-        return this.revealState.visible ? "text" : "password";
+    get isMasked() {
+        return !this.revealState.visible;
     }
 
     get eyeIcon() {
@@ -48,7 +48,7 @@ export const passwordToggleField = {
     displayName: _t("Password (toggle)"),
     extractProps: (fieldInfo, dynamicInfo) => {
         const props = charField.extractProps(fieldInfo, dynamicInfo);
-        props.isPassword = true;
+        props.isPassword = false;
         return props;
     },
 };

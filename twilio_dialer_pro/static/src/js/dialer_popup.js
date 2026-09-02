@@ -1,5 +1,8 @@
 /** @odoo-module **/
 
+import { BillingDashboard } from "@twilio_dialer_pro/js/billing";
+import { NumberAllocationPanel } from "@twilio_dialer_pro/js/number_allocation";
+
 import { Component, onMounted, onWillStart, onWillUnmount, onWillUpdateProps, useExternalListener } from "@odoo/owl";
 import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
@@ -15,7 +18,7 @@ const CONTACT_PAGE_SIZE = 30;
 
 export class DialerPopup extends Component {
     static template = "twilio_dialer_pro.DialerPopup";
-    static components = { AutoDialerRunner };
+    static components = { AutoDialerRunner, NumberAllocationPanel, BillingDashboard };
 
     static props = {
         onClose: { type: Function, optional: false },
@@ -30,6 +33,7 @@ export class DialerPopup extends Component {
     setup() {
                 this.orm = useService("orm");
         this.action = useService("action");
+        this.notification = useService("notification");
         const defaultCountry = COUNTRY_CODES.find((country) => country.code === "+91") || COUNTRY_CODES[0];
         const lastDial = this._loadLastDial();
         const savedCountry =
@@ -68,6 +72,29 @@ export class DialerPopup extends Component {
             showQuickDebugModal: false,
             lastCallDuration: 0,
             debugChecking: false,
+            settingsSubView: null,
+            subViewLoading: false,
+            aiSettings: {
+                ai_provider: "openai",
+                openai_api_key: "",
+                openai_speech_model: "whisper-1",
+                anthropic_api_key: "",
+                gemini_api_key: "",
+                deepgram_api_key: "",
+            },
+            callSettings: {
+                enable_incoming: true,
+                record_incoming: true,
+                record_outgoing: true,
+                enable_transcription: false,
+                enable_smart_copy: false,
+            },
+            accountSettings: {
+                account_sid: "",
+                auth_token: "",
+                phone_number: "",
+            },
+            showSecretKey: false,
         });
 
         this._callTimer = null;
@@ -521,13 +548,24 @@ export class DialerPopup extends Component {
         }
     }
 
-    setActiveTab(tab) {
+        async setActiveTab(tab) {
         this.state.activeTab = tab;
         this.closeAllDropdowns();
         if (tab === "contacts") {
             this._loadContacts({ reset: true });
         } else if (tab === "settings") {
-            this.openConfiguration();
+            this.state.settingsSubView = null;
+            this.state.subViewLoading = true;
+            try {
+                const res = await rpc("/twilio_dialer/settings/get");
+                if (res && res.success && res.call) {
+                    Object.assign(this.state.callSettings, res.call);
+                }
+            } catch (err) {
+                console.error("[Dialer] Failed to load call settings:", err);
+            } finally {
+                this.state.subViewLoading = false;
+            }
         }
     }
 
@@ -1061,4 +1099,74 @@ export class DialerPopup extends Component {
             }
         }, 50);
     }
+    async openSettingsSubView(viewName) {
+        this.state.settingsSubView = viewName;
+        this.state.showSecretKey = false;
+        if (viewName === "ai" || viewName === "call" || viewName === "account") {
+            this.state.subViewLoading = true;
+            try {
+                const res = await rpc("/twilio_dialer/settings/get");
+                if (res && res.success) {
+                    if (res.ai) Object.assign(this.state.aiSettings, res.ai);
+                    if (res.call) Object.assign(this.state.callSettings, res.call);
+                    if (res.account) Object.assign(this.state.accountSettings, res.account);
+                }
+            } catch (err) {
+                console.error("[Dialer] Failed to load settings:", err);
+            } finally {
+                this.state.subViewLoading = false;
+            }
+        }
+    }
+
+    closeSettingsSubView() {
+        this.state.settingsSubView = null;
+    }
+
+    
+
+    async saveSubViewSettings(section) {
+        this.state.subViewLoading = true;
+        try {
+            let payload = {};
+            if (section === "ai") payload = this.state.aiSettings;
+            else if (section === "call") payload = this.state.callSettings;
+            else if (section === "account") payload = this.state.accountSettings;
+
+            const res = await rpc("/twilio_dialer/settings/save", {
+                section: section,
+                values: payload,
+            });
+            if (res && res.success) {
+                this.notification.add(_t("Settings saved successfully!"), { type: "success" });
+            } else {
+                this.notification.add(res?.message || _t("Failed to save settings"), { type: "danger" });
+            }
+        } catch (err) {
+            console.error("[Dialer] Save settings error:", err);
+            this.notification.add(_t("Error saving settings"), { type: "danger" });
+        } finally {
+            this.state.subViewLoading = false;
+        }
+    }
+
+    openFullPageBilling() {
+        if (this.props.onClose) {
+            this.props.onClose();
+        }
+        const dialer = this.env.services.twilio_dialer;
+        if (dialer) {
+            dialer.close();
+        }
+        try {
+            this.action.doAction("twilio_dialer_pro.action_twilio_billing");
+        } catch (e) {
+            this.action.doAction("twilio_dialer.action_twilio_billing");
+        }
+    }
+
+    toggleSecretKeyVisibility() {
+        this.state.showSecretKey = !this.state.showSecretKey;
+    }
+
 }

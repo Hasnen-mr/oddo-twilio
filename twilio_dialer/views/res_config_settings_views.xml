@@ -15,128 +15,6 @@
                     <field name="twilio_application_sid" invisible="1"/>
                     <field name="twilio_config_section" widget="twilio_config_nav" class="o_twilio_cfg_nav_field"/>
 
-                    <!-- Connection overview (Account section) -->
-                    <block name="twilio_connection_overview">
-                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--account w-100">
-                        <div class="o_twilio_cfg_banner w-100">
-                            <div class="o_twilio_cfg_banner_left">
-                                <div class="o_twilio_cfg_banner_title">Twilio connection</div>
-                                <div class="o_twilio_cfg_banner_sub">
-                                    Connect your Twilio account, set call behavior, then optionally enable AI transcripts.
-                                </div>
-                            </div>
-                            <div class="o_twilio_cfg_banner_right">
-                                <span class="o_twilio_cfg_status_pill">
-                                    <field name="twilio_status" readonly="1" class="o_twilio_cfg_status_field"/>
-                                </span>
-                                <button name="action_remove_connection"
-                                        type="object"
-                                        string="Disconnect"
-                                        icon="fa-unlink"
-                                        class="btn btn-danger o_twilio_cfg_disconnect_btn"
-                                        invisible="not twilio_is_connected"
-                                        noSaveDialog="True"
-                                        confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear Account SID, Auth Token, and generated credentials. Continue?"/>
-                            </div>
-                        </div>
-                        <div class="o_twilio_cfg_smart_note w-100 mt-2" invisible="twilio_is_connected">
-                            <i class="fa fa-lock"/>
-                            <span><strong>Call Settings</strong> and <strong>AI Settings</strong> unlock after you save valid Twilio credentials and connect.</span>
-                        </div>
-                        </div>
-                    </block>
-
-                    <!-- Account -->
-                    <block name="twilio_account_details">
-                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--account w-100">
-                        <div class="o_twilio_cfg_grid w-100">
-                            <div class="o_twilio_cfg_card">
-                                <div class="o_twilio_cfg_card_title">Credentials</div>
-                                <div class="o_twilio_cfg_card_sub">Used to authenticate with your Twilio account.</div>
-
-                                <div class="o_twilio_cfg_smart_note">
-                                    <i class="fa fa-magic"/>
-                                    <span>Enter your <strong>Account SID</strong> and <strong>Auth Token</strong>, then click <strong>Save Credentials</strong>. Smart Tools creates the API key, TwiML app, and phone numbers, then refreshes this page.</span>
-                                </div>
-
-                                <div class="o_twilio_cfg_field">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label for="twilio_account_sid" class="o_twilio_cfg_label mb-0">Account SID</label>
-                                        <button name="action_open_credentials_help" type="object" string="How to find?" class="btn btn-link p-0 o_twilio_find_cred_btn"/>
-                                    </div>
-                                    <field name="twilio_account_sid"
-                                            class="o_twilio_cfg_input"
-                                            placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"/>
-                                </div>
-                                <div class="o_twilio_cfg_field">
-                                    <div class="d-flex justify-content-between align-items-center mb-1">
-                                        <label for="twilio_auth_token" class="o_twilio_cfg_label mb-0">Auth Token</label>
-                                        <button name="action_open_credentials_help" type="object" string="How to find?" class="btn btn-link p-0 o_twilio_find_cred_btn"/>
-                                    </div>
-                                    <field name="twilio_auth_token"
-                                            widget="password_toggle"
-                                            class="o_twilio_cfg_input"
-                                            placeholder="Your Twilio Auth Token"/>
-                                </div>
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_contact_email" class="o_twilio_cfg_label">Contact Email</label>
-                                    <field name="twilio_contact_email"
-                                            class="o_twilio_cfg_input"
-                                            placeholder="you@company.com"
-                                            widget="email"/>
-                                </div>
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_contact_phone" class="o_twilio_cfg_label">Contact Phone</label>
-                                    <field name="twilio_contact_phone"
-                                            class="o_twilio_cfg_input"
-                                            placeholder="+15551234567"/>
-                                </div>
-
-                                <div class="o_twilio_cfg_actions">
-                                    <button name="action_save_twilio_credentials"
-                                            type="object"
-                                            string="Save Credentials"
-                                            class="btn btn-primary"/>
-                                    <button name="action_generate_configuration"
-                                            type="object"
-                                            string="Sync Again"
-                                            class="btn btn-secondary"
-                                            invisible="not twilio_is_connected"/>
-                                </div>
-                            </div>
-
-                            <div class="o_twilio_cfg_card" invisible="not twilio_is_connected">
-                                <div class="o_twilio_cfg_card_title">Generated connection</div>
-                                <div class="o_twilio_cfg_card_sub">
-                                    Read-only details created automatically when you save your credentials.
-                                </div>
-
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_application_sid" class="o_twilio_cfg_label">Application SID</label>
-                                    <div class="o_twilio_cfg_readonly_box">
-                                        <field name="twilio_application_sid" readonly="1" nolabel="1"/>
-                                    </div>
-                                </div>
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_api_key_sid" class="o_twilio_cfg_label">API Key SID</label>
-                                    <div class="o_twilio_cfg_readonly_box">
-                                        <field name="twilio_api_key_sid" readonly="1" nolabel="1"/>
-                                    </div>
-                                </div>
-                                <div class="o_twilio_cfg_field">
-                                    <label for="twilio_api_secret" class="o_twilio_cfg_label">API Secret</label>
-                                    <div class="o_twilio_cfg_readonly_box">
-                                        <field name="twilio_api_secret"
-                                                readonly="1"
-                                                widget="password_toggle"
-                                                nolabel="1"/>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                    </block>
-
                     <!-- Call Settings -->
                     <block name="twilio_call_settings"
                            invisible="not twilio_is_connected">
@@ -249,7 +127,7 @@
                                 </div>
                                 <div class="o_twilio_cfg_api_warn"
                                      invisible="not twilio_outgoing_transcription or not twilio_ai_api_key_issue">
-                                    <i class="fa fa-exclamation-triangle"/>
+                                        <i class="fa fa-exclamation-triangle"/>
                                     <div class="o_twilio_cfg_api_warn_body">
                                         <span>API key is not set, or API key is not valid.</span>
                                         <field name="twilio_ai_settings_link"
@@ -293,7 +171,7 @@
                                 </div>
                                 <div class="o_twilio_cfg_field" invisible="twilio_ai_provider != 'openai'">
                                     <label for="twilio_openai_api_key" class="o_twilio_cfg_label">OpenAI API Key</label>
-                                    <field name="twilio_openai_api_key" password="True" class="o_twilio_cfg_input" placeholder="sk-..."/>
+                                    <field name="twilio_openai_api_key" widget="password_toggle" class="o_twilio_cfg_input" placeholder="sk-..."/>
                                 </div>
                                 <div class="o_twilio_cfg_field" invisible="twilio_ai_provider != 'openai'">
                                     <label for="twilio_openai_speech_model" class="o_twilio_cfg_label">OpenAI Speech Model</label>
@@ -301,15 +179,15 @@
                                 </div>
                                 <div class="o_twilio_cfg_field" invisible="twilio_ai_provider != 'anthropic'">
                                     <label for="twilio_anthropic_api_key" class="o_twilio_cfg_label">Anthropic API Key</label>
-                                    <field name="twilio_anthropic_api_key" password="True" class="o_twilio_cfg_input" placeholder="sk-ant-..."/>
+                                    <field name="twilio_anthropic_api_key" widget="password_toggle" class="o_twilio_cfg_input" placeholder="sk-ant-..."/>
                                 </div>
                                 <div class="o_twilio_cfg_field" invisible="twilio_ai_provider != 'gemini'">
                                     <label for="twilio_gemini_api_key" class="o_twilio_cfg_label">Google Gemini API Key</label>
-                                    <field name="twilio_gemini_api_key" password="True" class="o_twilio_cfg_input"/>
+                                    <field name="twilio_gemini_api_key" widget="password_toggle" class="o_twilio_cfg_input"/>
                                 </div>
                                 <div class="o_twilio_cfg_field" invisible="twilio_ai_provider != 'deepgram'">
                                     <label for="twilio_deepgram_api_key" class="o_twilio_cfg_label">Deepgram API Key</label>
-                                    <field name="twilio_deepgram_api_key" password="True" class="o_twilio_cfg_input"/>
+                                    <field name="twilio_deepgram_api_key" widget="password_toggle" class="o_twilio_cfg_input"/>
                                 </div>
                             </div>
 
@@ -353,6 +231,138 @@
                            invisible="not twilio_is_connected">
                         <div class="o_twilio_cfg_panel o_twilio_cfg_panel--billing w-100">
                         <field name="twilio_billing_panel" widget="twilio_billing_panel" nolabel="1" class="w-100 o_twilio_cfg_billing_field"/>
+                        </div>
+                    </block>
+
+                    <!-- Connection overview (Account section) -->
+                    <block name="twilio_connection_overview">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--account w-100">
+                        <div class="o_twilio_cfg_banner w-100">
+                            <div class="o_twilio_cfg_banner_left">
+                                <div class="o_twilio_cfg_banner_title">Twilio connection</div>
+                                <div class="o_twilio_cfg_banner_sub">
+                                    Connect your Twilio account, set call behavior, then optionally enable AI transcripts.
+                                </div>
+                            </div>
+                            <div class="o_twilio_cfg_banner_right">
+                                <span class="o_twilio_cfg_status_pill">
+                                    <field name="twilio_status" readonly="1" class="o_twilio_cfg_status_field"/>
+                                </span>
+                                <button name="action_remove_connection"
+                                        type="object"
+                                        string="Disconnect"
+                                        icon="fa-unlink"
+                                        class="btn btn-danger o_twilio_cfg_disconnect_btn"
+                                        invisible="not twilio_is_connected"
+                                        noSaveDialog="True"
+                                        confirm="This will disconnect Twilio (delete API key / TwiML app when possible) and clear Account SID, Auth Token, and generated credentials. Continue?"/>
+                            </div>
+                        </div>
+                        <div class="o_twilio_cfg_smart_note w-100 mt-2" invisible="twilio_is_connected">
+                            <i class="fa fa-lock"/>
+                            <span><strong>Call Settings</strong> and <strong>AI Settings</strong> unlock after you save valid Twilio credentials and connect.</span>
+                        </div>
+                        </div>
+                    </block>
+
+                    <!-- Account -->
+                    <block name="twilio_account_details">
+                        <div class="o_twilio_cfg_panel o_twilio_cfg_panel--account w-100">
+                        <div class="o_twilio_cfg_grid w-100">
+                            <div class="o_twilio_cfg_card">
+                                <div class="o_twilio_cfg_card_title">Credentials</div>
+                                <div class="o_twilio_cfg_card_sub">Used to authenticate with your Twilio account.</div>
+
+                                <div class="o_twilio_cfg_smart_note">
+                                    <i class="fa fa-magic"/>
+                                    <span>Enter your <strong>Account SID</strong> and <strong>Auth Token</strong>, then click <strong>Save Credentials</strong>. Smart Tools creates the API key, TwiML app, and phone numbers, then refreshes this page.</span>
+                                </div>
+
+                                <div class="o_twilio_cfg_field">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="twilio_account_sid" class="o_twilio_cfg_label mb-0">Account SID</label>
+                                        <button name="action_open_credentials_help" type="object" string="How to find?" class="btn btn-link p-0 o_twilio_find_cred_btn"/>
+                                    </div>
+                                    <field name="twilio_account_sid"
+                                           class="o_twilio_cfg_input"
+                                           placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                           autocomplete="off"
+                                           data-lpignore="true"
+                                           data-1p-ignore="true"
+                                           data-bwignore="true"
+                                           data-form-type="other"/>
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label for="twilio_auth_token" class="o_twilio_cfg_label mb-0">Auth Token</label>
+                                        <button name="action_open_credentials_help" type="object" string="How to find?" class="btn btn-link p-0 o_twilio_find_cred_btn"/>
+                                    </div>
+                                    <field name="twilio_auth_token"
+                                           widget="password_toggle"
+                                           class="o_twilio_cfg_input"
+                                           placeholder="Your Twilio Auth Token"
+                                           autocomplete="new-password"
+                                           data-lpignore="true"
+                                           data-1p-ignore="true"
+                                           data-bwignore="true"
+                                           data-form-type="other"/>
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_contact_email" class="o_twilio_cfg_label">Contact Email</label>
+                                    <field name="twilio_contact_email"
+                                            class="o_twilio_cfg_input"
+                                            placeholder="you@company.com"
+                                            widget="email"/>
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_contact_phone" class="o_twilio_cfg_label">Contact Phone</label>
+                                    <field name="twilio_contact_phone"
+                                            class="o_twilio_cfg_input"
+                                            placeholder="+15551234567"/>
+                                </div>
+
+                                <div class="o_twilio_cfg_actions">
+                                    <button name="action_save_twilio_credentials"
+                                            type="object"
+                                            string="Save Credentials"
+                                            class="btn btn-primary"/>
+                                    <button name="action_generate_configuration"
+                                            type="object"
+                                            string="Sync Again"
+                                            class="btn btn-secondary"
+                                            invisible="not twilio_is_connected"/>
+                                </div>
+                            </div>
+
+                            <div class="o_twilio_cfg_card" invisible="not twilio_is_connected">
+                                <div class="o_twilio_cfg_card_title">Generated connection</div>
+                                <div class="o_twilio_cfg_card_sub">
+                                    Read-only details created automatically when you save your credentials.
+                                </div>
+
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_application_sid" class="o_twilio_cfg_label">Application SID</label>
+                                    <div class="o_twilio_cfg_readonly_box">
+                                        <field name="twilio_application_sid" readonly="1" nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_api_key_sid" class="o_twilio_cfg_label">API Key SID</label>
+                                    <div class="o_twilio_cfg_readonly_box">
+                                        <field name="twilio_api_key_sid" readonly="1" nolabel="1"/>
+                                    </div>
+                                </div>
+                                <div class="o_twilio_cfg_field">
+                                    <label for="twilio_api_secret" class="o_twilio_cfg_label">API Secret</label>
+                                    <div class="o_twilio_cfg_readonly_box">
+                                        <field name="twilio_api_secret"
+                                                readonly="1"
+                                                widget="password_toggle"
+                                                nolabel="1"/>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         </div>
                     </block>
 

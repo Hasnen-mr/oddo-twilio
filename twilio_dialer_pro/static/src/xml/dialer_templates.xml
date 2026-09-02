@@ -7,7 +7,7 @@
         <button type="button"
                 class="o_dialer_toggle_btn"
                 t-att-class="{ 'o_dialer_toggle_btn--open': this.state.isOpen }"
-                title="Twilio Call Auto Dialer"
+                title="Twilio Call Auto Dialer (Alt + D)"
                 aria-label="Twilio Call Auto Dialer"
                 t-on-click="togglePanel">
             <span class="o_dialer_toggle_visual" aria-hidden="true">
@@ -469,37 +469,76 @@
                     </div>
                 </t>
 
-                <!-- Settings tab -->
+                                                                                                <!-- Settings tab: Direct Clean Call Settings Panel -->
                 <t t-elif="this.state.activeTab === 'settings'">
-                    <div class="o_dialer_tab_panel o_dialer_launch_panel">
-                        <div class="o_dialer_launch_card">
-                            <div class="o_dialer_launch_icon">
-                                <i class="fa fa-cog"/>
+                    <div class="o_dialer_tab_panel o_dialer_settings_panel p-3">
+                        <div class="o_dialer_settings_header mb-3">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <h4 class="fw-bold m-0 text-dark d-flex align-items-center gap-2" style="font-size: 16px;">
+                                    <i class="fa fa-phone text-primary"/>
+                                    <span>Call Settings</span>
+                                </h4>
+                                <span class="badge bg-light text-muted border" style="font-size: 11px;">
+                                    <i class="fa fa-keyboard-o me-1"/> Alt + D
+                                </span>
                             </div>
-                            <h3 class="o_dialer_launch_title">Settings</h3>
-                            <p class="o_dialer_launch_copy">
-                                Manage Twilio credentials, call options, AI, and billing.
-                            </p>
-                            <ul class="o_dialer_launch_tips">
-                                <li>
-                                    <i class="fa fa-check"/>
-                                    <span>Configuration opens in the main window</span>
-                                </li>
-                                <li>
-                                    <i class="fa fa-check"/>
-                                    <span>Dialer stays open while you configure</span>
-                                </li>
-                            </ul>
-                            <button type="button"
-                                    class="o_dialer_launch_btn"
-                                    t-on-click.stop="openConfiguration">
-                                <i class="fa fa-sliders"/>
-                                <span>Open Configuration</span>
-                            </button>
+                            <p class="small text-muted mb-0" style="font-size: 11.5px;">Manage audio, recording &amp; softphone call preferences.</p>
                         </div>
+
+                        <t t-if="this.state.subViewLoading">
+                            <div class="text-center py-4"><i class="fa fa-spinner fa-spin text-primary fa-2x"/></div>
+                        </t>
+                        <t t-else="">
+                            <div class="list-group list-group-flush border rounded-3 p-1 bg-white mb-3 shadow-xs">
+                                <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 cursor-pointer">
+                                    <div class="me-2">
+                                        <div class="fw-semibold text-dark small">Enable Incoming Calls</div>
+                                        <div class="text-muted" style="font-size: 11px;">Allow receiving inbound calls in softphone</div>
+                                    </div>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="this.state.callSettings.enable_incoming"/>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
+                                    <div class="me-2">
+                                        <div class="fw-semibold text-dark small">Record Incoming Calls</div>
+                                        <div class="text-muted" style="font-size: 11px;">Save inbound call recordings</div>
+                                    </div>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="this.state.callSettings.record_incoming"/>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
+                                    <div class="me-2">
+                                        <div class="fw-semibold text-dark small">Record Outbound Calls</div>
+                                        <div class="text-muted" style="font-size: 11px;">Save outbound dialer recordings</div>
+                                    </div>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="this.state.callSettings.record_outgoing"/>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
+                                    <div class="me-2">
+                                        <div class="fw-semibold text-dark small">AI Transcription</div>
+                                        <div class="text-muted" style="font-size: 11px;">Transcribe recordings automatically</div>
+                                    </div>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="this.state.callSettings.enable_transcription"/>
+                                </label>
+                                <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
+                                    <div class="me-2">
+                                        <div class="fw-semibold text-dark small">Smart Copy</div>
+                                        <div class="text-muted" style="font-size: 11px;">Copy transcripts directly to clipboard</div>
+                                    </div>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="this.state.callSettings.enable_smart_copy"/>
+                                </label>
+                            </div>
+
+                            <button type="button" class="btn btn-primary w-100 py-2 rounded-pill fw-semibold small shadow-xs mb-3" t-on-click="() => this.saveSubViewSettings('call')">
+                                <i class="fa fa-check me-1"/> Save Call Preferences
+                            </button>
+
+                            <button type="button"
+                                    class="btn btn-outline-secondary w-100 py-2 rounded-pill fw-semibold small"
+                                    t-on-click.stop="() => this.openFullPageConfiguration('call')">
+                                <i class="fa fa-external-link me-1"/> Open Full Configuration
+                            </button>
+                        </t>
                     </div>
                 </t>
-
                 <!-- About Us tab -->
                 <t t-elif="this.state.activeTab === 'about'">
                     <div class="o_dialer_tab_panel o_dialer_about">

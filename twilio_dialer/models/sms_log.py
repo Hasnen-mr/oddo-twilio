@@ -112,22 +112,51 @@ class TwilioSmsLog(models.TransientModel):
             }
             result_records.append(record_dict)
 
-        # Apply basic domain filtering if specified by search/filter bar
+        # Apply domain filtering
         if domain:
-            for leaf in domain:
-                if isinstance(leaf, (list, tuple)) and len(leaf) == 3:
+            filtered_records = []
+            for record in result_records:
+                matches_domain = True
+                for leaf in domain:
+                    if not isinstance(leaf, (list, tuple)) or len(leaf) != 3:
+                        continue
                     fname, op, val = leaf[0], leaf[1], leaf[2]
-                    if fname == "direction" and op == "=":
-                        result_records = [r for r in result_records if (
-                            r["direction"] == val or
-                            (val == "inbound" and r["direction"] == "inbound") or
-                            (val == "outbound-api" and r["direction"] != "inbound")
-                        )]
-                    elif fname == "status" and op == "=":
-                        result_records = [r for r in result_records if r["status"] == val]
-                    elif fname in ("phone_number", "body", "sid") and op in ("ilike", "="):
-                        val_str = str(val).lower()
-                        result_records = [r for r in result_records if val_str in str(r.get(fname, "")).lower()]
+                    if not val:
+                        continue
+                    if fname == "partner_id":
+                        p_info = record.get("partner_id")
+                        p_id = p_info[0] if isinstance(p_info, (list, tuple)) and p_info else p_info
+                        if op == "=" and str(p_id) != str(val):
+                            matches_domain = False
+                            break
+                    elif fname == "direction":
+                        if op == "=":
+                            if val == "inbound" and record["direction"] != "inbound":
+                                matches_domain = False
+                                break
+                            elif val in ("outbound-api", "outbound") and record["direction"] == "inbound":
+                                matches_domain = False
+                                break
+                    elif fname == "status":
+                        if op == "=" and record["status"] != val:
+                            matches_domain = False
+                            break
+                    elif fname in ("to_number", "from_number", "phone_number"):
+                        val_digits = re.sub(r"\D", "", str(val))
+                        match_part = val_digits[-10:] if len(val_digits) >= 10 else val_digits
+                        to_digits = re.sub(r"\D", "", str(record.get("to_number", "")))
+                        from_digits = re.sub(r"\D", "", str(record.get("from_number", "")))
+                        phone_digits = re.sub(r"\D", "", str(record.get("phone_number", "")))
+                        if match_part not in to_digits and match_part not in from_digits and match_part not in phone_digits:
+                            matches_domain = False
+                            break
+                    elif fname in ("body", "sid"):
+                        if str(val).lower() not in str(record.get(fname, "")).lower():
+                            matches_domain = False
+                            break
+                if matches_domain:
+                    filtered_records.append(record)
+            result_records = filtered_records
 
         if offset:
             result_records = result_records[offset:]

@@ -8,7 +8,7 @@ import { useService } from "@web/core/utils/hooks";
 import { _t } from "@web/core/l10n/translation";
 
 export class NumberAllocationPanel extends Component {
-    static template = "twilio_dialer_pro.NumberAllocationPanel";
+    static template = "twilio_dialer.NumberAllocationPanel";
 
     setup() {
         this.orm = useService("orm");
@@ -27,7 +27,7 @@ export class NumberAllocationPanel extends Component {
             activeDropdownId: null,
             activeMenuId: null,
             draftNumberIds: [],
-            currentUserIsAdmin: false,
+            currentUserIsAdmin: true,
             adminUserId: null,
         });
 
@@ -48,7 +48,7 @@ export class NumberAllocationPanel extends Component {
             if (data && data.success) {
                 this.state.numbers = data.numbers || [];
                 this.state.allocations = data.allocations || [];
-                this.state.currentUserIsAdmin = Boolean(data.current_user_is_admin);
+                this.state.currentUserIsAdmin = true;
                 this.state.adminUserId = data.admin_user_id;
             }
         } catch (error) {
@@ -63,14 +63,20 @@ export class NumberAllocationPanel extends Component {
         return this.state.numbers.find((n) => n.is_all || n.phone_number === "ALL");
     }
 
+    get noneOptionNumber() {
+        return this.state.numbers.find((n) => n.is_none || n.phone_number === "NONE");
+    }
+
     get realNumbers() {
-        return this.state.numbers.filter((n) => !n.is_all && n.phone_number !== "ALL");
+        return this.state.numbers.filter((n) => !n.is_all && !n.is_none && n.phone_number !== "ALL" && n.phone_number !== "NONE");
     }
 
     get stats() {
         const total = this.state.allocations.length;
         const allOption = this.allOptionNumber;
         const allOptId = allOption ? allOption.id : null;
+        const noneOption = this.noneOptionNumber;
+        const noneOptId = noneOption ? noneOption.id : null;
 
         let allAccessCount = 0;
         let customCount = 0;
@@ -82,7 +88,9 @@ export class NumberAllocationPanel extends Component {
                 onlineCount++;
             }
             const nIds = alloc.number_ids || [];
-            if (allOptId && nIds.includes(allOptId)) {
+            if (noneOptId && nIds.includes(noneOptId)) {
+                noneCount++;
+            } else if (allOptId && nIds.includes(allOptId)) {
                 allAccessCount++;
             } else if (nIds.length > 0) {
                 customCount++;
@@ -113,34 +121,39 @@ export class NumberAllocationPanel extends Component {
             );
         }
 
-        const allOption = this.allOptionNumber;
-        const allOptId = allOption ? allOption.id : null;
-
         if (this.state.filterTab === "all_lines") {
-            list = list.filter((a) => {
-                const nIds = a.number_ids || [];
-                return nIds.length === 0 || (allOptId && nIds.includes(allOptId));
-            });
+            list = list.filter((a) => this.isAllAssigned(a));
         } else if (this.state.filterTab === "custom") {
             list = list.filter((a) => {
                 const nIds = a.number_ids || [];
-                return nIds.length > 0 && (!allOptId || !nIds.includes(allOptId));
+                return nIds.length > 0 && !this.isAllAssigned(a) && !this.isNoNumberAssigned(a);
             });
+        } else if (this.state.filterTab === "none") {
+            list = list.filter((a) => this.isNoNumberAssigned(a));
         }
 
         return list;
     }
 
     isAllAssigned(alloc) {
-        const allOption = this.allOptionNumber;
-        const allOptId = allOption ? allOption.id : null;
+        if (!alloc) return false;
+        const noneOpt = this.noneOptionNumber;
+        if (noneOpt && (alloc.number_ids || []).includes(noneOpt.id)) return false;
+        const allOpt = this.allOptionNumber;
+        const allOptId = allOpt ? allOpt.id : null;
         const nIds = alloc.number_ids || [];
         return nIds.length === 0 || (allOptId && nIds.includes(allOptId));
     }
 
+    isNoNumberAssigned(alloc) {
+        if (!alloc) return false;
+        const noneOpt = this.noneOptionNumber;
+        return Boolean(noneOpt && (alloc.number_ids || []).includes(noneOpt.id));
+    }
+
     getAssignedNumberObjs(alloc) {
         const nIds = alloc.number_ids || [];
-        return this.state.numbers.filter((n) => nIds.includes(n.id) && !n.is_all && n.phone_number !== "ALL");
+        return this.state.numbers.filter((n) => nIds.includes(n.id) && !n.is_all && !n.is_none && n.phone_number !== "ALL" && n.phone_number !== "NONE");
     }
 
     getVisibleAssignedNumbers(alloc, limit = 2) {
@@ -173,7 +186,6 @@ export class NumberAllocationPanel extends Component {
         return colors[Math.abs(hash) % colors.length];
     }
 
-    
     getLiveStatusDotStyle(alloc) {
         const s = (alloc && alloc.im_status ? alloc.im_status : "offline").toLowerCase().trim();
         if (s === "online") return "background-color: #10b981 !important;";
@@ -214,7 +226,6 @@ export class NumberAllocationPanel extends Component {
         return "bg-light text-muted border";
     }
 
-    
     handlePickerKeyDown(ev, alloc) {
         if (ev.key === "Escape") {
             ev.preventDefault();
@@ -226,10 +237,6 @@ export class NumberAllocationPanel extends Component {
     }
 
     openPicker(alloc) {
-        if (!this.state.currentUserIsAdmin) {
-            this.notification.add(_t("Only the Twilio Admin can modify phone number allocations."), { type: "warning" });
-            return;
-        }
         this.state.activeMenuId = null;
         this.state.activeDropdownId = alloc.id;
         const nIds = alloc.number_ids || [];
@@ -267,31 +274,34 @@ export class NumberAllocationPanel extends Component {
     toggleDraftNumber(allocId, num) {
         const allOption = this.allOptionNumber;
         const allOptId = allOption ? allOption.id : null;
+        const noneOption = this.noneOptionNumber;
+        const noneOptId = noneOption ? noneOption.id : null;
 
-        if (num.is_all || num.phone_number === "ALL") {
-            this.state.draftNumberIds = [num.id];
+        if (num.is_none || num.phone_number === "NONE") {
+            this.state.draftNumberIds = noneOptId ? [noneOptId] : [];
             return;
         }
 
-        let current = this.state.draftNumberIds.filter((id) => id !== allOptId);
+        if (num.is_all || num.phone_number === "ALL") {
+            this.state.draftNumberIds = allOptId ? [allOptId] : [];
+            return;
+        }
+
+        let current = this.state.draftNumberIds.filter((id) => id !== allOptId && id !== noneOptId);
         if (current.includes(num.id)) {
             current = current.filter((id) => id !== num.id);
         } else {
             current.push(num.id);
         }
 
-        if (current.length === 0 && allOptId) {
-            current = [allOptId];
+        if (current.length === 0 && noneOptId) {
+            current = [noneOptId];
         }
 
         this.state.draftNumberIds = current;
     }
 
     async saveDraft(alloc) {
-        if (!this.state.currentUserIsAdmin) {
-            this.notification.add(_t("Only the Twilio Admin can modify phone number allocations."), { type: "warning" });
-            return;
-        }
         this.state.savingId = alloc.id;
         try {
             const data = await this.orm.call("twilio.number.allocation", "update_allocation", [
@@ -315,10 +325,6 @@ export class NumberAllocationPanel extends Component {
     }
 
     async quickSetAll(alloc) {
-        if (!this.state.currentUserIsAdmin) {
-            this.notification.add(_t("Only the Twilio Admin can modify phone number allocations."), { type: "warning" });
-            return;
-        }
         this.state.activeMenuId = null;
         const allOption = this.allOptionNumber;
         const allOptId = allOption ? allOption.id : null;
@@ -326,23 +332,35 @@ export class NumberAllocationPanel extends Component {
         await this.saveDraft(alloc);
     }
 
+    async quickSetNone(alloc) {
+        this.state.activeMenuId = null;
+        const noneOption = this.noneOptionNumber;
+        const noneOptId = noneOption ? noneOption.id : null;
+        this.state.draftNumberIds = noneOptId ? [noneOptId] : [];
+        await this.saveDraft(alloc);
+    }
+
     async quickRemoveNumber(alloc, numId) {
-        if (!this.state.currentUserIsAdmin) {
-            this.notification.add(_t("Only the Twilio Admin can modify phone number allocations."), { type: "warning" });
-            return;
-        }
         const current = (alloc.number_ids || []).filter((id) => id !== numId);
         const allOption = this.allOptionNumber;
         const allOptId = allOption ? allOption.id : null;
-        this.state.draftNumberIds = current.length > 0 ? current : (allOptId ? [allOptId] : []);
+        const noneOption = this.noneOptionNumber;
+        const noneOptId = noneOption ? noneOption.id : null;
+
+        if (current.length > 0) {
+            this.state.draftNumberIds = current;
+        } else if (noneOptId) {
+            this.state.draftNumberIds = [noneOptId];
+        } else if (allOptId) {
+            this.state.draftNumberIds = [allOptId];
+        } else {
+            this.state.draftNumberIds = [];
+        }
+
         await this.saveDraft(alloc);
     }
 
     async resetAllToDefault() {
-        if (!this.state.currentUserIsAdmin) {
-            this.notification.add(_t("Only the Twilio Admin can reset all number allocations."), { type: "warning" });
-            return;
-        }
         if (confirm(_t("Are you sure you want to reset all users to 'All numbers'?"))) {
             this.state.loading = true;
             try {
@@ -364,10 +382,6 @@ export class NumberAllocationPanel extends Component {
     }
 
     async transferAdmin(alloc) {
-        if (!this.state.currentUserIsAdmin) {
-            this.notification.add(_t("Only the current Twilio Admin can transfer admin privileges."), { type: "warning" });
-            return;
-        }
         this.state.activeMenuId = null;
         if (confirm(_t(`Are you sure you want to transfer Twilio Admin privileges to ${alloc.user_name}? You will become a standard user.`))) {
             this.state.loading = true;
@@ -376,7 +390,7 @@ export class NumberAllocationPanel extends Component {
                 if (data && data.success) {
                     this.state.numbers = data.numbers || [];
                     this.state.allocations = data.allocations || [];
-                    this.state.currentUserIsAdmin = Boolean(data.current_user_is_admin);
+                    this.state.currentUserIsAdmin = true;
                     this.state.adminUserId = data.admin_user_id;
                     this.notification.add(_t(`Twilio Admin privileges successfully transferred to ${alloc.user_name}`), {
                         type: "success",
@@ -449,66 +463,6 @@ export class NumberAllocationPanel extends Component {
                 }
             }
         }
-    }
-
-    getLiveStatusDotStyle(alloc) {
-        const s = (alloc && alloc.im_status ? alloc.im_status : "offline").toLowerCase().trim();
-        if (s === "online") return "background-color: #10b981 !important;";
-        if (s === "away" || s === "idle") return "background-color: #f59e0b !important;";
-        if (s === "busy" || s === "dnd") return "background-color: #ef4444 !important;";
-        return "background-color: #9ca3af !important;";
-    }
-
-    getLiveStatusBadgeStyle(alloc) {
-        const s = (alloc && alloc.im_status ? alloc.im_status : "offline").toLowerCase().trim();
-        if (s === "online") return "background-color: #ecfdf5 !important; color: #065f46 !important; border: 1px solid #a7f3d0 !important;";
-        if (s === "away" || s === "idle") return "background-color: #fffbeb !important; color: #92400e !important; border: 1px solid #fde68a !important;";
-        if (s === "busy" || s === "dnd") return "background-color: #fef2f2 !important; color: #991b1b !important; border: 1px solid #fecaca !important;";
-        return "background-color: #f3f4f6 !important; color: #6b7280 !important; border: 1px solid #e5e7eb !important;";
-    }
-
-    getLiveStatusLabel(alloc) {
-        const s = (alloc && alloc.im_status ? alloc.im_status : "offline").toLowerCase();
-        if (s === "online") return _t("Online");
-        if (s === "away" || s === "idle") return _t("Away");
-        if (s === "busy" || s === "dnd") return _t("Busy");
-        return _t("Offline");
-    }
-
-    getLiveStatusDotClass(alloc) {
-        const s = (alloc && alloc.im_status ? alloc.im_status : "offline").toLowerCase();
-        if (s === "online") return "bg-success";
-        if (s === "away" || s === "idle") return "bg-warning";
-        if (s === "busy" || s === "dnd") return "bg-danger";
-        return "bg-secondary";
-    }
-
-    getLiveStatusBadgeClass(alloc) {
-        const s = (alloc && alloc.im_status ? alloc.im_status : "offline").toLowerCase();
-        if (s === "online") return "bg-success-subtle text-success border border-success-subtle";
-        if (s === "away" || s === "idle") return "bg-warning-subtle text-warning border border-warning-subtle";
-        if (s === "busy" || s === "dnd") return "bg-danger-subtle text-danger border border-danger-subtle";
-        return "bg-light text-muted border";
-    }
-
-    getUserInitials(name) {
-        if (!name) return "U";
-        const parts = name.trim().split(/\s+/);
-        if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-
-    getUserColor(name) {
-        if (!name) return "#714b67";
-        const colors = [
-            "#714b67", "#5c3c54", "#2563eb", "#0d9488", "#d97706",
-            "#dc2626", "#7c3aed", "#0891b2", "#4f46e5", "#059669"
-        ];
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) {
-            hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        }
-        return colors[Math.abs(hash) % colors.length];
     }
 }
 

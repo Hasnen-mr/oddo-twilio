@@ -12,10 +12,10 @@
         </button>
     </t>
 
-    <!-- SMS Popup Modal -->
+    <!-- SMS Popup Modal & Embedded Live Chat View -->
     <t t-name="twilio_dialer.TwilioSmsPopup">
         <div class="o_twilio_sms_modal_backdrop" t-on-click.self="onCancel">
-            <div class="o_twilio_sms_modal">
+            <div t-att-class="this.props.isEmbedded ? 'o_twilio_sms_modal o_twilio_sms_modal--embedded' : 'o_twilio_sms_modal'">
 
                 <!-- Header -->
                 <div class="o_twilio_sms_header">
@@ -28,14 +28,22 @@
                             <div class="o_twilio_sms_subtitle d-flex align-items-center gap-2">
                                 <span class="o_twilio_sms_phone" t-esc="this.props.phone"/>
                                 <t t-if="this.state.messageText.trim()">
-                                    <span class="badge bg-warning text-dark border border-warning">
-                                        <i class="fa fa-pencil me-1"/>Draft: <t t-esc="this.state.messageText.length > 25 ? this.state.messageText.substring(0, 25) + '...' : this.state.messageText"/>
+                                    <span class="badge bg-warning text-dark border border-warning micro">
+                                        <i class="fa fa-pencil me-1"/>Draft
                                     </span>
                                 </t>
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn-close" t-on-click="onCancel" title="Close" aria-label="Close"/>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 shadow-none" t-on-click="(ev) => this.makeCall(ev)" title="Call via Twilio Softphone">
+                            <i class="fa fa-phone me-1"/>Call
+                        </button>
+                        <t t-if="!this.props.isEmbedded">
+                            <button type="button" class="btn-close ms-2" t-on-click="onCancel" title="Close" aria-label="Close"/>
+                        </t>
+                    </div>
                 </div>
 
                 <!-- Search Bar inside Conversation -->
@@ -51,23 +59,20 @@
                     </div>
                 </div>
 
-                <div class="o_twilio_sms_conversation_banner">
-                    <span>Conversation</span>
-                </div>
-
-                <!-- Chat Body (Messages with 80-85% height & scroll listener) -->
+                <!-- Chat Body (Messages or Skeleton) -->
                 <div class="o_twilio_sms_body" t-ref="chatBody" t-on-scroll="onScroll">
                     <t t-if="this.state.loading">
-                        <div class="o_twilio_sms_loading">
-                            <div class="spinner-border text-primary mb-2" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <span class="fw-medium text-slate-600">Loading conversation from Twilio...</span>
+                        <!-- Short Smooth Skeleton Loading State -->
+                        <div class="o_twilio_sms_skeleton_body">
+                            <div class="o_twilio_skeleton_bubble o_twilio_skeleton_bubble--in" style="width: 45%;"/>
+                            <div class="o_twilio_skeleton_bubble o_twilio_skeleton_bubble--out" style="width: 60%;"/>
+                            <div class="o_twilio_skeleton_bubble o_twilio_skeleton_bubble--in" style="width: 35%;"/>
+                            <div class="o_twilio_skeleton_bubble o_twilio_skeleton_bubble--out" style="width: 50%;"/>
                         </div>
                     </t>
-                    <t t-elif="this.state.errorState">
+                    <t t-elif="this.state.errorState and (!this.state.messages or this.state.messages.length === 0)">
                         <div class="o_twilio_sms_empty text-danger px-4">
-                            <i class="fa fa-exclamation-triangle fa-3x mb-2 text-danger opacity-75"/>
+                            <i class="fa fa-exclamation-triangle fa-2x mb-2 text-danger opacity-75"/>
                             <h6 class="fw-bold mb-1">Unable to load conversation</h6>
                             <p class="small text-muted text-center" t-esc="this.state.errorMessage"/>
                         </div>
@@ -87,97 +92,108 @@
                         </t>
 
                         <div class="o_twilio_sms_chat_list">
-                            <t t-foreach="filteredMessages" t-as="msg" t-key="msg.sid">
-                                <div t-att-class="msg.direction === 'inbound' ? 'o_twilio_sms_msg o_twilio_sms_msg--inbound' : 'o_twilio_sms_msg o_twilio_sms_msg--outbound'">
+                            <t t-foreach="filteredMessages" t-as="msg" t-key="msg.id || msg.sid">
+                                <div t-att-class="msg.direction === 'inbound' or msg.direction === 'incoming' ? 'o_twilio_sms_msg o_twilio_sms_msg--inbound' : 'o_twilio_sms_msg o_twilio_sms_msg--outbound'">
                                     <div class="o_twilio_sms_msg_sender">
-                                        <t t-if="msg.direction === 'inbound'">
-                                            <t t-esc="this.props.partnerName || 'John'"/>
+                                        <t t-if="msg.direction === 'inbound' or msg.direction === 'incoming'">
+                                            <t t-esc="this.props.partnerName || 'Contact'"/>
                                         </t>
                                         <t t-else="">
                                             You
                                         </t>
                                     </div>
                                     <div class="o_twilio_sms_msg_bubble">
-                                        <span t-esc="msg.body"/>
+                                        <div class="o_twilio_sms_msg_text" t-esc="msg.body"/>
+                                        <div class="o_twilio_sms_msg_meta">
+                                            <span class="o_twilio_sms_msg_time" t-esc="msg.create_date || msg.date_sent || ''"/>
+                                            <t t-if="msg.status === 'delivered' or msg.status === 'sent' or msg.status === 'received'">
+                                                <span class="o_twilio_sms_msg_status text-success" title="Delivered">
+                                                    <i class="fa fa-check"/>
+                                                </span>
+                                            </t>
+                                            <t t-elif="msg.status === 'failed' or msg.status === 'undelivered'">
+                                                <span class="o_twilio_sms_msg_status text-danger" title="Delivery Failed">
+                                                    <i class="fa fa-exclamation-circle"/>
+                                                </span>
+                                            </t>
+                                        </div>
                                     </div>
-                                    <div class="o_twilio_sms_msg_time d-flex align-items-center gap-1">
-                                        <span t-esc="msg.date"/>
-                                        <t t-if="msg.status and msg.direction !== 'inbound'">
-                                            • <span t-att-class="'o_twilio_sms_status_badge o_twilio_sms_status_badge--' + msg.status" t-esc="msg.status"/>
-                                        </t>
-                                        <t t-if="msg.status === 'failed' and msg.direction !== 'inbound'">
-                                            <button type="button" class="btn btn-link btn-sm p-0 ms-1 text-danger text-decoration-none" t-on-click="() => this.openRetryConfirm(msg)" title="Retry sending message">
-                                                <i class="fa fa-repeat me-1"/> Retry Sending
+                                    <t t-if="msg.status === 'failed' or msg.status === 'undelivered'">
+                                        <div class="o_twilio_sms_msg_failed_bar">
+                                            <span class="text-danger small"><i class="fa fa-times-circle me-1"/>Failed</span>
+                                            <button type="button" class="btn btn-link btn-sm text-danger p-0 ms-2 text-decoration-none" t-on-click="() => this.openRetryConfirm(msg)">
+                                                <i class="fa fa-repeat me-1"/>Retry Sending
                                             </button>
-                                        </t>
-                                    </div>
+                                        </div>
+                                    </t>
                                 </div>
                             </t>
                         </div>
                     </t>
                 </div>
 
-                <!-- Bottom Fixed Compose Area -->
+                <!-- Footer: Composer & Controls -->
                 <div class="o_twilio_sms_footer">
-
-                    <!-- Template Picker & Quick Replies Bar -->
-                    <div class="o_twilio_sms_tools_bar">
-                        <div class="d-flex align-items-center justify-content-between mb-1">
-                            <select class="form-select form-select-sm o_twilio_template_select" t-on-change="onSelectTemplate">
+                    <!-- Templates & Quick Replies Toolbar -->
+                    <div class="o_twilio_sms_toolbar">
+                        <div class="o_twilio_sms_templates_row d-flex align-items-center justify-content-between">
+                            <select class="form-select form-select-sm o_twilio_sms_template_select w-auto" t-on-change="onSelectTemplate">
                                 <option value="">Templates ▼</option>
-                                <t t-foreach="this.state.templates" t-as="tpl" t-key="tpl.id">
-                                    <option t-att-value="tpl.id">
-                                        [<t t-esc="tpl.category"/>] <t t-esc="tpl.name"/>
-                                    </option>
+                                <t t-foreach="this.state.templates" t-as="tmpl" t-key="tmpl.id">
+                                    <option t-att-value="tmpl.id" t-esc="tmpl.name"/>
                                 </t>
                             </select>
 
-                            <!-- Refined UX Character Counter: 145 chars ↓ 1 SMS ↓ 15 available -->
-                            <div class="o_twilio_char_counter small d-flex align-items-center gap-1" t-att-class="charInfo.isUnicode ? 'text-warning fw-bold' : 'text-muted'">
-                                <span><t t-esc="charInfo.length"/> chars</span>
-                                <span>↓</span>
-                                <span class="badge bg-light text-dark border" t-esc="charInfo.segments + ' SMS'"/>
-                                <span>↓</span>
-                                <span><t t-esc="charInfo.available"/> available</span>
+                            <div class="o_twilio_sms_char_counter small text-muted">
+                                <span class="fw-semibold" t-esc="charInfo.length"/> chars
+                                <span class="mx-1">•</span>
+                                <span class="badge bg-light text-dark border"><t t-esc="charInfo.segments"/> SMS</span>
+                                <span class="mx-1">•</span>
+                                <span t-esc="charInfo.available"/> available
                             </div>
                         </div>
 
-                        <!-- Dynamic Quick Replies Pills from DB -->
-                        <div class="o_twilio_quick_replies">
-                            <t t-foreach="this.state.quickReplies" t-as="qr" t-key="qr.id">
-                                <button type="button" class="badge rounded-pill bg-light text-dark border me-1 o_twilio_qr_pill" t-on-click="() => this.onInsertQuickReply(qr.body)" t-att-title="qr.body">
-                                    ✓ <t t-esc="qr.name"/>
-                                </button>
-                            </t>
-                        </div>
+                        <!-- Quick Reply Pills Carousel -->
+                        <t t-if="this.state.quickReplies and this.state.quickReplies.length > 0">
+                            <div class="o_twilio_quick_replies_carousel d-flex gap-1 overflow-auto py-1">
+                                <t t-foreach="this.state.quickReplies" t-as="reply" t-key="reply.id">
+                                    <button type="button" class="badge rounded-pill bg-light text-slate-700 border o_twilio_quick_reply_pill text-nowrap" t-on-click="() => this.onInsertQuickReply(reply.text)">
+                                        <t t-esc="reply.label || reply.text"/>
+                                    </button>
+                                </t>
+                            </div>
+                        </t>
                     </div>
 
                     <textarea class="o_twilio_sms_textarea"
                               t-ref="messageInput"
-                              placeholder="Type your message..."
+                              placeholder="Type a message (Enter to send, Shift+Enter for new line)..."
                               t-model="this.state.messageText"
                               t-on-input="onInputMessage"
+                              t-on-keydown="onKeyDownTextarea"
                               t-att-disabled="this.state.sending"/>
 
                     <div class="o_twilio_sms_actions">
                         <button type="button" class="btn btn-outline-secondary btn-sm me-auto" t-on-click="openPreview" t-att-disabled="this.state.sending || !this.state.messageText.trim()">
                             <i class="fa fa-eye me-1"/> Preview
                         </button>
-                        <button type="button" class="btn btn-secondary o_twilio_sms_btn_cancel" t-on-click="onCancel" t-att-disabled="this.state.sending">
-                            Cancel
-                        </button>
-                        <button type="button" class="btn btn-primary o_twilio_sms_btn_send" t-on-click="onSend" t-att-disabled="this.state.sending || !this.state.messageText.trim()">
+                        <t t-if="!this.props.isEmbedded">
+                            <button type="button" class="btn btn-secondary o_twilio_sms_btn_cancel" t-on-click="onCancel" t-att-disabled="this.state.sending">
+                                Cancel
+                            </button>
+                        </t>
+                        <button type="button" class="btn btn-primary o_twilio_sms_btn_send px-4" t-on-click="onSend" t-att-disabled="this.state.sending || !this.state.messageText.trim()">
                             <t t-if="this.state.sending">
                                 <i class="fa fa-spinner fa-spin me-1"/> Sending...
                             </t>
                             <t t-else="">
-                                Send
+                                <i class="fa fa-paper-plane me-1"/> Send
                             </t>
                         </button>
                     </div>
                 </div>
 
-                <!-- Message Preview Sub-Modal (Shows Final Rendered Text) -->
+                <!-- Message Preview Modal -->
                 <t t-if="this.state.showPreviewModal">
                     <div class="o_twilio_sms_modal_backdrop style-preview-layer" t-on-click.self="closePreview">
                         <div class="card shadow-lg p-3 o_twilio_preview_card">
@@ -188,8 +204,7 @@
                             <div class="card-body p-0 small">
                                 <div class="mb-2"><strong>Recipient:</strong> <t t-esc="this.props.partnerName || 'Contact'"/></div>
                                 <div class="mb-2"><strong>Phone:</strong> <t t-esc="normalizedPhone || this.props.phone"/></div>
-                                <div class="mb-2"><strong>Segments:</strong> <t t-esc="charInfo.segments"/></div>
-                                <div class="mb-2"><strong>Estimated SMS:</strong> <t t-esc="charInfo.segments"/></div>
+                                <div class="mb-2"><strong>Segments:</strong> <t t-esc="charInfo.segments"/> SMS</div>
                                 <div class="mb-2"><strong>Final Rendered Message:</strong></div>
                                 <div class="p-2 bg-light rounded border mb-3 text-wrap text-break fw-normal" t-esc="this.state.messageText"/>
                             </div>

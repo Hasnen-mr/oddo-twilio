@@ -36,14 +36,14 @@ class ResConfigSettings(models.TransientModel):
     # Left-sidebar section on Configuration page (client-only, not persisted)
     twilio_config_section = fields.Selection(
         selection=[
-            ("account", "Account Settings"),
             ("call", "Call Settings"),
             ("allocation", "My Team"),
             ("ai", "AI Settings"),
             ("billing", "Billing"),
+            ("account", "Account Settings"),
         ],
         string="Configuration Section",
-        default="account",
+        default="call",
     )
     twilio_allocation_panel = fields.Char(
         string="Allocation Panel",

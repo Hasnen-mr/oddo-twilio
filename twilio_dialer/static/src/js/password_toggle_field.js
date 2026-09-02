@@ -15,8 +15,8 @@ export class PasswordToggleField extends CharField {
         this.revealState = useState({ visible: false });
     }
 
-    get inputType() {
-        return this.revealState.visible ? "text" : "password";
+    get isMasked() {
+        return !this.revealState.visible;
     }
 
     get eyeIcon() {
@@ -48,7 +48,7 @@ export const passwordToggleField = {
     displayName: _t("Password (toggle)"),
     extractProps: (fieldInfo, dynamicInfo) => {
         const props = charField.extractProps(fieldInfo, dynamicInfo);
-        props.isPassword = true;
+        props.isPassword = false;
         return props;
     },
 };

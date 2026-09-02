@@ -21,7 +21,7 @@
                                    t-on-click.stop=""/>
                         </div>
                         <div class="o_dialer_country_options">
-                            <t t-foreach="filteredCountries" t-as="country" t-key="country.label">
+                            <t t-foreach="filteredCountries || []" t-as="country" t-key="country.label">
                                 <button type="button"
                                         class="o_dialer_country_option"
                                         t-att-class="{ 'o_dialer_country_option--active': this.state.selectedCountry.label === country.label }"

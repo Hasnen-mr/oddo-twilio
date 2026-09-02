@@ -42,7 +42,7 @@
                             </div>
                         </t>
                         <t t-else="">
-                            <t t-foreach="filteredConversations" t-as="contact" t-key="contact.phone">
+                            <t t-foreach="filteredConversations || []" t-as="contact" t-key="contact.phone">
                                 <div t-att-class="this.state.selectedContact and this.state.selectedContact.phone === contact.phone ? 'o_twilio_wa_item active' : 'o_twilio_wa_item'"
                                      t-on-click="() => this.onSelectContact(contact)">
                                     <div class="o_twilio_wa_avatar" t-att-style="'background-color: ' + this.getAvatarColor(contact.name)">

@@ -495,35 +495,35 @@
                                         <div class="fw-semibold text-dark small">Enable Incoming Calls</div>
                                         <div class="text-muted" style="font-size: 11px;">Allow receiving inbound calls in softphone</div>
                                     </div>
-                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="state.callSettings.enable_incoming"/>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox"  t-att-checked="this.state.callSettings.enable_incoming" t-on-change="(ev) => this.state.callSettings.enable_incoming = ev.target.checked"/>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
                                     <div class="me-2">
                                         <div class="fw-semibold text-dark small">Record Incoming Calls</div>
                                         <div class="text-muted" style="font-size: 11px;">Save inbound call recordings</div>
                                     </div>
-                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="state.callSettings.record_incoming"/>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox"  t-att-checked="this.state.callSettings.record_incoming" t-on-change="(ev) => this.state.callSettings.record_incoming = ev.target.checked"/>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
                                     <div class="me-2">
                                         <div class="fw-semibold text-dark small">Record Outbound Calls</div>
                                         <div class="text-muted" style="font-size: 11px;">Save outbound dialer recordings</div>
                                     </div>
-                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="state.callSettings.record_outgoing"/>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox"  t-att-checked="this.state.callSettings.record_outgoing" t-on-change="(ev) => this.state.callSettings.record_outgoing = ev.target.checked"/>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
                                     <div class="me-2">
                                         <div class="fw-semibold text-dark small">AI Transcription</div>
                                         <div class="text-muted" style="font-size: 11px;">Transcribe recordings automatically</div>
                                     </div>
-                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="state.callSettings.enable_transcription"/>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox"  t-att-checked="this.state.callSettings.enable_transcription" t-on-change="(ev) => this.state.callSettings.enable_transcription = ev.target.checked"/>
                                 </label>
                                 <label class="list-group-item d-flex justify-content-between align-items-center px-2.5 py-2.5 border-0 border-top cursor-pointer">
                                     <div class="me-2">
                                         <div class="fw-semibold text-dark small">Smart Copy</div>
                                         <div class="text-muted" style="font-size: 11px;">Copy transcripts directly to clipboard</div>
                                     </div>
-                                    <input class="form-check-input flex-shrink-0" type="checkbox" t-model="state.callSettings.enable_smart_copy"/>
+                                    <input class="form-check-input flex-shrink-0" type="checkbox"  t-att-checked="this.state.callSettings.enable_smart_copy" t-on-change="(ev) => this.state.callSettings.enable_smart_copy = ev.target.checked"/>
                                 </label>
                             </div>
 

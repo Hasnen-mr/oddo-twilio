@@ -73,7 +73,7 @@
                                        class="form-control"
                                        placeholder="ACxxxxxxxx"
                                        t-att-disabled="this.state.connecting or this.state.connected"
-                                       t-model="state.accountSid"/>
+                                       t-att-value="this.state.accountSid" t-on-input="(ev) => this.state.accountSid = ev.target.value"/>
                             </label>
                             <label class="o_twilio_onboard_field">
                                 <div class="d-flex justify-content-between align-items-center w-100 mb-1">
@@ -84,7 +84,7 @@
                                        class="form-control"
                                        placeholder="Your Auth Token"
                                        t-att-disabled="this.state.connecting or this.state.connected"
-                                       t-model="state.authToken"/>
+                                       t-att-value="this.state.authToken" t-on-input="(ev) => this.state.authToken = ev.target.value"/>
                             </label>
                             <label class="o_twilio_onboard_field">
                                 <span>Email</span>
@@ -92,7 +92,7 @@
                                        class="form-control"
                                        placeholder="you@company.com"
                                        t-att-disabled="this.state.connecting or this.state.connected"
-                                       t-model="state.email"/>
+                                       t-att-value="this.state.email" t-on-input="(ev) => this.state.email = ev.target.value"/>
                             </label>
                             <label class="o_twilio_onboard_field">
                                 <span>Phone</span>
@@ -100,7 +100,7 @@
                                        class="form-control"
                                        placeholder="+1…"
                                        t-att-disabled="this.state.connecting or this.state.connected"
-                                       t-model="state.phone"/>
+                                       t-att-value="this.state.phone" t-on-input="(ev) => this.state.phone = ev.target.value"/>
                             </label>
                         </div>
 
@@ -133,7 +133,7 @@
                             <div class="o_twilio_onboard_text mb-2">
                                 <div class="mb-1 text-muted" style="font-size: 0.85rem;">Correct your email address:</div>
                                 <div class="d-flex align-items-center justify-content-center gap-2" style="max-width: 380px; margin: 0 auto;">
-                                    <input type="email" class="form-control form-control-sm" placeholder="you@company.com" t-model="state.newEmail" style="max-width: 220px;"/>
+                                    <input type="email" class="form-control form-control-sm" placeholder="you@company.com" t-att-value="this.state.newEmail" t-on-input="(ev) => this.state.newEmail = ev.target.value" style="max-width: 220px;"/>
                                     <button type="button" class="btn btn-sm btn-primary text-nowrap" t-on-click="() => this.saveAndResendNewEmail()" t-att-disabled="this.state.sendingOtp or !this.state.newEmail">
                                         <t t-if="this.state.sendingOtp">
                                             <i class="fa fa-spinner fa-spin me-1"/>
@@ -154,7 +154,7 @@
                                        maxlength="6"
                                        autofocus="autofocus"
                                        t-att-disabled="this.state.verifyingOtp or this.state.emailVerified"
-                                       t-model="state.otp"
+                                       t-att-value="this.state.otp" t-on-input="(ev) => this.state.otp = ev.target.value"
                                        t-on-keydown="(ev) => this.onOtpKeydown(ev)"/>
                             </label>
 
@@ -188,7 +188,7 @@
                                     </div>
                                     <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
                                         <input class="form-check-input" type="checkbox" role="switch" id="allowIncomingCallSwitch"
-                                               t-model="state.allowIncomingCall"
+                                                t-att-checked="this.state.allowIncomingCall" t-on-change="(ev) => this.state.allowIncomingCall = ev.target.checked"
                                                t-on-change="(ev) => this.onToggleIncomingCall(ev)"
                                                t-att-disabled="this.state.verifyingOtp"
                                                style="width: 2.8rem; height: 1.4rem; cursor: pointer;"/>

@@ -41,7 +41,7 @@
                                         <label class="form-label small fw-bold text-dark mb-1">Full Name</label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-white"><i class="fa fa-user text-muted"/></span>
-                                            <input type="text" class="form-control" placeholder="John Doe" t-model="state.globalUserName"/>
+                                            <input type="text" class="form-control" placeholder="John Doe" t-att-value="this.state.globalUserName" t-on-input="(ev) => this.state.globalUserName = ev.target.value"/>
                                         </div>
                                     </div>
 
@@ -49,7 +49,7 @@
                                         <label class="form-label small fw-bold text-dark mb-1">Work Email <span class="text-danger">*</span></label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-white"><i class="fa fa-envelope text-muted"/></span>
-                                            <input type="email" class="form-control" placeholder="you@company.com" t-model="state.globalUserEmail"/>
+                                            <input type="email" class="form-control" placeholder="you@company.com" t-att-value="this.state.globalUserEmail" t-on-input="(ev) => this.state.globalUserEmail = ev.target.value"/>
                                         </div>
                                     </div>
 
@@ -57,7 +57,7 @@
                                         <label class="form-label small fw-bold text-dark mb-1">Phone Number <span class="text-danger">*</span></label>
                                         <div class="input-group input-group-sm">
                                             <span class="input-group-text bg-white"><i class="fa fa-phone text-muted"/></span>
-                                            <input type="tel" class="form-control" placeholder="+1 (555) 000-0000" t-model="state.globalUserPhone"/>
+                                            <input type="tel" class="form-control" placeholder="+1 (555) 000-0000" t-att-value="this.state.globalUserPhone" t-on-input="(ev) => this.state.globalUserPhone = ev.target.value"/>
                                         </div>
                                     </div>
 
@@ -92,7 +92,7 @@
                                            maxlength="6"
                                            autofocus="autofocus"
                                            style="letter-spacing: 0.25em;"
-                                           t-model="state.globalOtp"
+                                           t-att-value="this.state.globalOtp" t-on-input="(ev) => this.state.globalOtp = ev.target.value"
                                            t-on-keydown="(ev) => this.onGlobalOtpKeydown(ev)"/>
 
                                     <button type="button" 

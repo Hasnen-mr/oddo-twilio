@@ -24,7 +24,7 @@
                             <input type="text"
                                    class="o_twilio_wa_search_input"
                                    placeholder="Search or start new chat"
-                                   t-model="state.searchQuery"/>
+                                   t-att-value="this.state.searchQuery" t-on-input="(ev) => this.state.searchQuery = ev.target.value"/>
                         </div>
                     </div>
 

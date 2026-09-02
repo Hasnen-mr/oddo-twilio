@@ -84,7 +84,7 @@
                         <input type="text"
                                class="form-control form-control-sm ps-4 rounded-pill"
                                placeholder="Search team member by name or email..."
-                               t-model="state.searchQuery"/>
+                               t-att-value="this.state.searchQuery" t-on-input="(ev) => this.state.searchQuery = ev.target.value"/>
                     </div>
 
                     <!-- Filter Tabs -->

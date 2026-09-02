@@ -112,7 +112,7 @@
                     <textarea class="form-control rounded-3 border-secondary-subtle" 
                               rows="1" 
                               placeholder="Ask Claude AI Copilot..." 
-                              t-model="state.promptText" 
+                              t-att-value="this.state.promptText" t-on-input="(ev) => this.state.promptText = ev.target.value" 
                               t-on-keydown="(ev) => this.onKeyDown(ev)" 
                               t-att-disabled="state.sending"/>
                     <button class="btn btn-primary rounded-3 px-3" 

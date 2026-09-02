@@ -14,6 +14,8 @@ export class DialerSystray extends Component {
     setup() {
         this.dialer = useService("twilio_dialer");
         this.state = useState(this.dialer.state);
+        this.closePanel = this.closePanel.bind(this);
+        this.togglePanel = this.togglePanel.bind(this);
     }
 
     togglePanel() {

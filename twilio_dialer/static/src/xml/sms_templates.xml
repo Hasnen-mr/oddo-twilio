@@ -55,7 +55,7 @@
                         <input type="text"
                                class="form-control border-start-0 shadow-none ps-0"
                                placeholder="Search in conversation..."
-                               t-model="this.state.searchQuery"/>
+                               t-model="state.searchQuery"/>
                     </div>
                 </div>
 
@@ -168,7 +168,7 @@
                     <textarea class="o_twilio_sms_textarea"
                               t-ref="messageInput"
                               placeholder="Type a message (Enter to send, Shift+Enter for new line)..."
-                              t-model="this.state.messageText"
+                              t-model="state.messageText"
                               t-on-input="(ev) => this.onInputMessage(ev)"
                               t-on-keydown="(ev) => this.onKeyDownTextarea(ev)"
                               t-att-disabled="this.state.sending"/>

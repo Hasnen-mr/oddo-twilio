@@ -84,7 +84,7 @@
                         <input type="text"
                                class="form-control form-control-sm ps-4 rounded-pill"
                                placeholder="Search team member by name or email..."
-                               t-model="this.state.searchQuery"/>
+                               t-model="state.searchQuery"/>
                     </div>
 
                     <!-- Filter Tabs -->

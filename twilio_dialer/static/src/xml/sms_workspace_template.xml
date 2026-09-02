@@ -51,7 +51,7 @@
                             <input type="text"
                                    class="form-control border-start-0 shadow-none"
                                    placeholder="Enter phone number (+1...)"
-                                   t-model="this.state.newNumberInput"
+                                   t-model="state.newNumberInput"
                                    t-on-keydown="(ev) => ev.key === 'Enter' and this.startNewChatWithNumber()"/>
                             <button type="button" class="btn btn-primary btn-sm px-3" t-on-click="() => this.startNewChatWithNumber()">
                                 Chat
@@ -67,7 +67,7 @@
                         <input type="text"
                                class="o_twilio_wa_search_input"
                                placeholder="Search or start new chat"
-                               t-model="this.state.searchQuery"/>
+                               t-model="state.searchQuery"/>
                         <t t-if="this.state.searchQuery">
                             <button type="button" class="o_twilio_wa_search_clear" t-on-click="() => this.state.searchQuery = ''">
                                 <i class="fa fa-times"/>

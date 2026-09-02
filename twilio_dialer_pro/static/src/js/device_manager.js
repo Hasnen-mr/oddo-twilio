@@ -28,9 +28,9 @@ if (typeof window !== "undefined" && window.HTMLAudioElement && !window._odooAud
 
 
 import { loadJS } from "@web/core/assets";
-import { jsonrpc as rpc } from "@web/core/network/rpc_service";
+import { rpc } from "@web/core/network/rpc";
 
-const TWILIO_SDK_PATH = "/twilio_dialer_pro/static/lib/twilio/twilio.min.js";
+const TWILIO_SDK_PATH = "/twilio_dialer/static/lib/twilio/twilio.min.js";
 
 const STATUS = Object.freeze({
     INITIALIZING: "initializing",
@@ -333,6 +333,27 @@ class DeviceManager {
         }
         this.device = null;
         this._activeConnection = null;
+    }
+
+    _isAccessTokenInvalid(error) {
+        if (!error) return false;
+        const msg = (error.message || "" || String(error)).toLowerCase();
+        const name = (error.name || "").toLowerCase();
+        const code = error.code;
+        return (
+            code === 20101 ||
+            code === 20104 ||
+            code === 20105 ||
+            code === 20107 ||
+            code === 31204 ||
+            code === 31205 ||
+            name.includes("accesstokeninvalid") ||
+            name.includes("accesstokenexpired") ||
+            msg.includes("accesstokeninvalid") ||
+            msg.includes("unable to validate your access token") ||
+            msg.includes("access token expired") ||
+            msg.includes("jwt")
+        );
     }
 
     async _recoverInvalidAccessToken(error) {

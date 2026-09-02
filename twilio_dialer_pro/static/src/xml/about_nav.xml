@@ -10,7 +10,7 @@
                 </div>
             </div>
             <ul class="o_twilio_cfg_nav_list">
-                <li t-foreach="sections" t-as="section" t-key="section.id">
+                <li t-foreach="sections || []" t-as="section" t-key="section.id">
                     <button type="button"
                             class="o_twilio_cfg_nav_item"
                             t-att-class="{ 'o_twilio_cfg_nav_item--active': isActive(section) }"

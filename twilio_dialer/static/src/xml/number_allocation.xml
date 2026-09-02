@@ -140,7 +140,7 @@
                                     <span>No team members match the search criteria.</span>
                                 </td>
                             </tr>
-                            <tr t-foreach="filteredAllocations" t-as="alloc" t-key="alloc.id">
+                            <tr t-foreach="filteredAllocations || []" t-as="alloc" t-key="alloc.id">
                                 <!-- 1. Team Member Column with Live Status Indicator -->
                                 <td style="width: 30%;">
                                     <div class="d-flex align-items-center gap-2">
@@ -198,7 +198,7 @@
                                         <!-- Case C: Custom Assigned Lines -->
                                         <div t-else="" class="d-flex align-items-center gap-1 flex-wrap">
                                             <!-- Visible Number Chips (Max 2) -->
-                                            <t t-foreach="this.getVisibleAssignedNumbers(alloc, 2)" t-as="numObj" t-key="numObj.id">
+                                            <t t-foreach="this.getVisibleAssignedNumbers(alloc, 2) || []" t-as="numObj" t-key="numObj.id">
                                                 <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 d-inline-flex align-items-center gap-1 shadow-xs" style="font-size: 11px;">
                                                     <i class="fa fa-phone small text-muted"/>
                                                     <span class="fw-semibold text-truncate" style="max-width: 140px;" t-esc="numObj.friendly_name || numObj.phone_number"/>
@@ -231,7 +231,7 @@
                                             </div>
 
                                             <div class="o_twilio_numbers_checklist" style="max-height: 200px; overflow-y: auto;">
-                                                <t t-foreach="this.state.numbers" t-as="num" t-key="num.id">
+                                                <t t-foreach="this.state.numbers || []" t-as="num" t-key="num.id">
                                                     <div class="form-check py-1">
                                                         <input class="form-check-input"
                                                                type="checkbox"

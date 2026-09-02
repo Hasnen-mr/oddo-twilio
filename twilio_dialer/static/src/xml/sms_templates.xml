@@ -92,7 +92,7 @@
                         </t>
 
                         <div class="o_twilio_sms_chat_list">
-                            <t t-foreach="filteredMessages" t-as="msg" t-key="msg.id || msg.sid">
+                            <t t-foreach="filteredMessages || []" t-as="msg" t-key="msg.id || msg.sid">
                                 <div t-att-class="msg.direction === 'inbound' or msg.direction === 'incoming' ? 'o_twilio_sms_msg o_twilio_sms_msg--inbound' : 'o_twilio_sms_msg o_twilio_sms_msg--outbound'">
                                     <div class="o_twilio_sms_msg_sender">
                                         <t t-if="msg.direction === 'inbound' or msg.direction === 'incoming'">
@@ -139,7 +139,7 @@
                         <div class="o_twilio_sms_templates_row d-flex align-items-center justify-content-between">
                             <select class="form-select form-select-sm o_twilio_sms_template_select w-auto" t-on-change="onSelectTemplate">
                                 <option value="">Templates ▼</option>
-                                <t t-foreach="this.state.templates" t-as="tmpl" t-key="tmpl.id">
+                                <t t-foreach="this.state.templates || []" t-as="tmpl" t-key="tmpl.id">
                                     <option t-att-value="tmpl.id" t-esc="tmpl.name"/>
                                 </t>
                             </select>
@@ -156,7 +156,7 @@
                         <!-- Quick Reply Pills Carousel -->
                         <t t-if="this.state.quickReplies and this.state.quickReplies.length > 0">
                             <div class="o_twilio_quick_replies_carousel d-flex gap-1 overflow-auto py-1">
-                                <t t-foreach="this.state.quickReplies" t-as="reply" t-key="reply.id">
+                                <t t-foreach="this.state.quickReplies || []" t-as="reply" t-key="reply.id">
                                     <button type="button" class="badge rounded-pill bg-light text-slate-700 border o_twilio_quick_reply_pill text-nowrap" t-on-click="() => this.onInsertQuickReply(reply.text)">
                                         <t t-esc="reply.label || reply.text"/>
                                     </button>

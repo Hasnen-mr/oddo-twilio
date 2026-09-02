@@ -65,7 +65,7 @@
                         </div>
                     </t>
                     <t t-else="">
-                        <t t-foreach="state.history" t-as="msg" t-key="msg.id">
+                        <t t-foreach="state.history || []" t-as="msg" t-key="msg.id">
                             <div t-attf-class="d-flex flex-column max-w-85 #{msg.role === 'user' ? 'align-self-end text-end' : 'align-self-start text-start'} mb-2">
                                 <t t-if="msg.role === 'tool' || msg.block_type === 'tool_execution'">
                                     <div class="p-2 px-3 bg-light text-muted border rounded-3 small font-monospace my-1 d-flex align-items-center justify-content-between">

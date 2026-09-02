@@ -115,7 +115,7 @@
                         </div>
                     </t>
                     <t t-else="">
-                        <t t-foreach="filteredConversations" t-as="conv" t-key="conv.phone">
+                        <t t-foreach="filteredConversations || []" t-as="conv" t-key="conv.phone">
                             <div t-att-class="this.state.selectedContact and this.state.selectedContact.phone === conv.phone and this.state.filterTab !== 'logs' ? 'o_twilio_wa_item active' : 'o_twilio_wa_item'"
                                  t-on-click="() => this.selectConversation(conv)">
 
@@ -229,7 +229,7 @@
                                         </tr>
                                     </thead>
                                     <tbody class="small">
-                                        <t t-foreach="this.state.recentLogs" t-as="log" t-key="log.id">
+                                        <t t-foreach="this.state.recentLogs || []" t-as="log" t-key="log.id">
                                             <tr class="cursor-pointer" t-on-click="() => this.selectConversation({ phone: log.to_number || log.from_number, partner_id: log.partner_id ? log.partner_id[0] : false, name: log.partner_id ? log.partner_id[1] : log.phone_number })">
                                                 <td class="ps-3 text-nowrap text-muted" t-esc="log.create_date || ''"/>
                                                 <td class="fw-semibold text-slate-800">

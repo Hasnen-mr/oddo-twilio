@@ -150,7 +150,7 @@
                                         <div class="o_dialer_caller_list" t-if="this.state.showCallerDropdown and !this.state.dndEnabled">
                                             <t t-if="twilioCallerNumbers.length">
                                                 <div class="o_dialer_caller_group_label">Twilio Numbers</div>
-                                                <t t-foreach="twilioCallerNumbers" t-as="caller" t-key="caller.number">
+                                                <t t-foreach="twilioCallerNumbers || []" t-as="caller" t-key="caller.number">
                                                     <button
                                                         type="button"
                                                         class="o_dialer_caller_option"
@@ -166,7 +166,7 @@
                                                      t-att-class="{ 'o_dialer_caller_group_label--sep': twilioCallerNumbers.length }">
                                                     Caller ID
                                                 </div>
-                                                <t t-foreach="outgoingCallerIds" t-as="caller" t-key="caller.number">
+                                                <t t-foreach="outgoingCallerIds || []" t-as="caller" t-key="caller.number">
                                                     <button
                                                         type="button"
                                                         class="o_dialer_caller_option"
@@ -212,7 +212,7 @@
                                                     t-on-input="onCountrySearch"/>
                                             </div>
                                             <div class="o_dialer_country_options">
-                                                <t t-foreach="filteredCountries" t-as="country" t-key="country.label">
+                                                <t t-foreach="filteredCountries || []" t-as="country" t-key="country.label">
                                                     <button
                                                         type="button"
                                                         class="o_dialer_country_option"
@@ -251,7 +251,7 @@
                             </div>
 
                             <div class="o_dialer_keypad" t-att-class="{ 'o_dialer_keypad--dtmf': isCallActive or isIncoming, 'o_dialer_keypad--disabled': this.state.dndEnabled and !isCallActive and !isIncoming }">
-                                <t t-foreach="dialPadKeys"
+                                <t t-foreach="dialPadKeys || []"
                                    t-as="key"
                                    t-key="key.digit">
                                     <button
@@ -424,7 +424,7 @@
 
                         <div class="o_dialer_contact_list"
                              t-on-scroll="onContactListScroll">
-                            <t t-foreach="filteredContacts" t-as="contact" t-key="contact.id">
+                            <t t-foreach="filteredContacts || []" t-as="contact" t-key="contact.id">
                                 <div class="o_dialer_contact_item">
                                     <div class="o_dialer_contact_avatar" t-esc="contact.initials"/>
                                     <div class="o_dialer_contact_meta">
@@ -805,7 +805,7 @@
                                 t-on-change="(ev) => this.onSelectQueue(ev.target.value)"
                                 t-att-disabled="this.state.actionPending || isRunning">
                             <option value="">— Select a queue —</option>
-                            <t t-foreach="this.state.queues" t-as="q" t-key="q.id">
+                            <t t-foreach="this.state.queues || []" t-as="q" t-key="q.id">
                                 <option t-att-value="q.id"
                                         t-att-selected="this.state.activeQueue and this.state.activeQueue.id === q.id">
                                     <t t-esc="q.name"/> (<t t-esc="q.pending_contacts"/> pending)

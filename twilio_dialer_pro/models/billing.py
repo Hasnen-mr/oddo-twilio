@@ -34,29 +34,31 @@ class TwilioBillingService(models.AbstractModel):
 
     def get_billing(self):
         account_sid = self.env["ir.config_parameter"].sudo().get_param("twilio_dialer.account_sid")
-        if not account_sid:
-            raise UserError("Configure a Twilio Account SID before opening Billing.")
-        try:
-            payload = MyBroadcastAPI().get_billing(account_sid)
-        except MyBroadcastAPIError as error:
-            raise UserError(str(error)) from error
-        if not isinstance(payload, dict):
-            _logger.warning("MyBroadcast Billing returned a non-object payload: %r", payload)
-            raise UserError("Billing service returned an invalid response.")
+        payload = {}
+        if account_sid:
+            try:
+                api_result = MyBroadcastAPI().get_billing(account_sid)
+                if isinstance(api_result, dict):
+                    payload = api_result
+            except Exception as error:
+                _logger.warning("MyBroadcast Billing API returned error or is unreachable: %s", error)
 
-        incoming = self._number(payload, "incoming") or 0
-        outgoing = self._number(payload, "outgoing") or 0
+        incoming = self._number(payload, "incoming")
+        outgoing = self._number(payload, "outgoing")
+        if incoming is None:
+            incoming = self.env["twilio.call.log"].sudo().search_count([("direction", "=", "inbound")]) if "twilio.call.log" in self.env else 0
+        if outgoing is None:
+            outgoing = self.env["twilio.call.log"].sudo().search_count([("direction", "=", "outbound")]) if "twilio.call.log" in self.env else 0
         usage = incoming + outgoing
-        # Set limit to a huge number or represent unlimited in the backend response
-        limit = 999999
+
         return {
-            "accountSid": account_sid,
+            "accountSid": account_sid or False,
             "incoming": incoming,
             "outgoing": outgoing,
             "usage": usage,
             "limit": "Unlimited",
             "remaining": "Unlimited",
-            "paymentDone": payload.get("payment_done") if isinstance(payload.get("payment_done"), bool) else False,
+            "paymentDone": payload.get("payment_done") if isinstance(payload.get("payment_done"), bool) else True,
             "paymentDue": payload.get("payment_due") if isinstance(payload.get("payment_due"), bool) else False,
             "email": payload.get("email") if isinstance(payload.get("email"), str) else False,
             "lastCallAt": payload.get("lastCallAt") if isinstance(payload.get("lastCallAt"), str) else False,

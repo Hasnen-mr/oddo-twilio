@@ -112,7 +112,7 @@
                         </ul>
                         <button class="btn o_billing_btn o_billing_btn--primary"
                                 t-att-class="pkg.featured ? 'o_billing_btn--featured' : ''"
-                                t-on-click="() => openUrl(pkg.url)">
+                                t-on-click="() => this.openUrl(pkg.url)">
                             Buy <t t-esc="pkg.label"/>
                         </button>
                     </article>

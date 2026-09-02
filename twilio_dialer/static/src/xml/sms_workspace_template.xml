@@ -1,125 +1,246 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
+    <!-- WhatsApp Web Style SMS Workspace Client Action -->
     <t t-name="twilio_dialer.TwilioSmsWorkspaceClientAction">
-        <div class="o_twilio_sms_workspace container-fluid p-4">
+        <div class="o_twilio_wa_workspace">
 
-            <!-- Workspace Header Banner -->
-            <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-                <div>
-                    <h2 class="fw-bold mb-1 text-slate-800">
-                        <i class="fa fa-comments text-primary me-2"/>SMS
-                    </h2>
-                    <p class="text-muted mb-0">
-                        Message, logs, templates, and quick replies.
-                    </p>
+            <!-- LEFT SIDEBAR: WhatsApp Web Conversation List -->
+            <aside class="o_twilio_wa_sidebar">
+
+                                                <!-- Sidebar Top App Bar: WhatsApp Web Clean Bold Hierarchy -->
+                <header class="o_twilio_wa_sidebar_header">
+                    <h1 class="o_twilio_wa_sidebar_title">Chats</h1>
+                    <div class="o_twilio_wa_header_actions">
+                        <button type="button" class="o_twilio_wa_icon_btn" title="New chat" t-on-click="() => this.toggleNewChat()">
+                            <i class="fa fa-pencil-square-o"/>
+                        </button>
+                        <div class="dropdown d-inline-block">
+                            <button type="button" class="o_twilio_wa_icon_btn" data-bs-toggle="dropdown" title="Menu">
+                                <i class="fa fa-ellipsis-v"/>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 py-1" style="font-size: 13px;">
+                                <li>
+                                    <a class="dropdown-item py-2" href="#" t-on-click.prevent="() => this.openSmsTemplates()">
+                                        <i class="fa fa-file-text-o text-primary me-2"/> SMS Templates
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" href="#" t-on-click.prevent="() => this.openQuickReplies()">
+                                        <i class="fa fa-bolt text-warning me-2"/> Quick Replies
+                                    </a>
+                                </li>
+                                <li>
+                                    <hr class="dropdown-divider my-1"/>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item py-2" href="#" t-on-click.prevent="() => this.loadWorkspaceData()">
+                                        <i class="fa fa-refresh text-success me-2"/> Refresh Chats
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </header>
+
+                <!-- New Number Input Bar (Collapsible) -->
+                <t t-if="this.state.showNewChatInput">
+                    <div class="o_twilio_wa_new_chat_bar p-2 bg-light border-bottom">
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text bg-white border-end-0"><i class="fa fa-phone text-muted"/></span>
+                            <input type="text"
+                                   class="form-control border-start-0 shadow-none"
+                                   placeholder="Enter phone number (+1...)"
+                                   t-model="this.state.newNumberInput"
+                                   t-on-keydown="(ev) => ev.key === 'Enter' and this.startNewChatWithNumber()"/>
+                            <button type="button" class="btn btn-primary btn-sm px-3" t-on-click="() => this.startNewChatWithNumber()">
+                                Chat
+                            </button>
+                        </div>
+                    </div>
+                </t>
+
+                <!-- Search Input Row -->
+                <div class="o_twilio_wa_search_row">
+                    <div class="o_twilio_wa_search_box">
+                        <i class="fa fa-search o_twilio_wa_search_icon"/>
+                        <input type="text"
+                               class="o_twilio_wa_search_input"
+                               placeholder="Search or start new chat"
+                               t-model="this.state.searchQuery"/>
+                        <t t-if="this.state.searchQuery">
+                            <button type="button" class="o_twilio_wa_search_clear" t-on-click="() => this.state.searchQuery = ''">
+                                <i class="fa fa-times"/>
+                            </button>
+                        </t>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-outline-primary btn-sm" t-on-click="loadWorkspaceData">
-                    <i class="fa fa-refresh me-1"/> Refresh Hub
-                </button>
-            </div>
 
-            <t t-if="this.state.loading">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary mb-3" role="status"/>
-                    <div class="text-muted fw-medium">Loading SMS Workspace Dashboard...</div>
-                </div>
-            </t>
+                <!-- Filter Chips Row (All, Unread, Logs, Drafts) -->
+                <nav class="o_twilio_wa_filter_row" aria-label="Conversation Filters">
+                    <button type="button"
+                            t-att-class="this.state.filterTab === 'all' ? 'o_twilio_wa_filter_chip active' : 'o_twilio_wa_filter_chip'"
+                            t-on-click="() => this.setFilterTab('all')">
+                        All <span class="o_twilio_wa_chip_badge" t-esc="this.state.conversations.length"/>
+                    </button>
+                    <button type="button"
+                            t-att-class="this.state.filterTab === 'unread' ? 'o_twilio_wa_filter_chip active' : 'o_twilio_wa_filter_chip'"
+                            t-on-click="() => this.setFilterTab('unread')">
+                        Unread
+                    </button>
+                    <button type="button"
+                            t-att-class="this.state.filterTab === 'logs' ? 'o_twilio_wa_filter_chip active' : 'o_twilio_wa_filter_chip'"
+                            t-on-click="() => this.setFilterTab('logs')">
+                        Logs <span class="o_twilio_wa_chip_badge" t-esc="(this.state.counts and this.state.counts.logs) or 0"/>
+                    </button>
+                    <button type="button"
+                            t-att-class="this.state.filterTab === 'drafts' ? 'o_twilio_wa_filter_chip active' : 'o_twilio_wa_filter_chip'"
+                            t-on-click="() => this.setFilterTab('drafts')">
+                        Drafts <span class="o_twilio_wa_chip_badge" t-esc="this.state.drafts.length"/>
+                    </button>
+                </nav>
 
-            <t t-else="">
-                <!-- Priority: quick action buttons (short labels) -->
-                <div class="o_twilio_sms_quick_actions mb-4">
-                    <div class="o_twilio_sms_quick_btn" t-on-click="openMessagesList" role="button" tabindex="0">
-                        <button type="button" class="btn btn-primary o_twilio_sms_action_btn">
-                            <i class="fa fa-paper-plane me-2"/>Message
-                            <span class="badge bg-white text-primary ms-2" t-esc="(this.state.counts and this.state.counts.contacts) or 0"/>
-                        </button>
-                        <div class="o_twilio_sms_action_hint">
-                            Select any contact from your list to open live SMS chat &amp; message them directly.
+                <!-- Conversation Stream List -->
+                <div class="o_twilio_wa_conversation_list">
+                    <t t-if="this.state.loading">
+                        <div class="o_twilio_wa_loading">
+                            <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"/>
+                            <span>Loading conversations...</span>
                         </div>
-                    </div>
-
-                    <div class="o_twilio_sms_quick_btn" t-on-click="openSmsLogs" role="button" tabindex="0">
-                        <button type="button" class="btn btn-success o_twilio_sms_action_btn">
-                            <i class="fa fa-history me-2"/>Logs
-                            <span class="badge bg-white text-success ms-2" t-esc="(this.state.counts and this.state.counts.logs) or 0"/>
-                        </button>
-                        <div class="o_twilio_sms_action_hint">
-                            View live incoming and outgoing Twilio SMS message history.
+                    </t>
+                    <t t-elif="filteredConversations.length === 0">
+                        <div class="o_twilio_wa_empty_list">
+                            <i class="fa fa-comments-o fa-2x mb-2 text-muted opacity-50"/>
+                            <p class="mb-0 text-muted small">No conversations found.</p>
                         </div>
-                    </div>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="filteredConversations" t-as="conv" t-key="conv.phone">
+                            <div t-att-class="this.state.selectedContact and this.state.selectedContact.phone === conv.phone and this.state.filterTab !== 'logs' ? 'o_twilio_wa_item active' : 'o_twilio_wa_item'"
+                                 t-on-click="() => this.selectConversation(conv)">
 
-                    <div class="o_twilio_sms_quick_btn" t-on-click="openSmsTemplates" role="button" tabindex="0">
-                        <button type="button" class="btn btn-info o_twilio_sms_action_btn text-white">
-                            <i class="fa fa-file-text-o me-2"/>Templates
-                            <span class="badge bg-white text-info ms-2" t-esc="(this.state.counts and this.state.counts.templates) or 0"/>
-                        </button>
-                        <div class="o_twilio_sms_action_hint">
-                            Manage reusable text templates with dynamic placeholders.
-                        </div>
-                    </div>
+                                <!-- Contact Avatar with dynamic color -->
+                                <div class="o_twilio_wa_avatar" t-att-style="'background-color: ' + this.getAvatarColor(conv.name)">
+                                    <span t-esc="this.getInitials(conv.name)"/>
+                                </div>
 
-                    <div class="o_twilio_sms_quick_btn" t-on-click="openQuickReplies" role="button" tabindex="0">
-                        <button type="button" class="btn btn-warning o_twilio_sms_action_btn">
-                            <i class="fa fa-bolt me-2"/>Quick Replies
-                            <span class="badge bg-dark text-warning ms-2" t-esc="(this.state.counts and this.state.counts.quick_replies) or 0"/>
-                        </button>
-                        <div class="o_twilio_sms_action_hint">
-                            Configure quick response pills for one-click insertion.
-                        </div>
-                    </div>
-                </div>
+                                <!-- Contact Details & Snippet -->
+                                <div class="o_twilio_wa_item_body">
+                                    <div class="o_twilio_wa_item_header">
+                                        <span class="o_twilio_wa_item_name text-truncate" t-esc="conv.name"/>
+                                        <span class="o_twilio_wa_item_time text-nowrap" t-esc="this.formatDate(conv.last_date)"/>
+                                    </div>
+                                    <div class="o_twilio_wa_item_preview_row">
+                                        <div class="o_twilio_wa_item_snippet text-truncate">
+                                            <t t-if="conv.last_direction === 'incoming' or conv.last_direction === 'inbound'">
+                                                <i class="fa fa-arrow-down text-info me-1" title="Incoming"/>
+                                            </t>
+                                            <t t-elif="conv.last_direction === 'outgoing' or conv.last_direction === 'outbound'">
+                                                <i class="fa fa-check text-primary me-1" title="Outgoing"/>
+                                            </t>
+                                            <t t-if="conv.last_message">
+                                                <t t-esc="conv.last_message"/>
+                                            </t>
+                                            <t t-else="">
+                                                <span class="text-muted fst-italic" t-esc="conv.phone"/>
+                                            </t>
+                                        </div>
 
-                <!-- Section 2: SMS Logs Table Section (Embedded inside SMS Workspace) -->
-                <div id="o_twilio_sms_logs_section" class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-bottom pt-3 px-4 pb-3 d-flex align-items-center justify-content-between">
-                        <h5 class="fw-bold m-0 text-slate-800">
-                            <i class="fa fa-history text-success me-2"/>Logs
-                        </h5>
-                        <span class="badge bg-success rounded-pill px-3 py-2" t-esc="((this.state.counts and this.state.counts.logs) or 0) + ' Messages'"/>
-                    </div>
-                    <div class="card-body p-0">
-                        <t t-if="!this.state.recentLogs or this.state.recentLogs.length === 0">
-                            <div class="text-center py-5 text-muted">
-                                <i class="fa fa-comments-o fa-2x mb-2 opacity-50"/>
-                                <p class="mb-0">No SMS logs available.</p>
+                                        <div class="o_twilio_wa_item_meta">
+                                            <t t-if="conv.unread">
+                                                <span class="o_twilio_wa_unread_badge">1</span>
+                                            </t>
+                                            <!-- Quick call on hover -->
+                                            <button type="button"
+                                                    class="o_twilio_wa_quick_call_btn"
+                                                    title="Call Contact"
+                                                    t-on-click="(ev) => this.makeCall(conv.phone, conv.partner_id, conv.name, ev)">
+                                                <i class="fa fa-phone"/>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </t>
-                        <t t-else="">
-                            <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+                    </t>
+                </div>
+
+            </aside>
+
+            <!-- RIGHT MAIN PANEL: Active Chat or Full Logs Table -->
+            <main class="o_twilio_wa_main">
+
+                <!-- Tab 1: Live Chat Workspace (Default) -->
+                <t t-if="this.state.filterTab !== 'logs'">
+                    <t t-if="this.state.selectedContact">
+                        <div class="o_twilio_wa_chat_container">
+                            <TwilioSmsPopup isEmbedded="true"
+                                            phone="this.state.selectedContact.phone"
+                                            partnerId="this.state.selectedContact.partner_id"
+                                            partnerName="this.state.selectedContact.name"
+                                            onClose="() => this.onChatClosed()"/>
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <div class="o_twilio_wa_hero_empty">
+                            <div class="o_twilio_wa_hero_icon">
+                                <i class="fa fa-comments-o"/>
+                            </div>
+                            <h3 class="fw-bold text-slate-800 mb-2">Twilio SMS Hub</h3>
+                            <p class="text-muted text-center max-w-md mb-4">
+                                Send and receive instant two-way SMS messages. Select a contact from the left sidebar or start a new chat.
+                            </p>
+                            <div class="d-flex gap-3">
+                                <button type="button" class="btn btn-primary px-4 py-2" t-on-click="() => this.toggleNewChat()">
+                                    <i class="fa fa-paper-plane me-2"/>New Message
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary px-4 py-2" t-on-click="() => this.setFilterTab('logs')">
+                                    <i class="fa fa-history me-2"/>View Logs
+                                </button>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+
+                <!-- Tab 2: Logs Explorer Full Table View -->
+                <t t-else="">
+                    <div class="o_twilio_wa_logs_view p-4">
+                        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                            <div>
+                                <h4 class="fw-bold m-0 text-slate-800">
+                                    <i class="fa fa-history text-success me-2"/>SMS Message Logs
+                                </h4>
+                                <small class="text-muted">Live audit trail of all sent and received SMS messages.</small>
+                            </div>
+                            <span class="badge bg-success px-3 py-2" t-esc="((this.state.counts and this.state.counts.logs) or 0) + ' Messages'"/>
+                        </div>
+
+                        <div class="card border shadow-sm">
+                            <div class="table-responsive" style="max-height: calc(100vh - 220px); overflow-y: auto;">
                                 <table class="table table-hover align-middle mb-0">
                                     <thead class="table-light text-muted small text-uppercase sticky-top">
                                         <tr>
-                                            <th class="ps-4">Date</th>
+                                            <th class="ps-3">Date</th>
                                             <th>Contact</th>
                                             <th>Phone Number</th>
                                             <th>Direction</th>
                                             <th>Status</th>
-                                            <th class="pe-4">Message Preview</th>
+                                            <th class="pe-3">Message</th>
                                         </tr>
                                     </thead>
                                     <tbody class="small">
                                         <t t-foreach="this.state.recentLogs" t-as="log" t-key="log.id">
-                                            <tr class="cursor-pointer" t-on-click="() => this.openSmsForPhone(log.phone_number, log.partner_id ? log.partner_id[0] : false, log.partner_id ? log.partner_id[1] : log.phone_number)">
-                                                <td class="ps-4 text-nowrap text-muted" t-esc="log.date_sent || ''"/>
+                                            <tr class="cursor-pointer" t-on-click="() => this.selectConversation({ phone: log.to_number || log.from_number, partner_id: log.partner_id ? log.partner_id[0] : false, name: log.partner_id ? log.partner_id[1] : log.phone_number })">
+                                                <td class="ps-3 text-nowrap text-muted" t-esc="log.create_date || ''"/>
                                                 <td class="fw-semibold text-slate-800">
                                                     <t t-if="log.partner_id">
                                                         <i class="fa fa-user text-muted me-1"/><t t-esc="log.partner_id[1]"/>
                                                     </t>
-                                                    <t t-else="">
-                                                        <span class="text-muted">—</span>
-                                                    </t>
+                                                    <t t-else="">—</t>
                                                 </td>
+                                                <td class="fw-medium text-slate-700" t-esc="log.to_number || log.from_number"/>
                                                 <td>
-                                                    <div class="d-inline-flex align-items-center">
-                                                        <span class="me-2 fw-medium text-slate-700" t-esc="log.phone_number"/>
-                                                        <button type="button" class="o_twilio_contact_sms_button ms-2" title="Send SMS" t-on-click.stop="() => this.openSmsForPhone(log.phone_number, log.partner_id ? log.partner_id[0] : false, log.partner_id ? log.partner_id[1] : log.phone_number)">
-                                                            <i class="fa fa-comment"/>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <t t-if="log.direction === 'inbound'">
+                                                    <t t-if="log.direction === 'inbound' or log.direction === 'incoming'">
                                                         <span class="badge bg-info-subtle text-info border border-info-subtle px-2 py-1 rounded-pill">
                                                             <i class="fa fa-arrow-down me-1"/>Incoming
                                                         </span>
@@ -131,17 +252,9 @@
                                                     </t>
                                                 </td>
                                                 <td>
-                                                    <t t-if="log.status === 'delivered' or log.status === 'sent' or log.status === 'received'">
-                                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 rounded-pill text-capitalize" t-esc="log.status"/>
-                                                    </t>
-                                                    <t t-elif="log.status === 'queued' or log.status === 'sending'">
-                                                        <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-pill text-capitalize" t-esc="log.status"/>
-                                                    </t>
-                                                    <t t-else="">
-                                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1 rounded-pill text-capitalize" t-esc="log.status"/>
-                                                    </t>
+                                                    <span class="badge bg-light text-dark border px-2 py-1 rounded-pill text-capitalize" t-esc="log.status || 'sent'"/>
                                                 </td>
-                                                <td class="pe-4 text-break text-muted">
+                                                <td class="pe-3 text-break text-muted">
                                                     <t t-esc="log.body"/>
                                                 </td>
                                             </tr>
@@ -149,53 +262,11 @@
                                     </tbody>
                                 </table>
                             </div>
-                        </t>
+                        </div>
                     </div>
-                </div>
+                </t>
 
-                <!-- Section 3: Active Unsent Draft Messages Section (Compact Size) -->
-                <div class="card border-0 shadow-sm mb-4">
-                    <div class="card-header bg-white border-bottom-0 pt-3 px-3 pb-1 d-flex align-items-center justify-content-between">
-                        <h6 class="fw-bold m-0 text-slate-800 fs-6">
-                            <i class="fa fa-pencil-square-o text-warning me-2"/>Active Unsent Drafts
-                        </h6>
-                        <span class="badge bg-warning text-dark px-2 py-1 small" t-esc="this.state.drafts.length + ' Drafts'"/>
-                    </div>
-                    <div class="card-body px-3 pb-3 pt-2">
-                        <t t-if="this.state.drafts.length === 0">
-                            <div class="text-center py-2 text-muted small">
-                                <i class="fa fa-check-circle-o me-1 text-success"/>No active unsent drafts.
-                            </div>
-                        </t>
-                        <t t-else="">
-                            <div class="row g-2">
-                                <t t-foreach="this.state.drafts" t-as="draft" t-key="draft.phone">
-                                    <div class="col-12 col-md-4 col-lg-3">
-                                        <div class="card h-100 border o_twilio_draft_card p-2" t-on-click="() => this.openDraft(draft)">
-                                            <div class="d-flex align-items-center justify-content-between mb-1">
-                                                <div class="fw-semibold text-primary micro">
-                                                    <i class="fa fa-phone me-1"/><t t-esc="draft.phone"/>
-                                                </div>
-                                                <small class="text-muted micro" t-esc="draft.timestampStr"/>
-                                            </div>
-                                            <div class="p-1 bg-light rounded text-slate-700 micro mb-1 text-break text-truncate">
-                                                "<t t-esc="draft.preview"/>"
-                                            </div>
-                                            <div class="d-flex align-items-center justify-content-between mt-auto">
-                                                <span class="text-primary micro fw-medium">Resume ➔</span>
-                                                <button type="button" class="btn btn-link btn-sm text-danger p-0 text-decoration-none micro" t-on-click="(ev) => this.clearDraft(draft, ev)" title="Discard Draft">
-                                                    <i class="fa fa-trash me-1"/>Discard
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </t>
-                            </div>
-                        </t>
-                    </div>
-                </div>
-
-            </t>
+            </main>
 
         </div>
     </t>

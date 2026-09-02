@@ -1,64 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates xml:space="preserve">
 
-    <!-- WhatsApp / Telegram Style Full-Screen 2-Panel Messaging Dialog -->
+    <!-- WhatsApp Web Style 2-Panel Messaging Modal Dialog -->
     <t t-name="twilio_dialer_pro.TwilioSmsMessagingDialog">
         <div class="o_twilio_messaging_dialog_backdrop">
-            <div class="o_twilio_messaging_dialog">
+            <div class="o_twilio_messaging_dialog o_twilio_wa_dialog">
 
-                <!-- Left Panel: Contacts Sidebar -->
-                <div class="o_twilio_messaging_sidebar">
-                    <!-- Sidebar Header with Search & Back Button -->
-                    <div class="o_twilio_sidebar_header">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <div class="d-flex align-items-center gap-2">
-                                <button type="button" class="btn btn-link text-decoration-none text-slate-700 p-0 me-1 d-flex align-items-center gap-1 fw-medium shadow-none border-0" t-on-click="(ev) => this.onClose(ev)" title="Back to previous page">
-                                    <i class="fa fa-arrow-left text-primary"/> <span>Back</span>
-                                </button>
-                                <h5 class="fw-bold m-0 text-slate-800">
-                                    <i class="fa fa-comments text-primary me-2"/>Messages
-                                </h5>
-                            </div>
+                <!-- Left Panel: WhatsApp Web Style Contacts Sidebar -->
+                <div class="o_twilio_messaging_sidebar o_twilio_wa_sidebar">
+                    <!-- Sidebar Header with Back & Search -->
+                    <div class="o_twilio_wa_sidebar_header">
+                        <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-link text-decoration-none text-slate-700 p-0 me-1 shadow-none border-0" t-on-click="(ev) => this.onClose(ev)" title="Back">
+                                <i class="fa fa-arrow-left text-primary"/>
+                            </button>
+                            <span class="fw-bold text-slate-800 fs-6">Messages</span>
                         </div>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="fa fa-search text-muted"/>
-                            </span>
+                    </div>
+
+                    <div class="o_twilio_wa_search_row">
+                        <div class="o_twilio_wa_search_box">
+                            <i class="fa fa-search o_twilio_wa_search_icon"/>
                             <input type="text"
-                                   class="form-control border-start-0 shadow-none ps-0"
-                                   placeholder="Search contacts..."
+                                   class="o_twilio_wa_search_input"
+                                   placeholder="Search or start new chat"
                                    t-model="this.state.searchQuery"/>
                         </div>
                     </div>
 
                     <!-- Contact List Scroll Container -->
-                    <div class="o_twilio_contact_list">
+                    <div class="o_twilio_wa_conversation_list">
                         <t t-if="this.state.loading">
-                            <div class="text-center py-4 text-muted small">
+                            <div class="o_twilio_wa_loading">
                                 <div class="spinner-border spinner-border-sm text-primary mb-2" role="status"/>
-                                <div>Loading contacts...</div>
+                                <span>Loading contacts...</span>
                             </div>
                         </t>
-                        <t t-elif="filteredContacts.length === 0">
-                            <div class="text-center py-4 text-muted small px-3">
-                                No contacts found with a valid phone number.
+                        <t t-elif="filteredConversations.length === 0">
+                            <div class="o_twilio_wa_empty_list">
+                                <p class="mb-0 text-muted small">No contacts found.</p>
                             </div>
                         </t>
                         <t t-else="">
-                            <t t-foreach="filteredContacts" t-as="contact" t-key="contact.id">
-                                <div t-att-class="this.state.selectedContact and this.state.selectedContact.id === contact.id ? 'o_twilio_contact_item active' : 'o_twilio_contact_item'"
+                            <t t-foreach="filteredConversations" t-as="contact" t-key="contact.phone">
+                                <div t-att-class="this.state.selectedContact and this.state.selectedContact.phone === contact.phone ? 'o_twilio_wa_item active' : 'o_twilio_wa_item'"
                                      t-on-click="() => this.onSelectContact(contact)">
-                                    <div class="o_twilio_contact_avatar">
-                                        <i class="fa fa-user"/>
+                                    <div class="o_twilio_wa_avatar" t-att-style="'background-color: ' + this.getAvatarColor(contact.name)">
+                                        <span t-esc="this.getInitials(contact.name)"/>
                                     </div>
-                                    <div class="o_twilio_contact_info">
-                                        <div class="d-flex align-items-center justify-content-between">
-                                            <span class="o_twilio_contact_name text-truncate" t-esc="contact.name"/>
+                                    <div class="o_twilio_wa_item_body">
+                                        <div class="o_twilio_wa_item_header">
+                                            <span class="o_twilio_wa_item_name text-truncate" t-esc="contact.name"/>
                                         </div>
-                                        <div class="o_twilio_contact_phone text-muted small" t-esc="contact.phone"/>
-                                        <t t-if="contact.company">
-                                            <div class="o_twilio_contact_company text-muted micro text-truncate" t-esc="contact.company"/>
-                                        </t>
+                                        <div class="o_twilio_wa_item_snippet text-muted small text-truncate" t-esc="contact.phone"/>
                                     </div>
                                 </div>
                             </t>
@@ -66,19 +60,18 @@
                     </div>
                 </div>
 
-                <!-- Right Panel: Conversation View (Reuses TwilioSmsPopup Component) -->
+                <!-- Right Panel: Active Conversation View -->
                 <div class="o_twilio_messaging_main">
                     <t t-if="this.state.selectedContact">
-                        <!-- Embedded OWL Conversation Component without nesting backdrop -->
-                        <TwilioSmsPopup t-key="this.state.selectedContact.id + '_' + this.state.selectedContact.phone"
+                        <TwilioSmsPopup t-key="this.state.selectedContact.phone"
                                         phone="this.state.selectedContact.phone"
-                                        partnerId="this.state.selectedContact.id"
+                                        partnerId="this.state.selectedContact.partner_id"
                                         partnerName="this.state.selectedContact.name"
                                         onClose="() => this.onClose()"/>
                     </t>
                     <t t-else="">
-                        <div class="o_twilio_messaging_empty">
-                            <i class="fa fa-comments-o fa-4x mb-3 text-primary opacity-50"/>
+                        <div class="o_twilio_wa_hero_empty">
+                            <i class="fa fa-comments-o fa-3x mb-3 text-primary opacity-50"/>
                             <h5 class="fw-bold text-slate-700 mb-2">Select a contact to start messaging</h5>
                             <p class="text-muted small">Choose any contact from the left list to view conversation history and send SMS messages.</p>
                         </div>

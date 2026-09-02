@@ -4,7 +4,7 @@ import { Component, onWillStart } from "@odoo/owl";
 import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { TwilioSmsPopup } from "@twilio_dialer/js/sms_popup";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { registry } from "@web/core/registry";
 import { useService } from "@web/core/utils/hooks";
 

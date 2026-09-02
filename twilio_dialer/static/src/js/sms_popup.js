@@ -5,7 +5,7 @@ import * as owl from "@odoo/owl";
 const useState = owl.useState || owl.proxy || ((obj) => obj);
 import { normalizePhoneNumber } from "@twilio_dialer/js/phone_utils";
 import { _t } from "@web/core/l10n/translation";
-import { rpc } from "@web/core/network/rpc";
+import { jsonrpc as rpc } from "@web/core/network/rpc_service";
 import { useService } from "@web/core/utils/hooks";
 
 const DRAFT_STORAGE_KEY_PREFIX = "twilio_sms_draft_";

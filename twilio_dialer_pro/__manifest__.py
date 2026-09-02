@@ -132,7 +132,6 @@ Bitly: https://bit.ly/odoo-twilio-dialer
     },
 
     'data': [
-        'security/twilio_dialer_security.xml',
         'security/ir.model.access.csv',
         'views/dialer_actions.xml',
                 'views/res_config_settings_views.xml',

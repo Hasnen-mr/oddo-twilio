@@ -31,7 +31,7 @@
                 <t t-if="this.props.download_url">
                     <button type="button"
                             class="btn btn-link o_twilio_version_download px-0"
-                            t-on-click="openDownload">
+                            t-on-click="() => this.openDownload()">
                         View on Odoo Apps
                     </button>
                 </t>
@@ -39,11 +39,11 @@
 
             <t t-set-slot="footer">
                 <button type="button" class="btn btn-secondary"
-                        t-on-click="onRemindLater">
+                        t-on-click="() => this.onRemindLater()">
                     Remind Me Later
                 </button>
                 <button type="button" class="btn btn-primary"
-                        t-on-click="onOkay">
+                        t-on-click="() => this.onOkay()">
                     Okay
                 </button>
             </t>

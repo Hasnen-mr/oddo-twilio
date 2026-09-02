@@ -16,20 +16,20 @@
                     </div>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button class="btn btn-sm text-secondary p-1 border-0" t-on-click="onNewChat" title="Start New Conversation">
+                    <button class="btn btn-sm text-secondary p-1 border-0" t-on-click="() => this.onNewChat()" title="Start New Conversation">
                         <i class="fa fa-refresh fs-6"/>
                     </button>
-                    <button class="btn btn-sm text-secondary p-1 border-0" t-on-click="toggleExpand" t-att-title="state.isExpanded ? 'Compact Window' : 'Expand Window'">
+                    <button class="btn btn-sm text-secondary p-1 border-0" t-on-click="() => this.toggleExpand()" t-att-title="state.isExpanded ? 'Compact Window' : 'Expand Window'">
                         <i t-attf-class="fa #{state.isExpanded ? 'fa-compress' : 'fa-expand'} fs-6"/>
                     </button>
-                    <button class="btn btn-sm text-secondary p-1 border-0 ms-1" t-on-click="props.onClose" title="Close Claude Chat">
+                    <button class="btn btn-sm text-secondary p-1 border-0 ms-1" t-on-click="() => this.props.onClose()" title="Close Claude Chat">
                         <i class="fa fa-times fs-5"/>
                     </button>
                 </div>
             </div>
 
             <!-- Main Message Container with Position Relative for Inset Overlay -->
-            <div class="o_mcp_ai_chat_body flex-grow-1 p-3 overflow-auto d-flex flex-column gap-3 position-relative" t-ref="chatBody" t-on-scroll="onScroll">
+            <div class="o_mcp_ai_chat_body flex-grow-1 p-3 overflow-auto d-flex flex-column gap-3 position-relative" t-ref="chatBody" t-on-scroll="(ev) => this.onScroll(ev)">
                 <!-- Semi-Transparent Skeleton Overlay for Context Switch (Only when switching) -->
                 <t t-if="state.isSwitchingThread">
                     <div class="o_mcp_skeleton_overlay o_mcp_active">
@@ -113,10 +113,10 @@
                               rows="1" 
                               placeholder="Ask Claude AI Copilot..." 
                               t-model="state.promptText" 
-                              t-on-keydown="onKeyDown" 
+                              t-on-keydown="(ev) => this.onKeyDown(ev)" 
                               t-att-disabled="state.sending"/>
                     <button class="btn btn-primary rounded-3 px-3" 
-                            t-on-click="onSendMessage" 
+                            t-on-click="() => this.onSendMessage()" 
                             t-att-disabled="state.sending || !state.promptText">
                         <t t-if="state.sending">
                             <i class="fa fa-spinner fa-spin"/>

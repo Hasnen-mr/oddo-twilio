@@ -9,7 +9,7 @@
                 t-att-class="{ 'o_dialer_toggle_btn--open': this.state.isOpen }"
                 title="Twilio Call Auto Dialer (Alt + D)"
                 aria-label="Twilio Call Auto Dialer"
-                t-on-click="togglePanel">
+                t-on-click="() => this.togglePanel()">
             <span class="o_dialer_toggle_visual" aria-hidden="true">
                 <span class="o_dialer_toggle_ring o_dialer_toggle_ring--outer"/>
                 <span class="o_dialer_toggle_ring o_dialer_toggle_ring--inner"/>
@@ -31,7 +31,7 @@
     </t>
 
     <t t-name="twilio_dialer_pro.DialerPopup">
-        <div class="o_dialer_popup" t-on-click="closeAllDropdowns">
+        <div class="o_dialer_popup" t-on-click="() => this.closeAllDropdowns()">
 
             <!-- Header -->
             <div class="o_dialer_header">
@@ -46,7 +46,7 @@
                 <button
                     type="button"
                     class="o_dialer_close_btn"
-                    t-on-click="closePopup"
+                    t-on-click="() => this.closePopup()"
                     title="Close">
                     <i class="fa fa-times"/>
                 </button>
@@ -92,7 +92,7 @@
                                 <button
                                     type="button"
                                     class="o_dialer_incoming_btn o_dialer_incoming_btn--accept"
-                                    t-on-click="onAcceptCall"
+                                    t-on-click="() => this.onAcceptCall()"
                                     title="Accept Call"
                                     aria-label="Accept Call">
                                     <i class="fa fa-phone"/>
@@ -101,7 +101,7 @@
                                 <button
                                     type="button"
                                     class="o_dialer_incoming_btn o_dialer_incoming_btn--decline"
-                                    t-on-click="onRejectCall"
+                                    t-on-click="() => this.onRejectCall()"
                                     title="Decline Call"
                                     aria-label="Decline Call">
                                     <i class="fa fa-phone"/>
@@ -113,7 +113,7 @@
                                 <button
                                     type="button"
                                     class="o_dialer_incoming_keypad_toggle_btn"
-                                    t-on-click="toggleIncomingKeypad">
+                                    t-on-click="() => this.toggleIncomingKeypad()">
                                     <i class="fa fa-keyboard-o"/>
                                     <span>Dial Pad</span>
                                 </button>
@@ -129,7 +129,7 @@
                                  'o_dialer_keypad_view--dnd': this.state.dndEnabled and !isIncoming and !isCallActive
                              }">
                             <div class="o_dialer_incoming_back_row" t-if="isIncoming and this.state.showIncomingKeypad">
-                                <button type="button" class="o_dialer_back_btn" t-on-click="backToIncomingView">
+                                <button type="button" class="o_dialer_back_btn" t-on-click="() => this.backToIncomingView()">
                                     <i class="fa fa-arrow-left"/>
                                     <span>Back</span>
                                 </button>
@@ -143,7 +143,7 @@
                                             type="button"
                                             class="o_dialer_caller_dropdown_btn"
                                             t-att-disabled="this.state.dndEnabled"
-                                            t-on-click.stop="toggleCallerDropdown">
+                                            t-on-click.stop="() => this.toggleCallerDropdown()">
                                             <span class="o_dialer_caller_number" t-esc="formattedCallerDisplay"/>
                                             <i class="fa fa-chevron-down o_dialer_dropdown_arrow"/>
                                         </button>
@@ -182,7 +182,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <button type="button" class="o_dialer_icon_btn" title="Refresh numbers" t-att-disabled="this.state.dndEnabled" t-on-click.stop="_loadConfiguredPhoneNumber">
+                                    <button type="button" class="o_dialer_icon_btn" title="Refresh numbers" t-att-disabled="this.state.dndEnabled" t-on-click.stop="() => this._loadConfiguredPhoneNumber()">
                                         <i class="fa fa-refresh"/>
                                     </button>
                                     <button type="button" class="o_dialer_icon_btn o_dialer_icon_btn--disabled" disabled="true" title="Add number">
@@ -198,7 +198,7 @@
                                             type="button"
                                             class="o_dialer_country_btn"
                                             t-att-disabled="isCallActive or isIncoming or this.state.dndEnabled"
-                                            t-on-click.stop="toggleCountryDropdown">
+                                            t-on-click.stop="() => this.toggleCountryDropdown()">
                                             <span class="o_dialer_country_flag" t-esc="this.state.selectedCountry.flag"/>
                                             <span class="o_dialer_country_code" t-esc="this.state.selectedCountry.code"/>
                                             <i class="fa fa-caret-down" t-if="!isCallActive and !isIncoming and !this.state.dndEnabled"/>
@@ -209,7 +209,7 @@
                                                     type="text"
                                                     placeholder="Search countries..."
                                                     class="o_dialer_country_search_input"
-                                                    t-on-input="onCountrySearch"/>
+                                                    t-on-input="(ev) => this.onCountrySearch(ev)"/>
                                             </div>
                                             <div class="o_dialer_country_options">
                                                 <t t-foreach="filteredCountries || []" t-as="country" t-key="country.label">
@@ -232,8 +232,8 @@
                                     <input
                                         type="tel"
                                         t-att-value="this.state.phoneNumber"
-                                        t-on-input="onInput"
-                                        t-on-keydown="onPhoneInputKeydown"
+                                        t-on-input="(ev) => this.onInput(ev)"
+                                        t-on-keydown="(ev) => this.onPhoneInputKeydown(ev)"
                                         t-att-disabled="isCallActive or isIncoming or this.state.dndEnabled"
                                         t-att-readonly="isCallActive or isIncoming or this.state.dndEnabled"
                                         class="o_dialer_phone_input"
@@ -242,7 +242,7 @@
                                         type="button"
                                         class="o_dialer_phone_erase"
                                         t-att-disabled="!this.state.phoneNumber or isCallActive or isIncoming or this.state.dndEnabled"
-                                        t-on-click="backspace"
+                                        t-on-click="() => this.backspace()"
                                         title="Erase last digit"
                                         aria-label="Erase last digit">
                                         <i class="fa fa-long-arrow-left"/>
@@ -276,7 +276,7 @@
                                         <button
                                             type="button"
                                             class="o_dialer_incoming_btn o_dialer_incoming_btn--accept"
-                                            t-on-click="onAcceptCall"
+                                            t-on-click="() => this.onAcceptCall()"
                                             title="Accept Call"
                                             aria-label="Accept Call">
                                             <i class="fa fa-phone"/>
@@ -285,7 +285,7 @@
                                         <button
                                             type="button"
                                             class="o_dialer_incoming_btn o_dialer_incoming_btn--decline"
-                                            t-on-click="onRejectCall"
+                                            t-on-click="() => this.onRejectCall()"
                                             title="Decline Call"
                                             aria-label="Decline Call">
                                             <i class="fa fa-phone"/>
@@ -298,7 +298,7 @@
                                         type="button"
                                         class="o_dialer_action_btn o_dialer_action_btn--mute"
                                         t-att-class="{ 'o_dialer_action_btn--mute-active': this.state.isMuted }"
-                                        t-on-click="onToggleMute"
+                                        t-on-click="() => this.onToggleMute()"
                                         t-att-title="this.state.isMuted ? 'Unmute' : 'Mute'"
                                         t-att-aria-label="this.state.isMuted ? 'Unmute' : 'Mute'">
                                         <i t-att-class="this.state.isMuted ? 'fa fa-microphone-slash' : 'fa fa-microphone'"/>
@@ -307,7 +307,7 @@
                                     <button
                                         type="button"
                                         class="o_dialer_action_btn o_dialer_action_btn--hangup"
-                                        t-on-click="onHangUp"
+                                        t-on-click="() => this.onHangUp()"
                                         title="Hang Up"
                                         aria-label="Hang Up">
                                         <i class="fa fa-phone"/>
@@ -321,7 +321,7 @@
                                             class="o_dialer_action_btn o_dialer_action_btn--dnd"
                                             t-att-class="{ 'o_dialer_action_btn--dnd-active': this.state.dndEnabled }"
                                             t-att-disabled="this.state.refreshingToken"
-                                            t-on-click="onToggleDnd"
+                                            t-on-click="() => this.onToggleDnd()"
                                             t-att-title="this.state.dndEnabled ? 'Disable Do Not Disturb' : 'Do Not Disturb'"
                                             t-att-aria-label="this.state.dndEnabled ? 'Disable Do Not Disturb' : 'Do Not Disturb'">
                                             <svg class="o_dialer_dnd_icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -333,7 +333,7 @@
                                             type="button"
                                             class="o_dialer_action_btn o_dialer_action_btn--call"
                                             t-att-disabled="!canCall"
-                                            t-on-click="onCall"
+                                            t-on-click="() => this.onCall()"
                                             title="Call"
                                             aria-label="Call">
                                             <i class="fa fa-phone"/>
@@ -342,7 +342,7 @@
                                             type="button"
                                             class="o_dialer_action_btn o_dialer_action_btn--redial"
                                             t-att-disabled="!canRedial"
-                                            t-on-click="onRedial"
+                                            t-on-click="() => this.onRedial()"
                                             title="Redial"
                                             aria-label="Redial">
                                             <i class="fa fa-repeat"/>
@@ -368,7 +368,7 @@
                                         <button type="button"
                                                 class="o_dialer_token_refresh_btn"
                                                 t-att-disabled="this.state.refreshingToken"
-                                                t-on-click="onRefreshToken">
+                                                t-on-click="() => this.onRefreshToken()">
                                             <t t-if="this.state.refreshingToken">
                                                 <i class="fa fa-spinner fa-spin"/> Refreshing…
                                             </t>
@@ -412,18 +412,18 @@
                                        class="o_dialer_contacts_search_input"
                                        placeholder="Search name, company, phone..."
                                        t-att-value="this.state.contactSearchQuery"
-                                       t-on-input="onContactSearch"/>
+                                       t-on-input="(ev) => this.onContactSearch(ev)"/>
                             </div>
                             <button type="button"
                                     class="o_dialer_contacts_open_app"
                                     title="Open Contacts app"
-                                    t-on-click.stop="openContacts">
+                                    t-on-click.stop="() => this.openContacts()">
                                 <i class="fa fa-external-link"/>
                             </button>
                         </div>
 
                         <div class="o_dialer_contact_list"
-                             t-on-scroll="onContactListScroll">
+                             t-on-scroll="(ev) => this.onContactListScroll(ev)">
                             <t t-foreach="filteredContacts || []" t-as="contact" t-key="contact.id">
                                 <div class="o_dialer_contact_item">
                                     <div class="o_dialer_contact_avatar" t-esc="contact.initials"/>
@@ -569,7 +569,7 @@
                                                                                     <!-- Quick Debug Notification Banner (Light Theme matching Dialer UI) -->
             <div class="o_dialer_debug_banner mx-3 my-2 rounded-3 position-relative overflow-hidden"
                  t-if="this.state.showQuickDebugBanner"
-                 t-on-click="openQuickDebugModal">
+                 t-on-click="() => this.openQuickDebugModal()">
                 <div class="p-2 d-flex align-items-center justify-content-between">
                     <div class="d-flex align-items-center gap-2">
                         <i class="fa fa-exclamation-triangle" style="color: #DC2626; font-size: 1rem;"/>
@@ -593,7 +593,7 @@
                             <t t-else="">Diagnostic checks completed.</t>
                         </p>
                     </div>
-                    <button type="button" class="btn-close" t-on-click="closeQuickDebugModal" aria-label="Close" style="cursor: pointer;"></button>
+                    <button type="button" class="btn-close" t-on-click="() => this.closeQuickDebugModal()" aria-label="Close" style="cursor: pointer;"></button>
                 </div>
 
                 <div class="d-flex flex-column gap-2 mt-2">
@@ -731,7 +731,7 @@
                         </div>
                         <div class="small mt-1" style="padding-left: 1.5rem; font-size: 0.8rem;">
                             <t t-if="this.state.debugStep &gt;= 5">
-                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-underline text-primary" t-on-click="openHelpSupport" style="font-weight: 600;">
+                                <button type="button" class="btn btn-sm btn-link p-0 text-decoration-underline text-primary" t-on-click="() => this.openHelpSupport()" style="font-weight: 600;">
                                     Open Module Help &amp; Support Page
                                 </button>
                             </t>
@@ -794,7 +794,7 @@
                     <button type="button"
                             class="o_dialer_qrunner_settings_btn"
                             title="Open Auto Dialer Campaigns"
-                            t-on-click.stop="openSettings">
+                            t-on-click.stop="() => this.openSettings()">
                         <i class="fa fa-cog"/>
                         <span>Settings</span>
                     </button>
@@ -818,14 +818,14 @@
                             class="o_dialer_qrunner_tool_btn"
                             title="Open Queue in Odoo"
                             t-if="this.state.activeQueue"
-                            t-on-click.stop="openQueueInOdoo">
+                            t-on-click.stop="() => this.openQueueInOdoo()">
                         <i class="fa fa-external-link"/>
                     </button>
                     <button type="button"
                             class="o_dialer_qrunner_tool_btn"
                             title="Refresh queue list"
                             t-att-disabled="this.state.loadingQueues"
-                            t-on-click.stop="onRefresh">
+                            t-on-click.stop="() => this.onRefresh()">
                         <i t-att-class="this.state.loadingQueues ? 'fa fa-spinner fa-spin' : 'fa fa-refresh'"/>
                     </button>
                 </div>
@@ -915,7 +915,7 @@
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--start"
                                 t-att-disabled="this.state.actionPending || this.state.stats.total === 0"
-                                t-on-click="onStart">
+                                t-on-click="() => this.onStart()">
                             <i class="fa fa-play"/>
                             <span>Start Campaign</span>
                         </button>
@@ -924,14 +924,14 @@
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--pause"
                                 t-att-disabled="this.state.actionPending"
-                                t-on-click="onPause">
+                                t-on-click="() => this.onPause()">
                             <i class="fa fa-pause"/>
                             <span>Pause</span>
                         </button>
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--stop"
                                 t-att-disabled="this.state.actionPending"
-                                t-on-click="onStop">
+                                t-on-click="() => this.onStop()">
                             <i class="fa fa-stop"/>
                             <span>Stop</span>
                         </button>
@@ -940,14 +940,14 @@
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--start"
                                 t-att-disabled="this.state.actionPending"
-                                t-on-click="onResume">
+                                t-on-click="() => this.onResume()">
                             <i class="fa fa-play"/>
                             <span>Resume</span>
                         </button>
                         <button type="button"
                                 class="o_dialer_qrunner_ctrl_btn o_dialer_qrunner_ctrl_btn--stop"
                                 t-att-disabled="this.state.actionPending"
-                                t-on-click="onStop">
+                                t-on-click="() => this.onStop()">
                             <i class="fa fa-stop"/>
                             <span>Stop</span>
                         </button>
@@ -1009,7 +1009,7 @@
                                 class="o_dialer_qrunner_nav_btn"
                                 title="Previous contact"
                                 t-att-disabled="this.state.actionPending"
-                                t-on-click="onPrev">
+                                t-on-click="() => this.onPrev()">
                             <i class="fa fa-chevron-left"/>
                             <span>Prev</span>
                         </button>
@@ -1017,7 +1017,7 @@
                                 class="o_dialer_qrunner_nav_btn o_dialer_qrunner_nav_btn--skip"
                                 title="Skip this contact"
                                 t-att-disabled="this.state.actionPending"
-                                t-on-click="onSkip">
+                                t-on-click="() => this.onSkip()">
                             <i class="fa fa-forward"/>
                             <span>Skip</span>
                         </button>
@@ -1025,7 +1025,7 @@
                                 class="o_dialer_qrunner_nav_btn"
                                 title="Next contact"
                                 t-att-disabled="this.state.actionPending"
-                                t-on-click="onNext">
+                                t-on-click="() => this.onNext()">
                             <i class="fa fa-chevron-right"/>
                             <span>Next</span>
                         </button>

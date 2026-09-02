@@ -25,7 +25,7 @@
                                 </div>
                                 <h6 class="modal-title fw-bold text-dark mb-0" style="font-size: 15px;">Email Verification Required</h6>
                             </div>
-                            <button type="button" class="btn-close" aria-label="Close" t-on-click="closeGlobalVerifyModal" style="cursor: pointer;"/>
+                            <button type="button" class="btn-close" aria-label="Close" t-on-click="() => this.closeGlobalVerifyModal()" style="cursor: pointer;"/>
                         </div>
 
                         <!-- Modal Body -->
@@ -80,7 +80,7 @@
                                 <div class="p-3 bg-light rounded-3 border mb-3 text-start">
                                     <div class="d-flex align-items-center justify-content-between mb-2">
                                         <span class="text-muted small" style="font-size: 11.5px;">Code sent to: <strong class="text-dark" t-esc="state.globalUserEmail"/></span>
-                                        <button type="button" class="btn btn-link p-0 text-decoration-none small fw-semibold" style="color: #D97757;" t-on-click="changeGlobalRegistrationData">
+                                        <button type="button" class="btn btn-link p-0 text-decoration-none small fw-semibold" style="color: #D97757;" t-on-click="() => this.changeGlobalRegistrationData()">
                                             <i class="fa fa-pencil me-1"/>Change
                                         </button>
                                     </div>
@@ -93,11 +93,11 @@
                                            autofocus="autofocus"
                                            style="letter-spacing: 0.25em;"
                                            t-model="state.globalOtp"
-                                           t-on-keydown="onGlobalOtpKeydown"/>
+                                           t-on-keydown="(ev) => this.onGlobalOtpKeydown(ev)"/>
 
                                     <button type="button" 
                                             class="btn btn-primary w-100 fw-bold text-white py-2 shadow-sm mb-2"
-                                            t-on-click="verifyGlobalOtp"
+                                            t-on-click="() => this.verifyGlobalOtp()"
                                             t-att-disabled="state.globalVerifyingOtp || !state.globalOtp">
                                         <t t-if="state.globalVerifyingOtp">
                                             <i class="fa fa-spinner fa-spin me-1"/> Verifying Code...
@@ -148,10 +148,10 @@
                     type="button"
                     class="o_mcp_ai_bubble_close"
                     title="Hide Claude bubble for this session"
-                    t-on-click.stop="props.onDismiss">
+                    t-on-click.stop="() => this.props.onDismiss()">
                 <i class="fa fa-times"/>
             </button>
-            <button class="o_mcp_ai_bubble_trigger" t-on-click="props.onClick" title="Claude AI" type="button">
+            <button class="o_mcp_ai_bubble_trigger" t-on-click="() => this.props.onClick()" title="Claude AI" type="button">
                 <t t-if="props.isOpen">
                     <i class="fa fa-times" style="color: #D97757; font-size: 20px;"/>
                 </t>

@@ -9,14 +9,14 @@
                 <button type="button"
                         class="o_twilio_help_bubble_close"
                         title="Hide help bubble for this screen"
-                        t-on-click.stop="onHideHelpBubble">
+                        t-on-click.stop="() => this.onHideHelpBubble()">
                     <i class="fa fa-times"/>
                 </button>
                 <!-- Main floating calling help button with recreated Phone Info vector icon -->
                 <button type="button"
                         class="o_twilio_help_bubble_btn"
                         title="Twilio Dialer Help &amp; User Guide"
-                        t-on-click.stop="onOpenHelpDialog">
+                        t-on-click.stop="() => this.onOpenHelpDialog()">
                     <svg class="o_twilio_help_phone_info_svg" viewBox="0 0 24 24" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
                         <!-- Handset receiver -->
                         <path d="M 4 13.8 C 3.1 12.8 2.6 11.5 2.6 10.2 C 2.6 8.8 3.2 7.7 4.1 6.8 C 4.6 6.3 5.3 6 6 6 C 6.6 6 7.2 6.3 7.6 6.8 L 9 8.6 C 9.4 9.1 9.4 9.8 9 10.3 L 8.1 11.2 C 8.9 12.8 10.2 14.1 11.8 14.9 L 12.7 14 C 13.2 13.6 13.9 13.6 14.4 14 L 16.2 15.4 C 16.7 15.8 17 16.4 17 17 C 17 17.7 16.7 18.4 16.2 18.9 C 15.3 19.8 14.2 20.4 12.8 20.4 C 11.5 20.4 10.2 19.9 9.2 18.9 C 7.2 17.4 5.6 15.7 4 13.8 Z" fill="#ffffff"/>
@@ -45,7 +45,7 @@
                     <div class="d-flex align-items-center gap-2 ms-auto me-3">
                         <button type="button"
                                 class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1 shadow-sm o_twilio_open_dialer_header_btn"
-                                t-on-click="openDialer">
+                                t-on-click="() => this.openDialer()">
                             <i class="fa fa-phone"/> Open Dialer
                         </button>
                     </div>
@@ -256,7 +256,7 @@
                                 <li><strong>TwiML App SID:</strong> Starts with <code>AP...</code> (auto-created by the system).</li>
                             </ul>
                             <div class="d-flex gap-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm" t-on-click="openConfig">
+                                <button type="button" class="btn btn-outline-primary btn-sm" t-on-click="() => this.openConfig()">
                                     <i class="fa fa-cog me-1"/> Open Twilio Configuration
                                 </button>
                             </div>
@@ -324,7 +324,7 @@
                                 <h6 class="text-dark fw-bold mb-1"><i class="fa fa-stethoscope me-2 text-danger"/>Still Need Help? — Run Built-in Debug Troubleshooter</h6>
                                 <p class="small text-muted mb-2">If you experience call drops, connection issues, or one-way audio, launch our interactive 5-step automated troubleshooter to diagnose credentials, tokens, and audio permissions:</p>
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
-                                    <button type="button" class="btn btn-sm btn-danger px-3 py-1 text-white" t-on-click="openTroubleshooter">
+                                    <button type="button" class="btn btn-sm btn-danger px-3 py-1 text-white" t-on-click="() => this.openTroubleshooter()">
                                         <i class="fa fa-play-circle me-1"/> Launch Debug Troubleshooter
                                     </button>
                                     <span class="small text-muted">Runs direct diagnostic checks inside the Softphone.</span>
@@ -349,7 +349,7 @@
                                 <li><strong>Direct Delivery:</strong> Requests are delivered securely to our engineering team.</li>
                             </ul>
                             <div class="d-flex flex-wrap gap-2 align-items-center">
-                                <button type="button" class="btn btn-primary btn-sm px-3" t-on-click="openAboutHelp">
+                                <button type="button" class="btn btn-primary btn-sm px-3" t-on-click="() => this.openAboutHelp()">
                                     <i class="fa fa-external-link me-1"/> Open About Us &#8594; Help
                                 </button>
                                 <span class="small text-muted">Opens the Help &amp; Support form in About Us.</span>
@@ -369,11 +369,11 @@
             <t t-set-slot="footer">
                 <div class="d-flex justify-content-between align-items-center w-100 py-1">
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="openConfig">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" t-on-click="() => this.openConfig()">
                             <i class="fa fa-cog me-1"/> Settings
                         </button>
                     </div>
-                    <button type="button" class="btn btn-secondary px-4" t-on-click="props.close">
+                    <button type="button" class="btn btn-secondary px-4" t-on-click="() => this.props.close()">
                         Close
                     </button>
                 </div>

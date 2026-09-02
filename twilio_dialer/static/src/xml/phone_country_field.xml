@@ -7,7 +7,7 @@
                     <button type="button"
                             class="o_dialer_country_btn"
                             t-att-disabled="isReadonly"
-                            t-on-click.stop="toggleCountryDropdown">
+                            t-on-click.stop="() => this.toggleCountryDropdown()">
                         <span class="o_dialer_country_flag" t-esc="this.state.selectedCountry.flag"/>
                         <span class="o_dialer_country_code" t-esc="this.state.selectedCountry.code"/>
                         <i class="fa fa-caret-down"/>
@@ -17,7 +17,7 @@
                             <input type="text"
                                    placeholder="Search countries..."
                                    class="o_dialer_country_search_input"
-                                   t-on-input="onCountrySearch"
+                                   t-on-input="(ev) => this.onCountrySearch(ev)"
                                    t-on-click.stop=""/>
                         </div>
                         <div class="o_dialer_country_options">
@@ -42,11 +42,11 @@
                        placeholder="Enter phone number"
                        t-att-value="this.state.nationalNumber"
                        t-att-readonly="isReadonly"
-                       t-on-input="onNationalInput"/>
+                       t-on-input="(ev) => this.onNationalInput(ev)"/>
                 <button type="button"
                         class="o_dialer_phone_erase"
                         t-att-disabled="isReadonly or !this.state.nationalNumber"
-                        t-on-click.stop="clearNumber"
+                        t-on-click.stop="() => this.clearNumber()"
                         title="Clear">
                     <i class="fa fa-times"/>
                 </button>

@@ -5,7 +5,7 @@
         <t t-if="!state.isHiddenOnClaude">
             <div class="o_mcp_ai_systray_item position-relative d-flex align-items-center">
                 <button class="o_mcp_ai_systray_btn btn btn-link nav-link p-2 border-0 d-flex align-items-center gap-2 text-decoration-none shadow-none" 
-                        t-on-click="onSystrayClick" 
+                        t-on-click="() => this.onSystrayClick()" 
                         title="Claude AI Copilot (Global)" 
                         type="button">
                     <svg class="claude-icon-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

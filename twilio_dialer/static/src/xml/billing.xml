@@ -5,7 +5,7 @@
             <t t-if="this.state.loading"><div class="o_twilio_billing_skeleton"/></t>
             <t t-elif="this.state.error">
                 <div class="alert alert-warning m-0"><t t-esc="this.state.error"/></div>
-                <button class="btn btn-primary mt-2" t-on-click="refresh">Refresh</button>
+                <button class="btn btn-primary mt-2" t-on-click="() => this.refresh()">Refresh</button>
             </t>
             <t t-else="">
                 <div class="o_billing_screen">

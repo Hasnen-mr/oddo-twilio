@@ -25,7 +25,7 @@
                 <button type="button"
                         class="o_twilio_cfg_nav_back"
                         title="Back to Dashboard"
-                        t-on-click="backToDashboard">
+                        t-on-click="() => this.backToDashboard()">
                     <i class="fa fa-arrow-left"/>
                     <span>Back to Dashboard</span>
                 </button>

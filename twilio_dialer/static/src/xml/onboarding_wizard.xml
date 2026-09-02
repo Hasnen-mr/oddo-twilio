@@ -5,7 +5,7 @@
         <Dialog size="'lg'" contentClass="'o_twilio_onboard_dialog'">
             <t t-set-slot="header">
                 <h5 class="modal-title" t-esc="dialogTitle"/>
-                <button type="button" tabindex="-1" aria-label="Close" t-on-click="dismissWizard" style="position: absolute; top: 1rem; right: 1.5rem; z-index: 1050; cursor: pointer; font-size: 1.5rem; color: #9CA3AF; background: transparent; border: none; outline: none; box-shadow: none; padding: 0; line-height: 1; transition: color 0.15s ease-in-out;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#9CA3AF'">&#215;</button>
+                <button type="button" tabindex="-1" aria-label="Close" t-on-click="() => this.dismissWizard()" style="position: absolute; top: 1rem; right: 1.5rem; z-index: 1050; cursor: pointer; font-size: 1.5rem; color: #9CA3AF; background: transparent; border: none; outline: none; box-shadow: none; padding: 0; line-height: 1; transition: color 0.15s ease-in-out;" onmouseover="this.style.color='#374151'" onmouseout="this.style.color='#9CA3AF'">&#215;</button>
             </t>
             <div class="o_twilio_onboard">
                 <div class="o_twilio_onboard_progress">
@@ -67,7 +67,7 @@
                             <label class="o_twilio_onboard_field">
                                 <div class="d-flex justify-content-between align-items-center w-100 mb-1">
                                     <span>Account SID</span>
-                                    <a href="#" class="o_twilio_find_cred_link" t-on-click.prevent="openCredentialsHelp">How to find?</a>
+                                    <a href="#" class="o_twilio_find_cred_link" t-on-click.prevent="() => this.openCredentialsHelp()">How to find?</a>
                                 </div>
                                 <input type="text"
                                        class="form-control"
@@ -78,7 +78,7 @@
                             <label class="o_twilio_onboard_field">
                                 <div class="d-flex justify-content-between align-items-center w-100 mb-1">
                                     <span>Auth Token</span>
-                                    <a href="#" class="o_twilio_find_cred_link" t-on-click.prevent="openCredentialsHelp">How to find?</a>
+                                    <a href="#" class="o_twilio_find_cred_link" t-on-click.prevent="() => this.openCredentialsHelp()">How to find?</a>
                                 </div>
                                 <input type="password"
                                        class="form-control"
@@ -123,7 +123,7 @@
                                 <br/>
                                 <span class="d-inline-flex align-items-center justify-content-center gap-2 mt-1 flex-wrap">
                                     <span class="o_twilio_onboard_email_highlight fw-semibold" t-esc="this.state.email"/>
-                                    <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: #714b67; font-size: 0.85rem;" t-on-click="startEditingEmail">
+                                    <button type="button" class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: #714b67; font-size: 0.85rem;" t-on-click="() => this.startEditingEmail()">
                                         <i class="fa fa-pencil me-1"/>Change
                                     </button>
                                 </span>
@@ -134,13 +134,13 @@
                                 <div class="mb-1 text-muted" style="font-size: 0.85rem;">Correct your email address:</div>
                                 <div class="d-flex align-items-center justify-content-center gap-2" style="max-width: 380px; margin: 0 auto;">
                                     <input type="email" class="form-control form-control-sm" placeholder="you@company.com" t-model="this.state.newEmail" style="max-width: 220px;"/>
-                                    <button type="button" class="btn btn-sm btn-primary text-nowrap" t-on-click="saveAndResendNewEmail" t-att-disabled="this.state.sendingOtp or !this.state.newEmail">
+                                    <button type="button" class="btn btn-sm btn-primary text-nowrap" t-on-click="() => this.saveAndResendNewEmail()" t-att-disabled="this.state.sendingOtp or !this.state.newEmail">
                                         <t t-if="this.state.sendingOtp">
                                             <i class="fa fa-spinner fa-spin me-1"/>
                                         </t>
                                         Save &amp; Send
                                     </button>
-                                    <button type="button" class="btn btn-sm btn-light border" t-on-click="cancelEditingEmail" t-att-disabled="this.state.sendingOtp">Cancel</button>
+                                    <button type="button" class="btn btn-sm btn-light border" t-on-click="() => this.cancelEditingEmail()" t-att-disabled="this.state.sendingOtp">Cancel</button>
                                 </div>
                             </div>
                         </t>
@@ -155,7 +155,7 @@
                                        autofocus="autofocus"
                                        t-att-disabled="this.state.verifyingOtp or this.state.emailVerified"
                                        t-model="this.state.otp"
-                                       t-on-keydown="onOtpKeydown"/>
+                                       t-on-keydown="(ev) => this.onOtpKeydown(ev)"/>
                             </label>
 
                             <div class="text-center mt-3 pt-1">
@@ -163,7 +163,7 @@
                                         class="btn btn-link p-0 text-decoration-none fw-semibold"
                                         style="font-size: 0.88rem; color: #714b67;"
                                         t-att-disabled="this.state.sendingOtp or this.state.verifyingOtp"
-                                        t-on-click="onResendOtp">
+                                        t-on-click="() => this.onResendOtp()">
                                     <t t-if="this.state.sendingOtp">
                                         <i class="fa fa-spinner fa-spin me-1"/> Sending new code…
                                     </t>
@@ -189,7 +189,7 @@
                                     <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
                                         <input class="form-check-input" type="checkbox" role="switch" id="allowIncomingCallSwitch"
                                                t-model="this.state.allowIncomingCall"
-                                               t-on-change="onToggleIncomingCall"
+                                               t-on-change="(ev) => this.onToggleIncomingCall(ev)"
                                                t-att-disabled="this.state.verifyingOtp"
                                                style="width: 2.8rem; height: 1.4rem; cursor: pointer;"/>
                                     </div>
@@ -250,12 +250,12 @@
                 <t t-if="this.state.step &lt; 3">
                     <t t-if="this.state.step &gt; 1">
                         <button type="button" class="btn btn-secondary"
-                                t-on-click="prevStep">
+                                t-on-click="() => this.prevStep()">
                             Back
                         </button>
                     </t>
                     <button type="button" class="btn btn-primary ms-auto"
-                            t-on-click="nextStep">
+                            t-on-click="() => this.nextStep()">
                         Next
                     </button>
                 </t>
@@ -264,12 +264,12 @@
                 <t t-elif="this.state.step === 3">
                     <button type="button" class="btn btn-secondary"
                             t-att-disabled="this.state.connecting"
-                            t-on-click="prevStep">
+                            t-on-click="() => this.prevStep()">
                         Back
                     </button>
                     <button type="button" class="btn btn-primary o_twilio_onboard_connect ms-auto"
                             t-att-disabled="!canConnect"
-                            t-on-click="onConnect">
+                            t-on-click="() => this.onConnect()">
                         <t t-if="this.state.connecting">
                             <i class="fa fa-spinner fa-spin me-1"/> Connecting…
                         </t>
@@ -283,12 +283,12 @@
                 <t t-elif="this.state.step === 4">
                     <button type="button" class="btn btn-secondary"
                             t-att-disabled="this.state.verifyingOtp"
-                            t-on-click="prevStep">
+                            t-on-click="() => this.prevStep()">
                         Back
                     </button>
                     <button type="button" class="btn btn-primary ms-auto"
                             t-att-disabled="this.state.verifyingOtp or !this.state.otp"
-                            t-on-click="verifyOtp">
+                            t-on-click="() => this.verifyOtp()">
                         <t t-if="this.state.verifyingOtp">
                             <i class="fa fa-spinner fa-spin me-1"/> Verifying…
                         </t>
@@ -307,17 +307,17 @@
                     </t>
                     <t t-elif="this.state.tokenReady">
                         <button type="button" class="btn btn-success ms-auto"
-                                t-on-click="openDialer">
+                                t-on-click="() => this.openDialer()">
                             <i class="fa fa-phone me-1"/> Open Dialer
                         </button>
                     </t>
                     <t t-else="">
                         <button type="button" class="btn btn-secondary me-2"
-                                t-on-click="onCheckCredentials">
+                                t-on-click="() => this.onCheckCredentials()">
                             Check Credentials
                         </button>
                         <button type="button" class="btn btn-primary ms-auto"
-                                t-on-click="registerToken">
+                                t-on-click="() => this.registerToken()">
                             <i class="fa fa-refresh me-1"/> Retry Registration
                         </button>
                     </t>

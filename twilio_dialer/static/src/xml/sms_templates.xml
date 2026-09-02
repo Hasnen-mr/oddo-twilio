@@ -168,7 +168,7 @@
                     <textarea class="o_twilio_sms_textarea"
                               t-ref="messageInput"
                               placeholder="Type a message (Enter to send, Shift+Enter for new line)..."
-                              t-att-value="this.state.messageText" t-on-input="(ev) => this.state.messageText = ev.target.value"
+                              t-att-value="this.state.messageText"
                               t-on-input="(ev) => this.onInputMessage(ev)"
                               t-on-keydown="(ev) => this.onKeyDownTextarea(ev)"
                               t-att-disabled="this.state.sending"/>

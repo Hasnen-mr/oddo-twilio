@@ -188,7 +188,7 @@
                                     </div>
                                     <div class="form-check form-switch m-0" style="padding-left: 2.5em;">
                                         <input class="form-check-input" type="checkbox" role="switch" id="allowIncomingCallSwitch"
-                                                t-att-checked="this.state.allowIncomingCall" t-on-change="(ev) => this.state.allowIncomingCall = ev.target.checked"
+                                                t-att-checked="this.state.allowIncomingCall"
                                                t-on-change="(ev) => this.onToggleIncomingCall(ev)"
                                                t-att-disabled="this.state.verifyingOtp"
                                                style="width: 2.8rem; height: 1.4rem; cursor: pointer;"/>

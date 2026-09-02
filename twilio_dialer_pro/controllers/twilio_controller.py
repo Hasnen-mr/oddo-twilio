@@ -23,9 +23,9 @@ class TwilioController(http.Controller):
     def _validate_twilio_request(self):
         """Validate incoming Twilio webhook signatures."""
         icp = request.env["ir.config_parameter"].sudo()
-        if not icp.get_param("twilio_dialer.validate_webhook"):
+        if not icp.get_param("twilio_dialer_pro.validate_webhook"):
             return True
-        auth_token = icp.get_param("twilio_dialer.auth_token")
+        auth_token = icp.get_param("twilio_dialer_pro.auth_token")
         if not auth_token:
             return True
         from twilio.request_validator import RequestValidator
@@ -36,7 +36,7 @@ class TwilioController(http.Controller):
         return validator.validate(url, post_vars, signature)
 
     @http.route(
-        ["/twilio_dialer/token", "/twilio_dialer/token/<string:subpath>"],
+        ["/twilio_dialer_pro/token", "/twilio_dialer_pro/token/<string:subpath>"],
         type="http",
         auth="user",
         methods=["GET", "POST"],
@@ -77,7 +77,7 @@ class TwilioController(http.Controller):
                 headers=[("Content-Type", "application/json; charset=utf-8")],
             )
 
-    @http.route("/twilio_dialer/billing", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/billing", type="json", auth="user")
     def get_billing_info(self):
         try:
             service = request.env["twilio.billing.service"]
@@ -106,7 +106,7 @@ class TwilioController(http.Controller):
             }
 
 
-    @http.route("/twilio_dialer/call_info", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/call_info", type="json", auth="user")
     def get_call_info(self, call_sid=None):
         if not call_sid:
             return {"success": False, "to_number": ""}
@@ -130,12 +130,12 @@ class TwilioController(http.Controller):
             _logger.warning("Failed to fetch call info for %s: %s", call_sid, e)
             return {"success": False, "to_number": ""}
 
-    @http.route("/twilio_dialer/phone_number", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/phone_number", type="json", auth="user")
     def get_phone_number(self):
         try:
             service = request.env["twilio.service"]
             icp = request.env["ir.config_parameter"].sudo()
-            account_sid = icp.get_param("twilio_dialer.account_sid") or ""
+            account_sid = icp.get_param("twilio_dialer_pro.account_sid") or ""
             
             if not account_sid:
                 return {
@@ -191,7 +191,7 @@ class TwilioController(http.Controller):
             except Exception as e:
                 _logger.debug("Twilio outgoing caller IDs notice: %s", e)
 
-            phone_number = callers[0]["phone_number"] if callers else (icp.get_param("twilio_dialer.phone_number") or False)
+            phone_number = callers[0]["phone_number"] if callers else (icp.get_param("twilio_dialer_pro.phone_number") or False)
 
             return {
                 "phone_number": phone_number,
@@ -206,7 +206,7 @@ class TwilioController(http.Controller):
             }
 
     @http.route(
-        "/twilio_dialer/call_setup",
+        "/twilio_dialer_pro/call_setup",
         type="http",
         auth="public",
         methods=["GET", "POST"],
@@ -232,16 +232,30 @@ class TwilioController(http.Controller):
                 or ""
             )
 
+            to_raw = (
+                params.get("To")
+                or params.get("to")
+                or params.get("destination")
+                or params.get("phone")
+                or request.httprequest.args.get("To", "")
+                or request.httprequest.args.get("to", "")
+                or request.httprequest.args.get("destination", "")
+                or request.httprequest.args.get("phone", "")
+                or ""
+            )
+
             # An outbound call from Odoo browser softphone always has a client identity (e.g. client:id_odoo_...)
+            # or a dialed destination phone number.
             is_outbound_softphone = (
                 str(caller_param).strip().lower().startswith("client:")
                 or str(caller_param).strip().lower().startswith("id_odoo_")
+                or (to_raw and not str(to_raw).strip().lower().startswith("client:") and not str(to_raw).strip().lower().startswith("id_odoo_") and any(ch.isdigit() for ch in str(to_raw)))
                 or bool(params.get("destination"))
                 or bool(params.get("phone"))
             )
 
             # If it's an inbound call from an outside phone, route to incoming_call handler
-            if direction.startswith("inbound") or not is_outbound_softphone:
+            if not is_outbound_softphone:
                 return self.incoming_call(**kwargs)
 
             raw_caller_id = (
@@ -275,17 +289,6 @@ class TwilioController(http.Controller):
             if not caller_id or not caller_id.startswith("+"):
                 caller_id = request.env["twilio.service"].sudo().get_verified_twilio_phone_number()
 
-            to_raw = (
-                params.get("To")
-                or params.get("to")
-                or params.get("destination")
-                or params.get("phone")
-                or request.httprequest.args.get("To", "")
-                or request.httprequest.args.get("to", "")
-                or request.httprequest.args.get("destination", "")
-                or request.httprequest.args.get("phone", "")
-            )
-
             to_number = _sanitize_e164(to_raw)
             if not to_number:
                 digits_to = re.sub(r"\D", "", str(to_raw or ""))
@@ -297,7 +300,7 @@ class TwilioController(http.Controller):
 
             if _TWILIO_TWIML_AVAILABLE:
                 response = VoiceResponse()
-                dial = Dial(caller_id=caller_id)
+                dial = Dial(caller_id=caller_id, answer_on_bridge=True)
                 dial.number(to_number)
                 response.append(dial)
                 return request.make_response(
@@ -305,7 +308,7 @@ class TwilioController(http.Controller):
                     headers=[("Content-Type", "text/xml")],
                 )
             else:
-                xml = f'<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="{caller_id}"><Number>{to_number}</Number></Dial></Response>'
+                xml = f'<?xml version="1.0" encoding="UTF-8"?><Response><Dial callerId="{caller_id}" answerOnBridge="true"><Number>{to_number}</Number></Dial></Response>'
                 return request.make_response(
                     xml,
                     headers=[("Content-Type", "application/xml")],
@@ -319,7 +322,7 @@ class TwilioController(http.Controller):
             )
 
     @http.route(
-        "/twilio_dialer/incoming_call",
+        "/twilio_dialer_pro/incoming_call",
         type="http",
         auth="public",
         methods=["GET", "POST"],
@@ -341,7 +344,7 @@ class TwilioController(http.Controller):
                 request.env["twilio.call.log"].sudo().create_incoming_call(call_sid, from_number, to_number)
 
             icp = request.env["ir.config_parameter"].sudo()
-            account_sid = icp.get_param("twilio_dialer.account_sid") or ""
+            account_sid = icp.get_param("twilio_dialer_pro.account_sid") or ""
             incoming = {}
             if account_sid:
                 try:
@@ -354,11 +357,11 @@ class TwilioController(http.Controller):
                 except Exception:
                     _logger.debug("MyBroadcast call settings check passed")
 
-            enable_transcription = icp.get_param("twilio_dialer.incoming_transcription") in ("True", "true", "1")
+            enable_transcription = icp.get_param("twilio_dialer_pro.incoming_transcription") in ("True", "true", "1")
             allow = incoming.get("allow", True) if isinstance(incoming, dict) and "allow" in incoming else True
             record_call = incoming.get("record", False) if isinstance(incoming, dict) and "record" in incoming else (
-                icp.get_param("twilio_dialer.incoming_record") in ("True", "true", "1") or
-                icp.get_param("twilio_dialer.record_calls") in ("True", "true", "1")
+                icp.get_param("twilio_dialer_pro.incoming_record") in ("True", "true", "1") or
+                icp.get_param("twilio_dialer_pro.record_calls") in ("True", "true", "1")
             )
             forward = incoming.get("forward", False) if isinstance(incoming, dict) else False
             forward_to = incoming.get("forwardTo", "") if isinstance(incoming, dict) else ""
@@ -371,15 +374,15 @@ class TwilioController(http.Controller):
                 else ""
             )
             if not welcome_greeting:
-                welcome_greeting = icp.get_param("twilio_dialer.incoming_welcome_greeting") in ("True", "true", "1")
+                welcome_greeting = icp.get_param("twilio_dialer_pro.incoming_welcome_greeting") in ("True", "true", "1")
             if not welcome_greeting_text:
-                welcome_greeting_text = icp.get_param("twilio_dialer.incoming_welcome_greeting_text", "") or ""
+                welcome_greeting_text = icp.get_param("twilio_dialer_pro.incoming_welcome_greeting_text", "") or ""
 
             if not allow:
                 twiml = '<?xml version="1.0" encoding="UTF-8"?><Response><Reject/></Response>'
                 return request.make_response(twiml, headers={"Content-Type": "text/xml; charset=utf-8"})
 
-            caller_id = icp.get_param("twilio_dialer.phone_number") or None
+            caller_id = icp.get_param("twilio_dialer_pro.phone_number") or None
             greeting_say = ""
             if welcome_greeting:
                 greeting_say = (
@@ -414,7 +417,7 @@ class TwilioController(http.Controller):
 
             # Direct unified WebRTC client identity matching:
             client_identity = f"id_odoo_{account_sid}" if account_sid else "agent"
-            caller_id_val = from_number or icp.get_param("twilio_dialer.phone_number") or ""
+            caller_id_val = from_number or icp.get_param("twilio_dialer_pro.phone_number") or ""
 
             if _TWILIO_TWIML_AVAILABLE:
                 from twilio.twiml.voice_response import Client
@@ -424,7 +427,7 @@ class TwilioController(http.Controller):
                 dial = Dial(
                     caller_id=caller_id_val,
                     answer_on_bridge=True,
-                    action="/twilio_dialer/twilio_event",
+                    action="/twilio_dialer_pro/twilio_event",
                     record="record-from-answer-dual" if record_call else None,
                 )
                 client = Client(client_identity)
@@ -442,7 +445,7 @@ class TwilioController(http.Controller):
                     '<?xml version="1.0" encoding="UTF-8"?>'
                     '<Response>'
                     '{say}'
-                    '<Dial callerId="{caller_id}" answerOnBridge="true" action="/twilio_dialer/twilio_event"{record}>'
+                    '<Dial callerId="{caller_id}" answerOnBridge="true" action="/twilio_dialer_pro/twilio_event"{record}>'
                     '<Client>{client}{params}</Client>'
                     '</Dial>'
                     '</Response>'
@@ -462,7 +465,7 @@ class TwilioController(http.Controller):
             return request.make_response(twiml_err, headers={"Content-Type": "text/xml; charset=utf-8"})
 
     @http.route(
-        "/twilio_dialer/twilio_event",
+        "/twilio_dialer_pro/twilio_event",
         type="http",
         auth="public",
         methods=["GET", "POST"],
@@ -490,7 +493,7 @@ class TwilioController(http.Controller):
         response = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>'
         return request.make_response(response, headers={"Content-Type": "text/xml; charset=utf-8"})
 
-    @http.route("/twilio_dialer/sms/get_conversations", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/get_conversations", type="json", auth="user")
     def get_sms_conversations(self, **kwargs):
         try:
             # 1. Fetch recent SMS logs to group into active conversations
@@ -562,7 +565,7 @@ class TwilioController(http.Controller):
             _logger.error("Error fetching SMS conversations: %s", e)
             return {"success": False, "message": str(e), "conversations": []}
 
-    @http.route("/twilio_dialer/sms/get_contacts", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/get_contacts", type="json", auth="user")
     def get_sms_contacts(self, **kwargs):
         try:
             domain = [("phone", "!=", False)]
@@ -575,7 +578,7 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/sms/get_templates", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/get_templates", type="json", auth="user")
     def get_sms_templates(self, **kwargs):
         try:
             templates = request.env["twilio.sms.template"].sudo().search_read(
@@ -586,7 +589,7 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/sms/get_quick_replies", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/get_quick_replies", type="json", auth="user")
     def get_sms_quick_replies(self, **kwargs):
         try:
             replies = request.env["twilio.sms.quick.reply"].sudo().search_read(
@@ -597,7 +600,7 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/sms/get_history", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/get_history", type="json", auth="user")
     def get_sms_history(self, **kwargs):
         try:
             partner_id = kwargs.get("partner_id")
@@ -650,7 +653,7 @@ class TwilioController(http.Controller):
 
 
 
-    @http.route("/twilio_dialer/sms/workspace_counts", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/workspace_counts", type="json", auth="user")
     def get_sms_workspace_counts(self, **kwargs):
         try:
             contacts = request.env["res.partner"].sudo().search_count([
@@ -678,7 +681,7 @@ class TwilioController(http.Controller):
                 "counts": {"contacts": 0, "logs": 0, "templates": 0, "quick_replies": 0, "sent": 0, "received": 0, "total": 0}
             }
 
-    @http.route("/twilio_dialer/sms/get_recent_logs", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/get_recent_logs", type="json", auth="user")
     def get_sms_recent_logs(self, **kwargs):
         try:
             limit = kwargs.get("limit", 50)
@@ -692,7 +695,7 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/sms/send", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/sms/send", type="json", auth="user")
     def send_sms_json(self, **kwargs):
         to_number = kwargs.get("to_number")
         body = kwargs.get("body")
@@ -717,7 +720,7 @@ class TwilioController(http.Controller):
             _logger.error("Failed to send SMS: %s", str(e))
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/call_log/create", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/call_log/create", type="json", auth="user")
     def create_call_log(self, **kwargs):
         try:
             log = request.env["twilio.call.log"].sudo().create_call_log(**kwargs)
@@ -725,7 +728,7 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/call_log/update", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/call_log/update", type="json", auth="user")
     def update_call_log(self, **kwargs):
         try:
             request.env["twilio.call.log"].sudo().update_call_log(**kwargs)
@@ -733,7 +736,7 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/auto_dialer/sync_line", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/auto_dialer/sync_line", type="json", auth="user")
     def auto_dialer_sync_line(self, **kwargs):
         try:
             line_id = kwargs.get("queue_line_id")
@@ -755,7 +758,7 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/auto_dialer/navigate", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/auto_dialer/navigate", type="json", auth="user")
     def auto_dialer_navigate(self, **kwargs):
         try:
             auto_dialer_id = kwargs.get("auto_dialer_id")
@@ -769,77 +772,77 @@ class TwilioController(http.Controller):
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/settings/get", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/settings/get", type="json", auth="user")
     def get_dialer_settings(self, **kwargs):
         try:
             icp = request.env["ir.config_parameter"].sudo()
-            provider = icp.get_param("twilio_dialer.ai_provider", "openai") or "openai"
+            provider = icp.get_param("twilio_dialer_pro.ai_provider", "openai") or "openai"
             key_map = {
-                "openai": "twilio_dialer.openai_api_key",
-                "anthropic": "twilio_dialer.anthropic_api_key",
-                "gemini": "twilio_dialer.gemini_api_key",
-                "deepgram": "twilio_dialer.deepgram_api_key",
+                "openai": "twilio_dialer_pro.openai_api_key",
+                "anthropic": "twilio_dialer_pro.anthropic_api_key",
+                "gemini": "twilio_dialer_pro.gemini_api_key",
+                "deepgram": "twilio_dialer_pro.deepgram_api_key",
             }
-            active_key = icp.get_param(key_map.get(provider, "twilio_dialer.openai_api_key"), "") or ""
+            active_key = icp.get_param(key_map.get(provider, "twilio_dialer_pro.openai_api_key"), "") or ""
             return {
                 "success": True,
                 "ai": {
                     "ai_provider": provider,
                     "has_key": bool(active_key and len(active_key) > 5),
-                    "openai_speech_model": icp.get_param("twilio_dialer.openai_speech_model", "whisper-1") or "whisper-1",
+                    "openai_speech_model": icp.get_param("twilio_dialer_pro.openai_speech_model", "whisper-1") or "whisper-1",
                 },
                 "call": {
-                    "enable_incoming": icp.get_param("twilio_dialer.enable_incoming_calls", "True") == "True",
-                    "record_incoming": icp.get_param("twilio_dialer.record_incoming", "True") == "True",
-                    "record_outgoing": icp.get_param("twilio_dialer.record_outgoing", "True") == "True",
-                    "enable_transcription": icp.get_param("twilio_dialer.enable_transcription", "False") == "True",
-                    "enable_smart_copy": icp.get_param("twilio_dialer.enable_smart_copy", "False") == "True",
+                    "enable_incoming": icp.get_param("twilio_dialer_pro.enable_incoming_calls", "True") == "True",
+                    "record_incoming": icp.get_param("twilio_dialer_pro.record_incoming", "True") == "True",
+                    "record_outgoing": icp.get_param("twilio_dialer_pro.record_outgoing", "True") == "True",
+                    "enable_transcription": icp.get_param("twilio_dialer_pro.enable_transcription", "False") == "True",
+                    "enable_smart_copy": icp.get_param("twilio_dialer_pro.enable_smart_copy", "False") == "True",
                 },
                 "account": {
-                    "account_sid": icp.get_param("twilio_dialer.account_sid", "") or "",
-                    "auth_token": icp.get_param("twilio_dialer.auth_token", "") or "",
-                    "phone_number": icp.get_param("twilio_dialer.phone_number", "") or "",
+                    "account_sid": icp.get_param("twilio_dialer_pro.account_sid", "") or "",
+                    "auth_token": icp.get_param("twilio_dialer_pro.auth_token", "") or "",
+                    "phone_number": icp.get_param("twilio_dialer_pro.phone_number", "") or "",
                 }
             }
         except Exception as e:
             return {"success": False, "message": str(e)}
 
-    @http.route("/twilio_dialer/settings/save", type="json", auth="user")
+    @http.route("/twilio_dialer_pro/settings/save", type="json", auth="user")
     def save_dialer_settings(self, section=None, values=None, **kwargs):
         try:
             icp = request.env["ir.config_parameter"].sudo()
             values = values or {}
             if section == "ai":
                 if "ai_provider" in values:
-                    icp.set_param("twilio_dialer.ai_provider", values["ai_provider"])
+                    icp.set_param("twilio_dialer_pro.ai_provider", values["ai_provider"])
                 if "openai_api_key" in values:
-                    icp.set_param("twilio_dialer.openai_api_key", values["openai_api_key"])
+                    icp.set_param("twilio_dialer_pro.openai_api_key", values["openai_api_key"])
                 if "openai_speech_model" in values:
-                    icp.set_param("twilio_dialer.openai_speech_model", values["openai_speech_model"])
+                    icp.set_param("twilio_dialer_pro.openai_speech_model", values["openai_speech_model"])
                 if "anthropic_api_key" in values:
-                    icp.set_param("twilio_dialer.anthropic_api_key", values["anthropic_api_key"])
+                    icp.set_param("twilio_dialer_pro.anthropic_api_key", values["anthropic_api_key"])
                 if "gemini_api_key" in values:
-                    icp.set_param("twilio_dialer.gemini_api_key", values["gemini_api_key"])
+                    icp.set_param("twilio_dialer_pro.gemini_api_key", values["gemini_api_key"])
                 if "deepgram_api_key" in values:
-                    icp.set_param("twilio_dialer.deepgram_api_key", values["deepgram_api_key"])
+                    icp.set_param("twilio_dialer_pro.deepgram_api_key", values["deepgram_api_key"])
             elif section == "call":
                 if "enable_incoming" in values:
-                    icp.set_param("twilio_dialer.enable_incoming_calls", str(bool(values["enable_incoming"])))
+                    icp.set_param("twilio_dialer_pro.enable_incoming_calls", str(bool(values["enable_incoming"])))
                 if "record_incoming" in values:
-                    icp.set_param("twilio_dialer.record_incoming", str(bool(values["record_incoming"])))
+                    icp.set_param("twilio_dialer_pro.record_incoming", str(bool(values["record_incoming"])))
                 if "record_outgoing" in values:
-                    icp.set_param("twilio_dialer.record_outgoing", str(bool(values["record_outgoing"])))
+                    icp.set_param("twilio_dialer_pro.record_outgoing", str(bool(values["record_outgoing"])))
                 if "enable_transcription" in values:
-                    icp.set_param("twilio_dialer.enable_transcription", str(bool(values["enable_transcription"])))
+                    icp.set_param("twilio_dialer_pro.enable_transcription", str(bool(values["enable_transcription"])))
                 if "enable_smart_copy" in values:
-                    icp.set_param("twilio_dialer.enable_smart_copy", str(bool(values["enable_smart_copy"])))
+                    icp.set_param("twilio_dialer_pro.enable_smart_copy", str(bool(values["enable_smart_copy"])))
             elif section == "account":
                 if "account_sid" in values:
-                    icp.set_param("twilio_dialer.account_sid", values["account_sid"])
+                    icp.set_param("twilio_dialer_pro.account_sid", values["account_sid"])
                 if "auth_token" in values:
-                    icp.set_param("twilio_dialer.auth_token", values["auth_token"])
+                    icp.set_param("twilio_dialer_pro.auth_token", values["auth_token"])
                 if "phone_number" in values:
-                    icp.set_param("twilio_dialer.phone_number", values["phone_number"])
+                    icp.set_param("twilio_dialer_pro.phone_number", values["phone_number"])
             return {"success": True}
         except Exception as e:
             return {"success": False, "message": str(e)}
